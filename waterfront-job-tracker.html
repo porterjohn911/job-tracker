@@ -468,6 +468,168 @@ input[type=range]{width:100%;accent-color:var(--green-700);height:4px;cursor:poi
 .toast svg{width:15px;height:15px;stroke-width:2.5}
 .loader{text-align:center;padding:60px 20px;color:var(--text-3);font-size:14px}
 .divider{height:1px;background:var(--border);margin:4px 0 18px}
+
+/* ── NAV (5 tabs need smaller text) ── */
+.nav-btn{font-size:9.5px}
+.nav-btn svg{width:18px;height:18px}
+
+/* ── DASHBOARD ── */
+.kpi-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:18px}
+.kpi-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);padding:13px 14px;box-shadow:var(--shadow-sm);position:relative;overflow:hidden}
+.kpi-card.accent-green{border-left:3px solid var(--green-600)}
+.kpi-card.accent-gold{border-left:3px solid var(--gold)}
+.kpi-card.accent-red{border-left:3px solid var(--red)}
+.kpi-card.accent-sky{border-left:3px solid var(--sky)}
+.kpi-label{font-size:10.5px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px}
+.kpi-value{font-size:24px;font-weight:700;color:var(--text);font-variant-numeric:tabular-nums;line-height:1.1}
+.kpi-sub{font-size:11px;color:var(--text-3);margin-top:3px}
+.dash-section{margin-bottom:22px}
+.dash-row{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);padding:11px 14px;margin-bottom:6px;display:flex;align-items:center;gap:10px;cursor:pointer;transition:transform 0.15s}
+.dash-row:active{transform:scale(0.985)}
+.dash-row .dr-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.dash-row .dr-text{flex:1;min-width:0}
+.dash-row .dr-title{font-size:13.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dash-row .dr-sub{font-size:11.5px;color:var(--text-3);margin-top:1px}
+.dash-row .dr-meta{font-size:11px;color:var(--text-2);font-weight:600;white-space:nowrap}
+.dash-empty{font-size:13px;color:var(--text-3);padding:12px 4px}
+
+/* ── PIPELINE STEPPER ── */
+.pipeline{display:flex;gap:4px;background:var(--surface-3);border-radius:var(--r-sm);padding:5px;margin-bottom:14px;overflow-x:auto;scrollbar-width:none}
+.pipeline::-webkit-scrollbar{display:none}
+.pl-step{flex:1;min-width:78px;padding:7px 6px;font-size:10.5px;font-weight:600;text-align:center;color:var(--text-3);border-radius:6px;cursor:pointer;transition:all 0.15s;white-space:nowrap}
+.pl-step.done{color:var(--green-700)}
+.pl-step.current{background:var(--green-700);color:#fff;box-shadow:var(--shadow-sm)}
+.pl-step:active{transform:scale(0.96)}
+
+/* ── DETAIL TABS ── */
+.dtabs{display:flex;gap:2px;border-bottom:1px solid var(--border);margin-bottom:16px;overflow-x:auto;scrollbar-width:none}
+.dtabs::-webkit-scrollbar{display:none}
+.dtab{padding:9px 12px;font-size:12px;font-weight:600;color:var(--text-3);cursor:pointer;border:none;background:none;border-bottom:2px solid transparent;font-family:var(--font);white-space:nowrap;transition:all 0.15s}
+.dtab.active{color:var(--green-700);border-bottom-color:var(--green-700)}
+.dtab:hover{color:var(--text-2)}
+.dtab-badge{display:inline-block;margin-left:4px;background:var(--surface-3);color:var(--text-2);font-size:10px;font-weight:700;padding:1px 6px;border-radius:10px;min-width:18px;text-align:center}
+.dtab.active .dtab-badge{background:var(--green-100);color:var(--green-700)}
+
+/* ── TASKS ── */
+.task-list{display:flex;flex-direction:column;gap:6px}
+.task-row{display:flex;align-items:flex-start;gap:10px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);padding:10px 12px}
+.task-row.done{opacity:0.6}
+.task-row.done .task-title{text-decoration:line-through}
+.task-check{width:22px;height:22px;border-radius:6px;border:2px solid var(--border-md);flex-shrink:0;cursor:pointer;display:flex;align-items:center;justify-content:center;background:var(--surface);margin-top:1px;transition:all 0.15s}
+.task-check.checked{background:var(--green-600);border-color:var(--green-600)}
+.task-check svg{width:13px;height:13px;color:#fff;stroke-width:3;opacity:0;transition:opacity 0.15s}
+.task-check.checked svg{opacity:1}
+.task-body{flex:1;min-width:0}
+.task-title{font-size:13.5px;font-weight:500;line-height:1.4;color:var(--text);word-break:break-word}
+.task-meta{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px;align-items:center}
+.task-meta span{font-size:11px;color:var(--text-3)}
+.task-priority{display:inline-block;padding:1px 7px;border-radius:10px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.04em}
+.tp-high{background:#fde0e0;color:#a91d1d}
+.tp-med{background:var(--gold-light);color:#92600a}
+.tp-low{background:var(--surface-3);color:var(--text-2)}
+.task-due{font-size:11px;font-weight:600}
+.task-due.overdue{color:var(--red)}
+.task-due.soon{color:var(--orange)}
+.task-del{background:none;border:none;color:var(--text-3);cursor:pointer;font-size:18px;line-height:1;padding:0 4px;align-self:flex-start}
+.task-del:hover{color:var(--red)}
+.task-add{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.task-add input,.task-add select{padding:8px 10px;font-size:13px;border:1.5px solid var(--border-md);border-radius:var(--r-sm);background:var(--surface);color:var(--text);font-family:var(--font);outline:none}
+.task-add input[type=text]{flex:1;min-width:160px}
+.task-add input:focus,.task-add select:focus{border-color:var(--green-600)}
+
+/* ── LOGS ── */
+.log-list{display:flex;flex-direction:column;gap:10px;margin-bottom:12px}
+.log-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);padding:12px 14px;border-left:3px solid var(--sky)}
+.log-head{display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap}
+.log-ava{width:22px;height:22px;border-radius:50%;background:var(--sky);color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.log-meta{font-size:12px;color:var(--text-2);font-weight:600}
+.log-date{font-size:11px;color:var(--text-3);margin-left:auto}
+.log-text{font-size:13.5px;line-height:1.55;color:var(--text);white-space:pre-wrap;word-break:break-word}
+.log-extras{display:flex;gap:10px;margin-top:6px;font-size:11px;color:var(--text-3);flex-wrap:wrap}
+.log-extras span{display:inline-flex;align-items:center;gap:3px}
+
+/* ── BUDGET ── */
+.budget-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+.budget-cell{background:var(--surface-3);border-radius:var(--r-sm);padding:11px 13px}
+.budget-cell.full{grid-column:1/-1}
+.budget-cell.pos{background:var(--green-50);color:var(--green-700)}
+.budget-cell.neg{background:var(--red-light);color:#a91d1d}
+.budget-label{font-size:10.5px;color:var(--text-3);font-weight:700;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:3px}
+.budget-cell.pos .budget-label,.budget-cell.neg .budget-label{color:inherit;opacity:0.75}
+.budget-value{font-size:17px;font-weight:700;font-variant-numeric:tabular-nums}
+.budget-list{display:flex;flex-direction:column;gap:6px;margin-bottom:12px}
+.budget-item{display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);padding:9px 12px}
+.bi-icon{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:14px}
+.bi-icon.exp{background:var(--red-light);color:#a91d1d}
+.bi-icon.pay{background:var(--green-50);color:var(--green-700)}
+.bi-body{flex:1;min-width:0}
+.bi-title{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bi-sub{font-size:11px;color:var(--text-3);margin-top:1px}
+.bi-amt{font-size:13.5px;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
+.bi-amt.exp{color:#a91d1d}
+.bi-amt.pay{color:var(--green-700)}
+.bi-del{background:none;border:none;color:var(--text-3);cursor:pointer;padding:2px 6px;font-size:16px;line-height:1}
+.bi-del:hover{color:var(--red)}
+
+/* ── CLIENTS ── */
+.client-list{display:flex;flex-direction:column;gap:8px}
+.client-row{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);padding:13px 14px;cursor:pointer;display:flex;align-items:center;gap:12px;transition:transform 0.15s,box-shadow 0.15s}
+.client-row:hover{box-shadow:var(--shadow-sm)}
+.client-row:active{transform:scale(0.99)}
+.client-ava{width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--orange));color:#fff;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;flex-shrink:0}
+.client-info{flex:1;min-width:0}
+.client-name{font-size:14.5px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.client-sub{font-size:12px;color:var(--text-3);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.client-sub span{display:inline-flex;align-items:center;gap:3px}
+.client-jobs-badge{background:var(--green-100);color:var(--green-700);font-size:11px;font-weight:700;padding:3px 9px;border-radius:12px;flex-shrink:0}
+.client-actions{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
+.contact-link{display:inline-flex;align-items:center;gap:5px;background:var(--surface-3);color:var(--text-2);text-decoration:none;padding:7px 11px;border-radius:var(--r-sm);font-size:12.5px;font-weight:600;transition:all 0.15s}
+.contact-link:hover{background:var(--green-100);color:var(--green-700)}
+.contact-link svg{width:13px;height:13px;stroke-width:2.2}
+
+/* ── SCHEDULE ── */
+.schedule-day{margin-bottom:20px}
+.schedule-day-hd{font-size:11px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:8px;padding-bottom:5px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px}
+.schedule-day-hd .sdh-date{font-family:var(--font-display);font-size:18px;color:var(--text);text-transform:none;letter-spacing:normal;font-weight:400}
+.schedule-day-hd.today{color:var(--green-700)}
+.schedule-day-hd.today .sdh-date{color:var(--green-700)}
+.sched-item{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);padding:11px 13px;margin-bottom:6px;display:flex;align-items:center;gap:10px;cursor:pointer}
+.sched-item-icon{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:13px;font-weight:700;color:#fff}
+.si-job{background:var(--green-700)}
+.si-task{background:var(--sky)}
+.si-due{background:var(--orange)}
+.sched-body{flex:1;min-width:0}
+.sched-title{font-size:13.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sched-sub{font-size:11.5px;color:var(--text-3);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* ── FILES ── */
+.file-list{display:flex;flex-direction:column;gap:6px;margin-bottom:10px}
+.file-row{display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);padding:9px 12px}
+.file-row a{color:var(--green-700);text-decoration:none;font-weight:600;font-size:13px;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.file-row a:hover{text-decoration:underline}
+.file-icon{width:28px;height:28px;border-radius:7px;background:var(--green-100);color:var(--green-700);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:13px;font-weight:700}
+
+/* ── CLIENT UPDATES ── */
+.cu-note-card{background:var(--green-50);border:1px solid var(--green-100);border-left:3px solid var(--gold);border-radius:var(--r-md);padding:11px 14px}
+.cu-banner{background:var(--gold-light);color:#92600a;padding:9px 12px;border-radius:var(--r-sm);font-size:12px;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.cu-banner svg{width:14px;height:14px;stroke-width:2.2;flex-shrink:0}
+
+/* ── SHARE LINK ── */
+.share-box{background:var(--surface-3);border:1.5px dashed var(--border-md);border-radius:var(--r-sm);padding:12px;display:flex;gap:8px;align-items:center;margin-top:10px}
+.share-box input{flex:1;background:transparent;border:none;font-family:monospace;font-size:12px;color:var(--text);outline:none;min-width:0}
+.btn-copy{background:var(--green-700);color:#fff;border:none;padding:7px 12px;border-radius:var(--r-sm);font-size:12px;font-weight:600;cursor:pointer;font-family:var(--font);white-space:nowrap}
+
+/* ── PORTAL ── */
+.portal-banner{background:linear-gradient(135deg,var(--green-900),var(--green-700));color:#fff;padding:14px 18px;border-radius:var(--r-md);margin-bottom:18px}
+.portal-banner h2{font-family:var(--font-display);font-size:20px;font-weight:400;margin-bottom:4px}
+.portal-banner p{font-size:12.5px;opacity:0.8}
+
+/* misc */
+.btn-sm.primary{background:var(--green-700);color:#fff;border-color:var(--green-700)}
+.btn-sm.primary:hover{background:var(--green-800);color:#fff}
+.section-hd .add-mini{font-size:11px;font-weight:600;color:var(--green-700);cursor:pointer;letter-spacing:0;text-transform:none;background:none;border:none;font-family:var(--font);padding:2px 4px}
+.section-hd .add-mini:hover{text-decoration:underline}
+.muted{color:var(--text-3);font-size:13px;padding:8px 2px}
 </style>
 </head>
 <body>
@@ -493,13 +655,21 @@ input[type=range]{width:100%;accent-color:var(--green-700);height:4px;cursor:poi
 </div>
 
 <nav class="nav">
-  <button class="nav-btn active" data-view="jobs">
+  <button class="nav-btn active" data-view="dashboard">
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z"/></svg>
+    Home
+  </button>
+  <button class="nav-btn" data-view="jobs">
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25"/></svg>
     Jobs
   </button>
-  <button class="nav-btn" data-view="activity">
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5M5.625 4.5h12.75a1.875 1.875 0 010 3.75H5.625a1.875 1.875 0 010-3.75z"/></svg>
-    Activity
+  <button class="nav-btn" data-view="schedule">
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5"/></svg>
+    Schedule
+  </button>
+  <button class="nav-btn" data-view="clients">
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M17.982 18.725A7.488 7.488 0 0012 15.75a7.488 7.488 0 00-5.982 2.975m11.963 0a9 9 0 10-11.963 0m11.963 0A8.966 8.966 0 0112 21a8.966 8.966 0 01-5.982-2.275M15 9.75a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+    Clients
   </button>
   <button class="nav-btn" data-view="team">
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z"/></svg>
@@ -519,99 +689,325 @@ try{const s=localStorage.getItem('wfs_fb');if(s)FIREBASE_CONFIG=JSON.parse(s)}ca
 
 // ══ State ══
 let DB=null;
-const S={jobs:{},activity:[],members:[],view:'jobs',detail:null,filter:'all',search:'',user:localStorage.getItem('wfs_user')||''};
+const S={
+  clients:{}, jobs:{}, activity:[], members:[],
+  view:'dashboard', detail:null, detailTab:'overview',
+  filter:'all', search:'',
+  clientDetail:null, clientSearch:'',
+  user:localStorage.getItem('wfs_user')||'',
+  portal:null  // when set, render read-only client view
+};
+
+// ══ Stage / status pipeline ══
+const STAGES=[
+  {k:'lead',label:'Lead'},
+  {k:'estimate',label:'Estimate'},
+  {k:'scheduled',label:'Scheduled'},
+  {k:'active',label:'In Progress'},
+  {k:'punch',label:'Punch List'},
+  {k:'complete',label:'Complete'},
+];
+const HOLD={k:'hold',label:'On Hold'};
+const ALL_STATUSES=[...STAGES,HOLD];
 
 // ══ Helpers ══
 const $=id=>document.getElementById(id);
-const esc=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-function ago(ts){const s=Math.floor((Date.now()-ts)/1000);if(s<60)return'just now';if(s<3600)return Math.floor(s/60)+'m ago';if(s<86400)return Math.floor(s/3600)+'h ago';return new Date(ts).toLocaleDateString()}
-function uid(){return'j_'+Date.now()+'_'+Math.random().toString(36).slice(2,6)}
+const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+function ago(ts){if(!ts)return'';const s=Math.floor((Date.now()-ts)/1000);if(s<60)return'just now';if(s<3600)return Math.floor(s/60)+'m ago';if(s<86400)return Math.floor(s/3600)+'h ago';if(s<86400*7)return Math.floor(s/86400)+'d ago';return new Date(ts).toLocaleDateString()}
+function uid(p){return(p||'j')+'_'+Date.now()+'_'+Math.random().toString(36).slice(2,7)}
 function jobs(){return Object.values(S.jobs).sort((a,b)=>(b.created||0)-(a.created||0))}
-function initials(name){return(name||'?')[0].toUpperCase()}
+function clientsArr(){return Object.values(S.clients).sort((a,b)=>(a.name||'').localeCompare(b.name||''))}
+function initials(name){if(!name)return'?';const p=String(name).trim().split(/\s+/);return((p[0]?.[0]||'')+(p[1]?.[0]||'')).toUpperCase()||'?'}
+function fmt$(n){const v=Number(n||0);return'$'+v.toLocaleString(undefined,{maximumFractionDigits:0})}
+function todayISO(){return new Date().toISOString().slice(0,10)}
+function dateLabel(iso){if(!iso)return'';const d=new Date(iso+'T00:00:00');const tod=new Date();tod.setHours(0,0,0,0);const t=new Date(d);t.setHours(0,0,0,0);const diff=Math.round((t-tod)/86400000);if(diff===0)return'Today';if(diff===1)return'Tomorrow';if(diff===-1)return'Yesterday';if(diff>1&&diff<7)return d.toLocaleDateString(undefined,{weekday:'long'});return d.toLocaleDateString(undefined,{month:'short',day:'numeric',year:diff>180||diff<-180?'numeric':undefined})}
+function isOverdue(iso){if(!iso)return false;const d=new Date(iso+'T00:00:00');const tod=new Date();tod.setHours(0,0,0,0);return d<tod}
+function dueSoon(iso){if(!iso)return false;const d=new Date(iso+'T00:00:00');const tod=new Date();tod.setHours(0,0,0,0);const diff=Math.round((d-tod)/86400000);return diff>=0&&diff<=2}
+function statusLabel(s){return(ALL_STATUSES.find(x=>x.k===s)||{}).label||s||'—'}
+function clientName(id){return S.clients[id]?.name||''}
 
 function toast(msg,icon='check'){
   const t=$('toast');
-  const icons={check:'<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>',photo:'📷',note:'💬'};
+  const icons={check:'<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>',photo:'📷',note:'💬',task:'✓',log:'📝',cash:'💵'};
   t.innerHTML=(icons[icon]||'')+esc(msg);t.classList.add('show');
-  clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),2600);
+  clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),2400);
+}
+
+// ══ Job migration / defaults ══
+function normalizeJob(j){
+  if(!j)return j;
+  j.notes=j.notes||[];
+  j.clientUpdates=j.clientUpdates||[];
+  j.photos=j.photos||[];
+  j.files=j.files||[];
+  j.tasks=j.tasks||[];
+  j.logs=j.logs||[];
+  j.expenses=j.expenses||[];
+  j.payments=j.payments||[];
+  j.assignedTeam=j.assignedTeam||(j.assigned?[j.assigned]:[]);
+  if(!j.shareCode)j.shareCode=(j.id||'').replace(/[^a-z0-9]/gi,'').slice(-8)||Math.random().toString(36).slice(2,10);
+  return j;
 }
 
 // ══ DB layer ══
 const LOCAL={
-  load(){try{S.jobs=JSON.parse(localStorage.getItem('wfs_jobs')||'{}')}catch(e){S.jobs={}}try{S.activity=JSON.parse(localStorage.getItem('wfs_activity')||'[]')}catch(e){S.activity=[]}try{S.members=JSON.parse(localStorage.getItem('wfs_members')||'[]')}catch(e){S.members=[]}},
+  load(){
+    try{S.jobs=JSON.parse(localStorage.getItem('wfs_jobs')||'{}')}catch(e){S.jobs={}}
+    try{S.activity=JSON.parse(localStorage.getItem('wfs_activity')||'[]')}catch(e){S.activity=[]}
+    try{S.members=JSON.parse(localStorage.getItem('wfs_members')||'[]')}catch(e){S.members=[]}
+    try{S.clients=JSON.parse(localStorage.getItem('wfs_clients')||'{}')}catch(e){S.clients={}}
+    Object.values(S.jobs).forEach(normalizeJob);
+  },
   saveJobs(){try{localStorage.setItem('wfs_jobs',JSON.stringify(S.jobs))}catch(e){}},
-  saveActivity(){try{localStorage.setItem('wfs_activity',JSON.stringify(S.activity.slice(0,300)))}catch(e){}},
-  saveMembers(){try{localStorage.setItem('wfs_members',JSON.stringify(S.members))}catch(e){}}
+  saveActivity(){try{localStorage.setItem('wfs_activity',JSON.stringify(S.activity.slice(0,400)))}catch(e){}},
+  saveMembers(){try{localStorage.setItem('wfs_members',JSON.stringify(S.members))}catch(e){}},
+  saveClients(){try{localStorage.setItem('wfs_clients',JSON.stringify(S.clients))}catch(e){}}
 };
-function syncStatus(state,msg){const d=$('sync-dot'),t=$('sync-text');d.className='sync-dot '+state;t.textContent=msg}
+function syncStatus(state,msg){const d=$('sync-dot'),t=$('sync-text');if(d)d.className='sync-dot '+state;if(t)t.textContent=msg}
 function initFB(cfg){
   try{
     if(!firebase.apps.length)firebase.initializeApp(cfg);
     DB=firebase.database().ref('wfs');
     syncStatus('pulse','Connecting…');
-    DB.child('jobs').on('value',s=>{S.jobs=s.val()||{};LOCAL.saveJobs();syncStatus('ok','Team sync live');render()});
-    DB.child('activity').on('value',s=>{const r=s.val();S.activity=r?Object.values(r).sort((a,b)=>b.time-a.time):[];LOCAL.saveActivity()});
+    DB.child('jobs').on('value',s=>{const v=s.val()||{};Object.values(v).forEach(normalizeJob);S.jobs=v;LOCAL.saveJobs();syncStatus('ok','Team sync live');render()});
+    DB.child('clients').on('value',s=>{S.clients=s.val()||{};LOCAL.saveClients();render()});
+    DB.child('activity').on('value',s=>{const r=s.val();S.activity=r?Object.values(r).sort((a,b)=>b.time-a.time):[];LOCAL.saveActivity();if(S.view==='dashboard')render()});
     DB.child('members').on('value',s=>{S.members=s.val()||[];LOCAL.saveMembers();render()});
     DB.child('.info/connected').on('value',s=>{if(!s.val())syncStatus('err','Reconnecting…')});
     return true;
   }catch(e){syncStatus('err','Firebase error');return false}
 }
-async function writeJob(j){S.jobs[j.id]=j;LOCAL.saveJobs();if(DB)await DB.child('jobs/'+j.id).set(j).catch(()=>{})}
+async function writeJob(j){normalizeJob(j);j.updated=Date.now();S.jobs[j.id]=j;LOCAL.saveJobs();if(DB)await DB.child('jobs/'+j.id).set(j).catch(()=>{})}
 async function deleteJobDB(id){delete S.jobs[id];LOCAL.saveJobs();if(DB)await DB.child('jobs/'+id).remove().catch(()=>{})}
-async function logAct(action,job){const e={user:S.user||'Someone',action,job:job||'',time:Date.now()};S.activity.unshift(e);LOCAL.saveActivity();if(DB)await DB.child('activity').push(e).catch(()=>{})}
+async function writeClient(c){S.clients[c.id]=c;LOCAL.saveClients();if(DB)await DB.child('clients/'+c.id).set(c).catch(()=>{})}
+async function deleteClientDB(id){delete S.clients[id];LOCAL.saveClients();if(DB)await DB.child('clients/'+id).remove().catch(()=>{})}
+async function logAct(action,jobName,jobId){const e={user:S.user||'Someone',action,job:jobName||'',jobId:jobId||'',time:Date.now()};S.activity.unshift(e);LOCAL.saveActivity();if(DB)await DB.child('activity').push(e).catch(()=>{})}
 async function saveMembers(){LOCAL.saveMembers();if(DB)await DB.child('members').set(S.members).catch(()=>{})}
 
 LOCAL.load();
+
+// ══ Portal mode (read-only client view) ══
+function parsePortal(){
+  const h=location.hash||'';
+  const m=h.match(/^#share\/([a-z0-9]+)/i);
+  if(!m)return null;
+  return m[1];
+}
+
 if(FIREBASE_CONFIG)initFB(FIREBASE_CONFIG);
 
 // ══ Render ══
 function render(){
+  const portalCode=parsePortal();
+  if(portalCode){renderPortal(portalCode);return}
+  document.body.style.display='flex';
   const c=$('content');
-  if(S.view==='jobs'&&S.detail)c.innerHTML=renderDetail(S.detail);
-  else if(S.view==='jobs')c.innerHTML=renderJobs();
-  else if(S.view==='activity')c.innerHTML=renderActivity();
-  else if(S.view==='team')c.innerHTML=renderTeam();
+  let html='';
+  if(S.view==='jobs'&&S.detail)html=renderDetail(S.detail);
+  else if(S.view==='jobs')html=renderJobs();
+  else if(S.view==='dashboard')html=renderDashboard();
+  else if(S.view==='schedule')html=renderSchedule();
+  else if(S.view==='clients'&&S.clientDetail)html=renderClientDetail(S.clientDetail);
+  else if(S.view==='clients')html=renderClients();
+  else if(S.view==='team')html=renderTeam();
+  c.innerHTML=html;
   updateUserUI();
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.toggle('active',b.dataset.view===S.view));
   attachHandlers();
 }
 
 function updateUserUI(){
   const u=$('user-label'),a=$('user-avatar');
+  if(!u||!a)return;
   u.textContent=S.user||'Set name';
   a.textContent=S.user?initials(S.user):'?';
 }
 
-function sdClass(s){return{lead:'sd-lead',active:'sd-active',complete:'sd-complete',hold:'sd-hold'}[s]||'sd-hold'}
-function spClass(s){return{lead:'sp-lead',active:'sp-active',complete:'sp-complete',hold:'sp-hold'}[s]||'sp-hold'}
-function spLabel(s){return{lead:'Lead',active:'Active',complete:'Complete',hold:'On Hold'}[s]||s}
+function sdClass(s){return{lead:'sd-lead',estimate:'sd-lead',scheduled:'sd-active',active:'sd-active',punch:'sd-active',complete:'sd-complete',hold:'sd-hold'}[s]||'sd-hold'}
+function spClass(s){return{lead:'sp-lead',estimate:'sp-lead',scheduled:'sp-active',active:'sp-active',punch:'sp-active',complete:'sp-complete',hold:'sp-hold'}[s]||'sp-hold'}
 
+// ══ Dashboard ══
+function renderDashboard(){
+  const all=jobs();
+  const active=all.filter(j=>['scheduled','active','punch'].includes(j.status));
+  const leads=all.filter(j=>['lead','estimate'].includes(j.status));
+  const overdueTasks=[];
+  const dueTodayTasks=[];
+  all.forEach(j=>(j.tasks||[]).forEach(t=>{
+    if(t.done)return;
+    if(isOverdue(t.due))overdueTasks.push({t,j});
+    else if(t.due===todayISO())dueTodayTasks.push({t,j});
+  }));
+  const week=upcomingItems(7);
+  const totalEstimate=all.filter(j=>j.status!=='complete'&&j.status!=='hold').reduce((s,j)=>s+Number(j.value||0),0);
+  const outstanding=all.reduce((s,j)=>{
+    const est=Number(j.value||0);
+    const paid=(j.payments||[]).reduce((a,p)=>a+Number(p.amount||0),0);
+    if(j.status!=='hold')return s+Math.max(0,est-paid);
+    return s;
+  },0);
+  const recent=S.activity.slice(0,6);
+
+  return `<h2 style="font-family:var(--font-display);font-size:22px;font-weight:400;margin-bottom:14px">${S.user?'Hey '+esc(S.user.split(' ')[0])+',':'Welcome,'} here's where things stand.</h2>
+  <div class="kpi-grid">
+    <div class="kpi-card accent-green"><div class="kpi-label">Active Jobs</div><div class="kpi-value">${active.length}</div><div class="kpi-sub">${all.length} total</div></div>
+    <div class="kpi-card accent-gold"><div class="kpi-label">Leads / Estimates</div><div class="kpi-value">${leads.length}</div><div class="kpi-sub">awaiting next step</div></div>
+    <div class="kpi-card accent-red"><div class="kpi-label">Overdue Tasks</div><div class="kpi-value">${overdueTasks.length}</div><div class="kpi-sub">${dueTodayTasks.length} due today</div></div>
+    <div class="kpi-card accent-sky"><div class="kpi-label">Outstanding</div><div class="kpi-value">${fmt$(outstanding)}</div><div class="kpi-sub">of ${fmt$(totalEstimate)} est.</div></div>
+  </div>
+
+  <div class="dash-section">
+    <div class="section-hd">This Week <span>${week.length} item${week.length===1?'':'s'}</span></div>
+    ${week.length===0?'<div class="dash-empty">Nothing scheduled in the next 7 days.</div>':week.slice(0,6).map(it=>`
+      <div class="dash-row" data-go-job="${it.jobId}">
+        <span class="dr-dot" style="background:${it.kind==='task'?'var(--sky)':it.kind==='due'?'var(--orange)':'var(--green-600)'}"></span>
+        <div class="dr-text"><div class="dr-title">${esc(it.title)}</div><div class="dr-sub">${esc(it.sub)}</div></div>
+        <div class="dr-meta">${esc(dateLabel(it.date))}</div>
+      </div>`).join('')}
+    ${week.length>6?`<div class="muted" style="text-align:center;padding-top:4px"><a style="color:var(--green-700);font-weight:600;cursor:pointer" id="go-schedule">See full schedule →</a></div>`:''}
+  </div>
+
+  ${overdueTasks.length>0?`<div class="dash-section">
+    <div class="section-hd" style="color:var(--red)">Overdue <span style="color:var(--red)">${overdueTasks.length}</span></div>
+    ${overdueTasks.slice(0,5).map(({t,j})=>`
+      <div class="dash-row" data-go-job="${j.id}">
+        <span class="dr-dot" style="background:var(--red)"></span>
+        <div class="dr-text"><div class="dr-title">${esc(t.title)}</div><div class="dr-sub">${esc(j.name)}${t.assigned?' · '+esc(t.assigned):''}</div></div>
+        <div class="dr-meta" style="color:var(--red)">${esc(dateLabel(t.due))}</div>
+      </div>`).join('')}
+  </div>`:''}
+
+  <div class="dash-section">
+    <div class="section-hd">Active Jobs <span>${active.length}</span></div>
+    ${active.length===0?'<div class="dash-empty">No active jobs right now.</div>':active.slice(0,5).map(j=>{
+      const pct=j.progress||0;
+      return `<div class="dash-row" data-go-job="${j.id}">
+        <span class="dr-dot ${sdClass(j.status)}" style="border:2px solid rgba(255,255,255,0.6)"></span>
+        <div class="dr-text"><div class="dr-title">${esc(j.name)}</div><div class="dr-sub">${esc(clientName(j.clientId)||j.address||'—')} · ${esc(statusLabel(j.status))}</div></div>
+        <div class="dr-meta">${pct}%</div>
+      </div>`;
+    }).join('')}
+  </div>
+
+  <div class="dash-section">
+    <div class="section-hd">Recent Activity <span>${S.activity.length}</span></div>
+    ${recent.length===0?'<div class="dash-empty">Activity will appear here as your team works.</div>':`<div class="activity-feed">${recent.map(a=>`
+      <div class="activity-item"${a.jobId?` data-go-job="${esc(a.jobId)}" style="cursor:pointer"`:''}>
+        <div class="activity-ava">${initials(a.user)}</div>
+        <div class="activity-body">
+          <div class="activity-text"><strong>${esc(a.user)}</strong> ${esc(a.action)}${a.job?' · <strong>'+esc(a.job)+'</strong>':''}</div>
+          <div class="activity-time">${ago(a.time)}</div>
+        </div>
+      </div>`).join('')}</div>`}
+  </div>`;
+}
+
+// Collect upcoming items (jobs starting + tasks due) within N days
+function upcomingItems(days){
+  const tod=new Date();tod.setHours(0,0,0,0);
+  const limit=new Date(tod);limit.setDate(limit.getDate()+days);
+  const out=[];
+  jobs().forEach(j=>{
+    if(j.startDate){
+      const d=new Date(j.startDate+'T00:00:00');
+      if(d>=tod&&d<=limit&&j.status!=='complete'&&j.status!=='hold')
+        out.push({kind:'job',jobId:j.id,title:'Start: '+j.name,sub:clientName(j.clientId)||j.address||'',date:j.startDate,time:d.getTime()});
+    }
+    if(j.dueDate&&j.status!=='complete'){
+      const d=new Date(j.dueDate+'T00:00:00');
+      if(d>=tod&&d<=limit)
+        out.push({kind:'due',jobId:j.id,title:'Due: '+j.name,sub:clientName(j.clientId)||j.address||'',date:j.dueDate,time:d.getTime()});
+    }
+    (j.tasks||[]).forEach(t=>{
+      if(t.done||!t.due)return;
+      const d=new Date(t.due+'T00:00:00');
+      if(d>=tod&&d<=limit)
+        out.push({kind:'task',jobId:j.id,title:t.title,sub:j.name+(t.assigned?' · '+t.assigned:''),date:t.due,time:d.getTime()});
+    });
+  });
+  return out.sort((a,b)=>a.time-b.time);
+}
+
+// ══ Schedule view ══
+function renderSchedule(){
+  const items=upcomingItems(30);
+  const overdueTasks=[];
+  jobs().forEach(j=>(j.tasks||[]).forEach(t=>{
+    if(!t.done&&isOverdue(t.due))overdueTasks.push({kind:'task',jobId:j.id,title:t.title,sub:j.name+(t.assigned?' · '+t.assigned:''),date:t.due,time:new Date(t.due+'T00:00:00').getTime(),overdue:true});
+  }));
+  jobs().forEach(j=>{
+    if(j.dueDate&&j.status!=='complete'&&isOverdue(j.dueDate))
+      overdueTasks.push({kind:'due',jobId:j.id,title:'Due: '+j.name,sub:clientName(j.clientId)||j.address||'',date:j.dueDate,time:new Date(j.dueDate+'T00:00:00').getTime(),overdue:true});
+  });
+  overdueTasks.sort((a,b)=>a.time-b.time);
+
+  // Group by date
+  const groups={};
+  items.forEach(it=>{(groups[it.date]=groups[it.date]||[]).push(it)});
+  const dates=Object.keys(groups).sort();
+  const tod=todayISO();
+
+  let html=`<h2 style="font-family:var(--font-display);font-size:20px;font-weight:400;margin-bottom:14px">Schedule</h2>`;
+
+  if(overdueTasks.length){
+    html+=`<div class="schedule-day">
+      <div class="schedule-day-hd" style="color:var(--red);border-color:var(--red-light)"><span class="sdh-date" style="color:var(--red)">Overdue</span>· ${overdueTasks.length}</div>
+      ${overdueTasks.map(it=>schedItemHTML(it)).join('')}
+    </div>`;
+  }
+
+  if(!dates.length&&!overdueTasks.length){
+    html+=`<div class="empty"><div class="empty-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75"/></svg></div><h3>Nothing scheduled</h3><p>Set start dates, due dates, or task deadlines on jobs to see them here.</p></div>`;
+    return html;
+  }
+
+  dates.forEach(d=>{
+    const istoday=d===tod;
+    html+=`<div class="schedule-day">
+      <div class="schedule-day-hd ${istoday?'today':''}"><span class="sdh-date">${esc(dateLabel(d))}</span>${istoday?'· today':'· '+new Date(d+'T00:00:00').toLocaleDateString(undefined,{month:'short',day:'numeric'})}</div>
+      ${groups[d].map(it=>schedItemHTML(it)).join('')}
+    </div>`;
+  });
+  return html;
+}
+function schedItemHTML(it){
+  const cls=it.kind==='task'?'si-task':it.kind==='due'?'si-due':'si-job';
+  const ic=it.kind==='task'?'✓':it.kind==='due'?'!':'▶';
+  return `<div class="sched-item" data-go-job="${esc(it.jobId)}">
+    <div class="sched-item-icon ${cls}">${ic}</div>
+    <div class="sched-body"><div class="sched-title">${esc(it.title)}</div><div class="sched-sub">${esc(it.sub)}</div></div>
+  </div>`;
+}
+
+// ══ Jobs list ══
 function renderJobs(){
   const all=jobs();
-  const cnt={all:all.length,lead:0,active:0,complete:0,hold:0};
+  const cnt={all:all.length};
+  ALL_STATUSES.forEach(s=>cnt[s.k]=0);
   all.forEach(j=>{if(cnt[j.status]!==undefined)cnt[j.status]++});
   const shown=all.filter(j=>{
     const mf=S.filter==='all'||j.status===S.filter;
-    const ms=!S.search||j.name.toLowerCase().includes(S.search.toLowerCase())||(j.address||'').toLowerCase().includes(S.search.toLowerCase());
-    return mf&&ms;
+    if(!mf)return false;
+    if(!S.search)return true;
+    const q=S.search.toLowerCase();
+    return (j.name||'').toLowerCase().includes(q)||(j.address||'').toLowerCase().includes(q)||(clientName(j.clientId)||'').toLowerCase().includes(q);
   });
-  return`<div class="toolbar">
+  return `<div class="toolbar">
     <button class="btn-add" id="btn-add-job">
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
       New Job
     </button>
     <div class="search-wrap">
       <div class="search-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 15.803a7.5 7.5 0 0010.607 0z"/></svg></div>
-      <input class="search" id="search-in" placeholder="Search jobs…" value="${esc(S.search)}">
+      <input class="search" id="search-in" placeholder="Search jobs, clients, address…" value="${esc(S.search)}">
     </div>
   </div>
   <div class="filter-row" style="margin-bottom:14px">
     <div class="filter-chip ${S.filter==='all'?'active':''}" data-filter="all">All ${cnt.all}</div>
-    <div class="filter-chip ${S.filter==='lead'?'active':''}" data-filter="lead">Lead ${cnt.lead}</div>
-    <div class="filter-chip ${S.filter==='active'?'active':''}" data-filter="active">Active ${cnt.active}</div>
-    <div class="filter-chip ${S.filter==='complete'?'active':''}" data-filter="complete">Done ${cnt.complete}</div>
-    <div class="filter-chip ${S.filter==='hold'?'active':''}" data-filter="hold">On Hold ${cnt.hold}</div>
+    ${STAGES.map(s=>`<div class="filter-chip ${S.filter===s.k?'active':''}" data-filter="${s.k}">${esc(s.label)} ${cnt[s.k]||0}</div>`).join('')}
+    <div class="filter-chip ${S.filter==='hold'?'active':''}" data-filter="hold">On Hold ${cnt.hold||0}</div>
   </div>
-  ${shown.length===0?renderEmpty(all.length):'<div class="jobs-grid">'+shown.map(renderCard).join('')+'</div>'}` ;
+  ${shown.length===0?renderEmpty(all.length):'<div class="jobs-grid">'+shown.map(renderCard).join('')+'</div>'}`;
 }
 
 function renderEmpty(total){
@@ -626,115 +1022,394 @@ function renderEmpty(total){
 function renderCard(j){
   const photos=j.photos||[];
   const pct=j.progress||0;
-  const photoBadge=photos.length>1?'<div class="photo-badge"><svg xmlns=\"http://www.w3.org/2000/svg\" fill=\"none\" viewBox=\"0 0 24 24\" stroke=\"currentColor\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z\"/><path stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zM18.75 10.5h.008v.008h-.008V10.5z\"/></svg>'+photos.length+'</div>':'';
+  const cName=clientName(j.clientId);
+  const tasksOpen=(j.tasks||[]).filter(t=>!t.done).length;
+  const tasksOverdue=(j.tasks||[]).filter(t=>!t.done&&isOverdue(t.due)).length;
+  const photoBadge=photos.length>1?'<div class="photo-badge"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z"/><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zM18.75 10.5h.008v.008h-.008V10.5z"/></svg>'+photos.length+'</div>':'';
   const thumb=photos.length>0?'<img src="'+photos[0]+'" alt="" loading="lazy"><div class="status-dot '+sdClass(j.status)+'"></div>'+photoBadge:'<div class="status-dot '+sdClass(j.status)+'" style="top:10px;left:10px;position:absolute"></div><div class="card-thumb-icon">🏠</div>';
-
-  return`<div class="job-card" data-open="${j.id}" style="animation-delay:${Math.random()*0.1}s">
+  const taskBadge=tasksOpen>0?` · <span style="color:${tasksOverdue?'var(--red)':'var(--text-2)'}">${tasksOpen} task${tasksOpen===1?'':'s'}${tasksOverdue?' ('+tasksOverdue+' overdue)':''}</span>`:'';
+  return `<div class="job-card" data-open="${j.id}">
     <div class="card-thumb">${thumb}</div>
     <div class="card-body">
       <div class="card-name">${esc(j.name)}</div>
-      <div class="card-addr"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z"/></svg>${esc(j.address||'No address')}</div>
+      <div class="card-addr"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z"/></svg>${esc(cName||j.address||'No client / address')}${taskBadge}</div>
       <div class="prog-track"><div class="prog-fill" style="width:${pct}%"></div></div>
-      <div class="card-footer"><span class="status-pill ${spClass(j.status)}">${spLabel(j.status)}</span><span class="card-pct">${pct}%</span></div>
+      <div class="card-footer"><span class="status-pill ${spClass(j.status)}">${esc(statusLabel(j.status))}</span><span class="card-pct">${pct}%</span></div>
     </div>
   </div>`;
 }
 
+// ══ Job detail ══
 function renderDetail(id){
   const j=S.jobs[id];
   if(!j)return`<button class="detail-back" id="btn-back"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"/></svg>Back</button><p style="color:var(--text-2)">Job not found.</p>`;
+  normalizeJob(j);
   const photos=j.photos||[];
   const pct=j.progress||0;
-  const thumbHtml=photos.length>0?`<img src="${photos[0]}" alt="">`:null;
-  const photosHtml=photos.map((p,i)=>`<div class="photo-wrap"><img src="${p}" alt="" data-view-photo="${i}" loading="lazy"><button class="photo-del" data-del-photo="${i}">×</button></div>`).join('');
-  const notesHtml=(j.notes||[]).length===0?`<p style="font-size:13px;color:var(--text-3);padding:4px 0">No notes yet — be the first to add one.</p>`
-    :(j.notes||[]).map(n=>`<div class="note-card"><div class="note-meta"><div class="note-avatar">${initials(n.user)}</div>${esc(n.user)} · ${ago(n.time)}</div><div class="note-text">${esc(n.text)}</div></div>`).join('');
-  return`
+  const cName=clientName(j.clientId);
+  const tab=S.detailTab||'overview';
+  const openTasks=(j.tasks||[]).filter(t=>!t.done).length;
+  const stageIdx=STAGES.findIndex(s=>s.k===j.status);
+  const onHold=j.status==='hold';
+  return `
     <button class="detail-back" id="btn-back"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"/></svg>All Jobs</button>
-    <div class="detail-hero">${thumbHtml?thumbHtml:'🏠'}
-      ${photos.length>0?`<div class="hero-overlay"><div class="hero-photo-count"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z"/><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zM18.75 10.5h.008v.008h-.008V10.5z"/></svg>${photos.length} photo${photos.length>1?'s':''}</div><span class="status-pill ${spClass(j.status)}">${spLabel(j.status)}</span></div>`:''}
+    <div class="detail-hero">${photos.length>0?`<img src="${photos[0]}" alt="">`:'🏠'}
+      ${photos.length>0?`<div class="hero-overlay"><div class="hero-photo-count"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z"/></svg>${photos.length} photo${photos.length>1?'s':''}</div><span class="status-pill ${spClass(j.status)}">${esc(statusLabel(j.status))}</span></div>`:''}
     </div>
     <div class="detail-name">${esc(j.name)}</div>
-    <div class="detail-addr"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z"/></svg>${esc(j.address||'No address set')}</div>
-    <div class="detail-actions">${photos.length===0?`<span class="status-pill ${spClass(j.status)}">${spLabel(j.status)}</span>`:''}<button class="btn-sm" id="btn-edit-job"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125"/></svg>Edit Job</button></div>
-    <div class="divider"></div>
+    <div class="detail-addr"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z"/></svg>${esc(cName?cName+' · '+(j.address||''):j.address||'No address set')}</div>
+    <div class="detail-actions">
+      <button class="btn-sm" id="btn-edit-job"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125"/></svg>Edit Job</button>
+      ${cName?`<button class="btn-sm" id="btn-view-client"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0"/></svg>${esc(cName)}</button>`:''}
+      <button class="btn-sm" id="btn-share"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M7.217 10.907a2.25 2.25 0 100 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186l9.566-5.314m-9.566 7.5l9.566 5.314m0 0a2.25 2.25 0 103.935 2.186 2.25 2.25 0 00-3.935-2.186zm0-12.814a2.25 2.25 0 103.933-2.185 2.25 2.25 0 00-3.933 2.185z"/></svg>Share with client</button>
+    </div>
+
+    <div class="pipeline">
+      ${STAGES.map((s,i)=>`<div class="pl-step ${j.status===s.k?'current':(onHold?'':(stageIdx>=0&&i<stageIdx?'done':''))}" data-set-status="${s.k}">${esc(s.label)}</div>`).join('')}
+      <div class="pl-step ${onHold?'current':''}" data-set-status="hold" style="${onHold?'':'opacity:0.55'}">On Hold</div>
+    </div>
+
     <div class="prog-section">
       <div class="prog-top"><span class="prog-label-text">Completion</span><span class="prog-pct" id="prog-pct">${pct}%</span></div>
       <div class="prog-track-lg"><div class="prog-fill-lg" id="prog-fill-lg" style="width:${pct}%"></div></div>
       <input type="range" id="prog-slider" min="0" max="100" value="${pct}">
     </div>
-    <div class="section">
-      <div class="section-hd">Details</div>
-      <div class="info-grid">
-        <div class="info-cell"><div class="info-label">Type</div><div class="info-value">${esc(j.type||'—')}</div></div>
-        <div class="info-cell"><div class="info-label">Assigned to</div><div class="info-value">${esc(j.assigned||'—')}</div></div>
-        <div class="info-cell"><div class="info-label">Start date</div><div class="info-value">${esc(j.startDate||'—')}</div></div>
-        <div class="info-cell"><div class="info-label">Est. value</div><div class="info-value">${j.value?'$'+Number(j.value).toLocaleString():'—'}</div></div>
-      </div>
-      ${j.description?`<p style="font-size:13.5px;margin-top:10px;line-height:1.65;color:var(--text)">${esc(j.description)}</p>`:''}
+
+    <div class="dtabs">
+      <button class="dtab ${tab==='overview'?'active':''}" data-tab="overview">Overview</button>
+      <button class="dtab ${tab==='tasks'?'active':''}" data-tab="tasks">Tasks<span class="dtab-badge">${openTasks||(j.tasks||[]).length}</span></button>
+      <button class="dtab ${tab==='logs'?'active':''}" data-tab="logs">Daily Logs<span class="dtab-badge">${(j.logs||[]).length}</span></button>
+      <button class="dtab ${tab==='photos'?'active':''}" data-tab="photos">Photos<span class="dtab-badge">${photos.length}</span></button>
+      <button class="dtab ${tab==='files'?'active':''}" data-tab="files">Files<span class="dtab-badge">${(j.files||[]).length}</span></button>
+      <button class="dtab ${tab==='notes'?'active':''}" data-tab="notes">Notes<span class="dtab-badge">${(j.notes||[]).length}</span></button>
+      <button class="dtab ${tab==='client'?'active':''}" data-tab="client">Client<span class="dtab-badge">${(j.clientUpdates||[]).length}</span></button>
+      <button class="dtab ${tab==='budget'?'active':''}" data-tab="budget">Budget</button>
     </div>
-    <div class="section">
-      <div class="section-hd">Photos <span>${photos.length}</span></div>
-      <div class="photos-grid">
-        ${photosHtml}
-        <label class="photo-add-btn">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z"/><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zM18.75 10.5h.008v.008h-.008V10.5z"/></svg>
-          <span>Add Photos</span>
-          <input type="file" accept="image/*" multiple id="photo-upload" style="display:none">
-        </label>
-      </div>
+
+    <div id="dtab-body">${renderDetailTab(j,tab)}</div>`;
+}
+
+function renderDetailTab(j,tab){
+  if(tab==='overview')return renderOverviewTab(j);
+  if(tab==='tasks')return renderTasksTab(j);
+  if(tab==='logs')return renderLogsTab(j);
+  if(tab==='photos')return renderPhotosTab(j);
+  if(tab==='files')return renderFilesTab(j);
+  if(tab==='notes')return renderNotesTab(j);
+  if(tab==='client')return renderClientTab(j);
+  if(tab==='budget')return renderBudgetTab(j);
+  return '';
+}
+
+function renderOverviewTab(j){
+  const cName=clientName(j.clientId);
+  const cli=S.clients[j.clientId];
+  const teamHtml=(j.assignedTeam&&j.assignedTeam.length)?j.assignedTeam.map(m=>`<span class="status-pill sp-active" style="margin-right:4px">${esc(m)}</span>`).join(''):'<span class="info-value">—</span>';
+  return `<div class="section">
+    <div class="info-grid">
+      <div class="info-cell"><div class="info-label">Client</div><div class="info-value">${esc(cName||'—')}</div></div>
+      <div class="info-cell"><div class="info-label">Type</div><div class="info-value">${esc(j.type||'—')}</div></div>
+      <div class="info-cell"><div class="info-label">Start date</div><div class="info-value">${j.startDate?esc(dateLabel(j.startDate)):'—'}</div></div>
+      <div class="info-cell"><div class="info-label">Target finish</div><div class="info-value">${j.dueDate?esc(dateLabel(j.dueDate)):'—'}</div></div>
+      <div class="info-cell"><div class="info-label">Est. value</div><div class="info-value">${j.value?fmt$(j.value):'—'}</div></div>
+      <div class="info-cell"><div class="info-label">Status</div><div class="info-value">${esc(statusLabel(j.status))}</div></div>
     </div>
-    <div class="section">
-      <div class="section-hd">Notes <span>${(j.notes||[]).length}</span></div>
-      <div class="notes-list">${notesHtml}</div>
-      <div class="note-compose">
-        <input class="note-input" id="note-in" placeholder="${S.user?'Add a note…':'Set your name first…'}" ${!S.user?'disabled':''}>
-        <button class="btn-post" id="btn-post" ${!S.user?'disabled':''}>
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5"/></svg>
-          Post
-        </button>
+    <div class="info-cell" style="margin-top:8px"><div class="info-label">Team on this job</div><div style="margin-top:6px;display:flex;flex-wrap:wrap;gap:4px">${teamHtml}</div></div>
+    ${j.description?`<p style="font-size:13.5px;margin-top:14px;line-height:1.65;color:var(--text)">${esc(j.description)}</p>`:''}
+    ${cli?`<div class="info-cell" style="margin-top:14px">
+      <div class="info-label">Contact</div>
+      <div style="font-size:14px;font-weight:600;margin-top:3px">${esc(cli.contact||cli.name)}</div>
+      <div class="client-actions">
+        ${cli.phone?`<a class="contact-link" href="tel:${esc(cli.phone)}"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 01-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z"/></svg>${esc(cli.phone)}</a>`:''}
+        ${cli.email?`<a class="contact-link" href="mailto:${esc(cli.email)}"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"/></svg>Email</a>`:''}
       </div>
+    </div>`:''}
+  </div>`;
+}
+
+function renderTasksTab(j){
+  const tasks=(j.tasks||[]).slice().sort((a,b)=>{
+    if(a.done!==b.done)return a.done?1:-1;
+    if(!a.due&&!b.due)return (a.created||0)-(b.created||0);
+    if(!a.due)return 1;
+    if(!b.due)return -1;
+    return a.due.localeCompare(b.due);
+  });
+  const memberOpts='<option value="">Anyone</option>'+S.members.map(m=>`<option value="${esc(m)}">${esc(m)}</option>`).join('');
+  return `<div class="section">
+    <div class="task-list">
+      ${tasks.length===0?'<p class="muted">No tasks yet. Add one below.</p>':tasks.map(t=>{
+        const cls=t.done?'done':'';
+        const overdue=!t.done&&isOverdue(t.due);
+        const soon=!t.done&&dueSoon(t.due)&&!overdue;
+        const pri=t.priority||'low';
+        return `<div class="task-row ${cls}">
+          <div class="task-check ${t.done?'checked':''}" data-toggle-task="${t.id}"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg></div>
+          <div class="task-body">
+            <div class="task-title">${esc(t.title)}</div>
+            <div class="task-meta">
+              ${t.assigned?`<span>👤 ${esc(t.assigned)}</span>`:''}
+              ${t.due?`<span class="task-due ${overdue?'overdue':(soon?'soon':'')}">${esc(dateLabel(t.due))}${overdue?' · overdue':''}</span>`:''}
+              <span class="task-priority tp-${pri==='high'?'high':pri==='medium'?'med':'low'}">${esc(pri)}</span>
+            </div>
+          </div>
+          <button class="task-del" data-del-task="${t.id}" title="Delete">×</button>
+        </div>`;
+      }).join('')}
+    </div>
+    <div class="task-add">
+      <input type="text" id="task-title" placeholder="New task…" />
+      <select id="task-assigned">${memberOpts}</select>
+      <input type="date" id="task-due" />
+      <select id="task-priority"><option value="low">Low</option><option value="medium" selected>Medium</option><option value="high">High</option></select>
+      <button class="btn-save" id="task-add-btn">Add Task</button>
+    </div>
+  </div>`;
+}
+
+function renderLogsTab(j){
+  const logs=(j.logs||[]).slice().sort((a,b)=>(b.time||0)-(a.time||0));
+  return `<div class="section">
+    <div class="log-list">
+      ${logs.length===0?'<p class="muted">No daily logs yet. Crew can post field updates here.</p>':logs.map(l=>`
+        <div class="log-card">
+          <div class="log-head">
+            <div class="log-ava">${initials(l.user)}</div>
+            <span class="log-meta">${esc(l.user||'?')}</span>
+            <span class="log-date">${esc(l.date||'')} · ${ago(l.time)}</span>
+          </div>
+          <div class="log-text">${esc(l.text||'')}</div>
+          <div class="log-extras">
+            ${l.hours?`<span>⏱ ${esc(l.hours)} hrs</span>`:''}
+            ${l.weather?`<span>☀ ${esc(l.weather)}</span>`:''}
+          </div>
+          <button class="task-del" data-del-log="${l.id}" style="float:right;margin-top:-6px">×</button>
+        </div>`).join('')}
+    </div>
+    <div class="section" style="margin-top:14px">
+      <div class="section-hd">Add Daily Log</div>
+      <div class="form-group"><textarea class="form-textarea" id="log-text" placeholder="What got done today? Issues, materials needed, next steps…"></textarea></div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Hours</label><input class="form-input" type="number" step="0.5" id="log-hours" placeholder="e.g. 6"></div>
+        <div class="form-group"><label class="form-label">Weather</label><input class="form-input" id="log-weather" placeholder="e.g. Sunny 78°"></div>
+      </div>
+      <button class="btn-save" id="log-add-btn" ${!S.user?'disabled':''}>${S.user?'Post Log':'Set your name first'}</button>
+    </div>
+  </div>`;
+}
+
+function renderPhotosTab(j){
+  const photos=j.photos||[];
+  const photosHtml=photos.map((p,i)=>`<div class="photo-wrap"><img src="${p}" alt="" data-view-photo="${i}" loading="lazy"><button class="photo-del" data-del-photo="${i}">×</button></div>`).join('');
+  return `<div class="section">
+    <div class="photos-grid">
+      ${photosHtml}
+      <label class="photo-add-btn">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z"/></svg>
+        <span>Add Photos</span>
+        <input type="file" accept="image/*" multiple id="photo-upload" style="display:none">
+      </label>
+    </div>
+  </div>`;
+}
+
+function renderFilesTab(j){
+  const files=j.files||[];
+  return `<div class="section">
+    <div class="file-list">
+      ${files.length===0?'<p class="muted">No files attached. Add links to plans, contracts, permits, or shared drives.</p>':files.map(f=>`
+        <div class="file-row">
+          <div class="file-icon">📄</div>
+          <a href="${esc(f.url)}" target="_blank" rel="noopener">${esc(f.name||f.url)}</a>
+          <span style="font-size:11px;color:var(--text-3)">${esc(f.user||'')}</span>
+          <button class="bi-del" data-del-file="${f.id}">×</button>
+        </div>`).join('')}
+    </div>
+    <div class="section" style="margin-top:10px">
+      <div class="section-hd">Add File / Link</div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Label</label><input class="form-input" id="file-name" placeholder="e.g. Site plans"></div>
+        <div class="form-group"><label class="form-label">URL</label><input class="form-input" id="file-url" placeholder="https://…"></div>
+      </div>
+      <button class="btn-save" id="file-add-btn">Add Link</button>
+    </div>
+  </div>`;
+}
+
+function renderNotesTab(j){
+  const notes=(j.notes||[]).slice().sort((a,b)=>(b.time||0)-(a.time||0));
+  return `<div class="section">
+    <div class="cu-banner" style="background:var(--surface-3);color:var(--text-2)"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>Internal notes — team only. Not shared with clients.</div>
+    <div class="notes-list">${notes.length===0?'<p class="muted">No notes yet.</p>':notes.map(n=>`<div class="note-card"><div class="note-meta"><div class="note-avatar">${initials(n.user)}</div>${esc(n.user)} · ${ago(n.time)}</div><div class="note-text">${esc(n.text)}</div></div>`).join('')}</div>
+    <div class="note-compose">
+      <input class="note-input" id="note-in" placeholder="${S.user?'Add an internal note…':'Set your name first…'}" ${!S.user?'disabled':''}>
+      <button class="btn-post" id="btn-post" ${!S.user?'disabled':''}>Post</button>
+    </div>
+  </div>`;
+}
+
+function renderClientTab(j){
+  const updates=(j.clientUpdates||[]).slice().sort((a,b)=>(b.time||0)-(a.time||0));
+  const shareUrl=location.origin+location.pathname+'#share/'+j.shareCode;
+  return `<div class="section">
+    <div class="cu-banner"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z"/></svg>Client updates — visible to the client on their share link.</div>
+    <div class="notes-list">${updates.length===0?'<p class="muted">No client updates yet. Post one to keep the client in the loop.</p>':updates.map(n=>`<div class="cu-note-card"><div class="note-meta"><div class="note-avatar" style="background:var(--gold)">${initials(n.user)}</div>${esc(n.user)} · ${ago(n.time)}</div><div class="note-text">${esc(n.text)}</div></div>`).join('')}</div>
+    <div class="note-compose">
+      <input class="note-input" id="cu-in" placeholder="${S.user?'Write an update for the client…':'Set your name first…'}" ${!S.user?'disabled':''}>
+      <button class="btn-post" id="btn-cu-post" ${!S.user?'disabled':''}>Send</button>
+    </div>
+    <div class="section-hd" style="margin-top:18px">Share with Client</div>
+    <p class="muted">Send this link to your client. They'll see job progress, status, photos, and these updates — no internal notes, costs, or team-only info.</p>
+    <div class="share-box">
+      <input id="share-url" readonly value="${esc(shareUrl)}">
+      <button class="btn-copy" id="btn-copy-share">Copy</button>
+    </div>
+  </div>`;
+}
+
+function renderBudgetTab(j){
+  const estimate=Number(j.value||0);
+  const expenses=(j.expenses||[]).reduce((s,e)=>s+Number(e.amount||0),0);
+  const payments=(j.payments||[]).reduce((s,p)=>s+Number(p.amount||0),0);
+  const balance=estimate-payments;
+  const profit=estimate-expenses;
+  const memberOpts='<option value="">—</option>'+S.members.map(m=>`<option value="${esc(m)}">${esc(m)}</option>`).join('');
+  return `<div class="section">
+    <div class="budget-grid">
+      <div class="budget-cell"><div class="budget-label">Contract / Estimate</div><div class="budget-value">${fmt$(estimate)}</div></div>
+      <div class="budget-cell"><div class="budget-label">Expenses</div><div class="budget-value">${fmt$(expenses)}</div></div>
+      <div class="budget-cell pos"><div class="budget-label">Paid by Client</div><div class="budget-value">${fmt$(payments)}</div></div>
+      <div class="budget-cell ${balance>0?'neg':'pos'}"><div class="budget-label">Balance Owed</div><div class="budget-value">${fmt$(balance)}</div></div>
+      <div class="budget-cell full ${profit>=0?'pos':'neg'}"><div class="budget-label">Est. Profit (contract − expenses)</div><div class="budget-value">${fmt$(profit)}</div></div>
+    </div>
+
+    <div class="section-hd">Expenses <button class="add-mini" id="add-exp">+ Add expense</button></div>
+    <div class="budget-list">
+      ${(j.expenses||[]).length===0?'<p class="muted">No expenses logged.</p>':(j.expenses||[]).slice().sort((a,b)=>(b.date||'').localeCompare(a.date||'')).map(e=>`
+        <div class="budget-item">
+          <div class="bi-icon exp">−</div>
+          <div class="bi-body"><div class="bi-title">${esc(e.vendor||e.category||'Expense')}</div><div class="bi-sub">${esc(e.date||'')}${e.category?' · '+esc(e.category):''}${e.note?' · '+esc(e.note):''}</div></div>
+          <div class="bi-amt exp">−${fmt$(e.amount)}</div>
+          <button class="bi-del" data-del-exp="${e.id}">×</button>
+        </div>`).join('')}
+    </div>
+
+    <div class="section-hd" style="margin-top:14px">Payments Received <button class="add-mini" id="add-pay">+ Add payment</button></div>
+    <div class="budget-list">
+      ${(j.payments||[]).length===0?'<p class="muted">No payments recorded.</p>':(j.payments||[]).slice().sort((a,b)=>(b.date||'').localeCompare(a.date||'')).map(p=>`
+        <div class="budget-item">
+          <div class="bi-icon pay">+</div>
+          <div class="bi-body"><div class="bi-title">${esc(p.method||'Payment')}</div><div class="bi-sub">${esc(p.date||'')}${p.note?' · '+esc(p.note):''}</div></div>
+          <div class="bi-amt pay">+${fmt$(p.amount)}</div>
+          <button class="bi-del" data-del-pay="${p.id}">×</button>
+        </div>`).join('')}
+    </div>
+
+    <div id="budget-modal-slot"></div>
+  </div>`;
+}
+
+// ══ Clients ══
+function renderClients(){
+  const all=clientsArr();
+  const shown=all.filter(c=>!S.clientSearch||(c.name||'').toLowerCase().includes(S.clientSearch.toLowerCase())||(c.phone||'').includes(S.clientSearch)||(c.email||'').toLowerCase().includes(S.clientSearch.toLowerCase()));
+  return `<div class="toolbar">
+    <button class="btn-add" id="btn-add-client">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+      New Client
+    </button>
+    <div class="search-wrap">
+      <div class="search-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 15.803a7.5 7.5 0 0010.607 0z"/></svg></div>
+      <input class="search" id="client-search-in" placeholder="Search clients…" value="${esc(S.clientSearch)}">
+    </div>
+  </div>
+  ${all.length===0?`<div class="empty">
+    <div class="empty-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0"/></svg></div>
+    <h3>No clients yet</h3><p>Add a client so you can group their jobs, contact them, and share progress.</p>
+    <button class="btn-add" id="btn-add-client2" style="margin:0 auto">+ Add First Client</button></div>`:
+  '<div class="client-list">'+shown.map(c=>{
+    const jobCount=Object.values(S.jobs).filter(j=>j.clientId===c.id).length;
+    return `<div class="client-row" data-open-client="${c.id}">
+      <div class="client-ava">${initials(c.name)}</div>
+      <div class="client-info">
+        <div class="client-name">${esc(c.name)}</div>
+        <div class="client-sub">${c.phone?'<span>📞 '+esc(c.phone)+'</span>':''}${c.email?'<span>✉ '+esc(c.email)+'</span>':''}${(!c.phone&&!c.email)?'<span>'+esc(c.address||'No contact info')+'</span>':''}</div>
+      </div>
+      <div class="client-jobs-badge">${jobCount} job${jobCount===1?'':'s'}</div>
     </div>`;
+  }).join('')+'</div>'}`;
 }
 
-function renderActivity(){
-  if(!S.activity.length)return`<div class="empty"><div class="empty-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5M5.625 4.5h12.75a1.875 1.875 0 010 3.75H5.625a1.875 1.875 0 010-3.75z"/></svg></div><h3>No activity yet</h3><p>As your team adds and updates jobs, everything will appear here.</p></div>`;
-  return'<div class="activity-feed">'+S.activity.map((a,i)=>'<div class="activity-item" style="animation-delay:'+( i*0.03)+'s">'+'<div class="activity-ava">'+initials(a.user)+'</div>'+'<div class="activity-body">'+'<div class="activity-text"><strong>'+esc(a.user)+'</strong> '+esc(a.action)+(a.job?' · <strong>'+esc(a.job)+'</strong>':'')+'</div><div class="activity-time">'+ago(a.time)+'</div></div></div>').join('')+'</div>';
+function renderClientDetail(id){
+  const c=S.clients[id];
+  if(!c)return`<button class="detail-back" id="btn-back-client"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"/></svg>Back</button><p class="muted">Client not found.</p>`;
+  const cjobs=Object.values(S.jobs).filter(j=>j.clientId===c.id).sort((a,b)=>(b.created||0)-(a.created||0));
+  return `<button class="detail-back" id="btn-back-client"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"/></svg>All Clients</button>
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px">
+      <div class="client-ava" style="width:56px;height:56px;font-size:19px">${initials(c.name)}</div>
+      <div style="flex:1;min-width:0">
+        <div class="detail-name">${esc(c.name)}</div>
+        ${c.contact&&c.contact!==c.name?`<div class="detail-addr">${esc(c.contact)}</div>`:''}
+      </div>
+    </div>
+    <div class="client-actions" style="margin:0 0 14px">
+      ${c.phone?`<a class="contact-link" href="tel:${esc(c.phone)}">📞 ${esc(c.phone)}</a>`:''}
+      ${c.email?`<a class="contact-link" href="mailto:${esc(c.email)}">✉ ${esc(c.email)}</a>`:''}
+      <button class="btn-sm" id="edit-client-btn">Edit</button>
+    </div>
+    ${c.address?`<div class="info-cell" style="margin-bottom:10px"><div class="info-label">Address</div><div class="info-value">${esc(c.address)}</div></div>`:''}
+    ${c.notes?`<div class="info-cell" style="margin-bottom:14px"><div class="info-label">Notes</div><div style="font-size:13.5px;line-height:1.6;margin-top:4px">${esc(c.notes)}</div></div>`:''}
+    <div class="section-hd">Jobs for this client <span>${cjobs.length}</span></div>
+    ${cjobs.length===0?'<p class="muted">No jobs yet for this client. <a id="new-job-for-client" style="color:var(--green-700);cursor:pointer;font-weight:600">+ Create one</a></p>':'<div class="jobs-grid">'+cjobs.map(renderCard).join('')+'</div>'}
+    <button class="btn-add" id="new-job-for-client2" style="margin-top:14px">+ New Job for ${esc(c.name.split(' ')[0])}</button>`;
 }
 
+// ══ Team ══
 function renderTeam(){
-  return`<div class="member-add">
+  const memberJobs={};
+  Object.values(S.jobs).forEach(j=>{(j.assignedTeam||[]).forEach(m=>{memberJobs[m]=(memberJobs[m]||0)+1});const t=(j.tasks||[]).filter(t=>!t.done);t.forEach(tk=>{if(tk.assigned)memberJobs[tk.assigned+'__tasks']=(memberJobs[tk.assigned+'__tasks']||0)+1})});
+  return `<div class="member-add">
     <input id="member-in" placeholder="Add team member name…">
     <button class="btn-save" id="btn-add-member">Add</button>
   </div>
-  <div class="member-list">${S.members.map((m,i)=>`<div class="member-row"><div class="member-ava">${initials(m)}</div><div class="member-name">${esc(m)}</div><button class="btn-remove" data-rm="${i}">Remove</button></div>`).join('')}</div>
+  <div class="member-list">${S.members.map((m,i)=>{
+    const jc=memberJobs[m]||0;
+    const tc=memberJobs[m+'__tasks']||0;
+    return `<div class="member-row"><div class="member-ava">${initials(m)}</div><div class="member-name">${esc(m)}<div style="font-size:11px;color:var(--text-3);font-weight:400;margin-top:2px">${jc} job${jc===1?'':'s'} · ${tc} open task${tc===1?'':'s'}</div></div><button class="btn-remove" data-rm="${i}">Remove</button></div>`;
+  }).join('')}</div>
   <div class="team-info-card">
     <strong>Team sharing:</strong><br>
-    ${DB?'✅ Firebase connected — all devices share the same data in real time.':'⚠️ Not connected. Each phone saves its own data. Tap <strong>Connect team →</strong> above to enable live sharing.'}
+    ${DB?'✅ Firebase connected — every device sees the same jobs, tasks, logs, photos, and client info in real time.':'⚠️ Not connected. Each device saves its own copy. Tap <strong>Connect team →</strong> above to enable live sharing.'}
   </div>`;
 }
 
 // ══ Modals ══
 function closeModal(){$('modal-root').innerHTML=''}
 
-function showJobModal(mode,job){
+function showJobModal(mode,job,preselectClientId){
   const j=job||{};
-  const mOpts=S.members.map(m=>`<option value="${esc(m)}" ${j.assigned===m?'selected':''}>${esc(m)}</option>`).join('');
+  if(preselectClientId&&!j.clientId)j.clientId=preselectClientId;
+  const cOpts='<option value="">No client</option>'+clientsArr().map(c=>`<option value="${c.id}" ${j.clientId===c.id?'selected':''}>${esc(c.name)}</option>`).join('');
+  const teamHtml=S.members.map(m=>{
+    const sel=(j.assignedTeam||[]).includes(m);
+    return `<label style="display:inline-flex;align-items:center;gap:5px;background:${sel?'var(--green-100)':'var(--surface-3)'};color:${sel?'var(--green-700)':'var(--text-2)'};padding:6px 11px;border-radius:20px;font-size:12.5px;font-weight:600;cursor:pointer;margin:0 5px 5px 0"><input type="checkbox" value="${esc(m)}" ${sel?'checked':''} style="margin:0" class="team-cb">${esc(m)}</label>`;
+  }).join('')||'<p class="muted" style="padding:0">No team members yet — add them on the Team tab.</p>';
   $('modal-root').innerHTML=`<div class="modal-bd" id="mbd"><div class="modal"><div class="modal-handle"></div>
     <div class="modal-head"><div class="modal-title">${mode==='add'?'New Job':'Edit Job'}</div><button class="modal-close" id="mc"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button></div>
     <div class="modal-body">
       <div class="form-group"><label class="form-label">Job name *</label><input class="form-input" id="f-name" value="${esc(j.name||'')}" placeholder="e.g. Lake house dock repair"></div>
-      <div class="form-group"><label class="form-label">Address</label><input class="form-input" id="f-addr" value="${esc(j.address||'')}" placeholder="123 Waterfront Dr, LaFollette TN"></div>
+      <div class="form-group"><label class="form-label">Client</label><select class="form-select" id="f-client">${cOpts}</select></div>
+      <div class="form-group"><label class="form-label">Site address</label><input class="form-input" id="f-addr" value="${esc(j.address||'')}" placeholder="123 Waterfront Dr"></div>
       <div class="form-row">
-        <div class="form-group"><label class="form-label">Status</label><select class="form-select" id="f-status"><option value="lead" ${j.status==='lead'?'selected':''}>Lead</option><option value="active" ${(j.status==='active'||!j.status)?'selected':''}>Active</option><option value="complete" ${j.status==='complete'?'selected':''}>Complete</option><option value="hold" ${j.status==='hold'?'selected':''}>On Hold</option></select></div>
-        <div class="form-group"><label class="form-label">Job type</label><select class="form-select" id="f-type"><option value="">Select…</option><option value="New construction" ${j.type==='New construction'?'selected':''}>New construction</option><option value="Renovation" ${j.type==='Renovation'?'selected':''}>Renovation</option><option value="Dock / waterfront" ${j.type==='Dock / waterfront'?'selected':''}>Dock / waterfront</option><option value="Repair" ${j.type==='Repair'?'selected':''}>Repair</option><option value="Inspection" ${j.type==='Inspection'?'selected':''}>Inspection</option><option value="Other" ${j.type==='Other'?'selected':''}>Other</option></select></div>
+        <div class="form-group"><label class="form-label">Status</label><select class="form-select" id="f-status">${ALL_STATUSES.map(s=>`<option value="${s.k}" ${(j.status||'lead')===s.k?'selected':''}>${esc(s.label)}</option>`).join('')}</select></div>
+        <div class="form-group"><label class="form-label">Type</label><select class="form-select" id="f-type"><option value="">Select…</option><option value="New construction" ${j.type==='New construction'?'selected':''}>New construction</option><option value="Renovation" ${j.type==='Renovation'?'selected':''}>Renovation</option><option value="Dock / waterfront" ${j.type==='Dock / waterfront'?'selected':''}>Dock / waterfront</option><option value="Repair" ${j.type==='Repair'?'selected':''}>Repair</option><option value="Inspection" ${j.type==='Inspection'?'selected':''}>Inspection</option><option value="Other" ${j.type==='Other'?'selected':''}>Other</option></select></div>
       </div>
       <div class="form-row">
-        <div class="form-group"><label class="form-label">Assigned to</label><select class="form-select" id="f-assigned"><option value="">Select…</option>${mOpts}<option value="__custom__">Type name…</option></select></div>
         <div class="form-group"><label class="form-label">Start date</label><input class="form-input" type="date" id="f-start" value="${esc(j.startDate||'')}"></div>
+        <div class="form-group"><label class="form-label">Target finish</label><input class="form-input" type="date" id="f-due" value="${esc(j.dueDate||'')}"></div>
       </div>
-      <div id="custom-wrap" style="display:none" class="form-group"><label class="form-label">Custom name</label><input class="form-input" id="f-cname" placeholder="Name"></div>
-      <div class="form-group"><label class="form-label">Estimated value ($)</label><input class="form-input" type="number" id="f-val" value="${esc(j.value||'')}" placeholder="0"></div>
+      <div class="form-group"><label class="form-label">Contract / Est. value ($)</label><input class="form-input" type="number" id="f-val" value="${esc(j.value||'')}" placeholder="0"></div>
+      <div class="form-group"><label class="form-label">Assigned team</label><div style="display:flex;flex-wrap:wrap;margin-top:4px">${teamHtml}</div></div>
       <div class="form-group"><label class="form-label">Description</label><textarea class="form-textarea" id="f-desc">${esc(j.description||'')}</textarea></div>
     </div>
     <div class="modal-foot">
@@ -745,24 +1420,135 @@ function showJobModal(mode,job){
   </div></div>`;
   $('mc').onclick=$('btn-cx').onclick=closeModal;
   $('mbd').onclick=e=>{if(e.target===e.currentTarget)closeModal()};
-  $('f-assigned').onchange=function(){$('custom-wrap').style.display=this.value==='__custom__'?'block':'none'};
-  if(j.assigned&&S.members.includes(j.assigned))$('f-assigned').value=j.assigned;
   $('btn-sv').onclick=async()=>{
     const name=$('f-name').value.trim();
     if(!name){toast('Please enter a job name','');return}
-    let assigned=$('f-assigned').value;
-    if(assigned==='__custom__')assigned=$('f-cname').value.trim();
-    const data={name,assigned,address:$('f-addr').value.trim(),status:$('f-status').value,type:$('f-type').value,startDate:$('f-start').value,value:$('f-val').value,description:$('f-desc').value.trim()};
+    const team=Array.from(document.querySelectorAll('.team-cb:checked')).map(cb=>cb.value);
+    const data={
+      name,
+      clientId:$('f-client').value||'',
+      address:$('f-addr').value.trim(),
+      status:$('f-status').value,
+      type:$('f-type').value,
+      startDate:$('f-start').value,
+      dueDate:$('f-due').value,
+      value:$('f-val').value,
+      assignedTeam:team,
+      assigned:team[0]||'',
+      description:$('f-desc').value.trim()
+    };
     if(mode==='add'){
-      const nj={id:uid(),...data,progress:0,notes:[],photos:[],created:Date.now()};
-      await writeJob(nj);await logAct('added job',name);toast('Job added');
-    }else{await writeJob({...j,...data});await logAct('updated job',name);toast('Changes saved')}
+      const nj=normalizeJob({id:uid('j'),...data,progress:0,created:Date.now()});
+      await writeJob(nj);await logAct('added job',name,nj.id);toast('Job added');
+    }else{
+      const merged=normalizeJob({...j,...data});
+      await writeJob(merged);await logAct('updated job',name,j.id);toast('Changes saved');
+    }
     closeModal();render();
   };
   if(mode==='edit')$('btn-del').onclick=async()=>{
     if(!confirm('Delete this job? This cannot be undone.'))return;
-    await deleteJobDB(j.id);await logAct('deleted job',j.name);
+    await deleteJobDB(j.id);await logAct('deleted job',j.name,j.id);
     S.detail=null;closeModal();render();toast('Job deleted');
+  };
+}
+
+function showClientModal(mode,client){
+  const c=client||{};
+  $('modal-root').innerHTML=`<div class="modal-bd" id="mbd"><div class="modal"><div class="modal-handle"></div>
+    <div class="modal-head"><div class="modal-title">${mode==='add'?'New Client':'Edit Client'}</div><button class="modal-close" id="mc"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button></div>
+    <div class="modal-body">
+      <div class="form-group"><label class="form-label">Client name *</label><input class="form-input" id="c-name" value="${esc(c.name||'')}" placeholder="e.g. Smith Family or ACME Corp"></div>
+      <div class="form-group"><label class="form-label">Primary contact</label><input class="form-input" id="c-contact" value="${esc(c.contact||'')}" placeholder="e.g. John Smith"></div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Phone</label><input class="form-input" type="tel" id="c-phone" value="${esc(c.phone||'')}"></div>
+        <div class="form-group"><label class="form-label">Email</label><input class="form-input" type="email" id="c-email" value="${esc(c.email||'')}"></div>
+      </div>
+      <div class="form-group"><label class="form-label">Mailing address</label><input class="form-input" id="c-addr" value="${esc(c.address||'')}"></div>
+      <div class="form-group"><label class="form-label">Internal notes</label><textarea class="form-textarea" id="c-notes" placeholder="Referral source, preferences, communication style…">${esc(c.notes||'')}</textarea></div>
+    </div>
+    <div class="modal-foot">
+      ${mode==='edit'?`<button class="btn-delete" id="btn-del">Delete</button>`:''}
+      <button class="btn-cancel" id="btn-cx">Cancel</button>
+      <button class="btn-save" id="btn-sv">${mode==='add'?'Add Client':'Save'}</button>
+    </div>
+  </div></div>`;
+  $('mc').onclick=$('btn-cx').onclick=closeModal;
+  $('mbd').onclick=e=>{if(e.target===e.currentTarget)closeModal()};
+  $('btn-sv').onclick=async()=>{
+    const name=$('c-name').value.trim();
+    if(!name){toast('Enter a client name','');return}
+    const data={name,contact:$('c-contact').value.trim(),phone:$('c-phone').value.trim(),email:$('c-email').value.trim(),address:$('c-addr').value.trim(),notes:$('c-notes').value.trim()};
+    if(mode==='add'){
+      const nc={id:uid('c'),...data,created:Date.now()};
+      await writeClient(nc);await logAct('added client',name);toast('Client added');
+    }else{
+      await writeClient({...c,...data,updated:Date.now()});await logAct('updated client',name);toast('Saved');
+    }
+    closeModal();render();
+  };
+  if(mode==='edit')$('btn-del').onclick=async()=>{
+    const linked=Object.values(S.jobs).filter(j=>j.clientId===c.id).length;
+    if(linked>0&&!confirm('Delete this client? '+linked+' job'+(linked===1?'':'s')+' will remain but lose their client link.'))return;
+    if(linked===0&&!confirm('Delete this client?'))return;
+    Object.values(S.jobs).forEach(j=>{if(j.clientId===c.id){j.clientId='';writeJob(j)}});
+    await deleteClientDB(c.id);await logAct('deleted client',c.name);
+    S.clientDetail=null;closeModal();render();toast('Client deleted');
+  };
+}
+
+function showExpenseModal(j){
+  const memberOpts='<option value="">Anyone</option>'+S.members.map(m=>`<option value="${esc(m)}">${esc(m)}</option>`).join('');
+  $('modal-root').innerHTML=`<div class="modal-bd" id="mbd"><div class="modal"><div class="modal-handle"></div>
+    <div class="modal-head"><div class="modal-title">Add Expense</div><button class="modal-close" id="mc">×</button></div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Date</label><input class="form-input" type="date" id="e-date" value="${todayISO()}"></div>
+        <div class="form-group"><label class="form-label">Amount *</label><input class="form-input" type="number" step="0.01" id="e-amt"></div>
+      </div>
+      <div class="form-group"><label class="form-label">Vendor / Description</label><input class="form-input" id="e-vendor" placeholder="e.g. Lowe's lumber, gravel delivery"></div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Category</label><select class="form-select" id="e-cat"><option value="">—</option><option>Materials</option><option>Labor</option><option>Equipment</option><option>Subcontractor</option><option>Permits</option><option>Travel / Fuel</option><option>Other</option></select></div>
+        <div class="form-group"><label class="form-label">Paid by</label><select class="form-select" id="e-user">${memberOpts}</select></div>
+      </div>
+      <div class="form-group"><label class="form-label">Note</label><input class="form-input" id="e-note"></div>
+    </div>
+    <div class="modal-foot"><button class="btn-cancel" id="btn-cx">Cancel</button><button class="btn-save" id="btn-sv">Save Expense</button></div>
+  </div></div>`;
+  $('mc').onclick=$('btn-cx').onclick=closeModal;
+  $('mbd').onclick=e=>{if(e.target===e.currentTarget)closeModal()};
+  $('btn-sv').onclick=async()=>{
+    const amt=parseFloat($('e-amt').value);
+    if(!(amt>0)){toast('Enter an amount','');return}
+    j.expenses=j.expenses||[];
+    j.expenses.push({id:uid('e'),date:$('e-date').value||todayISO(),amount:amt,vendor:$('e-vendor').value.trim(),category:$('e-cat').value,user:$('e-user').value||S.user,note:$('e-note').value.trim(),time:Date.now()});
+    await writeJob(j);await logAct('logged $'+amt+' expense on',j.name,j.id);
+    closeModal();render();toast('Expense added','cash');
+  };
+}
+
+function showPaymentModal(j){
+  $('modal-root').innerHTML=`<div class="modal-bd" id="mbd"><div class="modal"><div class="modal-handle"></div>
+    <div class="modal-head"><div class="modal-title">Record Payment</div><button class="modal-close" id="mc">×</button></div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Date</label><input class="form-input" type="date" id="p-date" value="${todayISO()}"></div>
+        <div class="form-group"><label class="form-label">Amount *</label><input class="form-input" type="number" step="0.01" id="p-amt"></div>
+      </div>
+      <div class="form-group"><label class="form-label">Method</label><select class="form-select" id="p-method"><option>Check</option><option>Cash</option><option>Bank transfer / ACH</option><option>Credit card</option><option>Deposit</option><option>Other</option></select></div>
+      <div class="form-group"><label class="form-label">Note</label><input class="form-input" id="p-note" placeholder="e.g. Check #1234, deposit, final"></div>
+    </div>
+    <div class="modal-foot"><button class="btn-cancel" id="btn-cx">Cancel</button><button class="btn-save" id="btn-sv">Save Payment</button></div>
+  </div></div>`;
+  $('mc').onclick=$('btn-cx').onclick=closeModal;
+  $('mbd').onclick=e=>{if(e.target===e.currentTarget)closeModal()};
+  $('btn-sv').onclick=async()=>{
+    const amt=parseFloat($('p-amt').value);
+    if(!(amt>0)){toast('Enter an amount','');return}
+    j.payments=j.payments||[];
+    j.payments.push({id:uid('p'),date:$('p-date').value||todayISO(),amount:amt,method:$('p-method').value,note:$('p-note').value.trim(),user:S.user,time:Date.now()});
+    await writeJob(j);await logAct('recorded $'+amt+' payment on',j.name,j.id);
+    closeModal();render();toast('Payment recorded','cash');
   };
 }
 
@@ -770,7 +1556,7 @@ function showSetupModal(){
   $('modal-root').innerHTML=`<div class="modal-bd" id="mbd"><div class="modal"><div class="modal-handle"></div>
     <div class="modal-head"><div class="modal-title">Connect Your Team</div><button class="modal-close" id="mc"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button></div>
     <div class="modal-body">
-      <p style="font-size:13.5px;color:var(--text-2);line-height:1.7;margin-bottom:16px">To share jobs, photos, and notes across your team in real time, connect a free Firebase database. Takes about 5 minutes.</p>
+      <p style="font-size:13.5px;color:var(--text-2);line-height:1.7;margin-bottom:16px">To share jobs, clients, tasks, logs, and photos across your team in real time, connect a free Firebase database. Takes about 5 minutes.</p>
       <div class="setup-steps">
         <div class="setup-step"><div class="step-num">1</div><div class="step-text">Go to <a href="https://console.firebase.google.com" target="_blank">console.firebase.google.com</a> and sign in with Google.</div></div>
         <div class="setup-step"><div class="step-num">2</div><div class="step-text">Click "Add project", name it <strong>waterfront-jobs</strong>, skip Analytics → Create.</div></div>
@@ -778,8 +1564,7 @@ function showSetupModal(){
         <div class="setup-step"><div class="step-num">4</div><div class="step-text">Gear icon ⚙ → Project settings → Your apps → Web icon &lt;/&gt; → Register → copy the <strong>firebaseConfig</strong>.</div></div>
         <div class="setup-step"><div class="step-num">5</div><div class="step-text">Paste the config JSON below and tap Connect. Do this on every team member's phone.</div></div>
       </div>
-      <div class="form-group"><label class="form-label">Firebase config JSON</label><textarea class="form-textarea" id="fb-cfg" style="font-family:monospace;font-size:12px;min-height:110px" placeholder='{"apiKey":"AIza...","authDomain":"...","databaseURL":"https://....firebaseio.com","projectId":"...","storageBucket":"...","messagingSenderId":"...","appId":"..."}'>
-</textarea></div>
+      <div class="form-group"><label class="form-label">Firebase config JSON</label><textarea class="form-textarea" id="fb-cfg" style="font-family:monospace;font-size:12px;min-height:110px" placeholder='{"apiKey":"AIza...","authDomain":"...","databaseURL":"https://....firebaseio.com","projectId":"...","storageBucket":"...","messagingSenderId":"...","appId":"..."}'></textarea></div>
     </div>
     <div class="modal-foot"><button class="btn-cancel" id="btn-cx">Cancel</button><button class="btn-save" id="btn-connect">Connect Team</button></div>
   </div></div>`;
@@ -795,25 +1580,101 @@ function showSetupModal(){
   };
 }
 
+// ══ Portal (client view) ══
+function renderPortal(code){
+  const job=Object.values(S.jobs).find(j=>j.shareCode===code);
+  document.body.style.display='flex';
+  const c=$('content');
+  // Hide sync bar / nav for cleaner portal feel
+  document.querySelector('.sync-bar').style.display='none';
+  document.querySelector('.nav').style.display='none';
+  if(!job){
+    c.innerHTML=`<div class="empty"><div class="empty-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"/></svg></div><h3>Job not found</h3><p>This link may be out of date — please check with your contractor.</p></div>`;
+    return;
+  }
+  const cli=S.clients[job.clientId];
+  const photos=job.photos||[];
+  const updates=(job.clientUpdates||[]).slice().sort((a,b)=>(b.time||0)-(a.time||0));
+  const stageIdx=STAGES.findIndex(s=>s.k===job.status);
+  c.innerHTML=`
+    <div class="portal-banner">
+      <h2>${esc(job.name)}</h2>
+      <p>${esc(cli?.name||'')}${cli&&job.address?' · ':''}${esc(job.address||'')}</p>
+    </div>
+    <div class="pipeline">
+      ${STAGES.map((s,i)=>`<div class="pl-step ${job.status===s.k?'current':(stageIdx>=0&&i<stageIdx?'done':'')}">${esc(s.label)}</div>`).join('')}
+    </div>
+    <div class="prog-section">
+      <div class="prog-top"><span class="prog-label-text">Progress</span><span class="prog-pct">${job.progress||0}%</span></div>
+      <div class="prog-track-lg"><div class="prog-fill-lg" style="width:${job.progress||0}%"></div></div>
+    </div>
+    <div class="info-grid">
+      <div class="info-cell"><div class="info-label">Status</div><div class="info-value">${esc(statusLabel(job.status))}</div></div>
+      <div class="info-cell"><div class="info-label">Started</div><div class="info-value">${job.startDate?esc(dateLabel(job.startDate)):'—'}</div></div>
+      <div class="info-cell"><div class="info-label">Target Finish</div><div class="info-value">${job.dueDate?esc(dateLabel(job.dueDate)):'—'}</div></div>
+      <div class="info-cell"><div class="info-label">Type</div><div class="info-value">${esc(job.type||'—')}</div></div>
+    </div>
+    ${job.description?`<div class="section" style="margin-top:14px"><div class="section-hd">About this project</div><p style="font-size:13.5px;line-height:1.65">${esc(job.description)}</p></div>`:''}
+    <div class="section" style="margin-top:14px">
+      <div class="section-hd">Updates from the team <span>${updates.length}</span></div>
+      <div class="notes-list">${updates.length===0?'<p class="muted">No updates yet — check back soon.</p>':updates.map(n=>`<div class="cu-note-card"><div class="note-meta"><div class="note-avatar" style="background:var(--gold)">${initials(n.user)}</div>${esc(n.user)} · ${ago(n.time)}</div><div class="note-text">${esc(n.text)}</div></div>`).join('')}</div>
+    </div>
+    ${photos.length>0?`<div class="section"><div class="section-hd">Photos <span>${photos.length}</span></div><div class="photos-grid">${photos.map((p,i)=>`<div class="photo-wrap"><img src="${p}" alt="" data-portal-photo="${i}" loading="lazy"></div>`).join('')}</div></div>`:''}
+    <p class="muted" style="text-align:center;padding:24px 0 4px">Shared by Waterfront Solutions · this is a live view</p>`;
+  // Photo viewer on portal
+  document.querySelectorAll('[data-portal-photo]').forEach(img=>img.onclick=()=>{
+    const idx=parseInt(img.dataset.portalPhoto);
+    $('fs-root').innerHTML=`<div class="photo-fs" id="fs"><button class="photo-fs-close" id="fsc">×</button><img src="${photos[idx]}" alt=""></div>`;
+    $('fsc').onclick=()=>$('fs-root').innerHTML='';
+    $('fs').onclick=e=>{if(e.target===e.currentTarget)$('fs-root').innerHTML=''};
+  });
+}
+
 // ══ Handlers ══
 function attachHandlers(){
   document.querySelectorAll('.nav-btn').forEach(b=>{
-    b.onclick=()=>{S.view=b.dataset.view;S.detail=null;document.querySelectorAll('.nav-btn').forEach(x=>x.classList.toggle('active',x===b));render()}
+    b.onclick=()=>{S.view=b.dataset.view;S.detail=null;S.clientDetail=null;S.detailTab='overview';render()}
   });
   $('user-btn').onclick=()=>{
-    const n=prompt('Your name (appears on notes):',S.user);
+    const n=prompt('Your name (appears on notes, logs & tasks):',S.user);
     if(n!==null){S.user=n.trim();localStorage.setItem('wfs_user',S.user);render()}
   };
   $('setup-link').onclick=showSetupModal;
+
+  // Dashboard / schedule navigation
+  document.querySelectorAll('[data-go-job]').forEach(el=>el.onclick=e=>{
+    e.stopPropagation();S.view='jobs';S.detail=el.dataset.goJob;S.detailTab='overview';render();
+  });
+  $('go-schedule')?.addEventListener('click',()=>{S.view='schedule';render()});
+
+  // Jobs list
   $('btn-add-job')?.addEventListener('click',()=>showJobModal('add'));
   $('btn-add-job2')?.addEventListener('click',()=>showJobModal('add'));
   $('search-in')?.addEventListener('input',e=>{S.search=e.target.value;render()});
   document.querySelectorAll('[data-filter]').forEach(c=>c.onclick=()=>{S.filter=c.dataset.filter;render()});
-  document.querySelectorAll('[data-open]').forEach(c=>c.onclick=()=>{S.detail=c.dataset.open;render()});
+  document.querySelectorAll('[data-open]').forEach(c=>c.onclick=()=>{S.detail=c.dataset.open;S.detailTab='overview';render()});
+
+  // Detail page
   $('btn-back')?.addEventListener('click',()=>{S.detail=null;render()});
   $('btn-edit-job')?.addEventListener('click',()=>{const j=S.jobs[S.detail];if(j)showJobModal('edit',j)});
+  $('btn-view-client')?.addEventListener('click',()=>{const j=S.jobs[S.detail];if(j?.clientId){S.view='clients';S.clientDetail=j.clientId;render()}});
+  $('btn-share')?.addEventListener('click',()=>{S.detailTab='client';render()});
+  document.querySelectorAll('[data-set-status]').forEach(el=>el.onclick=async()=>{
+    const j=S.jobs[S.detail];if(!j)return;
+    const s=el.dataset.setStatus;
+    if(j.status===s)return;
+    j.status=s;
+    if(s==='complete'){j.progress=100;j.completedDate=todayISO()}
+    await writeJob(j);await logAct('moved to '+statusLabel(s),j.name,j.id);
+    render();toast('Status: '+statusLabel(s));
+  });
+  document.querySelectorAll('.dtab').forEach(b=>b.onclick=()=>{S.detailTab=b.dataset.tab;render()});
+
+  // Progress slider
   const sl=$('prog-slider');
-  if(sl){let pt;sl.oninput=function(){const f=$('prog-fill-lg'),p=$('prog-pct');if(f)f.style.width=this.value+'%';if(p)p.textContent=this.value+'%';clearTimeout(pt);pt=setTimeout(async()=>{const j=S.jobs[S.detail];if(j){j.progress=parseInt(this.value);await writeJob(j)}},700)}}
+  if(sl){let pt;sl.oninput=function(){const f=$('prog-fill-lg'),p=$('prog-pct');if(f)f.style.width=this.value+'%';if(p)p.textContent=this.value+'%';clearTimeout(pt);pt=setTimeout(async()=>{const j=S.jobs[S.detail];if(j){const old=j.progress||0;j.progress=parseInt(this.value);await writeJob(j);if(Math.abs(j.progress-old)>=5)logAct('set progress to '+j.progress+'% on',j.name,j.id)}},700)}}
+
+  // Photos
   $('photo-upload')?.addEventListener('change',function(){
     const j=S.jobs[S.detail];if(!j)return;j.photos=j.photos||[];
     const files=Array.from(this.files);if(!files.length)return;
@@ -825,7 +1686,7 @@ function attachHandlers(){
         if(w>MAX||h>MAX){if(w>h){h=Math.round(h*MAX/w);w=MAX}else{w=Math.round(w*MAX/h);h=MAX}}
         c.width=w;c.height=h;c.getContext('2d').drawImage(img,0,0,w,h);
         j.photos.push(c.toDataURL('image/jpeg',0.78));
-        if(++done===files.length){writeJob(j).then(()=>{logAct('added '+files.length+' photo(s) to',j.name);render();toast(files.length+' photo'+(files.length>1?'s':'')+' added','photo')})}
+        if(++done===files.length){writeJob(j).then(()=>{logAct('added '+files.length+' photo(s) to',j.name,j.id);render();toast(files.length+' photo'+(files.length>1?'s':'')+' added','photo')})}
       };img.src=e.target.result
     };r.readAsDataURL(file)});
   });
@@ -840,10 +1701,105 @@ function attachHandlers(){
     $('fsc').onclick=()=>$('fs-root').innerHTML='';
     $('fs').onclick=e=>{if(e.target===e.currentTarget)$('fs-root').innerHTML=''};
   });
+
+  // Tasks
+  $('task-add-btn')?.addEventListener('click',async()=>{
+    const j=S.jobs[S.detail];if(!j)return;
+    const title=$('task-title').value.trim();if(!title){toast('Enter a task','');return}
+    j.tasks=j.tasks||[];
+    j.tasks.push({id:uid('t'),title,assigned:$('task-assigned').value,due:$('task-due').value,priority:$('task-priority').value,done:false,created:Date.now()});
+    await writeJob(j);await logAct('added task "'+title+'" to',j.name,j.id);
+    render();toast('Task added','task');
+  });
+  document.querySelectorAll('[data-toggle-task]').forEach(el=>el.onclick=async()=>{
+    const j=S.jobs[S.detail];if(!j)return;
+    const id=el.dataset.toggleTask;
+    const t=(j.tasks||[]).find(x=>x.id===id);if(!t)return;
+    t.done=!t.done;t.completedTime=t.done?Date.now():null;t.completedBy=t.done?S.user:null;
+    await writeJob(j);if(t.done)await logAct('completed task "'+t.title+'" on',j.name,j.id);
+    render();
+  });
+  document.querySelectorAll('[data-del-task]').forEach(el=>el.onclick=async()=>{
+    const j=S.jobs[S.detail];if(!j)return;
+    j.tasks=(j.tasks||[]).filter(t=>t.id!==el.dataset.delTask);
+    await writeJob(j);render();toast('Task removed');
+  });
+
+  // Logs
+  $('log-add-btn')?.addEventListener('click',async()=>{
+    const j=S.jobs[S.detail];if(!j)return;if(!S.user){toast('Set your name first','');return}
+    const text=$('log-text').value.trim();if(!text){toast('Write what you got done','');return}
+    j.logs=j.logs||[];
+    j.logs.push({id:uid('l'),user:S.user,text,hours:$('log-hours').value,weather:$('log-weather').value,date:todayISO(),time:Date.now()});
+    await writeJob(j);await logAct('posted a daily log on',j.name,j.id);
+    render();toast('Log posted','log');
+  });
+  document.querySelectorAll('[data-del-log]').forEach(el=>el.onclick=async()=>{
+    const j=S.jobs[S.detail];if(!j)return;
+    j.logs=(j.logs||[]).filter(l=>l.id!==el.dataset.delLog);
+    await writeJob(j);render();toast('Log removed');
+  });
+
+  // Files
+  $('file-add-btn')?.addEventListener('click',async()=>{
+    const j=S.jobs[S.detail];if(!j)return;
+    const url=$('file-url').value.trim();if(!url){toast('Enter a URL','');return}
+    const name=$('file-name').value.trim()||url;
+    j.files=j.files||[];
+    j.files.push({id:uid('f'),name,url,user:S.user||'',added:Date.now()});
+    await writeJob(j);await logAct('attached "'+name+'" to',j.name,j.id);
+    render();toast('Link added');
+  });
+  document.querySelectorAll('[data-del-file]').forEach(el=>el.onclick=async()=>{
+    const j=S.jobs[S.detail];if(!j)return;
+    j.files=(j.files||[]).filter(f=>f.id!==el.dataset.delFile);
+    await writeJob(j);render();
+  });
+
+  // Internal notes
   const ni=$('note-in'),pb=$('btn-post');
-  async function postNote(){const t=ni?.value.trim();if(!t)return;const j=S.jobs[S.detail];if(!j)return;j.notes=j.notes||[];j.notes.push({user:S.user,text:t,time:Date.now()});await writeJob(j);await logAct('posted a note on',j.name);ni.value='';render();toast('Note posted','note')}
+  async function postNote(){const t=ni?.value.trim();if(!t)return;const j=S.jobs[S.detail];if(!j)return;j.notes=j.notes||[];j.notes.push({user:S.user,text:t,time:Date.now()});await writeJob(j);await logAct('posted a note on',j.name,j.id);ni.value='';render();toast('Note posted','note')}
   pb?.addEventListener('click',postNote);
   ni?.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();postNote()}});
+
+  // Client updates
+  const cui=$('cu-in'),cub=$('btn-cu-post');
+  async function postCU(){const t=cui?.value.trim();if(!t)return;const j=S.jobs[S.detail];if(!j)return;j.clientUpdates=j.clientUpdates||[];j.clientUpdates.push({user:S.user,text:t,time:Date.now()});await writeJob(j);await logAct('sent client update on',j.name,j.id);cui.value='';render();toast('Client update sent','note')}
+  cub?.addEventListener('click',postCU);
+  cui?.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();postCU()}});
+
+  // Share link
+  $('btn-copy-share')?.addEventListener('click',()=>{
+    const inp=$('share-url');inp.select();inp.setSelectionRange(0,99999);
+    try{navigator.clipboard.writeText(inp.value);toast('Link copied','check')}
+    catch(e){document.execCommand('copy');toast('Link copied','check')}
+  });
+
+  // Budget
+  $('add-exp')?.addEventListener('click',()=>{const j=S.jobs[S.detail];if(j)showExpenseModal(j)});
+  $('add-pay')?.addEventListener('click',()=>{const j=S.jobs[S.detail];if(j)showPaymentModal(j)});
+  document.querySelectorAll('[data-del-exp]').forEach(el=>el.onclick=async()=>{
+    const j=S.jobs[S.detail];if(!j)return;
+    j.expenses=(j.expenses||[]).filter(e=>e.id!==el.dataset.delExp);
+    await writeJob(j);render();toast('Expense removed');
+  });
+  document.querySelectorAll('[data-del-pay]').forEach(el=>el.onclick=async()=>{
+    const j=S.jobs[S.detail];if(!j)return;
+    j.payments=(j.payments||[]).filter(p=>p.id!==el.dataset.delPay);
+    await writeJob(j);render();toast('Payment removed');
+  });
+
+  // Clients
+  $('btn-add-client')?.addEventListener('click',()=>showClientModal('add'));
+  $('btn-add-client2')?.addEventListener('click',()=>showClientModal('add'));
+  $('client-search-in')?.addEventListener('input',e=>{S.clientSearch=e.target.value;render()});
+  document.querySelectorAll('[data-open-client]').forEach(c=>c.onclick=()=>{S.clientDetail=c.dataset.openClient;render()});
+  $('btn-back-client')?.addEventListener('click',()=>{S.clientDetail=null;render()});
+  $('edit-client-btn')?.addEventListener('click',()=>{const c=S.clients[S.clientDetail];if(c)showClientModal('edit',c)});
+  $('new-job-for-client')?.addEventListener('click',()=>showJobModal('add',null,S.clientDetail));
+  $('new-job-for-client2')?.addEventListener('click',()=>showJobModal('add',null,S.clientDetail));
+
+  // Team
   $('btn-add-member')?.addEventListener('click',async()=>{
     const inp=$('member-in');const name=inp?.value.trim();
     if(!name||S.members.includes(name)){toast(name?'Already on team':'Enter a name','');return}
@@ -852,6 +1808,7 @@ function attachHandlers(){
   document.querySelectorAll('[data-rm]').forEach(b=>b.onclick=async()=>{S.members.splice(parseInt(b.dataset.rm),1);await saveMembers();render()});
 }
 
+window.addEventListener('hashchange',render);
 render();
 </script>
 </body>
