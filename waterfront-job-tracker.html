@@ -12,6 +12,8 @@
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Serif+Display&display=swap" rel="stylesheet">
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin="" defer></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 :root{
@@ -96,12 +98,14 @@ body{display:flex;flex-direction:column;max-width:680px;margin:0 auto;min-height
   height:var(--nav-h);display:flex;
   background:var(--surface);border-bottom:1px solid var(--border);
   flex-shrink:0;position:sticky;top:var(--header-h);z-index:99;
+  overflow-x:auto;scrollbar-width:none;
 }
+.nav::-webkit-scrollbar{display:none}
 .nav-btn{
-  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  flex:1 0 auto;min-width:64px;display:flex;flex-direction:column;align-items:center;justify-content:center;
   gap:3px;border:none;background:none;cursor:pointer;color:var(--text-3);
   font-size:10px;font-weight:600;letter-spacing:0.04em;text-transform:uppercase;
-  border-bottom:2px solid transparent;transition:all 0.18s;padding:0 4px;
+  border-bottom:2px solid transparent;transition:all 0.18s;padding:0 6px;
   font-family:var(--font);
 }
 .nav-btn svg{width:20px;height:20px;stroke-width:1.8;transition:transform 0.18s}
@@ -678,6 +682,85 @@ input[type=range]{width:100%;accent-color:var(--green-700);height:4px;cursor:poi
 .photo-cat-chip.active{background:var(--green-700);color:#fff;border-color:var(--green-700)}
 .photo-cat-label{position:absolute;top:5px;left:5px;background:rgba(0,0,0,0.55);color:#fff;font-size:9.5px;font-weight:700;padding:2px 6px;border-radius:8px;text-transform:uppercase;letter-spacing:0.04em}
 
+/* ── NOTIFICATIONS BELL ── */
+.bell-btn{
+  position:relative;width:36px;height:36px;border-radius:50%;
+  background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.18);
+  display:flex;align-items:center;justify-content:center;cursor:pointer;
+  color:rgba(255,255,255,0.9);transition:background 0.2s;margin-right:6px;
+}
+.bell-btn:active{background:rgba(255,255,255,0.2)}
+.bell-btn svg{width:17px;height:17px;stroke-width:1.8}
+.bell-badge{
+  position:absolute;top:-3px;right:-3px;min-width:17px;height:17px;padding:0 4px;
+  background:var(--orange);color:#fff;border-radius:10px;
+  font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;
+  border:2px solid var(--green-900);
+}
+.notif-list{display:flex;flex-direction:column}
+.notif-empty{text-align:center;padding:40px 20px;color:var(--text-3);font-size:13.5px}
+.notif-item{
+  display:flex;gap:11px;padding:13px 4px;border-bottom:1px solid var(--border);
+  cursor:pointer;transition:background 0.15s;
+}
+.notif-item:hover{background:var(--surface-2)}
+.notif-item.unread{background:var(--green-50)}
+@media(prefers-color-scheme:dark){.notif-item.unread{background:var(--green-50)}}
+.notif-icon{
+  width:34px;height:34px;border-radius:50%;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;
+}
+.notif-icon.task{background:var(--gold)}
+.notif-icon.overdue{background:var(--red)}
+.notif-icon.activity{background:var(--green-600)}
+.notif-icon.mention{background:#8b5cf6}
+.notif-body{flex:1;min-width:0}
+.notif-text{font-size:13px;line-height:1.45;color:var(--text)}
+.notif-meta{font-size:11px;color:var(--text-3);margin-top:2px}
+.notif-dot{width:7px;height:7px;border-radius:50%;background:var(--orange);flex-shrink:0;margin-top:14px}
+.notif-clear{font-size:12px;color:var(--green-700);font-weight:600;cursor:pointer;background:none;border:none;font-family:var(--font);padding:6px 10px}
+
+/* ── REPORTS ── */
+.report-section{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);padding:14px 16px;margin-bottom:14px;box-shadow:var(--shadow-sm)}
+.report-hd{font-size:13px;font-weight:700;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between}
+.report-hd .kpi-sub{font-size:11px;font-weight:500}
+.donut-wrap{display:flex;align-items:center;gap:18px;justify-content:center;flex-wrap:wrap}
+.donut{position:relative;width:140px;height:140px}
+.donut svg{transform:rotate(-90deg);width:100%;height:100%}
+.donut-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
+.donut-pct{font-size:26px;font-weight:700;line-height:1;font-variant-numeric:tabular-nums}
+.donut-lbl{font-size:10.5px;color:var(--text-3);font-weight:700;text-transform:uppercase;letter-spacing:0.05em;margin-top:3px}
+.donut-legend{display:flex;flex-direction:column;gap:5px;font-size:12px}
+.donut-leg-row{display:flex;align-items:center;gap:7px}
+.donut-leg-dot{width:9px;height:9px;border-radius:50%}
+.report-chart{display:flex;align-items:flex-end;gap:6px;height:140px;padding:0 4px;margin-bottom:8px;border-bottom:1px solid var(--border)}
+.report-bar{flex:1;background:linear-gradient(180deg,var(--green-700),var(--green-400));border-radius:4px 4px 0 0;min-height:2px;position:relative;cursor:default;transition:opacity 0.15s}
+.report-bar:hover{opacity:0.8}
+.report-bar-label{position:absolute;bottom:-22px;left:50%;transform:translateX(-50%);font-size:10px;color:var(--text-3);font-weight:600;white-space:nowrap}
+.report-bar-val{position:absolute;top:-18px;left:50%;transform:translateX(-50%);font-size:10px;color:var(--text-2);font-weight:700;white-space:nowrap}
+.report-x-pad{height:24px}
+.leaderboard{display:flex;flex-direction:column;gap:6px}
+.lb-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)}
+.lb-row:last-child{border-bottom:none}
+.lb-rank{width:22px;height:22px;border-radius:50%;background:var(--surface-3);color:var(--text-2);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.lb-rank.gold{background:#fde68a;color:#78350f}
+.lb-rank.silver{background:#e5e7eb;color:#374151}
+.lb-rank.bronze{background:#fbd5b5;color:#7c2d12}
+.lb-name{flex:1;font-size:13.5px;font-weight:500}
+.lb-stats{font-size:12px;color:var(--text-3);font-weight:600;text-align:right}
+.lb-stats strong{color:var(--text);font-size:13px}
+
+/* ── MAP ── */
+.map-wrap{height:calc(100dvh - var(--header-h) - var(--nav-h) - 110px);min-height:380px;border-radius:var(--r-md);overflow:hidden;border:1px solid var(--border);box-shadow:var(--shadow-sm);position:relative}
+#leaflet-map{height:100%;width:100%}
+.map-empty{padding:40px 24px;text-align:center;color:var(--text-3);font-size:14px;background:var(--surface);border-radius:var(--r-md);border:1px solid var(--border)}
+.map-controls{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center}
+.map-stats{font-size:12px;color:var(--text-2);font-weight:600}
+.leaflet-popup-content{font-family:var(--font);font-size:13px}
+.leaflet-popup-content strong{display:block;font-size:14px;margin-bottom:4px}
+.leaflet-popup-content a{color:var(--green-700);text-decoration:none;font-weight:600;font-size:12px}
+.geocode-status{font-size:11.5px;color:var(--text-3);padding:6px 10px;background:var(--surface-3);border-radius:var(--r-sm);display:inline-block}
+
 /* ── PRINT ── */
 @media print{
   .header,.sync-bar,.nav,.detail-back,.detail-actions,.detail-tabs,.quick-actions,.photo-add-btn,.note-compose,.task-add,.stage-pipeline,.fin-edit-row,.modal-bd{display:none !important}
@@ -696,10 +779,16 @@ input[type=range]{width:100%;accent-color:var(--green-700);height:4px;cursor:poi
       <p>Waterfront Solutions</p>
     </div>
   </div>
-  <button class="user-btn" id="user-btn">
-    <div class="user-avatar" id="user-avatar">?</div>
-    <span id="user-label">Set name</span>
-  </button>
+  <div style="display:flex;align-items:center;gap:6px">
+    <button class="bell-btn" id="bell-btn" title="Notifications">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0"/></svg>
+      <span class="bell-badge" id="bell-badge" style="display:none">0</span>
+    </button>
+    <button class="user-btn" id="user-btn">
+      <div class="user-avatar" id="user-avatar">?</div>
+      <span id="user-label">Set name</span>
+    </button>
+  </div>
 </header>
 
 <div class="sync-bar">
@@ -720,6 +809,14 @@ input[type=range]{width:100%;accent-color:var(--green-700);height:4px;cursor:poi
   <button class="nav-btn" data-view="schedule">
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5"/></svg>
     Schedule
+  </button>
+  <button class="nav-btn" data-view="map">
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 6.75V15m6-6v8.25m.503 3.498l4.875-2.437c.381-.19.622-.58.622-1.006V4.82c0-.836-.88-1.38-1.628-1.006l-3.869 1.934c-.317.159-.69.159-1.006 0L9.503 3.252a1.125 1.125 0 00-1.006 0L3.622 5.689C3.24 5.88 3 6.27 3 6.695V19.18c0 .836.88 1.38 1.628 1.006l3.869-1.934c.317-.159.69-.159 1.006 0l4.994 2.497c.317.158.69.158 1.006 0z"/></svg>
+    Map
+  </button>
+  <button class="nav-btn" data-view="reports">
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z"/></svg>
+    Reports
   </button>
   <button class="nav-btn" data-view="activity">
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5M5.625 4.5h12.75a1.875 1.875 0 010 3.75H5.625a1.875 1.875 0 010-3.75z"/></svg>
@@ -743,12 +840,14 @@ try{const s=localStorage.getItem('wfs_fb');if(s)FIREBASE_CONFIG=JSON.parse(s)}ca
 
 // ══ State ══
 let DB=null;
-const S={jobs:{},activity:[],members:[],view:'dashboard',detail:null,detailTab:'overview',filter:'all',search:'',photoCat:'all',calMonth:new Date().getMonth(),calYear:new Date().getFullYear(),calSelected:null,user:localStorage.getItem('wfs_user')||''};
+let MAP=null,MAP_MARKERS=[];
+const S={jobs:{},activity:[],members:[],view:'dashboard',detail:null,detailTab:'overview',filter:'all',search:'',photoCat:'all',calMonth:new Date().getMonth(),calYear:new Date().getFullYear(),calSelected:null,reportRange:'90',user:localStorage.getItem('wfs_user')||'',notifReadAt:parseInt(localStorage.getItem('wfs_notif_read')||'0',10)};
 
 // ── Workflow stages (BuilderTrend / AccuLynx style)
 const STAGES=['Lead','Estimate','Approved','Scheduled','In Progress','Punch List','Complete'];
 const STAGE_TO_STATUS={'Lead':'lead','Estimate':'lead','Approved':'active','Scheduled':'active','In Progress':'active','Punch List':'active','Complete':'complete'};
 const PHOTO_CATS=['all','before','during','after','damage','docs'];
+const LEAD_SOURCES=['Referral','Repeat Customer','Google Search','Facebook / Social','Yard Sign','Drive-By','Website','Phone Call','Walk-In','Other'];
 
 // ══ Helpers ══
 const $=id=>document.getElementById(id);
@@ -808,10 +907,14 @@ function render(){
   else if(S.view==='jobs')c.innerHTML=renderJobs();
   else if(S.view==='dashboard')c.innerHTML=renderDashboard();
   else if(S.view==='schedule')c.innerHTML=renderSchedule();
+  else if(S.view==='map')c.innerHTML=renderMap();
+  else if(S.view==='reports')c.innerHTML=renderReports();
   else if(S.view==='activity')c.innerHTML=renderActivity();
   else if(S.view==='team')c.innerHTML=renderTeam();
   updateUserUI();
+  updateBellBadge();
   attachHandlers();
+  if(S.view==='map')mountMap();
 }
 
 function updateUserUI(){
@@ -993,6 +1096,323 @@ function renderSchedule(){
         </div>`).join('')}
     </div>
   `;
+}
+
+// ══ Reports ══
+function renderReports(){
+  const all=jobs();
+  const range=parseInt(S.reportRange||'90',10);
+  const cutoff=range>0?Date.now()-range*86400000:0;
+  const inRange=all.filter(j=>(j.created||0)>=cutoff);
+  // Win rate: complete vs (complete + lead-but-not-converted-and-not-on-hold-recently). Simpler: of jobs that left "lead" stage, how many became "complete"?
+  const totalLeads=all.filter(j=>j.created>=cutoff).length;
+  const won=all.filter(j=>j.status==='complete'&&(j.created||0)>=cutoff).length;
+  const lost=all.filter(j=>j.status==='hold'&&(j.created||0)>=cutoff).length;
+  const open=all.filter(j=>(j.status==='lead'||j.status==='active')&&(j.created||0)>=cutoff).length;
+  const decided=won+lost;
+  const winRate=decided>0?(won/decided)*100:0;
+  const conversionRate=totalLeads>0?(won/totalLeads)*100:0;
+
+  // Financial
+  const totalValue=inRange.reduce((s,j)=>s+Number(j.value||0),0);
+  const revenue=inRange.filter(j=>j.status==='complete').reduce((s,j)=>s+Number(j.invoiced||j.value||0),0);
+  const collected=inRange.reduce((s,j)=>s+Number(j.paid||0),0);
+  const avgDeal=won>0?revenue/won:0;
+  const pipeline=inRange.filter(j=>j.status!=='complete'&&j.status!=='hold').reduce((s,j)=>s+Number(j.value||0),0);
+
+  // Monthly revenue chart — last 6 months
+  const months=[];
+  const now=new Date();
+  for(let i=5;i>=0;i--){
+    const d=new Date(now.getFullYear(),now.getMonth()-i,1);
+    months.push({label:d.toLocaleDateString(undefined,{month:'short'}),key:d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'),val:0});
+  }
+  all.forEach(j=>{
+    if(j.status!=='complete')return;
+    const t=j.completedAt||j.created;
+    if(!t)return;
+    const d=new Date(t);
+    const k=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+    const m=months.find(x=>x.key===k);
+    if(m)m.val+=Number(j.invoiced||j.value||0);
+  });
+  const maxMonth=Math.max(1,...months.map(m=>m.val));
+
+  // Lead source ROI
+  const bySource={};
+  all.forEach(j=>{
+    if((j.created||0)<cutoff)return;
+    const s=j.leadSource||'Unknown';
+    bySource[s]=bySource[s]||{total:0,won:0,value:0,revenue:0};
+    bySource[s].total++;
+    bySource[s].value+=Number(j.value||0);
+    if(j.status==='complete'){bySource[s].won++;bySource[s].revenue+=Number(j.invoiced||j.value||0)}
+  });
+  const sources=Object.entries(bySource).sort((a,b)=>b[1].revenue-a[1].revenue);
+
+  // Team leaderboard
+  const byMember={};
+  all.forEach(j=>{
+    if((j.created||0)<cutoff)return;
+    const m=j.assigned||'Unassigned';
+    byMember[m]=byMember[m]||{name:m,jobs:0,won:0,revenue:0};
+    byMember[m].jobs++;
+    if(j.status==='complete'){byMember[m].won++;byMember[m].revenue+=Number(j.invoiced||j.value||0)}
+  });
+  const leaderboard=Object.values(byMember).sort((a,b)=>b.revenue-a.revenue).slice(0,8);
+
+  // Donut chart for win rate
+  const circumference=2*Math.PI*52;
+  const donutDash=(winRate/100)*circumference;
+
+  return `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+      <div>
+        <div style="font-size:11px;color:var(--text-3);text-transform:uppercase;letter-spacing:0.06em;font-weight:700">Performance</div>
+        <div style="font-size:20px;font-weight:700;margin-top:2px">Reports</div>
+      </div>
+      <div class="filter-row" style="margin-bottom:0">
+        ${[['30','30 days'],['90','90 days'],['365','1 year'],['0','All time']].map(([v,l])=>`<div class="filter-chip ${S.reportRange===v?'active':''}" data-range="${v}">${l}</div>`).join('')}
+      </div>
+    </div>
+
+    <div class="kpi-grid">
+      <div class="kpi-card accent"><div class="kpi-label">Won Revenue</div><div class="kpi-value">${money(revenue)}</div><div class="kpi-sub">${won} job${won!==1?'s':''} completed</div></div>
+      <div class="kpi-card"><div class="kpi-label">Pipeline Value</div><div class="kpi-value">${money(pipeline)}</div><div class="kpi-sub">${open} open</div></div>
+      <div class="kpi-card"><div class="kpi-label">Avg Job Size</div><div class="kpi-value">${money(avgDeal)}</div><div class="kpi-sub">across won jobs</div></div>
+      <div class="kpi-card"><div class="kpi-label">Collected</div><div class="kpi-value">${money(collected)}</div><div class="kpi-sub">${revenue>0?((collected/revenue)*100).toFixed(0):0}% of revenue</div></div>
+    </div>
+
+    <div class="report-section">
+      <div class="report-hd">Win Rate <span class="kpi-sub">${won} won · ${lost} lost · ${open} open</span></div>
+      <div class="donut-wrap">
+        <div class="donut">
+          <svg viewBox="0 0 120 120">
+            <circle cx="60" cy="60" r="52" fill="none" stroke="var(--surface-3)" stroke-width="14"/>
+            <circle cx="60" cy="60" r="52" fill="none" stroke="var(--green-600)" stroke-width="14"
+              stroke-dasharray="${donutDash} ${circumference}" stroke-linecap="round"/>
+          </svg>
+          <div class="donut-center"><div class="donut-pct">${winRate.toFixed(0)}%</div><div class="donut-lbl">Win Rate</div></div>
+        </div>
+        <div class="donut-legend">
+          <div class="donut-leg-row"><div class="donut-leg-dot" style="background:var(--green-600)"></div>Won <strong style="margin-left:auto">${won}</strong></div>
+          <div class="donut-leg-row"><div class="donut-leg-dot" style="background:#94a3b8"></div>Lost <strong style="margin-left:auto">${lost}</strong></div>
+          <div class="donut-leg-row"><div class="donut-leg-dot" style="background:var(--gold)"></div>Open <strong style="margin-left:auto">${open}</strong></div>
+          <div class="donut-leg-row" style="margin-top:6px;padding-top:6px;border-top:1px solid var(--border)"><span style="color:var(--text-3);font-size:11px">Conversion</span><strong style="margin-left:auto">${conversionRate.toFixed(0)}%</strong></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="report-section">
+      <div class="report-hd">Monthly Revenue <span class="kpi-sub">Last 6 months</span></div>
+      <div class="report-chart">
+        ${months.map(m=>{
+          const h=(m.val/maxMonth)*100;
+          return `<div class="report-bar" style="height:${Math.max(2,h)}%" title="${money(m.val)}">
+            <div class="report-bar-val">${m.val>0?'$'+(m.val>=1000?(m.val/1000).toFixed(0)+'k':m.val):''}</div>
+            <div class="report-bar-label">${m.label}</div>
+          </div>`;
+        }).join('')}
+      </div>
+      <div class="report-x-pad"></div>
+    </div>
+
+    <div class="report-section">
+      <div class="report-hd">Lead Source ROI <span class="kpi-sub">${sources.length} source${sources.length!==1?'s':''}</span></div>
+      ${sources.length===0?'<p style="font-size:13px;color:var(--text-3);padding:4px 0">Set the Lead Source on jobs to see where your best work comes from.</p>'
+        :`<div style="display:flex;flex-direction:column;gap:8px">
+          ${sources.map(([name,s])=>{
+            const rate=s.total>0?(s.won/s.total)*100:0;
+            return `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)">
+              <div style="flex:1;min-width:0">
+                <div style="font-weight:600;font-size:13.5px">${esc(name)}</div>
+                <div style="font-size:11.5px;color:var(--text-3)">${s.total} lead${s.total!==1?'s':''} · ${s.won} won · ${rate.toFixed(0)}% conversion</div>
+              </div>
+              <div style="text-align:right">
+                <div style="font-weight:700;font-size:14px">${money(s.revenue)}</div>
+                <div style="font-size:11px;color:var(--text-3)">${money(s.value)} pipeline</div>
+              </div>
+            </div>`;
+          }).join('')}
+        </div>`}
+    </div>
+
+    <div class="report-section">
+      <div class="report-hd">Team Leaderboard <span class="kpi-sub">By revenue</span></div>
+      ${leaderboard.length===0?'<p style="font-size:13px;color:var(--text-3);padding:4px 0">Assign jobs to team members to see rankings.</p>'
+        :`<div class="leaderboard">
+          ${leaderboard.map((m,i)=>{
+            const rankCls=i===0?'gold':i===1?'silver':i===2?'bronze':'';
+            return `<div class="lb-row">
+              <div class="lb-rank ${rankCls}">${i+1}</div>
+              <div class="member-ava" style="width:30px;height:30px;font-size:12px">${initials(m.name)}</div>
+              <div class="lb-name">${esc(m.name)}<div style="font-size:11px;color:var(--text-3);font-weight:500">${m.won}/${m.jobs} won</div></div>
+              <div class="lb-stats"><strong>${money(m.revenue)}</strong><div>revenue</div></div>
+            </div>`;
+          }).join('')}
+        </div>`}
+    </div>
+  `;
+}
+
+// ══ Map ══
+function renderMap(){
+  const all=jobs();
+  const withCoords=all.filter(j=>j.lat&&j.lng);
+  const needGeo=all.filter(j=>j.address&&(!j.lat||!j.lng));
+  return `
+    <div class="map-controls">
+      <div class="map-stats">${withCoords.length} of ${all.filter(j=>j.address).length} jobs pinned</div>
+      ${needGeo.length>0?`<button class="btn-sm" id="btn-geocode">Locate ${needGeo.length} address${needGeo.length!==1?'es':''}</button>`:''}
+      <span class="geocode-status" id="geo-status" style="display:none"></span>
+    </div>
+    ${withCoords.length===0?`<div class="map-empty">
+      <p style="margin-bottom:10px">No jobs pinned to the map yet.</p>
+      <p style="font-size:12.5px">${needGeo.length>0?'Click "Locate" above to find addresses on the map.':'Add a job with an address to get started.'}</p>
+    </div>`:''}
+    <div class="map-wrap" id="map-wrap" style="${withCoords.length===0?'display:none':''}">
+      <div id="leaflet-map"></div>
+    </div>
+  `;
+}
+
+function mountMap(){
+  if(typeof L==='undefined'){
+    setTimeout(mountMap,200);
+    return;
+  }
+  const el=document.getElementById('leaflet-map');
+  if(!el)return;
+  if(MAP){MAP.remove();MAP=null;MAP_MARKERS=[]}
+  const all=jobs().filter(j=>j.lat&&j.lng);
+  if(all.length===0)return;
+  MAP=L.map(el,{scrollWheelZoom:true});
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+    maxZoom:19,attribution:'© OpenStreetMap'
+  }).addTo(MAP);
+  const group=[];
+  all.forEach(j=>{
+    const color=j.status==='complete'?'#3ab5c8':j.status==='active'?'#4ade80':j.status==='hold'?'#94a3b8':'#e8a830';
+    const icon=L.divIcon({
+      className:'',
+      html:`<div style="background:${color};width:24px;height:24px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center"><div style="transform:rotate(45deg);color:#fff;font-size:11px;font-weight:700">${initials(j.name)}</div></div>`,
+      iconSize:[24,24],iconAnchor:[12,24]
+    });
+    const m=L.marker([j.lat,j.lng],{icon}).addTo(MAP);
+    m.bindPopup(`<strong>${esc(j.name)}</strong>${esc(j.address||'')}<br><br>${j.customerName?esc(j.customerName)+'<br>':''}${j.customerPhone?'📞 '+esc(j.customerPhone)+'<br>':''}<a href="#" data-open-job="${j.id}">Open job →</a>`);
+    m.on('popupopen',()=>{
+      const lnk=document.querySelector('[data-open-job="'+j.id+'"]');
+      if(lnk)lnk.onclick=e=>{e.preventDefault();S.detail=j.id;S.view='jobs';S.detailTab='overview';render()};
+    });
+    group.push([j.lat,j.lng]);
+  });
+  if(group.length===1){MAP.setView(group[0],13)}
+  else{MAP.fitBounds(group,{padding:[40,40]})}
+  setTimeout(()=>MAP&&MAP.invalidateSize(),100);
+}
+
+// Nominatim geocoder (rate limited 1/sec by their TOS)
+async function geocodeOne(addr){
+  try{
+    const r=await fetch('https://nominatim.openstreetmap.org/search?format=json&limit=1&q='+encodeURIComponent(addr),{headers:{'Accept':'application/json'}});
+    if(!r.ok)return null;
+    const data=await r.json();
+    if(data&&data.length>0)return{lat:parseFloat(data[0].lat),lng:parseFloat(data[0].lon)};
+  }catch(e){}
+  return null;
+}
+async function geocodeAll(){
+  const queue=jobs().filter(j=>j.address&&(!j.lat||!j.lng));
+  const status=$('geo-status');
+  if(status)status.style.display='inline-block';
+  for(let i=0;i<queue.length;i++){
+    const j=queue[i];
+    if(status)status.textContent=`Locating ${i+1} of ${queue.length}: ${j.name}…`;
+    const coords=await geocodeOne(j.address);
+    if(coords){j.lat=coords.lat;j.lng=coords.lng;await writeJob(j)}
+    await new Promise(r=>setTimeout(r,1100));
+  }
+  if(status)status.textContent='Done.';
+  toast('Locations updated');
+  render();
+}
+
+// ══ Notifications ══
+function buildNotifications(){
+  const out=[];
+  const me=(S.user||'').toLowerCase();
+  const all=jobs();
+  // Tasks due / overdue assigned to me (or unassigned that I created)
+  all.forEach(j=>{
+    (j.tasks||[]).forEach((t,i)=>{
+      if(t.done||!t.due)return;
+      const d=daysUntil(t.due);
+      if(d===null)return;
+      const owner=(t.assigned||'').toLowerCase();
+      const mine=me&&(owner===me||owner==='');
+      if(!mine)return;
+      if(d<0)out.push({type:'overdue',time:new Date(t.due+'T00:00:00').getTime(),text:`Task overdue: <strong>${esc(t.text)}</strong>`,sub:esc(j.name)+' · '+Math.abs(d)+'d late',jobId:j.id});
+      else if(d<=2)out.push({type:'task',time:new Date(t.due+'T00:00:00').getTime(),text:`Task due ${d===0?'today':d===1?'tomorrow':'in '+d+' days'}: <strong>${esc(t.text)}</strong>`,sub:esc(j.name),jobId:j.id});
+    });
+  });
+  // Recent activity on jobs assigned to me
+  S.activity.slice(0,40).forEach(a=>{
+    const job=Object.values(S.jobs).find(j=>j.name===a.job);
+    if(!job)return;
+    const mine=me&&(job.assigned||'').toLowerCase()===me;
+    if(mine&&a.user&&a.user.toLowerCase()!==me){
+      out.push({type:'activity',time:a.time,text:`<strong>${esc(a.user)}</strong> ${esc(a.action)}`,sub:esc(a.job||''),jobId:job.id});
+    }
+  });
+  // Recent notes that mention me by name (case-insensitive substring)
+  if(me){
+    all.forEach(j=>{
+      (j.notes||[]).forEach(n=>{
+        if(!n.text||!n.user)return;
+        if(n.user.toLowerCase()===me)return;
+        if(n.text.toLowerCase().includes('@'+me)||n.text.toLowerCase().includes(me)&&n.text.includes('@')){
+          out.push({type:'mention',time:n.time,text:`<strong>${esc(n.user)}</strong> mentioned you`,sub:esc(j.name)+' · '+esc(n.text).slice(0,60),jobId:j.id});
+        }
+      });
+    });
+  }
+  return out.sort((a,b)=>b.time-a.time).slice(0,30);
+}
+function unreadCount(){return buildNotifications().filter(n=>n.time>S.notifReadAt).length}
+function updateBellBadge(){
+  const b=$('bell-badge');if(!b)return;
+  const n=unreadCount();
+  b.textContent=n>9?'9+':n;
+  b.style.display=n>0?'flex':'none';
+}
+function showNotificationsModal(){
+  const notifs=buildNotifications();
+  const ICONS={overdue:'!',task:'○',activity:'•',mention:'@'};
+  const body=notifs.length===0
+    ? `<div class="notif-empty">🔕<br><br>You're all caught up.<br><span style="font-size:12px">Tasks assigned to you, mentions, and activity on your jobs will appear here.</span></div>`
+    : '<div class="notif-list">'+notifs.map(n=>`<div class="notif-item ${n.time>S.notifReadAt?'unread':''}" data-open="${n.jobId}">
+        <div class="notif-icon ${n.type}">${ICONS[n.type]||'•'}</div>
+        <div class="notif-body"><div class="notif-text">${n.text}</div><div class="notif-meta">${n.sub} · ${ago(n.time)}</div></div>
+        ${n.time>S.notifReadAt?'<div class="notif-dot"></div>':''}
+      </div>`).join('')+'</div>';
+  $('modal-root').innerHTML=`<div class="modal-bd" id="mbd"><div class="modal"><div class="modal-handle"></div>
+    <div class="modal-head"><div class="modal-title">Notifications ${notifs.length?'<span style="font-weight:400;color:var(--text-3);font-size:13px">· '+notifs.length+'</span>':''}</div>
+      <div style="display:flex;gap:4px;align-items:center">${notifs.length?'<button class="notif-clear" id="notif-mark">Mark all read</button>':''}<button class="modal-close" id="mc"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button></div>
+    </div>
+    <div class="modal-body" style="padding:0 20px 20px">${body}</div>
+  </div></div>`;
+  $('mc').onclick=closeModal;
+  $('mbd').onclick=e=>{if(e.target===e.currentTarget)closeModal()};
+  $('notif-mark')?.addEventListener('click',()=>{
+    S.notifReadAt=Date.now();
+    localStorage.setItem('wfs_notif_read',String(S.notifReadAt));
+    closeModal();render();toast('Marked all as read');
+  });
+  document.querySelectorAll('.notif-item[data-open]').forEach(el=>el.onclick=()=>{
+    S.notifReadAt=Math.max(S.notifReadAt,Date.now());
+    localStorage.setItem('wfs_notif_read',String(S.notifReadAt));
+    S.detail=el.dataset.open;S.view='jobs';S.detailTab='overview';closeModal();render();
+  });
 }
 
 function renderJobs(){
@@ -1181,6 +1601,7 @@ function renderDetailTab(j,tab){
           <div class="info-cell"><div class="info-label">Email</div><div class="info-value" style="font-size:12px;word-break:break-all">${j.customerEmail?`<a href="mailto:${encodeURIComponent(j.customerEmail)}" style="color:var(--green-700);text-decoration:none">${esc(j.customerEmail)}</a>`:'—'}</div></div>
           <div class="info-cell" style="grid-column:1/-1"><div class="info-label">Job Site Address</div><div class="info-value" style="font-size:13px">${esc(j.address||'—')}</div></div>
           <div class="info-cell" style="grid-column:1/-1"><div class="info-label">Billing Address</div><div class="info-value" style="font-size:13px">${esc(j.billingAddress||j.address||'—')}</div></div>
+          <div class="info-cell" style="grid-column:1/-1"><div class="info-label">Lead Source</div><div class="info-value">${esc(j.leadSource||'—')}</div></div>
         </div>
         ${j.customerNotes?`<div style="background:var(--surface-3);border-radius:var(--r-sm);padding:11px 13px;margin-top:10px"><div class="info-label">Customer Notes</div><p style="font-size:13px;margin-top:4px;line-height:1.55">${esc(j.customerNotes)}</p></div>`:''}
       </div>`;
@@ -1426,6 +1847,7 @@ function showJobModal(mode,job){
         <div class="form-group"><label class="form-label">Email</label><input class="form-input" type="email" id="f-cust-email" value="${esc(j.customerEmail||'')}" placeholder="customer@example.com"></div>
       </div>
       <div class="form-group"><label class="form-label">Billing Address</label><input class="form-input" id="f-bill-addr" value="${esc(j.billingAddress||'')}" placeholder="Leave blank if same as job site"></div>
+      <div class="form-group"><label class="form-label">Lead Source</label><select class="form-select" id="f-source"><option value="">Not set</option>${LEAD_SOURCES.map(s=>`<option value="${esc(s)}" ${j.leadSource===s?'selected':''}>${esc(s)}</option>`).join('')}</select></div>
 
       <div style="margin:18px 0 10px;padding-top:14px;border-top:1px solid var(--border)">
         <div class="form-label" style="font-size:12px;margin-bottom:10px">Financial</div>
@@ -1462,11 +1884,17 @@ function showJobModal(mode,job){
       customerPhone:$('f-cust-phone').value.trim(),
       customerEmail:$('f-cust-email').value.trim(),
       billingAddress:$('f-bill-addr').value.trim(),
+      leadSource:$('f-source').value,
     };
     if(mode==='add'){
-      const nj={id:uid(),...data,progress:0,notes:[],photos:[],tasks:[],dailyLogs:[],documents:[],comms:[],created:Date.now()};
+      const nj={id:uid(),...data,progress:data.status==='complete'?100:0,notes:[],photos:[],tasks:[],dailyLogs:[],documents:[],comms:[],created:Date.now()};
+      if(nj.status==='complete')nj.completedAt=Date.now();
       await writeJob(nj);await logAct('added job',name);toast('Job added');
-    }else{await writeJob({...j,...data});await logAct('updated job',name);toast('Changes saved')}
+    }else{
+      const merged={...j,...data};
+      if(merged.status==='complete'&&!j.completedAt)merged.completedAt=Date.now();
+      await writeJob(merged);await logAct('updated job',name);toast('Changes saved');
+    }
     closeModal();render();
   };
   if(mode==='edit')$('btn-del').onclick=async()=>{
@@ -1574,6 +2002,11 @@ function attachHandlers(){
     if(n!==null){S.user=n.trim();localStorage.setItem('wfs_user',S.user);render()}
   };
   $('setup-link').onclick=showSetupModal;
+  $('bell-btn')?.addEventListener('click',showNotificationsModal);
+  // Reports
+  document.querySelectorAll('[data-range]').forEach(c=>c.onclick=()=>{S.reportRange=c.dataset.range;render()});
+  // Map
+  $('btn-geocode')?.addEventListener('click',geocodeAll);
   $('btn-add-job')?.addEventListener('click',()=>showJobModal('add'));
   $('btn-add-job2')?.addEventListener('click',()=>showJobModal('add'));
   $('btn-export-csv')?.addEventListener('click',exportCSV);
@@ -1605,7 +2038,7 @@ function attachHandlers(){
     j.stage=newStage;
     const newStatus=STAGE_TO_STATUS[newStage];
     if(newStatus)j.status=newStatus;
-    if(newStage==='Complete')j.progress=100;
+    if(newStage==='Complete'){j.progress=100;j.completedAt=Date.now()}
     await writeJob(j);await logAct('moved to '+newStage,j.name);render();toast('Stage updated');
   });
 
