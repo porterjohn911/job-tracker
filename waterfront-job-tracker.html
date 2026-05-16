@@ -468,6 +468,222 @@ input[type=range]{width:100%;accent-color:var(--green-700);height:4px;cursor:poi
 .toast svg{width:15px;height:15px;stroke-width:2.5}
 .loader{text-align:center;padding:60px 20px;color:var(--text-3);font-size:14px}
 .divider{height:1px;background:var(--border);margin:4px 0 18px}
+
+/* ── DASHBOARD ── */
+.kpi-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:18px}
+.kpi-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);padding:14px 15px;box-shadow:var(--shadow-sm)}
+.kpi-label{font-size:10.5px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px;display:flex;align-items:center;gap:6px}
+.kpi-label svg{width:13px;height:13px;stroke-width:2}
+.kpi-value{font-size:22px;font-weight:700;color:var(--text);font-variant-numeric:tabular-nums;line-height:1.1}
+.kpi-sub{font-size:11.5px;color:var(--text-2);margin-top:3px}
+.kpi-card.accent{background:linear-gradient(135deg,var(--green-900),var(--green-700));color:#fff;border:none}
+.kpi-card.accent .kpi-label,.kpi-card.accent .kpi-value,.kpi-card.accent .kpi-sub{color:#fff}
+.kpi-card.accent .kpi-label{color:rgba(255,255,255,0.7)}
+.kpi-card.accent .kpi-sub{color:rgba(255,255,255,0.75)}
+.dash-section{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);padding:14px 16px;margin-bottom:14px}
+.dash-section-hd{font-size:13px;font-weight:700;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between}
+.dash-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px}
+.dash-row:last-child{border-bottom:none}
+.dash-row-pill{margin-left:auto;font-size:11px;font-weight:600;padding:2px 8px;border-radius:20px}
+.bar-chart{display:flex;flex-direction:column;gap:8px}
+.bar-row{display:flex;align-items:center;gap:8px;font-size:12px}
+.bar-row-label{flex:0 0 70px;font-weight:600;color:var(--text-2)}
+.bar-row-track{flex:1;height:8px;background:var(--surface-3);border-radius:4px;overflow:hidden}
+.bar-row-fill{height:100%;border-radius:4px;transition:width 0.4s}
+.bar-row-val{font-size:11.5px;color:var(--text-3);font-weight:600;min-width:24px;text-align:right}
+
+/* ── SCHEDULE / CALENDAR ── */
+.cal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.cal-title{font-size:17px;font-weight:700}
+.cal-nav{display:flex;gap:6px}
+.cal-nav button{
+  width:34px;height:34px;border-radius:var(--r-sm);background:var(--surface);
+  border:1.5px solid var(--border-md);cursor:pointer;display:flex;align-items:center;justify-content:center;
+  color:var(--text-2);font-family:var(--font);
+}
+.cal-nav button:active{transform:scale(0.95)}
+.cal-nav button svg{width:14px;height:14px;stroke-width:2.5}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:14px}
+.cal-dow{font-size:10px;font-weight:700;text-transform:uppercase;color:var(--text-3);text-align:center;padding:4px 0;letter-spacing:0.04em}
+.cal-day{
+  aspect-ratio:1;background:var(--surface);border:1px solid var(--border);
+  border-radius:8px;padding:5px;font-size:12px;cursor:pointer;
+  display:flex;flex-direction:column;align-items:flex-start;position:relative;
+  transition:all 0.15s;min-height:50px;
+}
+.cal-day:hover{border-color:var(--green-600)}
+.cal-day.empty{background:transparent;border:none;cursor:default}
+.cal-day.today{background:var(--green-100);border-color:var(--green-600);font-weight:700}
+.cal-day.has-jobs{background:var(--green-50);border-color:var(--green-400)}
+.cal-day-num{font-size:12px;font-weight:600;line-height:1}
+.cal-day-dots{display:flex;gap:2px;margin-top:2px;flex-wrap:wrap}
+.cal-day-dot{width:5px;height:5px;border-radius:50%;background:var(--green-700)}
+.cal-day-count{position:absolute;bottom:3px;right:5px;font-size:9.5px;color:var(--text-2);font-weight:600}
+.cal-day-list{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);padding:12px 14px}
+.cal-day-list-hd{font-size:12px;font-weight:700;color:var(--text-2);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.04em}
+.cal-job-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);cursor:pointer;font-size:13px}
+.cal-job-row:last-child{border-bottom:none}
+.cal-job-row:hover{color:var(--green-700)}
+
+/* ── DETAIL TABS ── */
+.detail-tabs{
+  display:flex;gap:4px;overflow-x:auto;background:var(--surface-3);
+  padding:4px;border-radius:var(--r-sm);margin-bottom:16px;scrollbar-width:none;
+}
+.detail-tabs::-webkit-scrollbar{display:none}
+.detail-tab{
+  padding:7px 13px;font-size:12px;font-weight:600;border-radius:8px;
+  cursor:pointer;color:var(--text-2);background:transparent;border:none;
+  font-family:var(--font);white-space:nowrap;transition:all 0.15s;
+}
+.detail-tab.active{background:var(--surface);color:var(--green-700);box-shadow:var(--shadow-sm)}
+.detail-tab:not(.active):active{background:rgba(0,0,0,0.05)}
+
+/* ── QUICK ACTIONS ── */
+.quick-actions{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:18px}
+.qa-btn{
+  display:flex;flex-direction:column;align-items:center;gap:5px;
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);
+  padding:11px 6px;cursor:pointer;color:var(--green-700);
+  font-size:11px;font-weight:600;font-family:var(--font);
+  transition:all 0.15s;text-decoration:none;
+}
+.qa-btn:active{transform:scale(0.96)}
+.qa-btn:hover{border-color:var(--green-600);background:var(--green-50)}
+.qa-btn svg{width:18px;height:18px;stroke-width:2}
+.qa-btn.disabled{opacity:0.4;pointer-events:none}
+
+/* ── STAGE PIPELINE ── */
+.stage-pipeline{display:flex;gap:0;margin-bottom:18px;border-radius:var(--r-sm);overflow:hidden;background:var(--surface-3)}
+.stage-step{
+  flex:1;padding:9px 4px;text-align:center;font-size:10.5px;font-weight:700;
+  color:var(--text-3);text-transform:uppercase;letter-spacing:0.04em;
+  cursor:pointer;position:relative;transition:all 0.15s;border:none;background:none;
+  font-family:var(--font);
+}
+.stage-step.done{background:var(--green-100);color:var(--green-700)}
+.stage-step.current{background:var(--green-700);color:#fff}
+.stage-step:hover:not(.current){background:rgba(0,0,0,0.04)}
+@media(prefers-color-scheme:dark){.stage-step:hover:not(.current){background:rgba(255,255,255,0.04)}}
+
+/* ── TASKS ── */
+.task-list{display:flex;flex-direction:column;gap:6px;margin-bottom:10px}
+.task-item{
+  display:flex;align-items:center;gap:10px;
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r-sm);padding:10px 12px;font-size:13.5px;
+  transition:all 0.15s;
+}
+.task-item.done{opacity:0.55}
+.task-item.done .task-text{text-decoration:line-through}
+.task-check{
+  width:20px;height:20px;border-radius:6px;border:2px solid var(--border-md);
+  cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;
+  background:var(--surface);transition:all 0.15s;
+}
+.task-check.checked{background:var(--green-700);border-color:var(--green-700)}
+.task-check.checked::after{content:'✓';color:#fff;font-size:13px;font-weight:700}
+.task-text{flex:1;color:var(--text);line-height:1.4}
+.task-meta{font-size:11px;color:var(--text-3);margin-top:2px}
+.task-del{background:none;border:none;color:var(--text-3);cursor:pointer;padding:4px;opacity:0;transition:opacity 0.15s}
+.task-item:hover .task-del{opacity:1}
+.task-del:hover{color:var(--red)}
+.task-add{display:flex;gap:8px}
+
+/* ── DOCS / FILES ── */
+.doc-list{display:flex;flex-direction:column;gap:6px;margin-bottom:10px}
+.doc-item{
+  display:flex;align-items:center;gap:11px;
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r-sm);padding:10px 13px;font-size:13px;
+  cursor:pointer;transition:all 0.15s;text-decoration:none;color:var(--text);
+}
+.doc-item:hover{border-color:var(--green-600)}
+.doc-icon{
+  width:34px;height:34px;border-radius:8px;background:var(--green-100);color:var(--green-700);
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.doc-icon svg{width:18px;height:18px;stroke-width:2}
+.doc-info{flex:1;min-width:0}
+.doc-name{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.doc-meta{font-size:11px;color:var(--text-3);margin-top:1px}
+.doc-del{background:none;border:none;color:var(--text-3);cursor:pointer;padding:6px;flex-shrink:0}
+.doc-del:hover{color:var(--red)}
+
+/* ── FINANCIALS ── */
+.fin-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+.fin-cell{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r-md);padding:12px 14px;
+}
+.fin-label{font-size:10.5px;color:var(--text-3);font-weight:700;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px}
+.fin-value{font-size:18px;font-weight:700;color:var(--text);font-variant-numeric:tabular-nums}
+.fin-cell.bal-pos .fin-value{color:var(--green-700)}
+.fin-cell.bal-neg .fin-value{color:var(--orange)}
+.fin-bar{height:8px;background:var(--surface-3);border-radius:8px;overflow:hidden;margin:10px 0 6px}
+.fin-bar-fill{height:100%;background:linear-gradient(90deg,var(--green-700),var(--green-400));transition:width 0.4s}
+.fin-edit-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:6px}
+
+/* ── DAILY LOG ── */
+.log-list{display:flex;flex-direction:column;gap:8px;margin-bottom:10px}
+.log-entry{
+  background:var(--surface);border:1px solid var(--border);
+  border-left:3px solid var(--sky);border-radius:var(--r-md);
+  padding:11px 14px;
+}
+.log-date{font-size:11px;font-weight:700;color:var(--text-2);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:5px;display:flex;align-items:center;gap:8px}
+.log-weather{font-size:11px;color:var(--text-3);font-weight:500;text-transform:none;letter-spacing:0}
+.log-text{font-size:13.5px;color:var(--text);line-height:1.55;white-space:pre-wrap}
+.log-hours{font-size:11.5px;color:var(--text-3);margin-top:5px;font-weight:600}
+
+/* ── COMMUNICATIONS ── */
+.comm-list{display:flex;flex-direction:column;gap:6px;margin-bottom:10px}
+.comm-item{
+  display:flex;gap:11px;background:var(--surface);
+  border:1px solid var(--border);border-radius:var(--r-md);padding:10px 13px;font-size:13px;
+}
+.comm-icon{
+  width:32px;height:32px;border-radius:50%;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;color:#fff;
+}
+.comm-icon svg{width:15px;height:15px;stroke-width:2}
+.comm-icon.call{background:#22c55e}
+.comm-icon.text{background:#3b82f6}
+.comm-icon.email{background:#8b5cf6}
+.comm-icon.meeting{background:var(--gold)}
+.comm-body{flex:1;min-width:0}
+.comm-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:3px}
+.comm-type{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;color:var(--text-2)}
+.comm-time{font-size:11px;color:var(--text-3)}
+.comm-text{font-size:13px;color:var(--text);line-height:1.5}
+
+/* ── BADGE ── */
+.badge{display:inline-flex;align-items:center;gap:4px;background:var(--gold-light);color:#92600a;font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:20px;letter-spacing:0.02em}
+.badge.danger{background:var(--red-light);color:var(--red)}
+.badge.info{background:#e0f2fe;color:#075985}
+@media(prefers-color-scheme:dark){
+  .badge{background:#3d2800;color:#fbbf24}
+  .badge.danger{background:#2d1515;color:#fca5a5}
+  .badge.info{background:#082f49;color:#38bdf8}
+}
+
+/* ── PHOTO CATEGORY ── */
+.photo-cat-tabs{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}
+.photo-cat-chip{
+  padding:5px 11px;border-radius:20px;border:1.5px solid var(--border-md);
+  font-size:11.5px;font-weight:600;cursor:pointer;color:var(--text-2);
+  background:var(--surface);transition:all 0.15s;
+  font-family:var(--font);
+}
+.photo-cat-chip.active{background:var(--green-700);color:#fff;border-color:var(--green-700)}
+.photo-cat-label{position:absolute;top:5px;left:5px;background:rgba(0,0,0,0.55);color:#fff;font-size:9.5px;font-weight:700;padding:2px 6px;border-radius:8px;text-transform:uppercase;letter-spacing:0.04em}
+
+/* ── PRINT ── */
+@media print{
+  .header,.sync-bar,.nav,.detail-back,.detail-actions,.detail-tabs,.quick-actions,.photo-add-btn,.note-compose,.task-add,.stage-pipeline,.fin-edit-row,.modal-bd{display:none !important}
+  body{max-width:none;background:#fff}
+  .content{padding:0}
+}
 </style>
 </head>
 <body>
@@ -493,9 +709,17 @@ input[type=range]{width:100%;accent-color:var(--green-700);height:4px;cursor:poi
 </div>
 
 <nav class="nav">
-  <button class="nav-btn active" data-view="jobs">
+  <button class="nav-btn active" data-view="dashboard">
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3v11.25A2.25 2.25 0 006 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0118 16.5h-2.25m-7.5 0h7.5m-7.5 0l-1 3m8.5-3l1 3m0 0l.5 1.5m-.5-1.5h-9.5m0 0l-.5 1.5M9 11.25v1.5M12 9v3.75m3-6v6"/></svg>
+    Home
+  </button>
+  <button class="nav-btn" data-view="jobs">
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25"/></svg>
     Jobs
+  </button>
+  <button class="nav-btn" data-view="schedule">
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5"/></svg>
+    Schedule
   </button>
   <button class="nav-btn" data-view="activity">
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5M5.625 4.5h12.75a1.875 1.875 0 010 3.75H5.625a1.875 1.875 0 010-3.75z"/></svg>
@@ -519,7 +743,12 @@ try{const s=localStorage.getItem('wfs_fb');if(s)FIREBASE_CONFIG=JSON.parse(s)}ca
 
 // ══ State ══
 let DB=null;
-const S={jobs:{},activity:[],members:[],view:'jobs',detail:null,filter:'all',search:'',user:localStorage.getItem('wfs_user')||''};
+const S={jobs:{},activity:[],members:[],view:'dashboard',detail:null,detailTab:'overview',filter:'all',search:'',photoCat:'all',calMonth:new Date().getMonth(),calYear:new Date().getFullYear(),calSelected:null,user:localStorage.getItem('wfs_user')||''};
+
+// ── Workflow stages (BuilderTrend / AccuLynx style)
+const STAGES=['Lead','Estimate','Approved','Scheduled','In Progress','Punch List','Complete'];
+const STAGE_TO_STATUS={'Lead':'lead','Estimate':'lead','Approved':'active','Scheduled':'active','In Progress':'active','Punch List':'active','Complete':'complete'};
+const PHOTO_CATS=['all','before','during','after','damage','docs'];
 
 // ══ Helpers ══
 const $=id=>document.getElementById(id);
@@ -528,6 +757,13 @@ function ago(ts){const s=Math.floor((Date.now()-ts)/1000);if(s<60)return'just no
 function uid(){return'j_'+Date.now()+'_'+Math.random().toString(36).slice(2,6)}
 function jobs(){return Object.values(S.jobs).sort((a,b)=>(b.created||0)-(a.created||0))}
 function initials(name){return(name||'?')[0].toUpperCase()}
+function money(n){const v=Number(n||0);return '$'+v.toLocaleString(undefined,{maximumFractionDigits:0})}
+function dateKey(d){const x=d instanceof Date?d:new Date(d);return x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0')}
+function fmtDate(s){if(!s)return'';try{const d=new Date(s+(s.length===10?'T00:00:00':''));return d.toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'})}catch(e){return s}}
+function fmtShort(s){if(!s)return'';try{const d=new Date(s+(s.length===10?'T00:00:00':''));return d.toLocaleDateString(undefined,{month:'short',day:'numeric'})}catch(e){return s}}
+function daysUntil(s){if(!s)return null;try{const d=new Date(s+(s.length===10?'T00:00:00':''));const t=new Date();t.setHours(0,0,0,0);return Math.round((d-t)/(1000*60*60*24))}catch(e){return null}}
+function jobBalance(j){const inv=Number(j.invoiced||0),paid=Number(j.paid||0);return inv-paid}
+function jobStage(j){return j.stage||(j.status==='complete'?'Complete':j.status==='lead'?'Lead':'In Progress')}
 
 function toast(msg,icon='check'){
   const t=$('toast');
@@ -567,8 +803,11 @@ if(FIREBASE_CONFIG)initFB(FIREBASE_CONFIG);
 // ══ Render ══
 function render(){
   const c=$('content');
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.toggle('active',b.dataset.view===S.view));
   if(S.view==='jobs'&&S.detail)c.innerHTML=renderDetail(S.detail);
   else if(S.view==='jobs')c.innerHTML=renderJobs();
+  else if(S.view==='dashboard')c.innerHTML=renderDashboard();
+  else if(S.view==='schedule')c.innerHTML=renderSchedule();
   else if(S.view==='activity')c.innerHTML=renderActivity();
   else if(S.view==='team')c.innerHTML=renderTeam();
   updateUserUI();
@@ -585,13 +824,186 @@ function sdClass(s){return{lead:'sd-lead',active:'sd-active',complete:'sd-comple
 function spClass(s){return{lead:'sp-lead',active:'sp-active',complete:'sp-complete',hold:'sp-hold'}[s]||'sp-hold'}
 function spLabel(s){return{lead:'Lead',active:'Active',complete:'Complete',hold:'On Hold'}[s]||s}
 
+function renderDashboard(){
+  const all=jobs();
+  const active=all.filter(j=>j.status==='active');
+  const leads=all.filter(j=>j.status==='lead');
+  const done=all.filter(j=>j.status==='complete');
+  const totalValue=all.reduce((s,j)=>s+Number(j.value||0),0);
+  const totalInvoiced=all.reduce((s,j)=>s+Number(j.invoiced||0),0);
+  const totalPaid=all.reduce((s,j)=>s+Number(j.paid||0),0);
+  const outstanding=totalInvoiced-totalPaid;
+  const pipeline=leads.reduce((s,j)=>s+Number(j.value||0),0);
+  // Upcoming: jobs with start date in next 14 days, or not yet started
+  const upcoming=all.filter(j=>{
+    if(j.status==='complete')return false;
+    const d=daysUntil(j.startDate);
+    return d!==null&&d>=-1&&d<=14;
+  }).sort((a,b)=>(new Date(a.startDate))-(new Date(b.startDate))).slice(0,5);
+  // Open tasks across all jobs
+  const openTasks=[];
+  all.forEach(j=>(j.tasks||[]).forEach((t,i)=>{if(!t.done)openTasks.push({...t,jobId:j.id,jobName:j.name})}));
+  openTasks.sort((a,b)=>(a.due||'9999')>(b.due||'9999')?1:-1);
+  // Status distribution for chart
+  const cntStatus={lead:leads.length,active:active.length,complete:done.length,hold:all.filter(j=>j.status==='hold').length};
+  const maxCnt=Math.max(1,...Object.values(cntStatus));
+  const colors={lead:'var(--gold)',active:'#4ade80',complete:'var(--sky)',hold:'#94a3b8'};
+  const recent=S.activity.slice(0,5);
+
+  return `
+    <div style="margin-bottom:14px">
+      <div style="font-size:11px;color:var(--text-3);text-transform:uppercase;letter-spacing:0.06em;font-weight:700">${new Date().toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'})}</div>
+      <div style="font-size:20px;font-weight:700;margin-top:2px">${S.user?'Hi, '+esc(S.user.split(' ')[0])+' 👋':'Welcome'}</div>
+    </div>
+    <div class="kpi-grid">
+      <div class="kpi-card accent">
+        <div class="kpi-label">Active Jobs</div>
+        <div class="kpi-value">${active.length}</div>
+        <div class="kpi-sub">${leads.length} lead${leads.length!==1?'s':''} · ${done.length} done</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Job Value</div>
+        <div class="kpi-value">${money(totalValue)}</div>
+        <div class="kpi-sub">${money(pipeline)} in pipeline</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Invoiced</div>
+        <div class="kpi-value">${money(totalInvoiced)}</div>
+        <div class="kpi-sub">${money(totalPaid)} collected</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Outstanding</div>
+        <div class="kpi-value" style="color:${outstanding>0?'var(--orange)':'var(--green-700)'}">${money(outstanding)}</div>
+        <div class="kpi-sub">${outstanding>0?'awaiting payment':'all paid up'}</div>
+      </div>
+    </div>
+
+    <div class="dash-section">
+      <div class="dash-section-hd">Upcoming <span class="kpi-sub" style="font-size:11px">Next 14 days</span></div>
+      ${upcoming.length===0?'<p style="font-size:12.5px;color:var(--text-3);padding:4px 0">Nothing scheduled. Add start dates to jobs to plan your week.</p>'
+        :upcoming.map(j=>{
+          const d=daysUntil(j.startDate);
+          const lbl=d===0?'Today':d===1?'Tomorrow':d<0?Math.abs(d)+'d ago':'in '+d+'d';
+          const pillCls=d<=1?'sp-lead':'sp-active';
+          return `<div class="dash-row" data-open="${j.id}" style="cursor:pointer">
+            <span style="font-size:16px">📅</span>
+            <div style="flex:1;min-width:0">
+              <div style="font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(j.name)}</div>
+              <div style="font-size:11.5px;color:var(--text-3)">${fmtShort(j.startDate)} · ${esc(j.assigned||'Unassigned')}</div>
+            </div>
+            <span class="dash-row-pill status-pill ${pillCls}">${lbl}</span>
+          </div>`;
+        }).join('')}
+    </div>
+
+    <div class="dash-section">
+      <div class="dash-section-hd">Open Tasks <span class="kpi-sub" style="font-size:11px">${openTasks.length} total</span></div>
+      ${openTasks.length===0?'<p style="font-size:12.5px;color:var(--text-3);padding:4px 0">No open tasks. Add tasks inside a job’s Tasks tab.</p>'
+        :openTasks.slice(0,6).map(t=>{
+          const d=daysUntil(t.due);
+          const overdue=d!==null&&d<0;
+          const dueLbl=t.due?(overdue?'<span class="badge danger">'+Math.abs(d)+'d overdue</span>':d===0?'<span class="badge">Today</span>':d<=3?'<span class="badge">in '+d+'d</span>':fmtShort(t.due)):'';
+          return `<div class="dash-row" data-open="${t.jobId}" style="cursor:pointer">
+            <span style="font-size:14px">○</span>
+            <div style="flex:1;min-width:0">
+              <div style="font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(t.text)}</div>
+              <div style="font-size:11.5px;color:var(--text-3)">${esc(t.jobName)}${t.assigned?' · '+esc(t.assigned):''}</div>
+            </div>
+            ${dueLbl}
+          </div>`;
+        }).join('')}
+    </div>
+
+    <div class="dash-section">
+      <div class="dash-section-hd">Jobs by Status</div>
+      <div class="bar-chart">
+        ${['lead','active','hold','complete'].map(s=>`
+          <div class="bar-row">
+            <div class="bar-row-label">${spLabel(s)}</div>
+            <div class="bar-row-track"><div class="bar-row-fill" style="width:${(cntStatus[s]/maxCnt)*100}%;background:${colors[s]}"></div></div>
+            <div class="bar-row-val">${cntStatus[s]}</div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+
+    ${recent.length?`<div class="dash-section">
+      <div class="dash-section-hd">Recent Activity <button class="btn-sm" id="btn-view-all-act" style="padding:5px 10px;font-size:11px">View all</button></div>
+      ${recent.map(a=>`<div class="dash-row" style="cursor:default">
+        <div class="activity-ava" style="width:28px;height:28px;font-size:11px">${initials(a.user)}</div>
+        <div style="flex:1;min-width:0;font-size:12.5px">
+          <strong>${esc(a.user)}</strong> ${esc(a.action)}${a.job?' · <strong>'+esc(a.job)+'</strong>':''}
+          <div style="font-size:11px;color:var(--text-3)">${ago(a.time)}</div>
+        </div>
+      </div>`).join('')}
+    </div>`:''}
+  `;
+}
+
+function renderSchedule(){
+  const y=S.calYear,m=S.calMonth;
+  const first=new Date(y,m,1);
+  const daysInMonth=new Date(y,m+1,0).getDate();
+  const startDow=first.getDay();
+  const monthName=first.toLocaleDateString(undefined,{month:'long',year:'numeric'});
+  const today=dateKey(new Date());
+  // Map day -> jobs
+  const byDay={};
+  jobs().forEach(j=>{
+    if(!j.startDate)return;
+    const k=j.startDate.slice(0,10);
+    (byDay[k]=byDay[k]||[]).push(j);
+  });
+  let cells='';
+  const DOW=['S','M','T','W','T','F','S'];
+  DOW.forEach(d=>cells+=`<div class="cal-dow">${d}</div>`);
+  for(let i=0;i<startDow;i++)cells+='<div class="cal-day empty"></div>';
+  for(let d=1;d<=daysInMonth;d++){
+    const k=`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const list=byDay[k]||[];
+    const isToday=k===today;
+    const cls='cal-day'+(isToday?' today':'')+(list.length?' has-jobs':'');
+    const dots=list.slice(0,4).map(()=>'<div class="cal-day-dot"></div>').join('');
+    const count=list.length>4?`<div class="cal-day-count">+${list.length-4}</div>`:'';
+    cells+=`<div class="${cls}" data-cal-day="${k}"><div class="cal-day-num">${d}</div><div class="cal-day-dots">${dots}</div>${count}</div>`;
+  }
+  const sel=S.calSelected||today;
+  const selJobs=byDay[sel]||[];
+
+  return `
+    <div class="cal-head">
+      <div class="cal-title">${monthName}</div>
+      <div class="cal-nav">
+        <button id="cal-prev"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5"/></svg></button>
+        <button id="cal-today" style="width:auto;padding:0 12px;font-size:12px;font-weight:600">Today</button>
+        <button id="cal-next"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5"/></svg></button>
+      </div>
+    </div>
+    <div class="cal-grid">${cells}</div>
+    <div class="cal-day-list">
+      <div class="cal-day-list-hd">${new Date(sel+'T00:00:00').toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'})}</div>
+      ${selJobs.length===0?'<p style="font-size:12.5px;color:var(--text-3);padding:4px 0">No jobs scheduled for this day.</p>'
+        :selJobs.map(j=>`<div class="cal-job-row" data-open="${j.id}">
+          <span class="status-dot ${sdClass(j.status)}" style="position:static"></span>
+          <div style="flex:1;min-width:0">
+            <div style="font-weight:600">${esc(j.name)}</div>
+            <div style="font-size:11.5px;color:var(--text-3)">${esc(j.address||'No address')}${j.assigned?' · '+esc(j.assigned):''}</div>
+          </div>
+          <span class="status-pill ${spClass(j.status)}">${spLabel(j.status)}</span>
+        </div>`).join('')}
+    </div>
+  `;
+}
+
 function renderJobs(){
   const all=jobs();
   const cnt={all:all.length,lead:0,active:0,complete:0,hold:0};
   all.forEach(j=>{if(cnt[j.status]!==undefined)cnt[j.status]++});
+  const q=S.search.toLowerCase();
   const shown=all.filter(j=>{
     const mf=S.filter==='all'||j.status===S.filter;
-    const ms=!S.search||j.name.toLowerCase().includes(S.search.toLowerCase())||(j.address||'').toLowerCase().includes(S.search.toLowerCase());
+    const hay=(j.name+' '+(j.address||'')+' '+(j.customerName||'')+' '+(j.customerPhone||'')+' '+(j.customerEmail||'')+' '+(j.assigned||'')).toLowerCase();
+    const ms=!S.search||hay.includes(q);
     return mf&&ms;
   });
   return`<div class="toolbar">
@@ -601,8 +1013,12 @@ function renderJobs(){
     </button>
     <div class="search-wrap">
       <div class="search-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 15.803a7.5 7.5 0 0010.607 0z"/></svg></div>
-      <input class="search" id="search-in" placeholder="Search jobs…" value="${esc(S.search)}">
+      <input class="search" id="search-in" placeholder="Search jobs, address, customer…" value="${esc(S.search)}">
     </div>
+    <button class="btn-sm" id="btn-export-csv" title="Export to CSV">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>
+      Export
+    </button>
   </div>
   <div class="filter-row" style="margin-bottom:14px">
     <div class="filter-chip ${S.filter==='all'?'active':''}" data-filter="all">All ${cnt.all}</div>
@@ -627,13 +1043,23 @@ function renderCard(j){
   const photos=j.photos||[];
   const pct=j.progress||0;
   const photoBadge=photos.length>1?'<div class="photo-badge"><svg xmlns=\"http://www.w3.org/2000/svg\" fill=\"none\" viewBox=\"0 0 24 24\" stroke=\"currentColor\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z\"/><path stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zM18.75 10.5h.008v.008h-.008V10.5z\"/></svg>'+photos.length+'</div>':'';
-  const thumb=photos.length>0?'<img src="'+photos[0]+'" alt="" loading="lazy"><div class="status-dot '+sdClass(j.status)+'"></div>'+photoBadge:'<div class="status-dot '+sdClass(j.status)+'" style="top:10px;left:10px;position:absolute"></div><div class="card-thumb-icon">🏠</div>';
+  const firstPhoto=photos.length>0?(typeof photos[0]==='string'?photos[0]:photos[0].url):'';
+  const thumb=photos.length>0?'<img src="'+firstPhoto+'" alt="" loading="lazy"><div class="status-dot '+sdClass(j.status)+'"></div>'+photoBadge:'<div class="status-dot '+sdClass(j.status)+'" style="top:10px;left:10px;position:absolute"></div><div class="card-thumb-icon">🏠</div>';
+
+  const tasks=(j.tasks||[]);
+  const openTasks=tasks.filter(t=>!t.done).length;
+  const bal=jobBalance(j);
+  const meta=[];
+  if(j.customerName)meta.push(esc(j.customerName));
+  if(openTasks)meta.push(openTasks+' open task'+(openTasks>1?'s':''));
+  if(bal>0)meta.push('<span style="color:var(--orange);font-weight:600">'+money(bal)+' due</span>');
 
   return`<div class="job-card" data-open="${j.id}" style="animation-delay:${Math.random()*0.1}s">
     <div class="card-thumb">${thumb}</div>
     <div class="card-body">
       <div class="card-name">${esc(j.name)}</div>
       <div class="card-addr"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z"/></svg>${esc(j.address||'No address')}</div>
+      ${meta.length?`<div style="font-size:11.5px;color:var(--text-3);margin-bottom:8px;display:flex;gap:8px;flex-wrap:wrap">${meta.join(' · ')}</div>`:''}
       <div class="prog-track"><div class="prog-fill" style="width:${pct}%"></div></div>
       <div class="card-footer"><span class="status-pill ${spClass(j.status)}">${spLabel(j.status)}</span><span class="card-pct">${pct}%</span></div>
     </div>
@@ -645,10 +1071,22 @@ function renderDetail(id){
   if(!j)return`<button class="detail-back" id="btn-back"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"/></svg>Back</button><p style="color:var(--text-2)">Job not found.</p>`;
   const photos=j.photos||[];
   const pct=j.progress||0;
-  const thumbHtml=photos.length>0?`<img src="${photos[0]}" alt="">`:null;
-  const photosHtml=photos.map((p,i)=>`<div class="photo-wrap"><img src="${p}" alt="" data-view-photo="${i}" loading="lazy"><button class="photo-del" data-del-photo="${i}">×</button></div>`).join('');
-  const notesHtml=(j.notes||[]).length===0?`<p style="font-size:13px;color:var(--text-3);padding:4px 0">No notes yet — be the first to add one.</p>`
-    :(j.notes||[]).map(n=>`<div class="note-card"><div class="note-meta"><div class="note-avatar">${initials(n.user)}</div>${esc(n.user)} · ${ago(n.time)}</div><div class="note-text">${esc(n.text)}</div></div>`).join('');
+  const thumbHtml=photos.length>0?`<img src="${photos[0].url||photos[0]}" alt="">`:null;
+  const stage=jobStage(j);
+  const stageIdx=STAGES.indexOf(stage);
+  const tab=S.detailTab||'overview';
+  const tabs=[
+    {id:'overview',label:'Overview'},
+    {id:'customer',label:'Customer'},
+    {id:'tasks',label:'Tasks',count:(j.tasks||[]).filter(t=>!t.done).length},
+    {id:'log',label:'Daily Log',count:(j.dailyLogs||[]).length},
+    {id:'photos',label:'Photos',count:photos.length},
+    {id:'docs',label:'Files',count:(j.documents||[]).length},
+    {id:'financial',label:'Financials'},
+    {id:'comms',label:'Comms',count:(j.comms||[]).length},
+    {id:'notes',label:'Notes',count:(j.notes||[]).length},
+  ];
+
   return`
     <button class="detail-back" id="btn-back"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"/></svg>All Jobs</button>
     <div class="detail-hero">${thumbHtml?thumbHtml:'🏠'}
@@ -656,45 +1094,285 @@ function renderDetail(id){
     </div>
     <div class="detail-name">${esc(j.name)}</div>
     <div class="detail-addr"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z"/></svg>${esc(j.address||'No address set')}</div>
-    <div class="detail-actions">${photos.length===0?`<span class="status-pill ${spClass(j.status)}">${spLabel(j.status)}</span>`:''}<button class="btn-sm" id="btn-edit-job"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125"/></svg>Edit Job</button></div>
-    <div class="divider"></div>
+
+    <div class="quick-actions">
+      <a class="qa-btn ${j.customerPhone?'':'disabled'}" ${j.customerPhone?`href="tel:${encodeURIComponent(j.customerPhone)}"`:''}>
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 01-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z"/></svg>
+        Call
+      </a>
+      <a class="qa-btn ${j.customerPhone?'':'disabled'}" ${j.customerPhone?`href="sms:${encodeURIComponent(j.customerPhone)}"`:''}>
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12.76c0 1.6 1.123 2.994 2.707 3.227 1.068.157 2.148.279 3.238.364.466.037.893.281 1.153.671L12 21l2.652-3.978c.26-.39.687-.634 1.153-.67 1.09-.086 2.17-.208 3.238-.365 1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z"/></svg>
+        Text
+      </a>
+      <a class="qa-btn ${j.customerEmail?'':'disabled'}" ${j.customerEmail?`href="mailto:${encodeURIComponent(j.customerEmail)}"`:''}>
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"/></svg>
+        Email
+      </a>
+      <a class="qa-btn ${j.address?'':'disabled'}" ${j.address?`href="https://maps.google.com/?q=${encodeURIComponent(j.address)}" target="_blank" rel="noopener"`:''}>
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 6.75V15m6-6v8.25m.503 3.498l4.875-2.437c.381-.19.622-.58.622-1.006V4.82c0-.836-.88-1.38-1.628-1.006l-3.869 1.934c-.317.159-.69.159-1.006 0L9.503 3.252a1.125 1.125 0 00-1.006 0L3.622 5.689C3.24 5.88 3 6.27 3 6.695V19.18c0 .836.88 1.38 1.628 1.006l3.869-1.934c.317-.159.69-.159 1.006 0l4.994 2.497c.317.158.69.158 1.006 0z"/></svg>
+        Map
+      </a>
+    </div>
+
+    <div class="stage-pipeline">
+      ${STAGES.map((s,i)=>{
+        const cls=i<stageIdx?'done':i===stageIdx?'current':'';
+        return `<button class="stage-step ${cls}" data-stage="${esc(s)}" title="${esc(s)}">${esc(s)}</button>`;
+      }).join('')}
+    </div>
+
+    <div class="detail-actions">
+      <button class="btn-sm" id="btn-edit-job"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125"/></svg>Edit Job</button>
+      <button class="btn-sm" id="btn-print-job"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.72 13.829c-.24.03-.48.062-.72.096m.72-.096a42.415 42.415 0 0110.56 0m-10.56 0L6.34 18m10.94-4.171c.24.03.48.062.72.096m-.72-.096L17.66 18m0 0l.229 2.523a1.125 1.125 0 01-1.12 1.227H7.231c-.662 0-1.18-.568-1.12-1.227L6.34 18m11.318 0h1.091A2.25 2.25 0 0021 15.75V9.456c0-1.081-.768-2.015-1.837-2.175a48.055 48.055 0 00-1.913-.247M6.34 18H5.25A2.25 2.25 0 013 15.75V9.456c0-1.081.768-2.015 1.837-2.175a48.041 48.041 0 011.913-.247m10.5 0a48.536 48.536 0 00-10.5 0m10.5 0V3.375c0-.621-.504-1.125-1.125-1.125h-8.25c-.621 0-1.125.504-1.125 1.125v3.659M18 10.5h.008v.008H18V10.5zm-3 0h.008v.008H15V10.5z"/></svg>Print</button>
+      <button class="btn-sm" id="btn-share-job"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M7.217 10.907a2.25 2.25 0 100 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186l9.566-5.314m-9.566 7.5l9.566 5.314m0 0a2.25 2.25 0 103.935 2.186 2.25 2.25 0 00-3.935-2.186zm0-12.814a2.25 2.25 0 103.933-2.185 2.25 2.25 0 00-3.933 2.185z"/></svg>Share</button>
+    </div>
+
     <div class="prog-section">
       <div class="prog-top"><span class="prog-label-text">Completion</span><span class="prog-pct" id="prog-pct">${pct}%</span></div>
       <div class="prog-track-lg"><div class="prog-fill-lg" id="prog-fill-lg" style="width:${pct}%"></div></div>
       <input type="range" id="prog-slider" min="0" max="100" value="${pct}">
     </div>
-    <div class="section">
-      <div class="section-hd">Details</div>
-      <div class="info-grid">
-        <div class="info-cell"><div class="info-label">Type</div><div class="info-value">${esc(j.type||'—')}</div></div>
-        <div class="info-cell"><div class="info-label">Assigned to</div><div class="info-value">${esc(j.assigned||'—')}</div></div>
-        <div class="info-cell"><div class="info-label">Start date</div><div class="info-value">${esc(j.startDate||'—')}</div></div>
-        <div class="info-cell"><div class="info-label">Est. value</div><div class="info-value">${j.value?'$'+Number(j.value).toLocaleString():'—'}</div></div>
-      </div>
-      ${j.description?`<p style="font-size:13.5px;margin-top:10px;line-height:1.65;color:var(--text)">${esc(j.description)}</p>`:''}
+
+    <div class="detail-tabs">
+      ${tabs.map(t=>`<button class="detail-tab ${tab===t.id?'active':''}" data-tab="${t.id}">${t.label}${t.count?' <span style="opacity:0.6">·'+t.count+'</span>':''}</button>`).join('')}
     </div>
-    <div class="section">
-      <div class="section-hd">Photos <span>${photos.length}</span></div>
-      <div class="photos-grid">
-        ${photosHtml}
-        <label class="photo-add-btn">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z"/><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zM18.75 10.5h.008v.008h-.008V10.5z"/></svg>
-          <span>Add Photos</span>
-          <input type="file" accept="image/*" multiple id="photo-upload" style="display:none">
+
+    <div id="tab-content">${renderDetailTab(j,tab)}</div>
+  `;
+}
+
+function renderDetailTab(j,tab){
+  const photos=j.photos||[];
+  if(tab==='overview'){
+    const desc=j.description?`<p style="font-size:13.5px;margin-top:10px;line-height:1.65;color:var(--text)">${esc(j.description)}</p>`:'';
+    const due=daysUntil(j.dueDate);
+    const dueBadge=j.dueDate?(due<0?`<span class="badge danger">${Math.abs(due)}d overdue</span>`:due===0?'<span class="badge">Due today</span>':due<=7?'<span class="badge">in '+due+'d</span>':''):'';
+    const balance=jobBalance(j);
+    return `
+      <div class="section">
+        <div class="section-hd">Details</div>
+        <div class="info-grid">
+          <div class="info-cell"><div class="info-label">Type</div><div class="info-value">${esc(j.type||'—')}</div></div>
+          <div class="info-cell"><div class="info-label">Assigned to</div><div class="info-value">${esc(j.assigned||'—')}</div></div>
+          <div class="info-cell"><div class="info-label">Start date</div><div class="info-value">${j.startDate?fmtDate(j.startDate):'—'}</div></div>
+          <div class="info-cell"><div class="info-label">Due date</div><div class="info-value">${j.dueDate?fmtDate(j.dueDate):'—'} ${dueBadge}</div></div>
+          <div class="info-cell"><div class="info-label">Stage</div><div class="info-value">${esc(jobStage(j))}</div></div>
+          <div class="info-cell"><div class="info-label">Est. value</div><div class="info-value">${j.value?money(j.value):'—'}</div></div>
+        </div>
+        ${desc}
+      </div>
+      <div class="section">
+        <div class="section-hd">Quick Stats</div>
+        <div class="info-grid">
+          <div class="info-cell"><div class="info-label">Photos</div><div class="info-value">${photos.length}</div></div>
+          <div class="info-cell"><div class="info-label">Open Tasks</div><div class="info-value">${(j.tasks||[]).filter(t=>!t.done).length}</div></div>
+          <div class="info-cell"><div class="info-label">Balance Due</div><div class="info-value" style="color:${balance>0?'var(--orange)':'var(--green-700)'}">${money(balance)}</div></div>
+          <div class="info-cell"><div class="info-label">Log Entries</div><div class="info-value">${(j.dailyLogs||[]).length}</div></div>
+        </div>
+      </div>`;
+  }
+  if(tab==='customer'){
+    return `
+      <div class="section">
+        <div class="section-hd">Customer Information <button class="btn-sm" id="btn-edit-customer" style="padding:5px 10px;font-size:11px">Edit</button></div>
+        <div class="info-grid">
+          <div class="info-cell" style="grid-column:1/-1"><div class="info-label">Name</div><div class="info-value">${esc(j.customerName||'—')}</div></div>
+          <div class="info-cell"><div class="info-label">Phone</div><div class="info-value">${j.customerPhone?`<a href="tel:${encodeURIComponent(j.customerPhone)}" style="color:var(--green-700);text-decoration:none">${esc(j.customerPhone)}</a>`:'—'}</div></div>
+          <div class="info-cell"><div class="info-label">Email</div><div class="info-value" style="font-size:12px;word-break:break-all">${j.customerEmail?`<a href="mailto:${encodeURIComponent(j.customerEmail)}" style="color:var(--green-700);text-decoration:none">${esc(j.customerEmail)}</a>`:'—'}</div></div>
+          <div class="info-cell" style="grid-column:1/-1"><div class="info-label">Job Site Address</div><div class="info-value" style="font-size:13px">${esc(j.address||'—')}</div></div>
+          <div class="info-cell" style="grid-column:1/-1"><div class="info-label">Billing Address</div><div class="info-value" style="font-size:13px">${esc(j.billingAddress||j.address||'—')}</div></div>
+        </div>
+        ${j.customerNotes?`<div style="background:var(--surface-3);border-radius:var(--r-sm);padding:11px 13px;margin-top:10px"><div class="info-label">Customer Notes</div><p style="font-size:13px;margin-top:4px;line-height:1.55">${esc(j.customerNotes)}</p></div>`:''}
+      </div>`;
+  }
+  if(tab==='tasks'){
+    const tasks=j.tasks||[];
+    const open=tasks.filter(t=>!t.done);
+    const done=tasks.filter(t=>t.done);
+    const render=(t,i)=>{
+      const due=daysUntil(t.due);
+      const overdue=due!==null&&due<0&&!t.done;
+      const dueLbl=t.due?(overdue?'<span class="badge danger">'+Math.abs(due)+'d late</span>':' · '+fmtShort(t.due)):'';
+      const assignMeta=t.assigned?' · '+esc(t.assigned):'';
+      return `<div class="task-item ${t.done?'done':''}">
+        <div class="task-check ${t.done?'checked':''}" data-task-toggle="${i}"></div>
+        <div style="flex:1;min-width:0">
+          <div class="task-text">${esc(t.text)}</div>
+          ${(t.due||t.assigned)?`<div class="task-meta">${dueLbl}${assignMeta}</div>`:''}
+        </div>
+        <button class="task-del" data-task-del="${i}">✕</button>
+      </div>`;
+    };
+    return `
+      <div class="section">
+        <div class="section-hd">Open Tasks <span>${open.length}</span></div>
+        <div class="task-list">${open.length?tasks.map((t,i)=>!t.done?render(t,i):'').join(''):'<p style="font-size:13px;color:var(--text-3);padding:4px 0">No open tasks.</p>'}</div>
+        <div class="task-add">
+          <input class="form-input" id="task-in" placeholder="New task…" style="flex:1">
+          <input class="form-input" id="task-due" type="date" style="max-width:140px" title="Due date">
+          <button class="btn-post" id="btn-add-task">Add</button>
+        </div>
+      </div>
+      ${done.length?`<div class="section">
+        <div class="section-hd">Completed <span>${done.length}</span></div>
+        <div class="task-list">${tasks.map((t,i)=>t.done?render(t,i):'').join('')}</div>
+      </div>`:''}`;
+  }
+  if(tab==='log'){
+    const logs=(j.dailyLogs||[]).slice().sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+    return `
+      <div class="section">
+        <div class="section-hd">Daily Log <span>${logs.length} entr${logs.length===1?'y':'ies'}</span></div>
+        <div class="log-list">
+          ${logs.length===0?'<p style="font-size:13px;color:var(--text-3);padding:4px 0">No log entries yet. Use the form below to record on-site work.</p>':logs.map(l=>`<div class="log-entry">
+            <div class="log-date">${fmtDate(l.date)} ${l.weather?`<span class="log-weather">· ${esc(l.weather)}</span>`:''} ${l.user?`<span class="log-weather">· by ${esc(l.user)}</span>`:''}</div>
+            <div class="log-text">${esc(l.text)}</div>
+            ${l.hours?`<div class="log-hours">⏱ ${esc(l.hours)} hrs</div>`:''}
+          </div>`).join('')}
+        </div>
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);padding:12px 14px">
+          <div class="form-row">
+            <div class="form-group" style="margin-bottom:8px"><label class="form-label">Date</label><input class="form-input" type="date" id="log-date" value="${dateKey(new Date())}"></div>
+            <div class="form-group" style="margin-bottom:8px"><label class="form-label">Hours</label><input class="form-input" type="number" step="0.5" id="log-hours" placeholder="0"></div>
+          </div>
+          <div class="form-group" style="margin-bottom:8px"><label class="form-label">Weather / Conditions</label><input class="form-input" id="log-weather" placeholder="Sunny 72°F, calm winds…"></div>
+          <div class="form-group" style="margin-bottom:8px"><label class="form-label">Work Performed</label><textarea class="form-textarea" id="log-text" placeholder="Describe today’s work, crew on site, materials used, issues…"></textarea></div>
+          <button class="btn-post" id="btn-add-log">Add Log Entry</button>
+        </div>
+      </div>`;
+  }
+  if(tab==='photos'){
+    const cat=S.photoCat||'all';
+    const filtered=cat==='all'?photos:photos.filter(p=>(p.cat||'')===cat);
+    const photosHtml=filtered.map((p,i)=>{
+      const idx=photos.indexOf(p);
+      const url=p.url||p;
+      return `<div class="photo-wrap">
+        ${p.cat?`<span class="photo-cat-label">${esc(p.cat)}</span>`:''}
+        <img src="${url}" alt="" data-view-photo="${idx}" loading="lazy">
+        <button class="photo-del" data-del-photo="${idx}">×</button>
+      </div>`;
+    }).join('');
+    return `
+      <div class="section">
+        <div class="section-hd">Photos <span>${photos.length} total</span></div>
+        <div class="photo-cat-tabs">
+          ${PHOTO_CATS.map(c=>`<div class="photo-cat-chip ${cat===c?'active':''}" data-photo-cat="${c}">${c==='all'?'All':c.charAt(0).toUpperCase()+c.slice(1)} ${c==='all'?photos.length:photos.filter(p=>(p.cat||'')===c).length}</div>`).join('')}
+        </div>
+        <div class="photos-grid">
+          ${photosHtml}
+          <label class="photo-add-btn">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z"/><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zM18.75 10.5h.008v.008h-.008V10.5z"/></svg>
+            <span>Add Photos</span>
+            <input type="file" accept="image/*" multiple id="photo-upload" style="display:none">
+          </label>
+        </div>
+        <p style="font-size:11.5px;color:var(--text-3);margin-top:10px">Tip: Upload tags photos as “${cat==='all'?'before':cat}”. Switch tabs first to choose a category.</p>
+      </div>`;
+  }
+  if(tab==='docs'){
+    const docs=j.documents||[];
+    const fileIcon=`<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/></svg>`;
+    return `
+      <div class="section">
+        <div class="section-hd">Files & Documents <span>${docs.length}</span></div>
+        <div class="doc-list">
+          ${docs.length===0?'<p style="font-size:13px;color:var(--text-3);padding:4px 0">No files yet. Contracts, permits, plans, receipts — keep them all here.</p>'
+            :docs.map((d,i)=>`<a class="doc-item" href="${d.url}" download="${esc(d.name)}" target="_blank">
+              <div class="doc-icon">${fileIcon}</div>
+              <div class="doc-info"><div class="doc-name">${esc(d.name)}</div><div class="doc-meta">${esc(d.size||'')}${d.uploaded?' · '+ago(d.uploaded):''}${d.user?' · '+esc(d.user):''}</div></div>
+              <button class="doc-del" data-doc-del="${i}" onclick="event.preventDefault();event.stopPropagation()">✕</button>
+            </a>`).join('')}
+        </div>
+        <label class="photo-add-btn" style="aspect-ratio:auto;padding:14px;flex-direction:row;gap:8px">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v6m3-3H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          <span>Upload File (PDF, DOC, IMG)</span>
+          <input type="file" accept="*/*" id="doc-upload" style="display:none">
         </label>
-      </div>
-    </div>
-    <div class="section">
-      <div class="section-hd">Notes <span>${(j.notes||[]).length}</span></div>
-      <div class="notes-list">${notesHtml}</div>
-      <div class="note-compose">
-        <input class="note-input" id="note-in" placeholder="${S.user?'Add a note…':'Set your name first…'}" ${!S.user?'disabled':''}>
-        <button class="btn-post" id="btn-post" ${!S.user?'disabled':''}>
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5"/></svg>
-          Post
-        </button>
-      </div>
-    </div>`;
+      </div>`;
+  }
+  if(tab==='financial'){
+    const est=Number(j.value||0);
+    const inv=Number(j.invoiced||0);
+    const paid=Number(j.paid||0);
+    const bal=inv-paid;
+    const pctPaid=inv>0?(paid/inv)*100:0;
+    const margin=est-Number(j.costs||0);
+    return `
+      <div class="section">
+        <div class="section-hd">Financial Summary</div>
+        <div class="fin-grid">
+          <div class="fin-cell"><div class="fin-label">Estimate</div><div class="fin-value">${money(est)}</div></div>
+          <div class="fin-cell"><div class="fin-label">Costs / Materials</div><div class="fin-value">${money(j.costs||0)}</div></div>
+          <div class="fin-cell"><div class="fin-label">Invoiced</div><div class="fin-value">${money(inv)}</div></div>
+          <div class="fin-cell"><div class="fin-label">Paid</div><div class="fin-value">${money(paid)}</div></div>
+          <div class="fin-cell ${bal>0?'bal-neg':'bal-pos'}" style="grid-column:1/-1"><div class="fin-label">Balance Due</div><div class="fin-value">${money(bal)}</div>
+            <div class="fin-bar"><div class="fin-bar-fill" style="width:${Math.min(100,pctPaid)}%"></div></div>
+            <div style="font-size:11.5px;color:var(--text-3)">${pctPaid.toFixed(0)}% collected</div>
+          </div>
+          <div class="fin-cell" style="grid-column:1/-1"><div class="fin-label">Projected Margin</div><div class="fin-value" style="color:${margin>=0?'var(--green-700)':'var(--orange)'}">${money(margin)} <span style="font-size:12px;color:var(--text-3);font-weight:500">${est>0?'('+((margin/est)*100).toFixed(0)+'%)':''}</span></div></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">Estimate ($)</label><input class="form-input" type="number" id="fin-est" value="${esc(est||'')}"></div>
+          <div class="form-group"><label class="form-label">Costs ($)</label><input class="form-input" type="number" id="fin-costs" value="${esc(j.costs||'')}"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">Invoiced ($)</label><input class="form-input" type="number" id="fin-inv" value="${esc(inv||'')}"></div>
+          <div class="form-group"><label class="form-label">Paid ($)</label><input class="form-input" type="number" id="fin-paid" value="${esc(paid||'')}"></div>
+        </div>
+        <button class="btn-post" id="btn-save-fin" style="margin-top:6px">Save Financials</button>
+      </div>`;
+  }
+  if(tab==='comms'){
+    const comms=(j.comms||[]).slice().sort((a,b)=>(b.time||0)-(a.time||0));
+    const icon={call:'<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 01-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z"/></svg>',
+      text:'<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12.76c0 1.6 1.123 2.994 2.707 3.227 1.068.157 2.148.279 3.238.364.466.037.893.281 1.153.671L12 21l2.652-3.978c.26-.39.687-.634 1.153-.67 1.09-.086 2.17-.208 3.238-.365 1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z"/></svg>',
+      email:'<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75"/></svg>',
+      meeting:'<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493"/></svg>'};
+    return `
+      <div class="section">
+        <div class="section-hd">Communication Log <span>${comms.length}</span></div>
+        <div class="comm-list">
+          ${comms.length===0?'<p style="font-size:13px;color:var(--text-3);padding:4px 0">No communications logged. Track every call, text, and email with the customer.</p>'
+            :comms.map(c=>`<div class="comm-item">
+              <div class="comm-icon ${c.type}">${icon[c.type]||icon.call}</div>
+              <div class="comm-body">
+                <div class="comm-head"><div class="comm-type">${esc(c.type)} ${c.user?'· '+esc(c.user):''}</div><div class="comm-time">${ago(c.time)}</div></div>
+                <div class="comm-text">${esc(c.text)}</div>
+              </div>
+            </div>`).join('')}
+        </div>
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);padding:12px 14px">
+          <div class="form-group" style="margin-bottom:8px"><label class="form-label">Type</label>
+            <select class="form-select" id="comm-type">
+              <option value="call">📞 Phone Call</option>
+              <option value="text">💬 Text Message</option>
+              <option value="email">📧 Email</option>
+              <option value="meeting">👥 In-Person Meeting</option>
+            </select>
+          </div>
+          <div class="form-group" style="margin-bottom:8px"><label class="form-label">Summary</label><textarea class="form-textarea" id="comm-text" placeholder="What was discussed?"></textarea></div>
+          <button class="btn-post" id="btn-add-comm">Log Communication</button>
+        </div>
+      </div>`;
+  }
+  if(tab==='notes'){
+    const notesHtml=(j.notes||[]).length===0?`<p style="font-size:13px;color:var(--text-3);padding:4px 0">No notes yet — be the first to add one.</p>`
+      :(j.notes||[]).slice().reverse().map(n=>`<div class="note-card"><div class="note-meta"><div class="note-avatar">${initials(n.user)}</div>${esc(n.user)} · ${ago(n.time)}</div><div class="note-text">${esc(n.text)}</div></div>`).join('');
+    return `
+      <div class="section">
+        <div class="section-hd">Internal Notes <span>${(j.notes||[]).length}</span></div>
+        <div class="notes-list">${notesHtml}</div>
+        <div class="note-compose">
+          <input class="note-input" id="note-in" placeholder="${S.user?'Add a note…':'Set your name first…'}" ${!S.user?'disabled':''}>
+          <button class="btn-post" id="btn-post" ${!S.user?'disabled':''}>
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5"/></svg>
+            Post
+          </button>
+        </div>
+      </div>`;
+  }
+  return '';
 }
 
 function renderActivity(){
@@ -724,18 +1402,36 @@ function showJobModal(mode,job){
     <div class="modal-head"><div class="modal-title">${mode==='add'?'New Job':'Edit Job'}</div><button class="modal-close" id="mc"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button></div>
     <div class="modal-body">
       <div class="form-group"><label class="form-label">Job name *</label><input class="form-input" id="f-name" value="${esc(j.name||'')}" placeholder="e.g. Lake house dock repair"></div>
-      <div class="form-group"><label class="form-label">Address</label><input class="form-input" id="f-addr" value="${esc(j.address||'')}" placeholder="123 Waterfront Dr, LaFollette TN"></div>
+      <div class="form-group"><label class="form-label">Job Site Address</label><input class="form-input" id="f-addr" value="${esc(j.address||'')}" placeholder="123 Waterfront Dr, LaFollette TN"></div>
       <div class="form-row">
+        <div class="form-group"><label class="form-label">Stage</label><select class="form-select" id="f-stage">${STAGES.map(s=>`<option value="${esc(s)}" ${jobStage(j)===s?'selected':''}>${esc(s)}</option>`).join('')}</select></div>
         <div class="form-group"><label class="form-label">Status</label><select class="form-select" id="f-status"><option value="lead" ${j.status==='lead'?'selected':''}>Lead</option><option value="active" ${(j.status==='active'||!j.status)?'selected':''}>Active</option><option value="complete" ${j.status==='complete'?'selected':''}>Complete</option><option value="hold" ${j.status==='hold'?'selected':''}>On Hold</option></select></div>
-        <div class="form-group"><label class="form-label">Job type</label><select class="form-select" id="f-type"><option value="">Select…</option><option value="New construction" ${j.type==='New construction'?'selected':''}>New construction</option><option value="Renovation" ${j.type==='Renovation'?'selected':''}>Renovation</option><option value="Dock / waterfront" ${j.type==='Dock / waterfront'?'selected':''}>Dock / waterfront</option><option value="Repair" ${j.type==='Repair'?'selected':''}>Repair</option><option value="Inspection" ${j.type==='Inspection'?'selected':''}>Inspection</option><option value="Other" ${j.type==='Other'?'selected':''}>Other</option></select></div>
       </div>
       <div class="form-row">
+        <div class="form-group"><label class="form-label">Job type</label><select class="form-select" id="f-type"><option value="">Select…</option><option value="New construction" ${j.type==='New construction'?'selected':''}>New construction</option><option value="Renovation" ${j.type==='Renovation'?'selected':''}>Renovation</option><option value="Dock / waterfront" ${j.type==='Dock / waterfront'?'selected':''}>Dock / waterfront</option><option value="Repair" ${j.type==='Repair'?'selected':''}>Repair</option><option value="Inspection" ${j.type==='Inspection'?'selected':''}>Inspection</option><option value="Other" ${j.type==='Other'?'selected':''}>Other</option></select></div>
         <div class="form-group"><label class="form-label">Assigned to</label><select class="form-select" id="f-assigned"><option value="">Select…</option>${mOpts}<option value="__custom__">Type name…</option></select></div>
+      </div>
+      <div class="form-row">
         <div class="form-group"><label class="form-label">Start date</label><input class="form-input" type="date" id="f-start" value="${esc(j.startDate||'')}"></div>
+        <div class="form-group"><label class="form-label">Due date</label><input class="form-input" type="date" id="f-due" value="${esc(j.dueDate||'')}"></div>
       </div>
       <div id="custom-wrap" style="display:none" class="form-group"><label class="form-label">Custom name</label><input class="form-input" id="f-cname" placeholder="Name"></div>
+
+      <div style="margin:18px 0 10px;padding-top:14px;border-top:1px solid var(--border)">
+        <div class="form-label" style="font-size:12px;margin-bottom:10px">Customer Information</div>
+      </div>
+      <div class="form-group"><label class="form-label">Customer Name</label><input class="form-input" id="f-cust-name" value="${esc(j.customerName||'')}" placeholder="John & Jane Smith"></div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Phone</label><input class="form-input" type="tel" id="f-cust-phone" value="${esc(j.customerPhone||'')}" placeholder="(555) 123-4567"></div>
+        <div class="form-group"><label class="form-label">Email</label><input class="form-input" type="email" id="f-cust-email" value="${esc(j.customerEmail||'')}" placeholder="customer@example.com"></div>
+      </div>
+      <div class="form-group"><label class="form-label">Billing Address</label><input class="form-input" id="f-bill-addr" value="${esc(j.billingAddress||'')}" placeholder="Leave blank if same as job site"></div>
+
+      <div style="margin:18px 0 10px;padding-top:14px;border-top:1px solid var(--border)">
+        <div class="form-label" style="font-size:12px;margin-bottom:10px">Financial</div>
+      </div>
       <div class="form-group"><label class="form-label">Estimated value ($)</label><input class="form-input" type="number" id="f-val" value="${esc(j.value||'')}" placeholder="0"></div>
-      <div class="form-group"><label class="form-label">Description</label><textarea class="form-textarea" id="f-desc">${esc(j.description||'')}</textarea></div>
+      <div class="form-group"><label class="form-label">Description / Scope of Work</label><textarea class="form-textarea" id="f-desc">${esc(j.description||'')}</textarea></div>
     </div>
     <div class="modal-foot">
       ${mode==='edit'?`<button class="btn-delete" id="btn-del">Delete</button>`:''}
@@ -752,9 +1448,23 @@ function showJobModal(mode,job){
     if(!name){toast('Please enter a job name','');return}
     let assigned=$('f-assigned').value;
     if(assigned==='__custom__')assigned=$('f-cname').value.trim();
-    const data={name,assigned,address:$('f-addr').value.trim(),status:$('f-status').value,type:$('f-type').value,startDate:$('f-start').value,value:$('f-val').value,description:$('f-desc').value.trim()};
+    const data={
+      name,assigned,
+      address:$('f-addr').value.trim(),
+      status:$('f-status').value,
+      stage:$('f-stage').value,
+      type:$('f-type').value,
+      startDate:$('f-start').value,
+      dueDate:$('f-due').value,
+      value:$('f-val').value,
+      description:$('f-desc').value.trim(),
+      customerName:$('f-cust-name').value.trim(),
+      customerPhone:$('f-cust-phone').value.trim(),
+      customerEmail:$('f-cust-email').value.trim(),
+      billingAddress:$('f-bill-addr').value.trim(),
+    };
     if(mode==='add'){
-      const nj={id:uid(),...data,progress:0,notes:[],photos:[],created:Date.now()};
+      const nj={id:uid(),...data,progress:0,notes:[],photos:[],tasks:[],dailyLogs:[],documents:[],comms:[],created:Date.now()};
       await writeJob(nj);await logAct('added job',name);toast('Job added');
     }else{await writeJob({...j,...data});await logAct('updated job',name);toast('Changes saved')}
     closeModal();render();
@@ -795,10 +1505,69 @@ function showSetupModal(){
   };
 }
 
+// ══ Helpers for photo backward compat ══
+function photoURL(p){return typeof p==='string'?p:(p&&p.url)||''}
+
+// ══ CSV export ══
+function exportCSV(){
+  const rows=[['Name','Customer','Phone','Email','Address','Status','Stage','Type','Assigned','Start','Due','Estimate','Invoiced','Paid','Balance','Progress','Created']];
+  jobs().forEach(j=>{
+    rows.push([j.name,j.customerName,j.customerPhone,j.customerEmail,j.address,j.status,jobStage(j),j.type,j.assigned,j.startDate,j.dueDate,j.value,j.invoiced,j.paid,jobBalance(j),(j.progress||0)+'%',j.created?new Date(j.created).toLocaleDateString():''].map(v=>v==null?'':String(v)));
+  });
+  const csv=rows.map(r=>r.map(c=>/[",\n]/.test(c)?'"'+c.replace(/"/g,'""')+'"':c).join(',')).join('\n');
+  const blob=new Blob([csv],{type:'text/csv'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='waterfront-jobs-'+dateKey(new Date())+'.csv';
+  a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+  toast('Exported '+jobs().length+' jobs');
+}
+
+// ══ Share / Print ══
+function printJob(j){
+  const w=window.open('','_blank');
+  if(!w){toast('Pop-up blocked','');return}
+  const photos=(j.photos||[]).map(p=>photoURL(p));
+  w.document.write(`<!DOCTYPE html><html><head><title>${esc(j.name)} — Job Summary</title>
+    <style>body{font-family:system-ui,sans-serif;max-width:800px;margin:30px auto;padding:0 20px;color:#0a1f18}
+    h1{font-size:24px;margin:0 0 6px}h2{font-size:14px;text-transform:uppercase;color:#666;margin:24px 0 8px;border-bottom:1px solid #ddd;padding-bottom:4px}
+    .meta{color:#666;margin-bottom:20px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:14px}
+    .cell{background:#f5f5f5;padding:10px;border-radius:6px}.label{font-size:11px;color:#666;text-transform:uppercase;font-weight:700}
+    img{max-width:200px;border-radius:8px;margin:4px}.pphotos{display:flex;flex-wrap:wrap}</style></head><body>
+    <h1>${esc(j.name)}</h1>
+    <div class="meta">${esc(j.address||'')} ${j.customerName?'· '+esc(j.customerName):''} ${j.customerPhone?'· '+esc(j.customerPhone):''}</div>
+    <h2>Details</h2>
+    <div class="grid">
+      <div class="cell"><div class="label">Stage</div>${esc(jobStage(j))}</div>
+      <div class="cell"><div class="label">Status</div>${esc(spLabel(j.status))}</div>
+      <div class="cell"><div class="label">Type</div>${esc(j.type||'—')}</div>
+      <div class="cell"><div class="label">Assigned</div>${esc(j.assigned||'—')}</div>
+      <div class="cell"><div class="label">Start</div>${esc(j.startDate||'—')}</div>
+      <div class="cell"><div class="label">Due</div>${esc(j.dueDate||'—')}</div>
+      <div class="cell"><div class="label">Estimate</div>${money(j.value)}</div>
+      <div class="cell"><div class="label">Balance</div>${money(jobBalance(j))}</div>
+    </div>
+    ${j.description?'<h2>Scope of Work</h2><p>'+esc(j.description).replace(/\n/g,'<br>')+'</p>':''}
+    ${(j.tasks||[]).length?'<h2>Tasks</h2><ul>'+(j.tasks||[]).map(t=>'<li>'+(t.done?'☑ ':'☐ ')+esc(t.text)+(t.due?' (due '+esc(t.due)+')':'')+'</li>').join('')+'</ul>':''}
+    ${photos.length?'<h2>Photos</h2><div class="pphotos">'+photos.map(p=>'<img src="'+p+'" />').join('')+'</div>':''}
+    </body></html>`);
+  w.document.close();
+  setTimeout(()=>w.print(),500);
+}
+
+async function shareJob(j){
+  const text=`${j.name}\n${j.address||''}\n${j.customerName?'Customer: '+j.customerName+'\n':''}Stage: ${jobStage(j)} · ${j.progress||0}% complete`;
+  if(navigator.share){
+    try{await navigator.share({title:j.name,text});return}catch(e){if(e.name==='AbortError')return}
+  }
+  try{await navigator.clipboard.writeText(text);toast('Copied to clipboard')}catch(e){alert(text)}
+}
+
 // ══ Handlers ══
 function attachHandlers(){
   document.querySelectorAll('.nav-btn').forEach(b=>{
-    b.onclick=()=>{S.view=b.dataset.view;S.detail=null;document.querySelectorAll('.nav-btn').forEach(x=>x.classList.toggle('active',x===b));render()}
+    b.onclick=()=>{S.view=b.dataset.view;S.detail=null;render()}
   });
   $('user-btn').onclick=()=>{
     const n=prompt('Your name (appears on notes):',S.user);
@@ -807,16 +1576,49 @@ function attachHandlers(){
   $('setup-link').onclick=showSetupModal;
   $('btn-add-job')?.addEventListener('click',()=>showJobModal('add'));
   $('btn-add-job2')?.addEventListener('click',()=>showJobModal('add'));
+  $('btn-export-csv')?.addEventListener('click',exportCSV);
+  $('btn-view-all-act')?.addEventListener('click',()=>{S.view='activity';render()});
   $('search-in')?.addEventListener('input',e=>{S.search=e.target.value;render()});
   document.querySelectorAll('[data-filter]').forEach(c=>c.onclick=()=>{S.filter=c.dataset.filter;render()});
-  document.querySelectorAll('[data-open]').forEach(c=>c.onclick=()=>{S.detail=c.dataset.open;render()});
-  $('btn-back')?.addEventListener('click',()=>{S.detail=null;render()});
+  document.querySelectorAll('[data-open]').forEach(c=>c.onclick=()=>{S.detail=c.dataset.open;S.view='jobs';S.detailTab='overview';render()});
+
+  // Calendar
+  $('cal-prev')?.addEventListener('click',()=>{S.calMonth--;if(S.calMonth<0){S.calMonth=11;S.calYear--}render()});
+  $('cal-next')?.addEventListener('click',()=>{S.calMonth++;if(S.calMonth>11){S.calMonth=0;S.calYear++}render()});
+  $('cal-today')?.addEventListener('click',()=>{const n=new Date();S.calMonth=n.getMonth();S.calYear=n.getFullYear();S.calSelected=dateKey(n);render()});
+  document.querySelectorAll('[data-cal-day]').forEach(d=>d.onclick=()=>{S.calSelected=d.dataset.calDay;render()});
+
+  // Detail
+  $('btn-back')?.addEventListener('click',()=>{S.detail=null;S.detailTab='overview';render()});
   $('btn-edit-job')?.addEventListener('click',()=>{const j=S.jobs[S.detail];if(j)showJobModal('edit',j)});
+  $('btn-edit-customer')?.addEventListener('click',()=>{const j=S.jobs[S.detail];if(j)showJobModal('edit',j)});
+  $('btn-print-job')?.addEventListener('click',()=>{const j=S.jobs[S.detail];if(j)printJob(j)});
+  $('btn-share-job')?.addEventListener('click',()=>{const j=S.jobs[S.detail];if(j)shareJob(j)});
+
+  // Detail tabs
+  document.querySelectorAll('[data-tab]').forEach(t=>t.onclick=()=>{S.detailTab=t.dataset.tab;render()});
+
+  // Stage pipeline
+  document.querySelectorAll('[data-stage]').forEach(b=>b.onclick=async()=>{
+    const j=S.jobs[S.detail];if(!j)return;
+    const newStage=b.dataset.stage;
+    j.stage=newStage;
+    const newStatus=STAGE_TO_STATUS[newStage];
+    if(newStatus)j.status=newStatus;
+    if(newStage==='Complete')j.progress=100;
+    await writeJob(j);await logAct('moved to '+newStage,j.name);render();toast('Stage updated');
+  });
+
+  // Progress
   const sl=$('prog-slider');
   if(sl){let pt;sl.oninput=function(){const f=$('prog-fill-lg'),p=$('prog-pct');if(f)f.style.width=this.value+'%';if(p)p.textContent=this.value+'%';clearTimeout(pt);pt=setTimeout(async()=>{const j=S.jobs[S.detail];if(j){j.progress=parseInt(this.value);await writeJob(j)}},700)}}
+
+  // Photos
+  document.querySelectorAll('[data-photo-cat]').forEach(c=>c.onclick=()=>{S.photoCat=c.dataset.photoCat;render()});
   $('photo-upload')?.addEventListener('change',function(){
     const j=S.jobs[S.detail];if(!j)return;j.photos=j.photos||[];
     const files=Array.from(this.files);if(!files.length)return;
+    const cat=S.photoCat&&S.photoCat!=='all'?S.photoCat:'';
     let done=0;
     files.forEach(file=>{const r=new FileReader();r.onload=e=>{
       const img=new Image();img.onload=()=>{
@@ -824,7 +1626,7 @@ function attachHandlers(){
         let w=img.width,h=img.height;
         if(w>MAX||h>MAX){if(w>h){h=Math.round(h*MAX/w);w=MAX}else{w=Math.round(w*MAX/h);h=MAX}}
         c.width=w;c.height=h;c.getContext('2d').drawImage(img,0,0,w,h);
-        j.photos.push(c.toDataURL('image/jpeg',0.78));
+        j.photos.push({url:c.toDataURL('image/jpeg',0.78),cat:cat,user:S.user,time:Date.now()});
         if(++done===files.length){writeJob(j).then(()=>{logAct('added '+files.length+' photo(s) to',j.name);render();toast(files.length+' photo'+(files.length>1?'s':'')+' added','photo')})}
       };img.src=e.target.result
     };r.readAsDataURL(file)});
@@ -836,14 +1638,89 @@ function attachHandlers(){
   document.querySelectorAll('[data-view-photo]').forEach(img=>img.onclick=e=>{
     e.stopPropagation();const j=S.jobs[S.detail];if(!j)return;
     const idx=parseInt(img.dataset.viewPhoto);
-    $('fs-root').innerHTML=`<div class="photo-fs" id="fs"><button class="photo-fs-close" id="fsc">×</button><img src="${j.photos[idx]}" alt=""></div>`;
+    const url=photoURL(j.photos[idx]);
+    $('fs-root').innerHTML=`<div class="photo-fs" id="fs"><button class="photo-fs-close" id="fsc">×</button><img src="${url}" alt=""></div>`;
     $('fsc').onclick=()=>$('fs-root').innerHTML='';
     $('fs').onclick=e=>{if(e.target===e.currentTarget)$('fs-root').innerHTML=''};
   });
+
+  // Notes
   const ni=$('note-in'),pb=$('btn-post');
   async function postNote(){const t=ni?.value.trim();if(!t)return;const j=S.jobs[S.detail];if(!j)return;j.notes=j.notes||[];j.notes.push({user:S.user,text:t,time:Date.now()});await writeJob(j);await logAct('posted a note on',j.name);ni.value='';render();toast('Note posted','note')}
   pb?.addEventListener('click',postNote);
   ni?.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();postNote()}});
+
+  // Tasks
+  $('btn-add-task')?.addEventListener('click',async()=>{
+    const inp=$('task-in'),due=$('task-due');
+    const text=inp?.value.trim();if(!text)return;
+    const j=S.jobs[S.detail];if(!j)return;
+    j.tasks=j.tasks||[];
+    j.tasks.push({text,due:due?.value||'',assigned:'',done:false,user:S.user,time:Date.now()});
+    await writeJob(j);await logAct('added task to',j.name);render();toast('Task added');
+  });
+  $('task-in')?.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();$('btn-add-task')?.click()}});
+  document.querySelectorAll('[data-task-toggle]').forEach(b=>b.onclick=async()=>{
+    const j=S.jobs[S.detail];if(!j)return;const i=parseInt(b.dataset.taskToggle);
+    j.tasks[i].done=!j.tasks[i].done;
+    if(j.tasks[i].done){j.tasks[i].doneTime=Date.now();j.tasks[i].doneBy=S.user}
+    await writeJob(j);await logAct(j.tasks[i].done?'completed task':'reopened task',j.name);render();
+  });
+  document.querySelectorAll('[data-task-del]').forEach(b=>b.onclick=async()=>{
+    const j=S.jobs[S.detail];if(!j)return;
+    j.tasks.splice(parseInt(b.dataset.taskDel),1);
+    await writeJob(j);render();toast('Task removed');
+  });
+
+  // Daily log
+  $('btn-add-log')?.addEventListener('click',async()=>{
+    const text=$('log-text').value.trim();if(!text){toast('Enter work performed','');return}
+    const j=S.jobs[S.detail];if(!j)return;
+    j.dailyLogs=j.dailyLogs||[];
+    j.dailyLogs.push({date:$('log-date').value||dateKey(new Date()),weather:$('log-weather').value.trim(),hours:$('log-hours').value,text,user:S.user,time:Date.now()});
+    await writeJob(j);await logAct('added log entry to',j.name);render();toast('Log entry saved');
+  });
+
+  // Documents
+  $('doc-upload')?.addEventListener('change',function(){
+    const j=S.jobs[S.detail];if(!j)return;j.documents=j.documents||[];
+    const file=this.files[0];if(!file)return;
+    if(file.size>5*1024*1024){toast('File too large (max 5MB)','');return}
+    const r=new FileReader();
+    r.onload=async e=>{
+      j.documents.push({name:file.name,url:e.target.result,size:(file.size/1024).toFixed(0)+' KB',type:file.type,uploaded:Date.now(),user:S.user});
+      await writeJob(j);await logAct('uploaded '+file.name+' to',j.name);render();toast('File uploaded');
+    };
+    r.readAsDataURL(file);
+  });
+  document.querySelectorAll('[data-doc-del]').forEach(b=>b.onclick=async e=>{
+    e.preventDefault();e.stopPropagation();
+    const j=S.jobs[S.detail];if(!j)return;
+    if(!confirm('Delete this file?'))return;
+    j.documents.splice(parseInt(b.dataset.docDel),1);
+    await writeJob(j);render();toast('File removed');
+  });
+
+  // Financials
+  $('btn-save-fin')?.addEventListener('click',async()=>{
+    const j=S.jobs[S.detail];if(!j)return;
+    j.value=$('fin-est').value;
+    j.costs=$('fin-costs').value;
+    j.invoiced=$('fin-inv').value;
+    j.paid=$('fin-paid').value;
+    await writeJob(j);await logAct('updated financials on',j.name);render();toast('Financials saved');
+  });
+
+  // Communications
+  $('btn-add-comm')?.addEventListener('click',async()=>{
+    const text=$('comm-text').value.trim();if(!text){toast('Add a summary','');return}
+    const j=S.jobs[S.detail];if(!j)return;
+    j.comms=j.comms||[];
+    j.comms.push({type:$('comm-type').value,text,user:S.user,time:Date.now()});
+    await writeJob(j);await logAct('logged a '+$('comm-type').value,j.name);render();toast('Communication logged');
+  });
+
+  // Team
   $('btn-add-member')?.addEventListener('click',async()=>{
     const inp=$('member-in');const name=inp?.value.trim();
     if(!name||S.members.includes(name)){toast(name?'Already on team':'Enter a name','');return}
