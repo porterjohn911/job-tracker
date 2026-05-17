@@ -995,6 +995,82 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .textarea-with-mic .mic-btn{position:absolute;bottom:8px;right:8px;width:32px;height:32px}
 .input-with-mic{display:flex;gap:6px;align-items:center}
 
+/* ── INVOICING ── */
+.invoice-list{display:flex;flex-direction:column;gap:8px;margin-bottom:14px}
+.invoice-row{
+  display:flex;align-items:center;gap:11px;
+  background:var(--surface);border:1px solid var(--border);
+  border-left:3px solid var(--green-700);border-radius:var(--r-md);
+  padding:12px 14px;cursor:pointer;transition:all 0.15s;
+}
+.invoice-row:hover{border-color:var(--green-600)}
+.invoice-row.draft{border-left-color:#94a3b8}
+.invoice-row.sent{border-left-color:var(--gold)}
+.invoice-row.paid{border-left-color:#16a34a}
+.invoice-row.overdue{border-left-color:var(--red)}
+.invoice-row-main{flex:1;min-width:0}
+.invoice-num{font-size:13.5px;font-weight:700;color:var(--text)}
+.invoice-meta{font-size:11.5px;color:var(--text-3);margin-top:2px}
+.invoice-row-amt{text-align:right;flex-shrink:0}
+.invoice-row-total{font-size:14px;font-weight:700;font-variant-numeric:tabular-nums}
+.invoice-row-bal{font-size:11px;color:var(--text-3);margin-top:1px}
+.invoice-status{
+  display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;
+  border-radius:20px;letter-spacing:0.04em;text-transform:uppercase;
+  background:var(--surface-3);color:var(--text-2);
+}
+.invoice-status.sent{background:var(--gold-light);color:#92400e}
+.invoice-status.paid{background:#dcfce7;color:#166534}
+.invoice-status.overdue{background:var(--red-light);color:var(--red)}
+@media(prefers-color-scheme:dark){
+  .invoice-status.sent{background:#3d2800;color:#fbbf24}
+  .invoice-status.paid{background:#052e16;color:#86efac}
+  .invoice-status.overdue{background:#2d1515;color:#fca5a5}
+}
+
+/* Line items table in editor */
+.line-items{display:flex;flex-direction:column;gap:6px;margin-bottom:12px}
+.li-row{
+  display:grid;grid-template-columns:1fr 70px 90px 90px 26px;gap:6px;align-items:center;
+}
+.li-row input{
+  width:100%;padding:8px 10px;font-size:13.5px;
+  border:1.5px solid var(--border-md);border-radius:8px;
+  background:var(--surface);color:var(--text);font-family:var(--font);outline:none;
+}
+.li-row input:focus{border-color:var(--green-600)}
+.li-row .li-amt{font-weight:600;font-variant-numeric:tabular-nums;color:var(--text);background:var(--surface-3);padding:8px 10px;border-radius:8px;font-size:13.5px;text-align:right}
+.li-row .li-del{
+  background:var(--surface-3);border:none;border-radius:50%;
+  width:26px;height:26px;font-size:14px;cursor:pointer;color:var(--text-3);
+  display:flex;align-items:center;justify-content:center;
+}
+.li-row .li-del:hover{background:var(--red-light);color:var(--red)}
+.li-head{
+  display:grid;grid-template-columns:1fr 70px 90px 90px 26px;gap:6px;
+  font-size:10px;font-weight:700;color:var(--text-3);
+  text-transform:uppercase;letter-spacing:0.05em;padding:0 10px;margin-bottom:2px;
+}
+.li-head>div:nth-child(3),.li-head>div:nth-child(4){text-align:right}
+.li-add-btn{
+  background:var(--surface-3);border:1.5px dashed var(--border-md);
+  padding:9px;border-radius:8px;font-size:12.5px;font-weight:600;
+  cursor:pointer;color:var(--text-2);font-family:var(--font);
+}
+.li-add-btn:hover{border-color:var(--green-600);color:var(--green-700)}
+
+.inv-totals{background:var(--surface-3);border-radius:var(--r-md);padding:12px 14px;margin-bottom:12px}
+.inv-total-row{display:flex;justify-content:space-between;align-items:center;padding:3px 0;font-size:13px}
+.inv-total-row.grand{padding-top:8px;margin-top:5px;border-top:1px solid var(--border-md);font-size:16px;font-weight:700;color:var(--green-900)}
+.inv-total-row .v{font-variant-numeric:tabular-nums;font-weight:600}
+@media(prefers-color-scheme:dark){.inv-total-row.grand{color:var(--green-400)}}
+
+@media(max-width:480px){
+  .li-head{grid-template-columns:1fr 56px 80px 80px 24px}
+  .li-row{grid-template-columns:1fr 56px 80px 80px 24px}
+  .li-row input{font-size:13px;padding:7px 8px}
+}
+
 /* ── PRINT ── */
 @media print{
   .header,.sync-bar,.nav,.detail-back,.detail-actions,.detail-tabs,.quick-actions,.photo-add-btn,.note-compose,.task-add,.stage-pipeline,.fin-edit-row,.modal-bd{display:none !important}
@@ -1086,6 +1162,21 @@ let MAP=null,MAP_MARKERS=[];
 const S={jobs:{},activity:[],members:[],view:'dashboard',detail:null,detailTab:'overview',filter:'all',search:'',photoCat:'all',calMonth:new Date().getMonth(),calYear:new Date().getFullYear(),calSelected:null,calMode:localStorage.getItem('wfs_calmode')||'month',reportRange:'90',sort:localStorage.getItem('wfs_sort')||'newest',sortOpen:false,bulkMode:false,bulkSel:new Set(),user:localStorage.getItem('wfs_user')||'',notifReadAt:parseInt(localStorage.getItem('wfs_notif_read')||'0',10)};
 const UNDO={stack:[],push(op){this.stack.push(op);if(this.stack.length>20)this.stack.shift()},pop(){return this.stack.pop()}};
 
+// ── Company info for invoice letterhead (editable via Settings)
+const COMPANY_DEFAULT={
+  name:'Waterfront Solutions',
+  address:'LaFollette, TN',
+  phone:'',
+  email:'',
+  website:'',
+  license:'',
+  taxRate:'',
+  terms:'Payment due upon receipt unless otherwise noted. Thank you for your business.',
+};
+function loadCompany(){try{const s=localStorage.getItem('wfs_company');return s?{...COMPANY_DEFAULT,...JSON.parse(s)}:{...COMPANY_DEFAULT}}catch(e){return{...COMPANY_DEFAULT}}}
+function saveCompany(c){localStorage.setItem('wfs_company',JSON.stringify(c))}
+let COMPANY=loadCompany();
+
 // ── Workflow stages (BuilderTrend / AccuLynx style)
 const STAGES=['Lead','Estimate','Approved','Scheduled','In Progress','Punch List','Complete'];
 const STAGE_TO_STATUS={'Lead':'lead','Estimate':'lead','Approved':'active','Scheduled':'active','In Progress':'active','Punch List':'active','Complete':'complete'};
@@ -1122,6 +1213,47 @@ function fmtShort(s){if(!s)return'';try{const d=new Date(s+(s.length===10?'T00:0
 function daysUntil(s){if(!s)return null;try{const d=new Date(s+(s.length===10?'T00:00:00':''));const t=new Date();t.setHours(0,0,0,0);return Math.round((d-t)/(1000*60*60*24))}catch(e){return null}}
 function jobBalance(j){const inv=Number(j.invoiced||0),paid=Number(j.paid||0);return inv-paid}
 function jobStage(j){return j.stage||(j.status==='complete'?'Complete':j.status==='lead'?'Lead':'In Progress')}
+
+// ── Invoice helpers ──
+function calcInvoice(inv){
+  const items=inv.items||[];
+  const sub=items.reduce((s,i)=>s+(Number(i.qty||0)*Number(i.rate||0)),0);
+  const tax=sub*(Number(inv.taxRate||0)/100);
+  const total=sub+tax;
+  const deposit=Number(inv.deposit||0);
+  const paid=Number(inv.paid||0);
+  const balance=total-paid;
+  return {sub,tax,total,deposit,paid,balance};
+}
+function nextInvoiceNumber(){
+  let max=1000;
+  Object.values(S.jobs).forEach(j=>{
+    (j.invoices||[]).forEach(inv=>{
+      const m=String(inv.number||'').match(/(\d+)/);
+      if(m){const n=parseInt(m[1],10);if(n>max)max=n}
+    });
+  });
+  return 'INV-'+(max+1);
+}
+function invoiceTotals(j){
+  const invs=j.invoices||[];
+  if(!invs.length)return null;
+  const inv=invs.reduce((s,i)=>{const c=calcInvoice(i);return{total:s.total+c.total,paid:s.paid+c.paid,balance:s.balance+c.balance}},{total:0,paid:0,balance:0});
+  return inv;
+}
+function invoiceStatus(inv){
+  const c=calcInvoice(inv);
+  if(c.total>0&&c.balance<=0.005)return'paid';
+  if(inv.status==='sent'){
+    if(inv.dueDate){const d=daysUntil(inv.dueDate);if(d!==null&&d<0)return'overdue'}
+    return'sent';
+  }
+  return inv.status||'draft';
+}
+function getBrandLogoSrc(){
+  const el=document.querySelector('.brand-logo');
+  return el?el.src:'';
+}
 
 function toast(msg,icon='check',undoFn){
   const t=$('toast');
@@ -1920,6 +2052,7 @@ function renderDetail(id){
     {id:'log',label:'Daily Log',count:(j.dailyLogs||[]).length},
     {id:'photos',label:'Photos',count:photos.length},
     {id:'docs',label:'Files',count:(j.documents||[]).length},
+    {id:'invoices',label:'Invoices',count:(j.invoices||[]).length},
     {id:'financial',label:'Financials'},
     {id:'comms',label:'Comms',count:(j.comms||[]).length},
     {id:'notes',label:'Notes',count:(j.notes||[]).length},
@@ -2134,14 +2267,16 @@ function renderDetailTab(j,tab){
   }
   if(tab==='financial'){
     const est=Number(j.value||0);
-    const inv=Number(j.invoiced||0);
-    const paid=Number(j.paid||0);
+    const invTot=invoiceTotals(j);
+    const inv=invTot?invTot.total:Number(j.invoiced||0);
+    const paid=invTot?invTot.paid:Number(j.paid||0);
     const bal=inv-paid;
     const pctPaid=inv>0?(paid/inv)*100:0;
     const margin=est-Number(j.costs||0);
+    const lockedByInv=!!invTot;
     return `
       <div class="section">
-        <div class="section-hd">Financial Summary</div>
+        <div class="section-hd">Financial Summary${lockedByInv?' <span style="font-weight:400;text-transform:none;letter-spacing:0">From '+((j.invoices||[]).length)+' invoice'+((j.invoices||[]).length===1?'':'s')+'</span>':''}</div>
         <div class="fin-grid">
           <div class="fin-cell"><div class="fin-label">Estimate</div><div class="fin-value">${money(est)}</div></div>
           <div class="fin-cell"><div class="fin-label">Costs / Materials</div><div class="fin-value">${money(j.costs||0)}</div></div>
@@ -2158,10 +2293,11 @@ function renderDetailTab(j,tab){
           <div class="form-group"><label class="form-label">Costs ($)</label><input class="form-input" type="number" id="fin-costs" value="${esc(j.costs||'')}"></div>
         </div>
         <div class="form-row">
-          <div class="form-group"><label class="form-label">Invoiced ($)</label><input class="form-input" type="number" id="fin-inv" value="${esc(inv||'')}"></div>
-          <div class="form-group"><label class="form-label">Paid ($)</label><input class="form-input" type="number" id="fin-paid" value="${esc(paid||'')}"></div>
+          <div class="form-group"><label class="form-label">Invoiced ($)${lockedByInv?' <span style="color:var(--text-3);font-weight:400;text-transform:none;letter-spacing:0;font-size:10px">auto</span>':''}</label><input class="form-input" type="number" id="fin-inv" value="${esc(inv||'')}" ${lockedByInv?'disabled':''}></div>
+          <div class="form-group"><label class="form-label">Paid ($)${lockedByInv?' <span style="color:var(--text-3);font-weight:400;text-transform:none;letter-spacing:0;font-size:10px">auto</span>':''}</label><input class="form-input" type="number" id="fin-paid" value="${esc(paid||'')}" ${lockedByInv?'disabled':''}></div>
         </div>
-        <button class="btn-post" id="btn-save-fin" style="margin-top:6px">Save Financials</button>
+        <button class="btn-post" id="btn-save-fin" style="margin-top:6px" ${lockedByInv?'disabled':''}>Save Financials</button>
+        ${lockedByInv?'<p style="font-size:11.5px;color:var(--text-3);margin-top:10px">Invoiced and Paid totals are computed from the Invoices tab. Edit individual invoices there.</p>':''}
       </div>`;
   }
   if(tab==='comms'){
@@ -2197,6 +2333,37 @@ function renderDetailTab(j,tab){
           </div>
           <button class="btn-post" id="btn-add-comm">Log Communication</button>
         </div>
+      </div>`;
+  }
+  if(tab==='invoices'){
+    const invs=(j.invoices||[]).slice().sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+    const tot=invoiceTotals(j);
+    return `
+      <div class="section">
+        <div class="section-hd" style="margin-bottom:12px">Invoices <span>${invs.length}</span></div>
+        ${tot?`<div class="inv-totals" style="margin-bottom:14px">
+          <div class="inv-total-row"><span>Total Invoiced</span><span class="v">${money(tot.total)}</span></div>
+          <div class="inv-total-row"><span>Paid</span><span class="v">${money(tot.paid)}</span></div>
+          <div class="inv-total-row grand"><span>Balance Due</span><span class="v">${money(tot.balance)}</span></div>
+        </div>`:''}
+        <div class="invoice-list">
+          ${invs.length===0?'<p style="font-size:13px;color:var(--text-3);padding:4px 0">No invoices yet. Create your first one — it will use your company letterhead and pull from line items.</p>'
+            :invs.map(inv=>{
+              const c=calcInvoice(inv);
+              const st=invoiceStatus(inv);
+              return `<div class="invoice-row ${st}" data-inv-id="${esc(inv.id)}">
+                <div class="invoice-row-main">
+                  <div class="invoice-num">${esc(inv.number||'')} <span class="invoice-status ${st}">${st}</span></div>
+                  <div class="invoice-meta">${fmtDate(inv.date)}${inv.dueDate?' · due '+fmtDate(inv.dueDate):''} · ${(inv.items||[]).length} item${(inv.items||[]).length!==1?'s':''}</div>
+                </div>
+                <div class="invoice-row-amt">
+                  <div class="invoice-row-total">${money(c.total)}</div>
+                  <div class="invoice-row-bal">${c.balance>0.005?money(c.balance)+' due':'Paid'}</div>
+                </div>
+              </div>`;
+            }).join('')}
+        </div>
+        <button class="btn-post" id="btn-new-inv" style="margin-top:6px">+ New Invoice</button>
       </div>`;
   }
   if(tab==='notes'){
@@ -2417,6 +2584,352 @@ async function shareJob(j){
   try{await navigator.clipboard.writeText(text);toast('Copied to clipboard')}catch(e){alert(text)}
 }
 
+// ══ Invoice editor ══
+let INV_DRAFT=null; // current draft being edited
+
+function defaultInvoice(j){
+  const today=dateKey(new Date());
+  const due=new Date();due.setDate(due.getDate()+30);
+  return {
+    id:'inv_'+Date.now()+'_'+Math.random().toString(36).slice(2,6),
+    number:nextInvoiceNumber(),
+    date:today,
+    dueDate:dateKey(due),
+    items:[{desc:j.name||'Services rendered',qty:1,rate:Number(j.value||0)||0}],
+    taxRate:COMPANY.taxRate||'',
+    notes:'',
+    terms:COMPANY.terms||'',
+    paid:0,
+    status:'draft',
+    created:Date.now(),
+  };
+}
+
+function showInvoiceModal(jobId,invoiceId){
+  const j=S.jobs[jobId];if(!j)return;
+  let inv;
+  if(invoiceId){
+    inv=(j.invoices||[]).find(i=>i.id===invoiceId);
+    if(!inv)return;
+    INV_DRAFT=JSON.parse(JSON.stringify(inv));
+  }else{
+    INV_DRAFT=defaultInvoice(j);
+  }
+  renderInvoiceModal(jobId,!!invoiceId);
+}
+
+function renderInvoiceModal(jobId,isEdit){
+  const inv=INV_DRAFT;
+  const c=calcInvoice(inv);
+  const itemsHtml=(inv.items||[]).map((it,i)=>`<div class="li-row" data-li="${i}">
+    <input type="text" data-li-field="desc" value="${esc(it.desc||'')}" placeholder="Description (e.g. Dock repair labor)" aria-label="Description">
+    <input type="number" step="0.01" data-li-field="qty" value="${esc(it.qty??'')}" placeholder="Qty" aria-label="Quantity">
+    <input type="number" step="0.01" data-li-field="rate" value="${esc(it.rate??'')}" placeholder="Rate" aria-label="Unit rate">
+    <div class="li-amt">${money((Number(it.qty||0)*Number(it.rate||0)))}</div>
+    <button class="li-del" data-li-del="${i}" aria-label="Remove line item">×</button>
+  </div>`).join('');
+
+  $('modal-root').innerHTML=`<div class="modal-bd" id="mbd" role="dialog" aria-modal="true" aria-label="Invoice editor"><div class="modal"><div class="modal-handle"></div>
+    <div class="modal-head"><div class="modal-title">${isEdit?'Edit Invoice':'New Invoice'}</div><button class="modal-close" id="mc" aria-label="Close"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button></div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Invoice #</label><input class="form-input" id="inv-num" value="${esc(inv.number||'')}"></div>
+        <div class="form-group"><label class="form-label">Status</label>
+          <select class="form-select" id="inv-status">
+            <option value="draft" ${inv.status==='draft'?'selected':''}>Draft</option>
+            <option value="sent" ${inv.status==='sent'?'selected':''}>Sent</option>
+            <option value="paid" ${inv.status==='paid'?'selected':''}>Paid</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Invoice Date</label><input class="form-input" type="date" id="inv-date" value="${esc(inv.date||'')}"></div>
+        <div class="form-group"><label class="form-label">Due Date</label><input class="form-input" type="date" id="inv-due" value="${esc(inv.dueDate||'')}"></div>
+      </div>
+      <div class="form-group"><label class="form-label">Line Items</label>
+        <div class="li-head"><div>Description</div><div>Qty</div><div>Rate</div><div>Amount</div><div></div></div>
+        <div class="line-items" id="line-items">${itemsHtml}</div>
+        <button class="li-add-btn" id="li-add" type="button">+ Add Line Item</button>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Tax Rate (%)</label><input class="form-input" type="number" step="0.01" id="inv-tax" value="${esc(inv.taxRate??'')}"></div>
+        <div class="form-group"><label class="form-label">Amount Paid</label><input class="form-input" type="number" step="0.01" id="inv-paid" value="${esc(inv.paid??'')}"></div>
+      </div>
+      <div class="inv-totals" id="inv-totals">
+        <div class="inv-total-row"><span>Subtotal</span><span class="v" id="t-sub">${money(c.sub)}</span></div>
+        <div class="inv-total-row"><span>Tax (${Number(inv.taxRate||0)}%)</span><span class="v" id="t-tax">${money(c.tax)}</span></div>
+        <div class="inv-total-row grand"><span>Total</span><span class="v" id="t-total">${money(c.total)}</span></div>
+        <div class="inv-total-row" style="color:var(--text-3);margin-top:4px"><span>Paid</span><span class="v" id="t-paid">${money(c.paid)}</span></div>
+        <div class="inv-total-row" style="font-weight:700"><span>Balance Due</span><span class="v" id="t-bal">${money(c.balance)}</span></div>
+      </div>
+      <div class="form-group"><label class="form-label">Notes (visible on invoice)</label>
+        <div class="textarea-with-mic"><textarea class="form-textarea" id="inv-notes" placeholder="Additional notes for the customer…">${esc(inv.notes||'')}</textarea>${micButton('#inv-notes')}</div>
+      </div>
+      <div class="form-group"><label class="form-label">Payment Terms</label><textarea class="form-textarea" id="inv-terms">${esc(inv.terms||'')}</textarea></div>
+    </div>
+    <div class="modal-foot">
+      ${isEdit?`<button class="btn-delete" id="inv-del">Delete</button>`:''}
+      <button class="btn-cancel" id="btn-cx">Cancel</button>
+      <button class="btn-sm" id="inv-print" style="background:var(--surface);border:1.5px solid var(--border-md);font-weight:600">Save & Print</button>
+      <button class="btn-save" id="inv-save">Save</button>
+    </div>
+  </div></div>`;
+
+  $('mc').onclick=$('btn-cx').onclick=()=>{INV_DRAFT=null;closeModal()};
+  $('mbd').onclick=e=>{if(e.target===e.currentTarget){INV_DRAFT=null;closeModal()}};
+
+  function refreshLineItems(){
+    const wrap=$('line-items');
+    wrap.innerHTML=(INV_DRAFT.items||[]).map((it,i)=>`<div class="li-row" data-li="${i}">
+      <input type="text" data-li-field="desc" value="${esc(it.desc||'')}" placeholder="Description">
+      <input type="number" step="0.01" data-li-field="qty" value="${esc(it.qty??'')}" placeholder="Qty">
+      <input type="number" step="0.01" data-li-field="rate" value="${esc(it.rate??'')}" placeholder="Rate">
+      <div class="li-amt">${money(Number(it.qty||0)*Number(it.rate||0))}</div>
+      <button class="li-del" data-li-del="${i}">×</button>
+    </div>`).join('');
+    wireLineItemHandlers();
+    refreshTotals();
+  }
+  function refreshTotals(){
+    const c=calcInvoice(INV_DRAFT);
+    const tsub=$('t-sub'),ttax=$('t-tax'),ttot=$('t-total'),tpaid=$('t-paid'),tbal=$('t-bal');
+    if(tsub)tsub.textContent=money(c.sub);
+    if(ttax)ttax.textContent=money(c.tax);
+    if(ttot)ttot.textContent=money(c.total);
+    if(tpaid)tpaid.textContent=money(c.paid);
+    if(tbal)tbal.textContent=money(c.balance);
+    // Update tax row label
+    const taxLabel=document.querySelector('#inv-totals .inv-total-row:nth-child(2) span:first-child');
+    if(taxLabel)taxLabel.textContent='Tax ('+Number(INV_DRAFT.taxRate||0)+'%)';
+    // Update line-row amounts
+    document.querySelectorAll('[data-li]').forEach(row=>{
+      const i=parseInt(row.dataset.li);const it=INV_DRAFT.items[i];if(!it)return;
+      const amt=row.querySelector('.li-amt');
+      if(amt)amt.textContent=money(Number(it.qty||0)*Number(it.rate||0));
+    });
+  }
+  function wireLineItemHandlers(){
+    document.querySelectorAll('[data-li]').forEach(row=>{
+      const i=parseInt(row.dataset.li);
+      row.querySelectorAll('[data-li-field]').forEach(inp=>{
+        inp.oninput=()=>{
+          const f=inp.dataset.liField;
+          INV_DRAFT.items[i][f]=f==='desc'?inp.value:inp.value;
+          refreshTotals();
+        };
+      });
+    });
+    document.querySelectorAll('[data-li-del]').forEach(b=>b.onclick=()=>{
+      const i=parseInt(b.dataset.liDel);
+      INV_DRAFT.items.splice(i,1);
+      if(INV_DRAFT.items.length===0)INV_DRAFT.items.push({desc:'',qty:1,rate:0});
+      refreshLineItems();
+    });
+  }
+  wireLineItemHandlers();
+  wireMicButtons();
+
+  $('li-add').onclick=()=>{INV_DRAFT.items=INV_DRAFT.items||[];INV_DRAFT.items.push({desc:'',qty:1,rate:0});refreshLineItems();};
+  ['inv-num','inv-date','inv-due','inv-status','inv-tax','inv-paid','inv-notes','inv-terms'].forEach(id=>{
+    const el=$(id);if(!el)return;
+    const k=id.replace('inv-','');
+    const fieldMap={num:'number',date:'date',due:'dueDate',status:'status',tax:'taxRate',paid:'paid',notes:'notes',terms:'terms'};
+    el.oninput=el.onchange=()=>{INV_DRAFT[fieldMap[k]]=el.value;refreshTotals()};
+  });
+
+  async function saveInvoice(){
+    const j=S.jobs[jobId];if(!j)return null;
+    // Drop empty trailing items
+    INV_DRAFT.items=(INV_DRAFT.items||[]).filter(it=>(it.desc&&it.desc.trim())||Number(it.qty||0)!==0||Number(it.rate||0)!==0);
+    if(INV_DRAFT.items.length===0){toast('Add at least one line item','');return null}
+    j.invoices=j.invoices||[];
+    const existing=j.invoices.findIndex(i=>i.id===INV_DRAFT.id);
+    if(existing>=0)j.invoices[existing]=INV_DRAFT;else j.invoices.push(INV_DRAFT);
+    // Update aggregate invoiced/paid totals on the job for the financial summary
+    const tot=invoiceTotals(j);
+    j.invoiced=tot.total;
+    j.paid=tot.paid;
+    await writeJob(j);
+    await logAct(existing>=0?'updated invoice on':'created invoice on',j.name);
+    return INV_DRAFT;
+  }
+
+  $('inv-save').onclick=async()=>{
+    const saved=await saveInvoice();
+    if(saved){toast('Invoice saved');INV_DRAFT=null;closeModal();render()}
+  };
+  $('inv-print').onclick=async()=>{
+    const saved=await saveInvoice();
+    if(saved){INV_DRAFT=null;closeModal();render();printInvoice(S.jobs[jobId],saved)}
+  };
+  if(isEdit){
+    $('inv-del').onclick=async()=>{
+      const j=S.jobs[jobId];if(!j)return;
+      const backup=JSON.parse(JSON.stringify(INV_DRAFT));
+      j.invoices=(j.invoices||[]).filter(i=>i.id!==INV_DRAFT.id);
+      const tot=invoiceTotals(j);j.invoiced=tot?tot.total:0;j.paid=tot?tot.paid:0;
+      await writeJob(j);await logAct('deleted invoice on',j.name);
+      INV_DRAFT=null;closeModal();render();
+      const restore=async()=>{const jj=S.jobs[jobId];if(jj){jj.invoices=jj.invoices||[];jj.invoices.push(backup);const t=invoiceTotals(jj);jj.invoiced=t.total;jj.paid=t.paid;await writeJob(jj);render();toast('Invoice restored')}};
+      UNDO.push(restore);
+      toast('Invoice deleted','undo',restore);
+    };
+  }
+}
+
+// ══ Printable invoice with company letterhead ══
+function printInvoice(j,inv){
+  const w=window.open('','_blank');
+  if(!w){toast('Pop-up blocked — allow pop-ups to print','');return}
+  const c=calcInvoice(inv);
+  const logoSrc=getBrandLogoSrc();
+  const co=COMPANY;
+  const itemsRows=(inv.items||[]).map(it=>{
+    const amt=Number(it.qty||0)*Number(it.rate||0);
+    return `<tr>
+      <td>${esc(it.desc||'')}</td>
+      <td class="num">${esc(String(it.qty??''))}</td>
+      <td class="num">${money(Number(it.rate||0))}</td>
+      <td class="num">${money(amt)}</td>
+    </tr>`;
+  }).join('');
+
+  w.document.write(`<!DOCTYPE html><html><head>
+    <meta charset="utf-8">
+    <title>${esc(inv.number||'Invoice')} — ${esc(j.name||'')}</title>
+    <style>
+      *{box-sizing:border-box;margin:0;padding:0}
+      body{font-family:Helvetica,Arial,sans-serif;color:#0a1f18;background:#fff;max-width:780px;margin:30px auto;padding:0 32px;font-size:13px;line-height:1.5}
+      .lh{display:flex;justify-content:space-between;align-items:flex-start;padding-bottom:18px;border-bottom:3px solid #0a3d2e;margin-bottom:24px;gap:20px}
+      .lh-l{display:flex;align-items:center;gap:14px;flex:1}
+      .lh-l img{width:78px;height:78px;object-fit:contain}
+      .lh-co{flex:1}
+      .lh-co h1{font-family:Georgia,serif;font-size:24px;font-weight:600;color:#0a3d2e;letter-spacing:0.01em;line-height:1.1;margin-bottom:4px}
+      .lh-co .tag{font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#666}
+      .lh-co .addr{font-size:11.5px;color:#555;margin-top:6px;line-height:1.5;white-space:pre-line}
+      .lh-r{text-align:right}
+      .lh-r .title{font-size:36px;font-weight:800;color:#0a3d2e;letter-spacing:0.04em;line-height:1}
+      .lh-r .num{font-size:13px;color:#555;margin-top:6px}
+      .lh-r .status{display:inline-block;margin-top:8px;font-size:10.5px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;padding:4px 12px;border-radius:20px;background:#fef3c7;color:#92400e}
+      .lh-r .status.paid{background:#dcfce7;color:#166534}
+      .lh-r .status.draft{background:#f1f5f9;color:#475569}
+      .lh-r .status.overdue{background:#fee2e2;color:#991b1b}
+      .meta{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:24px}
+      .meta-box .lbl{font-size:9.5px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#888;margin-bottom:4px}
+      .meta-box .v{font-size:13px;color:#0a1f18;line-height:1.5}
+      .meta-box .v strong{display:block;font-size:14px;margin-bottom:1px}
+      table{width:100%;border-collapse:collapse;margin-bottom:18px}
+      thead th{text-align:left;font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#666;padding:8px 10px;background:#f0faf6;border-top:1px solid #ddd;border-bottom:1px solid #ddd}
+      th.num,td.num{text-align:right}
+      tbody td{padding:10px;border-bottom:1px solid #eee;font-size:13px;vertical-align:top}
+      tbody tr:last-child td{border-bottom:1px solid #ddd}
+      .totals{margin-left:auto;width:300px;margin-bottom:20px}
+      .totals .row{display:flex;justify-content:space-between;padding:5px 0;font-size:13px}
+      .totals .row .v{font-variant-numeric:tabular-nums;font-weight:600}
+      .totals .grand{padding:10px 0;border-top:2px solid #0a3d2e;margin-top:6px;font-size:16px;font-weight:700;color:#0a3d2e}
+      .totals .due{margin-top:8px;padding:10px 14px;background:#fef3c7;border-radius:6px;font-size:14px;font-weight:700;color:#92400e;display:flex;justify-content:space-between}
+      .totals .due.zero{background:#dcfce7;color:#166534}
+      .notes{margin-top:16px;padding:14px;background:#f7f9f8;border-left:3px solid #0a3d2e;border-radius:6px;font-size:12px;color:#3d6358;line-height:1.6}
+      .notes .lbl{font-size:9.5px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#0a3d2e;margin-bottom:5px}
+      .terms{margin-top:14px;font-size:11px;color:#777;line-height:1.6;white-space:pre-line}
+      .ft{margin-top:28px;padding-top:14px;border-top:1px solid #ddd;text-align:center;font-size:10.5px;color:#888;letter-spacing:0.04em}
+      @media print{body{margin:0;padding:18mm 16mm;max-width:none}.no-print{display:none}}
+      .print-bar{position:fixed;top:12px;right:12px;display:flex;gap:8px}
+      .print-bar button{padding:8px 16px;background:#0a3d2e;color:#fff;border:none;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;font-family:Helvetica,sans-serif}
+      .print-bar button.alt{background:#fff;color:#0a3d2e;border:1.5px solid #0a3d2e}
+    </style></head><body>
+    <div class="no-print print-bar">
+      <button class="alt" onclick="window.close()">Close</button>
+      <button onclick="window.print()">Print / Save PDF</button>
+    </div>
+    <header class="lh">
+      <div class="lh-l">
+        ${logoSrc?`<img src="${logoSrc}" alt="">`:''}
+        <div class="lh-co">
+          <h1>${esc(co.name||'Waterfront Solutions')}</h1>
+          <div class="tag">${esc(co.license?'Lic. '+co.license:'Construction & Waterfront Services')}</div>
+          <div class="addr">${esc(co.address||'')}${co.phone?'\n'+esc(co.phone):''}${co.email?' · '+esc(co.email):''}${co.website?'\n'+esc(co.website):''}</div>
+        </div>
+      </div>
+      <div class="lh-r">
+        <div class="title">INVOICE</div>
+        <div class="num">${esc(inv.number||'')}</div>
+        <div class="status ${invoiceStatus(inv)}">${invoiceStatus(inv)}</div>
+      </div>
+    </header>
+    <section class="meta">
+      <div class="meta-box">
+        <div class="lbl">Bill To</div>
+        <div class="v"><strong>${esc(j.customerName||'Customer')}</strong>${j.billingAddress?'\n'+esc(j.billingAddress):(j.address?'\n'+esc(j.address):'')}${j.customerPhone?'\n'+esc(j.customerPhone):''}${j.customerEmail?'\n'+esc(j.customerEmail):''}</div>
+      </div>
+      <div class="meta-box">
+        <div class="lbl">Project</div>
+        <div class="v"><strong>${esc(j.name||'')}</strong>${j.address?'\n'+esc(j.address):''}</div>
+        <div style="margin-top:12px"><div class="lbl">Invoice Date</div><div class="v">${fmtDate(inv.date)||''}</div></div>
+        ${inv.dueDate?`<div style="margin-top:8px"><div class="lbl">Due Date</div><div class="v">${fmtDate(inv.dueDate)}</div></div>`:''}
+      </div>
+    </section>
+    <table>
+      <thead><tr><th style="width:50%">Description</th><th class="num">Qty</th><th class="num">Rate</th><th class="num">Amount</th></tr></thead>
+      <tbody>${itemsRows||'<tr><td colspan="4" style="text-align:center;color:#999;padding:20px">No line items</td></tr>'}</tbody>
+    </table>
+    <div class="totals">
+      <div class="row"><span>Subtotal</span><span class="v">${money(c.sub)}</span></div>
+      <div class="row"><span>Tax (${Number(inv.taxRate||0)}%)</span><span class="v">${money(c.tax)}</span></div>
+      <div class="row grand"><span>Total</span><span class="v">${money(c.total)}</span></div>
+      ${c.paid>0?`<div class="row"><span>Paid</span><span class="v">-${money(c.paid)}</span></div>`:''}
+      <div class="due ${c.balance<=0.005?'zero':''}"><span>${c.balance<=0.005?'Paid in Full':'Balance Due'}</span><span class="v">${money(Math.max(0,c.balance))}</span></div>
+    </div>
+    ${inv.notes?`<div class="notes"><div class="lbl">Notes</div>${esc(inv.notes).replace(/\n/g,'<br>')}</div>`:''}
+    ${inv.terms?`<div class="terms">${esc(inv.terms)}</div>`:''}
+    <div class="ft">${esc(co.name||'Waterfront Solutions')}${co.phone?' · '+esc(co.phone):''}${co.email?' · '+esc(co.email):''} — Thank you for your business</div>
+    </body></html>`);
+  w.document.close();
+}
+
+// ══ Company / settings modal ══
+function showSettingsModal(){
+  const c={...COMPANY};
+  $('modal-root').innerHTML=`<div class="modal-bd" id="mbd" role="dialog" aria-modal="true" aria-label="Settings"><div class="modal"><div class="modal-handle"></div>
+    <div class="modal-head"><div class="modal-title">Settings</div><button class="modal-close" id="mc" aria-label="Close"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button></div>
+    <div class="modal-body">
+      <div class="form-group"><label class="form-label">Your Name (appears on notes & activity)</label><input class="form-input" id="set-user" value="${esc(S.user||'')}" placeholder="Your name"></div>
+      <div style="margin:14px 0 10px;padding-top:14px;border-top:1px solid var(--border)"><div class="form-label" style="font-size:12px">Company Info (used on invoices)</div></div>
+      <div class="form-group"><label class="form-label">Company Name</label><input class="form-input" id="set-co-name" value="${esc(c.name||'')}"></div>
+      <div class="form-group"><label class="form-label">Address</label><textarea class="form-textarea" id="set-co-addr" style="min-height:56px">${esc(c.address||'')}</textarea></div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Phone</label><input class="form-input" type="tel" id="set-co-phone" value="${esc(c.phone||'')}"></div>
+        <div class="form-group"><label class="form-label">Email</label><input class="form-input" type="email" id="set-co-email" value="${esc(c.email||'')}"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Website</label><input class="form-input" id="set-co-web" value="${esc(c.website||'')}"></div>
+        <div class="form-group"><label class="form-label">License #</label><input class="form-input" id="set-co-lic" value="${esc(c.license||'')}"></div>
+      </div>
+      <div class="form-group"><label class="form-label">Default Tax Rate (%)</label><input class="form-input" type="number" step="0.01" id="set-co-tax" value="${esc(c.taxRate||'')}"></div>
+      <div class="form-group"><label class="form-label">Default Invoice Terms</label><textarea class="form-textarea" id="set-co-terms">${esc(c.terms||'')}</textarea></div>
+    </div>
+    <div class="modal-foot"><button class="btn-cancel" id="btn-cx">Cancel</button><button class="btn-save" id="btn-set-save">Save</button></div>
+  </div></div>`;
+  $('mc').onclick=$('btn-cx').onclick=closeModal;
+  $('mbd').onclick=e=>{if(e.target===e.currentTarget)closeModal()};
+  $('btn-set-save').onclick=()=>{
+    const newUser=$('set-user').value.trim();
+    if(newUser!==S.user){S.user=newUser;localStorage.setItem('wfs_user',S.user)}
+    COMPANY={
+      name:$('set-co-name').value.trim()||COMPANY_DEFAULT.name,
+      address:$('set-co-addr').value.trim(),
+      phone:$('set-co-phone').value.trim(),
+      email:$('set-co-email').value.trim(),
+      website:$('set-co-web').value.trim(),
+      license:$('set-co-lic').value.trim(),
+      taxRate:$('set-co-tax').value,
+      terms:$('set-co-terms').value.trim(),
+    };
+    saveCompany(COMPANY);
+    closeModal();render();toast('Settings saved');
+  };
+}
+
 // ══ Command Palette ══
 let CMD={open:false,query:'',idx:0,items:[]};
 function cmdItems(){
@@ -2427,6 +2940,7 @@ function cmdItems(){
   });
   // Actions
   out.push({type:'action',name:'New Job',sub:'Create a job',ico:'plus',run:()=>showJobModal('add')});
+  out.push({type:'action',name:'Settings & Company Info',sub:'Edit name, logo, invoice defaults',ico:'kbd',run:showSettingsModal});
   out.push({type:'action',name:'Export to CSV',sub:'Download all jobs',ico:'download',run:exportCSV});
   out.push({type:'action',name:'Notifications',sub:'See your inbox',ico:'bell',run:showNotificationsModal});
   out.push({type:'action',name:'Connect Team (Firebase)',sub:'Live sync setup',ico:'link',run:showSetupModal});
@@ -2663,10 +3177,7 @@ function attachHandlers(){
   document.querySelectorAll('.nav-btn').forEach(b=>{
     b.onclick=()=>{S.view=b.dataset.view;S.detail=null;render()}
   });
-  $('user-btn').onclick=()=>{
-    const n=prompt('Your name (appears on notes):',S.user);
-    if(n!==null){S.user=n.trim();localStorage.setItem('wfs_user',S.user);render()}
-  };
+  $('user-btn').onclick=showSettingsModal;
   $('setup-link').onclick=showSetupModal;
   $('bell-btn')?.addEventListener('click',showNotificationsModal);
   $('cmd-btn')?.addEventListener('click',showCommandPalette);
@@ -2733,6 +3244,12 @@ function attachHandlers(){
 
   // Voice dictation mic buttons
   wireMicButtons();
+
+  // Invoices
+  $('btn-new-inv')?.addEventListener('click',()=>{const id=S.detail;if(id)showInvoiceModal(id)});
+  document.querySelectorAll('[data-inv-id]').forEach(row=>row.onclick=()=>{
+    const id=S.detail;if(id)showInvoiceModal(id,row.dataset.invId);
+  });
   // Reports
   document.querySelectorAll('[data-range]').forEach(c=>c.onclick=()=>{S.reportRange=c.dataset.range;render()});
   // Map
