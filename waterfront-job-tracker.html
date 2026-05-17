@@ -509,27 +509,83 @@ input[type=range]{width:100%;accent-color:var(--green-700);height:4px;cursor:poi
 }
 .cal-nav button:active{transform:scale(0.95)}
 .cal-nav button svg{width:14px;height:14px;stroke-width:2.5}
-.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:14px}
+.cal-view-toggle{display:flex;gap:4px;background:var(--surface-3);padding:3px;border-radius:var(--r-sm);margin-bottom:10px}
+.cal-view-toggle button{
+  flex:1;padding:6px 10px;font-size:11.5px;font-weight:600;border:none;background:none;
+  color:var(--text-2);cursor:pointer;border-radius:6px;font-family:var(--font);
+}
+.cal-view-toggle button.active{background:var(--surface);color:var(--green-700);box-shadow:var(--shadow-sm)}
+.cal-legend{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px;font-size:10.5px;color:var(--text-3);font-weight:600}
+.cal-legend-item{display:flex;align-items:center;gap:4px}
+.cal-legend-sw{width:9px;height:9px;border-radius:3px}
+
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:14px}
 .cal-dow{font-size:10px;font-weight:700;text-transform:uppercase;color:var(--text-3);text-align:center;padding:4px 0;letter-spacing:0.04em}
 .cal-day{
-  aspect-ratio:1;background:var(--surface);border:1px solid var(--border);
-  border-radius:8px;padding:5px;font-size:12px;cursor:pointer;
-  display:flex;flex-direction:column;align-items:flex-start;position:relative;
-  transition:all 0.15s;min-height:50px;
+  min-height:84px;background:var(--surface);border:1px solid var(--border);
+  border-radius:8px;padding:4px;font-size:12px;cursor:pointer;
+  display:flex;flex-direction:column;align-items:stretch;position:relative;
+  transition:all 0.15s;overflow:hidden;
 }
+@media(min-width:520px){.cal-day{min-height:104px}}
 .cal-day:hover{border-color:var(--green-600)}
-.cal-day.empty{background:transparent;border:none;cursor:default}
-.cal-day.today{background:var(--green-100);border-color:var(--green-600);font-weight:700}
-.cal-day.has-jobs{background:var(--green-50);border-color:var(--green-400)}
-.cal-day-num{font-size:12px;font-weight:600;line-height:1}
-.cal-day-dots{display:flex;gap:2px;margin-top:2px;flex-wrap:wrap}
-.cal-day-dot{width:5px;height:5px;border-radius:50%;background:var(--green-700)}
-.cal-day-count{position:absolute;bottom:3px;right:5px;font-size:9.5px;color:var(--text-2);font-weight:600}
+.cal-day.empty{background:transparent;border:none;cursor:default;min-height:84px}
+.cal-day.other-month{opacity:0.4}
+.cal-day.today{background:var(--green-50);border-color:var(--green-600)}
+.cal-day.selected{outline:2px solid var(--green-700);outline-offset:-2px}
+.cal-day-num{
+  font-size:11px;font-weight:600;color:var(--text-2);line-height:1;
+  margin-bottom:3px;display:flex;align-items:center;justify-content:space-between;padding:1px 2px;
+}
+.cal-day.today .cal-day-num{color:var(--green-700);font-weight:700}
+.cal-day.today .cal-day-num span{
+  width:18px;height:18px;border-radius:50%;background:var(--green-700);color:#fff;
+  display:inline-flex;align-items:center;justify-content:center;font-size:10.5px;font-weight:700;
+}
+.cal-day-chips{display:flex;flex-direction:column;gap:2px;overflow:hidden;flex:1}
+.cal-chip{
+  display:flex;align-items:center;gap:3px;
+  padding:2px 5px;border-radius:3px;font-size:10px;font-weight:600;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  border-left:3px solid var(--green-700);background:var(--green-100);color:var(--green-900);
+  line-height:1.25;cursor:pointer;
+}
+.cal-chip.cs-active{border-left-color:#16a34a;background:#dcfce7;color:#166534}
+.cal-chip.cs-lead{border-left-color:#d97706;background:var(--gold-light);color:#92400e}
+.cal-chip.cs-complete{border-left-color:#0284c7;background:#e0f2fe;color:#075985}
+.cal-chip.cs-hold{border-left-color:#64748b;background:var(--surface-3);color:var(--text-2)}
+.cal-chip.continues-left{border-left:none;padding-left:8px;border-radius:0 3px 3px 0}
+.cal-chip.continues-right{border-radius:3px 0 0 3px;margin-right:-4px;padding-right:8px}
+.cal-chip.continues-both{border-left:none;border-radius:0;margin-right:-4px;padding-left:8px;padding-right:8px}
+@media(prefers-color-scheme:dark){
+  .cal-chip{background:#1a3d2e;color:#a7f3d0}
+  .cal-chip.cs-active{background:#052e16;color:#86efac}
+  .cal-chip.cs-lead{background:#3d2800;color:#fbbf24}
+  .cal-chip.cs-complete{background:#082f49;color:#7dd3fc}
+  .cal-chip.cs-hold{background:#1e2e28;color:var(--text-2)}
+}
+.cal-day-more{font-size:9.5px;color:var(--text-3);font-weight:600;padding:1px 5px;cursor:pointer}
+.cal-day-more:hover{color:var(--green-700)}
+
 .cal-day-list{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);padding:12px 14px}
-.cal-day-list-hd{font-size:12px;font-weight:700;color:var(--text-2);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.04em}
-.cal-job-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);cursor:pointer;font-size:13px}
+.cal-day-list-hd{font-size:12px;font-weight:700;color:var(--text-2);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.04em;display:flex;justify-content:space-between;align-items:center}
+.cal-day-list-hd .kpi-sub{font-size:10.5px;font-weight:600;color:var(--text-3);text-transform:none;letter-spacing:0}
+.cal-job-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);cursor:pointer;font-size:13px}
 .cal-job-row:last-child{border-bottom:none}
 .cal-job-row:hover{color:var(--green-700)}
+.cal-job-row-bar{width:3px;align-self:stretch;border-radius:2px;flex-shrink:0;min-height:32px}
+.cal-job-row-meta{font-size:11px;color:var(--text-3);margin-top:1px}
+.cal-job-row-day{font-size:10px;color:var(--text-3);font-weight:600;background:var(--surface-3);padding:2px 6px;border-radius:4px;text-transform:uppercase;letter-spacing:0.03em}
+
+/* Agenda list view */
+.agenda-day{margin-bottom:18px}
+.agenda-day-hd{
+  font-size:11px;font-weight:700;color:var(--text-3);text-transform:uppercase;
+  letter-spacing:0.06em;margin-bottom:6px;display:flex;align-items:center;gap:8px;
+  padding-bottom:5px;border-bottom:1px solid var(--border);
+}
+.agenda-day-hd .today-pill{background:var(--green-700);color:#fff;font-size:10px;padding:2px 7px;border-radius:10px;letter-spacing:0.02em}
+.agenda-day-empty{font-size:12px;color:var(--text-3);padding:4px 0;font-style:italic}
 
 /* ── DETAIL TABS ── */
 .detail-tabs{
@@ -1027,7 +1083,7 @@ try{const s=localStorage.getItem('wfs_fb');if(s)FIREBASE_CONFIG=JSON.parse(s)}ca
 // ══ State ══
 let DB=null;
 let MAP=null,MAP_MARKERS=[];
-const S={jobs:{},activity:[],members:[],view:'dashboard',detail:null,detailTab:'overview',filter:'all',search:'',photoCat:'all',calMonth:new Date().getMonth(),calYear:new Date().getFullYear(),calSelected:null,reportRange:'90',sort:localStorage.getItem('wfs_sort')||'newest',sortOpen:false,bulkMode:false,bulkSel:new Set(),user:localStorage.getItem('wfs_user')||'',notifReadAt:parseInt(localStorage.getItem('wfs_notif_read')||'0',10)};
+const S={jobs:{},activity:[],members:[],view:'dashboard',detail:null,detailTab:'overview',filter:'all',search:'',photoCat:'all',calMonth:new Date().getMonth(),calYear:new Date().getFullYear(),calSelected:null,calMode:localStorage.getItem('wfs_calmode')||'month',reportRange:'90',sort:localStorage.getItem('wfs_sort')||'newest',sortOpen:false,bulkMode:false,bulkSel:new Set(),user:localStorage.getItem('wfs_user')||'',notifReadAt:parseInt(localStorage.getItem('wfs_notif_read')||'0',10)};
 const UNDO={stack:[],push(op){this.stack.push(op);if(this.stack.length>20)this.stack.shift()},pop(){return this.stack.pop()}};
 
 // ── Workflow stages (BuilderTrend / AccuLynx style)
@@ -1253,6 +1309,26 @@ function renderDashboard(){
   `;
 }
 
+// Returns the date range a job covers (inclusive) as 'YYYY-MM-DD' keys.
+function jobDateRange(j){
+  if(!j.startDate)return[];
+  const start=j.startDate.slice(0,10);
+  const end=(j.dueDate||j.startDate).slice(0,10);
+  // Guard against invalid dates / due before start
+  if(end<start)return[start];
+  const out=[];
+  const s=new Date(start+'T00:00:00');
+  const e=new Date(end+'T00:00:00');
+  for(let d=new Date(s);d<=e;d.setDate(d.getDate()+1)){
+    out.push(dateKey(d));
+  }
+  // Cap at 365 days to avoid runaway iterations on bad data
+  return out.slice(0,365);
+}
+
+function chipClass(status){return{lead:'cs-lead',active:'cs-active',complete:'cs-complete',hold:'cs-hold'}[status]||'cs-active'}
+function chipBarColor(status){return{lead:'#d97706',active:'#16a34a',complete:'#0284c7',hold:'#64748b'}[status]||'#16a34a'}
+
 function renderSchedule(){
   const y=S.calYear,m=S.calMonth;
   const first=new Date(y,m,1);
@@ -1260,52 +1336,158 @@ function renderSchedule(){
   const startDow=first.getDay();
   const monthName=first.toLocaleDateString(undefined,{month:'long',year:'numeric'});
   const today=dateKey(new Date());
-  // Map day -> jobs
+  // Build map: dateKey -> [{job, dayIdx, totalDays}]
   const byDay={};
   jobs().forEach(j=>{
-    if(!j.startDate)return;
-    const k=j.startDate.slice(0,10);
-    (byDay[k]=byDay[k]||[]).push(j);
+    const range=jobDateRange(j);
+    range.forEach((k,i)=>{
+      (byDay[k]=byDay[k]||[]).push({job:j,dayIdx:i,totalDays:range.length,firstDay:range[0],lastDay:range[range.length-1]});
+    });
   });
-  let cells='';
-  const DOW=['S','M','T','W','T','F','S'];
-  DOW.forEach(d=>cells+=`<div class="cal-dow">${d}</div>`);
-  for(let i=0;i<startDow;i++)cells+='<div class="cal-day empty"></div>';
-  for(let d=1;d<=daysInMonth;d++){
-    const k=`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-    const list=byDay[k]||[];
-    const isToday=k===today;
-    const cls='cal-day'+(isToday?' today':'')+(list.length?' has-jobs':'');
-    const dots=list.slice(0,4).map(()=>'<div class="cal-day-dot"></div>').join('');
-    const count=list.length>4?`<div class="cal-day-count">+${list.length-4}</div>`:'';
-    cells+=`<div class="${cls}" data-cal-day="${k}"><div class="cal-day-num">${d}</div><div class="cal-day-dots">${dots}</div>${count}</div>`;
-  }
+  // Sort each day's chips so multi-day jobs come first and stay in stable order
+  Object.values(byDay).forEach(arr=>arr.sort((a,b)=>{
+    if(b.totalDays!==a.totalDays)return b.totalDays-a.totalDays;
+    return a.job.name.localeCompare(b.job.name);
+  }));
+
   const sel=S.calSelected||today;
-  const selJobs=byDay[sel]||[];
+  const isMonth=S.calMode!=='agenda';
 
   return `
     <div class="cal-head">
-      <div class="cal-title">${monthName}</div>
+      <div class="cal-title">${isMonth?monthName:'Upcoming'}</div>
       <div class="cal-nav">
-        <button id="cal-prev"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5"/></svg></button>
+        <button id="cal-prev" aria-label="Previous"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5"/></svg></button>
         <button id="cal-today" style="width:auto;padding:0 12px;font-size:12px;font-weight:600">Today</button>
-        <button id="cal-next"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5"/></svg></button>
+        <button id="cal-next" aria-label="Next"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5"/></svg></button>
       </div>
     </div>
-    <div class="cal-grid">${cells}</div>
-    <div class="cal-day-list">
-      <div class="cal-day-list-hd">${new Date(sel+'T00:00:00').toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'})}</div>
-      ${selJobs.length===0?'<p style="font-size:12.5px;color:var(--text-3);padding:4px 0">No jobs scheduled for this day.</p>'
-        :selJobs.map(j=>`<div class="cal-job-row" data-open="${j.id}">
-          <span class="status-dot ${sdClass(j.status)}" style="position:static"></span>
-          <div style="flex:1;min-width:0">
-            <div style="font-weight:600">${esc(j.name)}</div>
-            <div style="font-size:11.5px;color:var(--text-3)">${esc(j.address||'No address')}${j.assigned?' · '+esc(j.assigned):''}</div>
-          </div>
-          <span class="status-pill ${spClass(j.status)}">${spLabel(j.status)}</span>
-        </div>`).join('')}
+    <div class="cal-view-toggle" role="tablist">
+      <button class="${isMonth?'active':''}" data-cal-mode="month" role="tab" aria-selected="${isMonth}">Month</button>
+      <button class="${!isMonth?'active':''}" data-cal-mode="agenda" role="tab" aria-selected="${!isMonth}">Agenda</button>
     </div>
+    <div class="cal-legend">
+      <div class="cal-legend-item"><div class="cal-legend-sw" style="background:#dcfce7;border-left:3px solid #16a34a"></div>Active</div>
+      <div class="cal-legend-item"><div class="cal-legend-sw" style="background:var(--gold-light);border-left:3px solid #d97706"></div>Lead</div>
+      <div class="cal-legend-item"><div class="cal-legend-sw" style="background:#e0f2fe;border-left:3px solid #0284c7"></div>Complete</div>
+      <div class="cal-legend-item"><div class="cal-legend-sw" style="background:var(--surface-3);border-left:3px solid #64748b"></div>On Hold</div>
+    </div>
+    ${isMonth?renderCalMonth(y,m,daysInMonth,startDow,byDay,today,sel):renderCalAgenda(byDay,today)}
+    ${isMonth?renderSelectedDay(byDay,sel,today):''}
   `;
+}
+
+function renderCalMonth(y,m,daysInMonth,startDow,byDay,today,sel){
+  const MAX_CHIPS=3;
+  let cells='';
+  const DOW=['S','M','T','W','T','F','S'];
+  DOW.forEach(d=>cells+=`<div class="cal-dow">${d}</div>`);
+  // Leading days from previous month
+  const prevDays=new Date(y,m,0).getDate();
+  for(let i=startDow-1;i>=0;i--){
+    const d=prevDays-i;
+    const prevM=m===0?11:m-1;
+    const prevY=m===0?y-1:y;
+    const k=`${prevY}-${String(prevM+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    cells+=renderCalCell(k,d,byDay,today,sel,true,MAX_CHIPS);
+  }
+  // Current month
+  for(let d=1;d<=daysInMonth;d++){
+    const k=`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    cells+=renderCalCell(k,d,byDay,today,sel,false,MAX_CHIPS);
+  }
+  // Trailing days to fill final week
+  const filled=startDow+daysInMonth;
+  const trailing=(7-filled%7)%7;
+  for(let i=1;i<=trailing;i++){
+    const nextM=m===11?0:m+1;
+    const nextY=m===11?y+1:y;
+    const k=`${nextY}-${String(nextM+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
+    cells+=renderCalCell(k,i,byDay,today,sel,true,MAX_CHIPS);
+  }
+  return `<div class="cal-grid">${cells}</div>`;
+}
+
+function renderCalCell(k,dayNum,byDay,today,sel,otherMonth,maxChips){
+  const list=byDay[k]||[];
+  const isToday=k===today;
+  const isSel=k===sel;
+  const cls='cal-day'+(isToday?' today':'')+(isSel?' selected':'')+(otherMonth?' other-month':'');
+  const visible=list.slice(0,maxChips);
+  const overflow=list.length-visible.length;
+  const chips=visible.map(({job,dayIdx,totalDays})=>{
+    const contLeft=dayIdx>0;
+    const contRight=dayIdx<totalDays-1;
+    const isWeekStart=new Date(k+'T00:00:00').getDay()===0;
+    const isWeekEnd=new Date(k+'T00:00:00').getDay()===6;
+    let contCls='';
+    if(contLeft&&contRight)contCls=isWeekStart?'continues-right':(isWeekEnd?'continues-left':'continues-both');
+    else if(contLeft)contCls=isWeekStart?'':'continues-left';
+    else if(contRight)contCls=isWeekEnd?'':'continues-right';
+    // On wrap to a new week, restart the chip with a left border
+    const label=(!contLeft||isWeekStart)?esc(job.name):'';
+    return `<div class="cal-chip ${chipClass(job.status)} ${contCls}" data-open="${job.id}" title="${esc(job.name)} · ${spLabel(job.status)}${totalDays>1?' · day '+(dayIdx+1)+'/'+totalDays:''}">${label||'&nbsp;'}</div>`;
+  }).join('');
+  const more=overflow>0?`<div class="cal-day-more" data-cal-day="${k}">+${overflow} more</div>`:'';
+  return `<div class="${cls}" data-cal-day="${k}"><div class="cal-day-num"><span>${dayNum}</span></div><div class="cal-day-chips">${chips}${more}</div></div>`;
+}
+
+function renderSelectedDay(byDay,sel,today){
+  const selList=(byDay[sel]||[]).slice();
+  // Sort: leads first? Or by status priority. Use status order: lead, active, complete, hold
+  const order={lead:0,active:1,complete:2,hold:3};
+  selList.sort((a,b)=>(order[a.job.status]??9)-(order[b.job.status]??9));
+  const dt=new Date(sel+'T00:00:00');
+  const lbl=dt.toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'});
+  const isToday=sel===today;
+  return `<div class="cal-day-list">
+    <div class="cal-day-list-hd"><span>${esc(lbl)}${isToday?' <span class="kpi-sub" style="color:var(--green-700);font-weight:700;margin-left:6px">Today</span>':''}</span><span class="kpi-sub">${selList.length} job${selList.length!==1?'s':''}</span></div>
+    ${selList.length===0?'<p style="font-size:12.5px;color:var(--text-3);padding:4px 0">Nothing scheduled. Tap a date above with jobs to see what\'s on the books.</p>'
+      :selList.map(({job,dayIdx,totalDays})=>`<div class="cal-job-row" data-open="${job.id}">
+        <div class="cal-job-row-bar" style="background:${chipBarColor(job.status)}"></div>
+        <div style="flex:1;min-width:0">
+          <div style="font-weight:600">${esc(job.name)}${totalDays>1?` <span class="cal-job-row-day">Day ${dayIdx+1}/${totalDays}</span>`:''}</div>
+          <div class="cal-job-row-meta">${esc(job.address||'No address')}${job.assigned?' · '+esc(job.assigned):''}${job.customerName?' · '+esc(job.customerName):''}</div>
+        </div>
+        <span class="status-pill ${spClass(job.status)}">${spLabel(job.status)}</span>
+      </div>`).join('')}
+  </div>`;
+}
+
+function renderCalAgenda(byDay,today){
+  // Show today plus next 14 days that have anything scheduled
+  const days=[];
+  const start=new Date(today+'T00:00:00');
+  for(let i=0;i<21;i++){
+    const d=new Date(start);d.setDate(start.getDate()+i);
+    const k=dateKey(d);
+    if(byDay[k]&&byDay[k].length){
+      days.push({k,date:d,list:byDay[k]});
+    }
+  }
+  if(days.length===0){
+    return `<div class="cal-day-list" style="text-align:center;padding:40px 24px">
+      <p style="font-size:14px;color:var(--text-2);margin-bottom:6px">Nothing scheduled in the next 3 weeks.</p>
+      <p style="font-size:12.5px;color:var(--text-3)">Add a start date (and optional due date) to a job to see it here.</p>
+    </div>`;
+  }
+  return days.map(({k,date,list})=>{
+    const isToday=k===today;
+    const lbl=date.toLocaleDateString(undefined,{weekday:'long',month:'short',day:'numeric'});
+    const order={lead:0,active:1,complete:2,hold:3};
+    const sorted=list.slice().sort((a,b)=>(order[a.job.status]??9)-(order[b.job.status]??9));
+    return `<div class="agenda-day">
+      <div class="agenda-day-hd">${esc(lbl)} ${isToday?'<span class="today-pill">TODAY</span>':''}<span style="margin-left:auto;color:var(--text-3);font-weight:600">${sorted.length} job${sorted.length!==1?'s':''}</span></div>
+      ${sorted.map(({job,dayIdx,totalDays})=>`<div class="cal-job-row" data-open="${job.id}">
+        <div class="cal-job-row-bar" style="background:${chipBarColor(job.status)}"></div>
+        <div style="flex:1;min-width:0">
+          <div style="font-weight:600">${esc(job.name)}${totalDays>1?` <span class="cal-job-row-day">Day ${dayIdx+1}/${totalDays}</span>`:''}</div>
+          <div class="cal-job-row-meta">${esc(job.address||'No address')}${job.assigned?' · '+esc(job.assigned):''}</div>
+        </div>
+        <span class="status-pill ${spClass(job.status)}">${spLabel(job.status)}</span>
+      </div>`).join('')}
+    </div>`;
+  }).join('');
 }
 
 // ══ Reports ══
@@ -2563,6 +2745,7 @@ function attachHandlers(){
   document.querySelectorAll('[data-filter]').forEach(c=>c.onclick=()=>{S.filter=c.dataset.filter;render()});
   document.querySelectorAll('[data-open]').forEach(c=>{
     c.onclick=e=>{
+      e.stopPropagation();
       // Bulk mode: clicks toggle selection instead of opening
       if(S.bulkMode&&c.classList.contains('job-card')){
         const id=c.dataset.open;
@@ -2575,10 +2758,25 @@ function attachHandlers(){
   });
 
   // Calendar
-  $('cal-prev')?.addEventListener('click',()=>{S.calMonth--;if(S.calMonth<0){S.calMonth=11;S.calYear--}render()});
-  $('cal-next')?.addEventListener('click',()=>{S.calMonth++;if(S.calMonth>11){S.calMonth=0;S.calYear++}render()});
+  $('cal-prev')?.addEventListener('click',()=>{
+    if(S.calMode==='agenda'){const n=new Date();S.calMonth=n.getMonth();S.calYear=n.getFullYear();render();return}
+    S.calMonth--;if(S.calMonth<0){S.calMonth=11;S.calYear--}render();
+  });
+  $('cal-next')?.addEventListener('click',()=>{
+    if(S.calMode==='agenda'){const n=new Date();S.calMonth=n.getMonth();S.calYear=n.getFullYear();render();return}
+    S.calMonth++;if(S.calMonth>11){S.calMonth=0;S.calYear++}render();
+  });
   $('cal-today')?.addEventListener('click',()=>{const n=new Date();S.calMonth=n.getMonth();S.calYear=n.getFullYear();S.calSelected=dateKey(n);render()});
-  document.querySelectorAll('[data-cal-day]').forEach(d=>d.onclick=()=>{S.calSelected=d.dataset.calDay;render()});
+  document.querySelectorAll('[data-cal-mode]').forEach(b=>b.onclick=()=>{S.calMode=b.dataset.calMode;localStorage.setItem('wfs_calmode',S.calMode);render()});
+  document.querySelectorAll('[data-cal-day]').forEach(d=>d.onclick=e=>{
+    // Ignore clicks on chips (they have their own handler that stops propagation, but be defensive)
+    if(e.target.closest('[data-open]'))return;
+    // Tapping a day from outside the current month jumps to that month
+    const k=d.dataset.calDay;
+    const [yy,mm]=k.split('-').map(n=>parseInt(n,10));
+    if(yy!==S.calYear||(mm-1)!==S.calMonth){S.calYear=yy;S.calMonth=mm-1}
+    S.calSelected=k;render();
+  });
 
   // Detail
   $('btn-back')?.addEventListener('click',()=>{S.detail=null;S.detailTab='overview';render()});
