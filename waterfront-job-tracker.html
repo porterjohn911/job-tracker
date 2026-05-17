@@ -1071,6 +1071,36 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
   .li-row input{font-size:13px;padding:7px 8px}
 }
 
+/* ── INVOICES VIEW ── */
+.aging-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:4px}
+@media(max-width:520px){.aging-grid{grid-template-columns:repeat(3,1fr)}}
+.aging-cell{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r-sm);padding:10px 8px;text-align:center;
+}
+.aging-cell.bucket-1{border-top:3px solid #fbbf24}
+.aging-cell.bucket-2{border-top:3px solid #f97316}
+.aging-cell.bucket-3{border-top:3px solid #ef4444}
+.aging-cell.bucket-4{border-top:3px solid #991b1b}
+.aging-cell.bucket-0{border-top:3px solid #16a34a}
+.aging-lbl{font-size:10px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:0.04em;line-height:1.2}
+.aging-val{font-size:15px;font-weight:700;color:var(--text);margin-top:5px;font-variant-numeric:tabular-nums;line-height:1.1}
+.aging-cnt{font-size:10.5px;color:var(--text-3);margin-top:2px}
+
+.top-customers .lb-row{padding:7px 0}
+.top-customers .lb-stats strong{color:var(--orange)}
+
+.inv-quick-actions{display:flex;gap:4px;flex-shrink:0}
+.inv-quick-btn{
+  background:none;border:1px solid var(--border-md);
+  width:30px;height:30px;border-radius:50%;cursor:pointer;
+  display:inline-flex;align-items:center;justify-content:center;
+  color:var(--text-2);transition:all 0.15s;
+}
+.inv-quick-btn:hover{border-color:var(--green-600);color:var(--green-700)}
+.inv-quick-btn svg{width:13px;height:13px;stroke-width:2}
+.inv-row-job{font-size:11px;color:var(--text-3);font-weight:500;margin-top:1px}
+
 /* ── PRINT ── */
 @media print{
   .header,.sync-bar,.nav,.detail-back,.detail-actions,.detail-tabs,.quick-actions,.photo-add-btn,.note-compose,.task-add,.stage-pipeline,.fin-edit-row,.modal-bd{display:none !important}
@@ -1124,6 +1154,10 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5"/></svg>
     Schedule
   </button>
+  <button class="nav-btn" data-view="invoices">
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25zM6.75 12h.008v.008H6.75V12zm0 3h.008v.008H6.75V15zm0 3h.008v.008H6.75V18z"/></svg>
+    Invoices
+  </button>
   <button class="nav-btn" data-view="map">
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 6.75V15m6-6v8.25m.503 3.498l4.875-2.437c.381-.19.622-.58.622-1.006V4.82c0-.836-.88-1.38-1.628-1.006l-3.869 1.934c-.317.159-.69.159-1.006 0L9.503 3.252a1.125 1.125 0 00-1.006 0L3.622 5.689C3.24 5.88 3 6.27 3 6.695V19.18c0 .836.88 1.38 1.628 1.006l3.869-1.934c.317-.159.69-.159 1.006 0l4.994 2.497c.317.158.69.158 1.006 0z"/></svg>
     Map
@@ -1159,7 +1193,7 @@ try{const s=localStorage.getItem('wfs_fb');if(s)FIREBASE_CONFIG=JSON.parse(s)}ca
 // ══ State ══
 let DB=null;
 let MAP=null,MAP_MARKERS=[];
-const S={jobs:{},activity:[],members:[],view:'dashboard',detail:null,detailTab:'overview',filter:'all',search:'',photoCat:'all',calMonth:new Date().getMonth(),calYear:new Date().getFullYear(),calSelected:null,calMode:localStorage.getItem('wfs_calmode')||'month',reportRange:'90',sort:localStorage.getItem('wfs_sort')||'newest',sortOpen:false,bulkMode:false,bulkSel:new Set(),user:localStorage.getItem('wfs_user')||'',notifReadAt:parseInt(localStorage.getItem('wfs_notif_read')||'0',10)};
+const S={jobs:{},activity:[],members:[],view:'dashboard',detail:null,detailTab:'overview',filter:'all',search:'',photoCat:'all',calMonth:new Date().getMonth(),calYear:new Date().getFullYear(),calSelected:null,calMode:localStorage.getItem('wfs_calmode')||'month',reportRange:'90',sort:localStorage.getItem('wfs_sort')||'newest',sortOpen:false,bulkMode:false,bulkSel:new Set(),invFilter:'all',invSearch:'',invSort:'date',user:localStorage.getItem('wfs_user')||'',notifReadAt:parseInt(localStorage.getItem('wfs_notif_read')||'0',10)};
 const UNDO={stack:[],push(op){this.stack.push(op);if(this.stack.length>20)this.stack.shift()},pop(){return this.stack.pop()}};
 
 // ── Company info for invoice letterhead (editable via Settings)
@@ -1305,6 +1339,7 @@ function render(){
   else if(S.view==='jobs')c.innerHTML=renderJobs();
   else if(S.view==='dashboard')c.innerHTML=renderDashboard();
   else if(S.view==='schedule')c.innerHTML=renderSchedule();
+  else if(S.view==='invoices')c.innerHTML=renderInvoicesView();
   else if(S.view==='map')c.innerHTML=renderMap();
   else if(S.view==='reports')c.innerHTML=renderReports();
   else if(S.view==='activity')c.innerHTML=renderActivity();
@@ -1620,6 +1655,250 @@ function renderCalAgenda(byDay,today){
       </div>`).join('')}
     </div>`;
   }).join('');
+}
+
+// ══ Invoices view (all invoices across all jobs) ══
+function getAllInvoices(){
+  const out=[];
+  Object.values(S.jobs).forEach(j=>{
+    (j.invoices||[]).forEach(inv=>out.push({inv,job:j}));
+  });
+  return out;
+}
+
+function agingBucket(days){
+  // days = number of days OVERDUE (positive means past due)
+  if(days<=0)return 0; // current / not yet due
+  if(days<=30)return 1;
+  if(days<=60)return 2;
+  if(days<=90)return 3;
+  return 4;
+}
+
+function renderInvoicesView(){
+  const all=getAllInvoices();
+  // Stats
+  let totalInvoiced=0,totalPaid=0,outstanding=0,overdueAmt=0,overdueCount=0;
+  const statusCounts={draft:0,sent:0,paid:0,overdue:0};
+  // Aging buckets: 0=current, 1=1-30, 2=31-60, 3=61-90, 4=90+
+  const aging=[0,0,0,0,0];
+  const agingCounts=[0,0,0,0,0];
+  // Top outstanding customers
+  const byCustomer={};
+
+  all.forEach(({inv,job})=>{
+    const c=calcInvoice(inv);
+    const st=invoiceStatus(inv);
+    totalInvoiced+=c.total;
+    totalPaid+=c.paid;
+    outstanding+=c.balance;
+    statusCounts[st]=(statusCounts[st]||0)+1;
+    // Aging — only on unpaid balances
+    if(c.balance>0.005){
+      const due=inv.dueDate||inv.date;
+      const daysOver=due?-(daysUntil(due)||0):0;
+      const b=agingBucket(daysOver);
+      aging[b]+=c.balance;
+      agingCounts[b]++;
+      if(st==='overdue'){overdueAmt+=c.balance;overdueCount++}
+      // Customer aggregation
+      const key=job.customerName||'(no name)';
+      byCustomer[key]=byCustomer[key]||{name:key,jobs:new Set(),outstanding:0,overdue:0};
+      byCustomer[key].jobs.add(job.id);
+      byCustomer[key].outstanding+=c.balance;
+      if(st==='overdue')byCustomer[key].overdue+=c.balance;
+    }
+  });
+  const topCustomers=Object.values(byCustomer).sort((a,b)=>b.outstanding-a.outstanding).slice(0,5);
+
+  // Filter + search + sort
+  const q=S.invSearch.toLowerCase();
+  let shown=all.filter(({inv,job})=>{
+    if(S.invFilter!=='all'&&invoiceStatus(inv)!==S.invFilter)return false;
+    if(!q)return true;
+    const hay=((inv.number||'')+' '+(job.name||'')+' '+(job.customerName||'')+' '+(job.address||'')).toLowerCase();
+    return hay.includes(q);
+  });
+  const sortFn={
+    date:(a,b)=>(b.inv.date||'').localeCompare(a.inv.date||''),
+    due:(a,b)=>(a.inv.dueDate||'9999').localeCompare(b.inv.dueDate||'9999'),
+    amount:(a,b)=>calcInvoice(b.inv).total-calcInvoice(a.inv).total,
+    balance:(a,b)=>calcInvoice(b.inv).balance-calcInvoice(a.inv).balance,
+    number:(a,b)=>(b.inv.number||'').localeCompare(a.inv.number||''),
+  }[S.invSort]||sortFn?.date;
+  shown.sort(sortFn);
+
+  const collectionRate=totalInvoiced>0?(totalPaid/totalInvoiced)*100:0;
+  const statusChips=[
+    ['all','All',all.length],
+    ['draft','Draft',statusCounts.draft||0],
+    ['sent','Sent',statusCounts.sent||0],
+    ['overdue','Overdue',statusCounts.overdue||0],
+    ['paid','Paid',statusCounts.paid||0],
+  ];
+
+  const agingLabels=['Current','1-30 days','31-60 days','61-90 days','90+ days'];
+
+  return `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+      <div>
+        <div style="font-size:11px;color:var(--text-3);text-transform:uppercase;letter-spacing:0.06em;font-weight:700">Accounts Receivable</div>
+        <div style="font-size:20px;font-weight:700;margin-top:2px">Invoices</div>
+      </div>
+      <button class="btn-add" id="btn-new-inv-global" aria-label="Create new invoice">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+        New Invoice
+      </button>
+    </div>
+
+    <div class="kpi-grid">
+      <div class="kpi-card accent"><div class="kpi-label">Outstanding</div><div class="kpi-value">${money(outstanding)}</div><div class="kpi-sub">${all.filter(({inv})=>calcInvoice(inv).balance>0.005).length} unpaid</div></div>
+      <div class="kpi-card"><div class="kpi-label">Overdue</div><div class="kpi-value" style="color:${overdueCount>0?'var(--red)':'var(--text)'}">${money(overdueAmt)}</div><div class="kpi-sub">${overdueCount} invoice${overdueCount!==1?'s':''}</div></div>
+      <div class="kpi-card"><div class="kpi-label">Collected</div><div class="kpi-value">${money(totalPaid)}</div><div class="kpi-sub">${collectionRate.toFixed(0)}% of invoiced</div></div>
+      <div class="kpi-card"><div class="kpi-label">Total Invoiced</div><div class="kpi-value">${money(totalInvoiced)}</div><div class="kpi-sub">${all.length} invoice${all.length!==1?'s':''}</div></div>
+    </div>
+
+    <div class="report-section">
+      <div class="report-hd">Aging Report <span class="kpi-sub">Outstanding balances by age</span></div>
+      <div class="aging-grid">
+        ${agingLabels.map((lbl,i)=>`<div class="aging-cell bucket-${i}">
+          <div class="aging-lbl">${lbl}</div>
+          <div class="aging-val">${money(aging[i])}</div>
+          <div class="aging-cnt">${agingCounts[i]} invoice${agingCounts[i]!==1?'s':''}</div>
+        </div>`).join('')}
+      </div>
+    </div>
+
+    ${topCustomers.length?`<div class="report-section">
+      <div class="report-hd">Top Outstanding Customers</div>
+      <div class="leaderboard top-customers">
+        ${topCustomers.map((c,i)=>{
+          const rankCls=i===0?'gold':i===1?'silver':i===2?'bronze':'';
+          return `<div class="lb-row">
+            <div class="lb-rank ${rankCls}">${i+1}</div>
+            <div class="member-ava" style="width:30px;height:30px;font-size:12px">${initials(c.name)}</div>
+            <div class="lb-name">${esc(c.name)}<div style="font-size:11px;color:var(--text-3);font-weight:500">${c.jobs.size} job${c.jobs.size!==1?'s':''}${c.overdue>0?' · '+money(c.overdue)+' overdue':''}</div></div>
+            <div class="lb-stats"><strong>${money(c.outstanding)}</strong><div>balance</div></div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`:''}
+
+    <div class="toolbar" style="margin-top:8px">
+      <div class="search-wrap">
+        <div class="search-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 15.803a7.5 7.5 0 0010.607 0z"/></svg></div>
+        <input class="search" id="inv-search" placeholder="Search invoice #, job, customer…" value="${esc(S.invSearch)}" aria-label="Search invoices">
+      </div>
+      <select class="form-select" id="inv-sort" style="max-width:160px;font-size:13px;padding:8px 10px" aria-label="Sort invoices">
+        <option value="date" ${S.invSort==='date'?'selected':''}>Newest first</option>
+        <option value="due" ${S.invSort==='due'?'selected':''}>Due soonest</option>
+        <option value="amount" ${S.invSort==='amount'?'selected':''}>Largest total</option>
+        <option value="balance" ${S.invSort==='balance'?'selected':''}>Largest balance</option>
+        <option value="number" ${S.invSort==='number'?'selected':''}>Invoice #</option>
+      </select>
+    </div>
+
+    <div class="filter-row" style="margin-bottom:14px">
+      ${statusChips.map(([k,lbl,n])=>`<div class="filter-chip ${S.invFilter===k?'active':''}" data-inv-filter="${k}">${lbl} ${n}</div>`).join('')}
+    </div>
+
+    <div class="invoice-list">
+      ${shown.length===0?`<div class="empty" style="padding:40px 20px">
+        <div class="empty-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75M3.75 9.75h16.5m-16.5 3.75h16.5"/></svg></div>
+        <h3>${all.length===0?'No invoices yet':'No matches'}</h3>
+        <p>${all.length===0?'Create your first invoice. It will use your company letterhead and pull from job line items.':'Try a different search or filter.'}</p>
+      </div>`
+        :shown.map(({inv,job})=>{
+          const c=calcInvoice(inv);
+          const st=invoiceStatus(inv);
+          const daysOver=inv.dueDate?-(daysUntil(inv.dueDate)||0):0;
+          const overInfo=st==='overdue'&&daysOver>0?` · <span style="color:var(--red);font-weight:700">${daysOver}d late</span>`:'';
+          return `<div class="invoice-row ${st}">
+            <div class="invoice-row-main" data-open-inv="${esc(job.id)}|${esc(inv.id)}" style="cursor:pointer">
+              <div class="invoice-num">${esc(inv.number||'')} <span class="invoice-status ${st}">${st}</span></div>
+              <div class="invoice-meta">${esc(job.customerName||'(no customer)')} · ${fmtDate(inv.date)}${inv.dueDate?' · due '+fmtDate(inv.dueDate):''}${overInfo}</div>
+              <div class="inv-row-job">${esc(job.name||'')}</div>
+            </div>
+            <div class="invoice-row-amt" style="margin-right:8px">
+              <div class="invoice-row-total">${money(c.total)}</div>
+              <div class="invoice-row-bal" style="color:${c.balance>0.005?'var(--orange)':'var(--green-700)'};font-weight:600">${c.balance>0.005?money(c.balance)+' due':'Paid'}</div>
+            </div>
+            <div class="inv-quick-actions">
+              <button class="inv-quick-btn" data-inv-print="${esc(job.id)}|${esc(inv.id)}" title="Print" aria-label="Print invoice ${esc(inv.number||'')}">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.72 13.829c-.24.03-.48.062-.72.096m.72-.096a42.415 42.415 0 0110.56 0m-10.56 0L6.34 18m10.94-4.171c.24.03.48.062.72.096m-.72-.096L17.66 18m0 0l.229 2.523a1.125 1.125 0 01-1.12 1.227H7.231c-.662 0-1.18-.568-1.12-1.227L6.34 18m11.318 0h1.091A2.25 2.25 0 0021 15.75V9.456c0-1.081-.768-2.015-1.837-2.175a48.055 48.055 0 00-1.913-.247M6.34 18H5.25A2.25 2.25 0 013 15.75V9.456c0-1.081.768-2.015 1.837-2.175a48.041 48.041 0 011.913-.247m10.5 0a48.536 48.536 0 00-10.5 0m10.5 0V3.375c0-.621-.504-1.125-1.125-1.125h-8.25c-.621 0-1.125.504-1.125 1.125v3.659"/></svg>
+              </button>
+              ${c.balance>0.005?`<button class="inv-quick-btn" data-inv-paid="${esc(job.id)}|${esc(inv.id)}" title="Mark paid in full" aria-label="Mark invoice ${esc(inv.number||'')} as paid">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
+              </button>`:''}
+              ${job.customerEmail?`<button class="inv-quick-btn" data-inv-email="${esc(job.id)}|${esc(inv.id)}" title="Email invoice" aria-label="Email invoice ${esc(inv.number||'')}">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25"/></svg>
+              </button>`:''}
+            </div>
+          </div>`;
+        }).join('')}
+    </div>
+  `;
+}
+
+// Pick a job, then open invoice editor for it
+function showJobPickerModal(onPick){
+  const all=jobs();
+  if(all.length===0){toast('Add a job first','');return}
+  $('modal-root').innerHTML=`<div class="modal-bd" id="mbd" role="dialog" aria-modal="true" aria-label="Pick a job"><div class="modal"><div class="modal-handle"></div>
+    <div class="modal-head"><div class="modal-title">Pick a Job</div><button class="modal-close" id="mc" aria-label="Close"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button></div>
+    <div class="modal-body">
+      <p style="font-size:12.5px;color:var(--text-2);margin-bottom:10px">Invoices are attached to a job so the customer info and project details pull through automatically.</p>
+      <div class="search-wrap" style="margin-bottom:12px"><div class="search-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 15.803a7.5 7.5 0 0010.607 0z"/></svg></div>
+        <input class="search" id="picker-search" placeholder="Search jobs…" aria-label="Search jobs" autofocus>
+      </div>
+      <div id="picker-list" style="display:flex;flex-direction:column;gap:6px;max-height:50vh;overflow-y:auto">
+        ${all.map(j=>`<div class="invoice-row" data-pick="${esc(j.id)}" style="cursor:pointer;border-left-color:${j.status==='complete'?'#0284c7':j.status==='active'?'#16a34a':j.status==='lead'?'#d97706':'#94a3b8'}">
+          <div class="invoice-row-main">
+            <div class="invoice-num">${esc(j.name)}</div>
+            <div class="invoice-meta">${esc(j.customerName||'No customer')}${j.address?' · '+esc(j.address):''}</div>
+          </div>
+          <span class="status-pill ${spClass(j.status)}">${spLabel(j.status)}</span>
+        </div>`).join('')}
+      </div>
+    </div>
+  </div></div>`;
+  $('mc').onclick=closeModal;
+  $('mbd').onclick=e=>{if(e.target===e.currentTarget)closeModal()};
+  const filterList=q=>{
+    const ql=q.toLowerCase();
+    document.querySelectorAll('[data-pick]').forEach(r=>{
+      const hay=r.textContent.toLowerCase();
+      r.style.display=!ql||hay.includes(ql)?'':'none';
+    });
+  };
+  $('picker-search').oninput=e=>filterList(e.target.value);
+  document.querySelectorAll('[data-pick]').forEach(r=>r.onclick=()=>{
+    closeModal();onPick(r.dataset.pick);
+  });
+}
+
+function emailInvoice(j,inv){
+  const c=calcInvoice(inv);
+  const co=COMPANY;
+  const subject=encodeURIComponent(`Invoice ${inv.number||''} from ${co.name||'Waterfront Solutions'}`);
+  const body=encodeURIComponent(
+`Hi ${j.customerName||'there'},
+
+Please find your invoice details below for ${j.name}:
+
+Invoice: ${inv.number||''}
+Date: ${fmtDate(inv.date)||''}
+${inv.dueDate?'Due: '+fmtDate(inv.dueDate)+'\n':''}Total: ${money(c.total)}
+${c.paid>0?'Paid: '+money(c.paid)+'\n':''}Balance Due: ${money(c.balance)}
+
+${inv.notes||''}
+
+${inv.terms||''}
+
+Thank you,
+${co.name||'Waterfront Solutions'}${co.phone?'\n'+co.phone:''}${co.email?'\n'+co.email:''}`);
+  const to=encodeURIComponent(j.customerEmail||'');
+  window.location.href=`mailto:${to}?subject=${subject}&body=${body}`;
 }
 
 // ══ Reports ══
@@ -2935,11 +3214,12 @@ let CMD={open:false,query:'',idx:0,items:[]};
 function cmdItems(){
   const out=[];
   // Views
-  [['dashboard','Home / Dashboard','home'],['jobs','Jobs','briefcase'],['schedule','Schedule','calendar'],['map','Map','map'],['reports','Reports','chart'],['activity','Activity','list'],['team','Team','team']].forEach(([v,name,ico])=>{
+  [['dashboard','Home / Dashboard','home'],['jobs','Jobs','briefcase'],['schedule','Schedule','calendar'],['invoices','Invoices','invoice'],['map','Map','map'],['reports','Reports','chart'],['activity','Activity','list'],['team','Team','team']].forEach(([v,name,ico])=>{
     out.push({type:'view',name:'Go to '+name,sub:'View',ico,run:()=>{S.view=v;S.detail=null;render()}});
   });
   // Actions
   out.push({type:'action',name:'New Job',sub:'Create a job',ico:'plus',run:()=>showJobModal('add')});
+  out.push({type:'action',name:'New Invoice',sub:'Pick a job, then create invoice',ico:'invoice',run:()=>showJobPickerModal(jobId=>showInvoiceModal(jobId))});
   out.push({type:'action',name:'Settings & Company Info',sub:'Edit name, logo, invoice defaults',ico:'kbd',run:showSettingsModal});
   out.push({type:'action',name:'Export to CSV',sub:'Download all jobs',ico:'download',run:exportCSV});
   out.push({type:'action',name:'Notifications',sub:'See your inbox',ico:'bell',run:showNotificationsModal});
@@ -2985,6 +3265,7 @@ const CMD_ICONS={
   kbd:'<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5v10.5H3.75z"/></svg>',
   undo:'<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3"/></svg>',
   job:'<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12"/></svg>',
+  invoice:'<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 3h6m-9-9h12v18l-3-2-3 2-3-2-3 2V6z"/></svg>',
 };
 function showCommandPalette(){
   CMD.open=true;CMD.query='';CMD.idx=0;CMD.items=cmdItems();
@@ -3054,6 +3335,7 @@ function showShortcutsModal(){
     ['Go to Dashboard',['G','D']],
     ['Go to Jobs',['G','J']],
     ['Go to Schedule',['G','S']],
+    ['Go to Invoices',['G','I']],
     ['Go to Map',['G','M']],
     ['Go to Reports',['G','R']],
     ['Notifications',['B']],
@@ -3153,7 +3435,7 @@ function onKey(e){
   // g + (d/j/s/m/r) go-to
   if(k==='g'||k==='G'){KBD_BUFFER='g';clearTimeout(KBD_BUFFER_T);KBD_BUFFER_T=setTimeout(()=>KBD_BUFFER='',1200);return}
   if(KBD_BUFFER==='g'){
-    const map={d:'dashboard',j:'jobs',s:'schedule',m:'map',r:'reports',a:'activity',t:'team'};
+    const map={d:'dashboard',j:'jobs',s:'schedule',i:'invoices',m:'map',r:'reports',a:'activity',t:'team'};
     const target=map[k.toLowerCase()];
     if(target){KBD_BUFFER='';clearTimeout(KBD_BUFFER_T);S.view=target;S.detail=null;render();e.preventDefault()}
   }
@@ -3245,10 +3527,57 @@ function attachHandlers(){
   // Voice dictation mic buttons
   wireMicButtons();
 
-  // Invoices
+  // Invoices (per-job tab)
   $('btn-new-inv')?.addEventListener('click',()=>{const id=S.detail;if(id)showInvoiceModal(id)});
   document.querySelectorAll('[data-inv-id]').forEach(row=>row.onclick=()=>{
     const id=S.detail;if(id)showInvoiceModal(id,row.dataset.invId);
+  });
+
+  // Invoices (global view)
+  $('btn-new-inv-global')?.addEventListener('click',()=>showJobPickerModal(jobId=>showInvoiceModal(jobId)));
+  $('inv-search')?.addEventListener('input',e=>{S.invSearch=e.target.value;render()});
+  $('inv-sort')?.addEventListener('change',e=>{S.invSort=e.target.value;render()});
+  document.querySelectorAll('[data-inv-filter]').forEach(c=>c.onclick=()=>{S.invFilter=c.dataset.invFilter;render()});
+  document.querySelectorAll('[data-open-inv]').forEach(el=>el.onclick=e=>{
+    e.stopPropagation();
+    const [jobId,invId]=el.dataset.openInv.split('|');
+    showInvoiceModal(jobId,invId);
+  });
+  document.querySelectorAll('[data-inv-print]').forEach(b=>b.onclick=e=>{
+    e.stopPropagation();
+    const [jobId,invId]=b.dataset.invPrint.split('|');
+    const j=S.jobs[jobId];if(!j)return;
+    const inv=(j.invoices||[]).find(i=>i.id===invId);
+    if(inv)printInvoice(j,inv);
+  });
+  document.querySelectorAll('[data-inv-paid]').forEach(b=>b.onclick=async e=>{
+    e.stopPropagation();
+    const [jobId,invId]=b.dataset.invPaid.split('|');
+    const j=S.jobs[jobId];if(!j)return;
+    const inv=(j.invoices||[]).find(i=>i.id===invId);
+    if(!inv)return;
+    const c=calcInvoice(inv);
+    const prevPaid=Number(inv.paid||0);
+    const prevStatus=inv.status;
+    inv.paid=c.total;inv.status='paid';
+    const tot=invoiceTotals(j);if(tot){j.invoiced=tot.total;j.paid=tot.paid}
+    await writeJob(j);await logAct('marked invoice '+(inv.number||'')+' paid on',j.name);render();
+    const restore=async()=>{
+      const jj=S.jobs[jobId];if(!jj)return;
+      const ii=(jj.invoices||[]).find(i=>i.id===invId);if(!ii)return;
+      ii.paid=prevPaid;ii.status=prevStatus;
+      const t=invoiceTotals(jj);if(t){jj.invoiced=t.total;jj.paid=t.paid}
+      await writeJob(jj);render();toast('Reverted');
+    };
+    UNDO.push(restore);
+    toast('Marked paid','undo',restore);
+  });
+  document.querySelectorAll('[data-inv-email]').forEach(b=>b.onclick=e=>{
+    e.stopPropagation();
+    const [jobId,invId]=b.dataset.invEmail.split('|');
+    const j=S.jobs[jobId];if(!j)return;
+    const inv=(j.invoices||[]).find(i=>i.id===invId);
+    if(inv)emailInvoice(j,inv);
   });
   // Reports
   document.querySelectorAll('[data-range]').forEach(c=>c.onclick=()=>{S.reportRange=c.dataset.range;render()});
