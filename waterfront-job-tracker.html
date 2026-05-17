@@ -509,27 +509,83 @@ input[type=range]{width:100%;accent-color:var(--green-700);height:4px;cursor:poi
 }
 .cal-nav button:active{transform:scale(0.95)}
 .cal-nav button svg{width:14px;height:14px;stroke-width:2.5}
-.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:14px}
+.cal-view-toggle{display:flex;gap:4px;background:var(--surface-3);padding:3px;border-radius:var(--r-sm);margin-bottom:10px}
+.cal-view-toggle button{
+  flex:1;padding:6px 10px;font-size:11.5px;font-weight:600;border:none;background:none;
+  color:var(--text-2);cursor:pointer;border-radius:6px;font-family:var(--font);
+}
+.cal-view-toggle button.active{background:var(--surface);color:var(--green-700);box-shadow:var(--shadow-sm)}
+.cal-legend{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px;font-size:10.5px;color:var(--text-3);font-weight:600}
+.cal-legend-item{display:flex;align-items:center;gap:4px}
+.cal-legend-sw{width:9px;height:9px;border-radius:3px}
+
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:14px}
 .cal-dow{font-size:10px;font-weight:700;text-transform:uppercase;color:var(--text-3);text-align:center;padding:4px 0;letter-spacing:0.04em}
 .cal-day{
-  aspect-ratio:1;background:var(--surface);border:1px solid var(--border);
-  border-radius:8px;padding:5px;font-size:12px;cursor:pointer;
-  display:flex;flex-direction:column;align-items:flex-start;position:relative;
-  transition:all 0.15s;min-height:50px;
+  min-height:84px;background:var(--surface);border:1px solid var(--border);
+  border-radius:8px;padding:4px;font-size:12px;cursor:pointer;
+  display:flex;flex-direction:column;align-items:stretch;position:relative;
+  transition:all 0.15s;overflow:hidden;
 }
+@media(min-width:520px){.cal-day{min-height:104px}}
 .cal-day:hover{border-color:var(--green-600)}
-.cal-day.empty{background:transparent;border:none;cursor:default}
-.cal-day.today{background:var(--green-100);border-color:var(--green-600);font-weight:700}
-.cal-day.has-jobs{background:var(--green-50);border-color:var(--green-400)}
-.cal-day-num{font-size:12px;font-weight:600;line-height:1}
-.cal-day-dots{display:flex;gap:2px;margin-top:2px;flex-wrap:wrap}
-.cal-day-dot{width:5px;height:5px;border-radius:50%;background:var(--green-700)}
-.cal-day-count{position:absolute;bottom:3px;right:5px;font-size:9.5px;color:var(--text-2);font-weight:600}
+.cal-day.empty{background:transparent;border:none;cursor:default;min-height:84px}
+.cal-day.other-month{opacity:0.4}
+.cal-day.today{background:var(--green-50);border-color:var(--green-600)}
+.cal-day.selected{outline:2px solid var(--green-700);outline-offset:-2px}
+.cal-day-num{
+  font-size:11px;font-weight:600;color:var(--text-2);line-height:1;
+  margin-bottom:3px;display:flex;align-items:center;justify-content:space-between;padding:1px 2px;
+}
+.cal-day.today .cal-day-num{color:var(--green-700);font-weight:700}
+.cal-day.today .cal-day-num span{
+  width:18px;height:18px;border-radius:50%;background:var(--green-700);color:#fff;
+  display:inline-flex;align-items:center;justify-content:center;font-size:10.5px;font-weight:700;
+}
+.cal-day-chips{display:flex;flex-direction:column;gap:2px;overflow:hidden;flex:1}
+.cal-chip{
+  display:flex;align-items:center;gap:3px;
+  padding:2px 5px;border-radius:3px;font-size:10px;font-weight:600;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  border-left:3px solid var(--green-700);background:var(--green-100);color:var(--green-900);
+  line-height:1.25;cursor:pointer;
+}
+.cal-chip.cs-active{border-left-color:#16a34a;background:#dcfce7;color:#166534}
+.cal-chip.cs-lead{border-left-color:#d97706;background:var(--gold-light);color:#92400e}
+.cal-chip.cs-complete{border-left-color:#0284c7;background:#e0f2fe;color:#075985}
+.cal-chip.cs-hold{border-left-color:#64748b;background:var(--surface-3);color:var(--text-2)}
+.cal-chip.continues-left{border-left:none;padding-left:8px;border-radius:0 3px 3px 0}
+.cal-chip.continues-right{border-radius:3px 0 0 3px;margin-right:-4px;padding-right:8px}
+.cal-chip.continues-both{border-left:none;border-radius:0;margin-right:-4px;padding-left:8px;padding-right:8px}
+@media(prefers-color-scheme:dark){
+  .cal-chip{background:#1a3d2e;color:#a7f3d0}
+  .cal-chip.cs-active{background:#052e16;color:#86efac}
+  .cal-chip.cs-lead{background:#3d2800;color:#fbbf24}
+  .cal-chip.cs-complete{background:#082f49;color:#7dd3fc}
+  .cal-chip.cs-hold{background:#1e2e28;color:var(--text-2)}
+}
+.cal-day-more{font-size:9.5px;color:var(--text-3);font-weight:600;padding:1px 5px;cursor:pointer}
+.cal-day-more:hover{color:var(--green-700)}
+
 .cal-day-list{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);padding:12px 14px}
-.cal-day-list-hd{font-size:12px;font-weight:700;color:var(--text-2);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.04em}
-.cal-job-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);cursor:pointer;font-size:13px}
+.cal-day-list-hd{font-size:12px;font-weight:700;color:var(--text-2);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.04em;display:flex;justify-content:space-between;align-items:center}
+.cal-day-list-hd .kpi-sub{font-size:10.5px;font-weight:600;color:var(--text-3);text-transform:none;letter-spacing:0}
+.cal-job-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);cursor:pointer;font-size:13px}
 .cal-job-row:last-child{border-bottom:none}
 .cal-job-row:hover{color:var(--green-700)}
+.cal-job-row-bar{width:3px;align-self:stretch;border-radius:2px;flex-shrink:0;min-height:32px}
+.cal-job-row-meta{font-size:11px;color:var(--text-3);margin-top:1px}
+.cal-job-row-day{font-size:10px;color:var(--text-3);font-weight:600;background:var(--surface-3);padding:2px 6px;border-radius:4px;text-transform:uppercase;letter-spacing:0.03em}
+
+/* Agenda list view */
+.agenda-day{margin-bottom:18px}
+.agenda-day-hd{
+  font-size:11px;font-weight:700;color:var(--text-3);text-transform:uppercase;
+  letter-spacing:0.06em;margin-bottom:6px;display:flex;align-items:center;gap:8px;
+  padding-bottom:5px;border-bottom:1px solid var(--border);
+}
+.agenda-day-hd .today-pill{background:var(--green-700);color:#fff;font-size:10px;padding:2px 7px;border-radius:10px;letter-spacing:0.02em}
+.agenda-day-empty{font-size:12px;color:var(--text-3);padding:4px 0;font-style:italic}
 
 /* ── DETAIL TABS ── */
 .detail-tabs{
@@ -939,6 +995,139 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .textarea-with-mic .mic-btn{position:absolute;bottom:8px;right:8px;width:32px;height:32px}
 .input-with-mic{display:flex;gap:6px;align-items:center}
 
+/* ── INVOICING ── */
+.invoice-list{display:flex;flex-direction:column;gap:8px;margin-bottom:14px}
+.invoice-row{
+  display:flex;align-items:center;gap:11px;
+  background:var(--surface);border:1px solid var(--border);
+  border-left:3px solid var(--green-700);border-radius:var(--r-md);
+  padding:12px 14px;cursor:pointer;transition:all 0.15s;
+}
+.invoice-row:hover{border-color:var(--green-600)}
+.invoice-row.draft{border-left-color:#94a3b8}
+.invoice-row.sent{border-left-color:var(--gold)}
+.invoice-row.paid{border-left-color:#16a34a}
+.invoice-row.overdue{border-left-color:var(--red)}
+.invoice-row-main{flex:1;min-width:0}
+.invoice-num{font-size:13.5px;font-weight:700;color:var(--text)}
+.invoice-meta{font-size:11.5px;color:var(--text-3);margin-top:2px}
+.invoice-row-amt{text-align:right;flex-shrink:0}
+.invoice-row-total{font-size:14px;font-weight:700;font-variant-numeric:tabular-nums}
+.invoice-row-bal{font-size:11px;color:var(--text-3);margin-top:1px}
+.invoice-status{
+  display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;
+  border-radius:20px;letter-spacing:0.04em;text-transform:uppercase;
+  background:var(--surface-3);color:var(--text-2);
+}
+.invoice-status.sent{background:var(--gold-light);color:#92400e}
+.invoice-status.paid{background:#dcfce7;color:#166534}
+.invoice-status.overdue{background:var(--red-light);color:var(--red)}
+@media(prefers-color-scheme:dark){
+  .invoice-status.sent{background:#3d2800;color:#fbbf24}
+  .invoice-status.paid{background:#052e16;color:#86efac}
+  .invoice-status.overdue{background:#2d1515;color:#fca5a5}
+}
+
+/* Line items table in editor */
+.line-items{display:flex;flex-direction:column;gap:6px;margin-bottom:12px}
+.li-row{
+  display:grid;grid-template-columns:1fr 70px 90px 90px 26px;gap:6px;align-items:center;
+}
+.li-row input{
+  width:100%;padding:8px 10px;font-size:13.5px;
+  border:1.5px solid var(--border-md);border-radius:8px;
+  background:var(--surface);color:var(--text);font-family:var(--font);outline:none;
+}
+.li-row input:focus{border-color:var(--green-600)}
+.li-row .li-amt{font-weight:600;font-variant-numeric:tabular-nums;color:var(--text);background:var(--surface-3);padding:8px 10px;border-radius:8px;font-size:13.5px;text-align:right}
+.li-row .li-del{
+  background:var(--surface-3);border:none;border-radius:50%;
+  width:26px;height:26px;font-size:14px;cursor:pointer;color:var(--text-3);
+  display:flex;align-items:center;justify-content:center;
+}
+.li-row .li-del:hover{background:var(--red-light);color:var(--red)}
+.li-head{
+  display:grid;grid-template-columns:1fr 70px 90px 90px 26px;gap:6px;
+  font-size:10px;font-weight:700;color:var(--text-3);
+  text-transform:uppercase;letter-spacing:0.05em;padding:0 10px;margin-bottom:2px;
+}
+.li-head>div:nth-child(3),.li-head>div:nth-child(4){text-align:right}
+.li-add-btn{
+  background:var(--surface-3);border:1.5px dashed var(--border-md);
+  padding:9px;border-radius:8px;font-size:12.5px;font-weight:600;
+  cursor:pointer;color:var(--text-2);font-family:var(--font);
+}
+.li-add-btn:hover{border-color:var(--green-600);color:var(--green-700)}
+
+.inv-totals{background:var(--surface-3);border-radius:var(--r-md);padding:12px 14px;margin-bottom:12px}
+.inv-total-row{display:flex;justify-content:space-between;align-items:center;padding:3px 0;font-size:13px}
+.inv-total-row.grand{padding-top:8px;margin-top:5px;border-top:1px solid var(--border-md);font-size:16px;font-weight:700;color:var(--green-900)}
+.inv-total-row .v{font-variant-numeric:tabular-nums;font-weight:600}
+@media(prefers-color-scheme:dark){.inv-total-row.grand{color:var(--green-400)}}
+
+@media(max-width:480px){
+  .li-head{grid-template-columns:1fr 56px 80px 80px 24px}
+  .li-row{grid-template-columns:1fr 56px 80px 80px 24px}
+  .li-row input{font-size:13px;padding:7px 8px}
+}
+
+/* ── INVOICES VIEW ── */
+.aging-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:4px}
+@media(max-width:520px){.aging-grid{grid-template-columns:repeat(3,1fr)}}
+.aging-cell{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r-sm);padding:10px 8px;text-align:center;
+}
+.aging-cell.bucket-1{border-top:3px solid #fbbf24}
+.aging-cell.bucket-2{border-top:3px solid #f97316}
+.aging-cell.bucket-3{border-top:3px solid #ef4444}
+.aging-cell.bucket-4{border-top:3px solid #991b1b}
+.aging-cell.bucket-0{border-top:3px solid #16a34a}
+.aging-lbl{font-size:10px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:0.04em;line-height:1.2}
+.aging-val{font-size:15px;font-weight:700;color:var(--text);margin-top:5px;font-variant-numeric:tabular-nums;line-height:1.1}
+.aging-cnt{font-size:10.5px;color:var(--text-3);margin-top:2px}
+
+.top-customers .lb-row{padding:7px 0}
+.top-customers .lb-stats strong{color:var(--orange)}
+
+.inv-quick-actions{display:flex;gap:4px;flex-shrink:0}
+.inv-quick-btn{
+  background:none;border:1px solid var(--border-md);
+  width:30px;height:30px;border-radius:50%;cursor:pointer;
+  display:inline-flex;align-items:center;justify-content:center;
+  color:var(--text-2);transition:all 0.15s;
+}
+.inv-quick-btn:hover{border-color:var(--green-600);color:var(--green-700)}
+.inv-quick-btn svg{width:13px;height:13px;stroke-width:2}
+.inv-row-job{font-size:11px;color:var(--text-3);font-weight:500;margin-top:1px}
+
+/* ── EMAIL PREVIEW ── */
+.email-preview-wrap{
+  border:1px solid var(--border);border-radius:var(--r-md);
+  background:#f5f5f5;padding:14px;max-height:48vh;overflow-y:auto;
+  margin-bottom:14px;
+}
+.email-preview-frame{
+  width:100%;border:none;background:#fff;border-radius:8px;
+  box-shadow:0 2px 8px rgba(0,0,0,0.08);display:block;
+}
+.email-send-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px}
+@media(max-width:480px){.email-send-grid{grid-template-columns:1fr}}
+.email-send-btn{
+  display:flex;align-items:center;gap:8px;padding:11px 14px;
+  background:var(--surface);border:1.5px solid var(--border-md);border-radius:var(--r-sm);
+  cursor:pointer;color:var(--text);font-family:var(--font);font-size:13px;font-weight:600;
+  transition:all 0.15s;text-decoration:none;text-align:left;
+}
+.email-send-btn:hover{border-color:var(--green-600);color:var(--green-700);background:var(--green-50)}
+.email-send-btn:active{transform:scale(0.98)}
+.email-send-btn svg{width:18px;height:18px;stroke-width:2;flex-shrink:0;color:var(--green-700)}
+.email-send-btn.primary{background:var(--green-700);color:#fff;border-color:var(--green-700)}
+.email-send-btn.primary svg{color:#fff}
+.email-send-btn.primary:hover{background:var(--green-800);color:#fff}
+.email-send-sub{display:block;font-size:11px;font-weight:500;color:var(--text-3);margin-top:1px}
+.email-send-btn.primary .email-send-sub{color:rgba(255,255,255,0.8)}
+
 /* ── PRINT ── */
 @media print{
   .header,.sync-bar,.nav,.detail-back,.detail-actions,.detail-tabs,.quick-actions,.photo-add-btn,.note-compose,.task-add,.stage-pipeline,.fin-edit-row,.modal-bd{display:none !important}
@@ -992,6 +1181,10 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5"/></svg>
     Schedule
   </button>
+  <button class="nav-btn" data-view="invoices">
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25zM6.75 12h.008v.008H6.75V12zm0 3h.008v.008H6.75V15zm0 3h.008v.008H6.75V18z"/></svg>
+    Invoices
+  </button>
   <button class="nav-btn" data-view="map">
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 6.75V15m6-6v8.25m.503 3.498l4.875-2.437c.381-.19.622-.58.622-1.006V4.82c0-.836-.88-1.38-1.628-1.006l-3.869 1.934c-.317.159-.69.159-1.006 0L9.503 3.252a1.125 1.125 0 00-1.006 0L3.622 5.689C3.24 5.88 3 6.27 3 6.695V19.18c0 .836.88 1.38 1.628 1.006l3.869-1.934c.317-.159.69-.159 1.006 0l4.994 2.497c.317.158.69.158 1.006 0z"/></svg>
     Map
@@ -1027,8 +1220,23 @@ try{const s=localStorage.getItem('wfs_fb');if(s)FIREBASE_CONFIG=JSON.parse(s)}ca
 // ══ State ══
 let DB=null;
 let MAP=null,MAP_MARKERS=[];
-const S={jobs:{},activity:[],members:[],view:'dashboard',detail:null,detailTab:'overview',filter:'all',search:'',photoCat:'all',calMonth:new Date().getMonth(),calYear:new Date().getFullYear(),calSelected:null,reportRange:'90',sort:localStorage.getItem('wfs_sort')||'newest',sortOpen:false,bulkMode:false,bulkSel:new Set(),user:localStorage.getItem('wfs_user')||'',notifReadAt:parseInt(localStorage.getItem('wfs_notif_read')||'0',10)};
+const S={jobs:{},activity:[],members:[],view:'dashboard',detail:null,detailTab:'overview',filter:'all',search:'',photoCat:'all',calMonth:new Date().getMonth(),calYear:new Date().getFullYear(),calSelected:null,calMode:localStorage.getItem('wfs_calmode')||'month',reportRange:'90',sort:localStorage.getItem('wfs_sort')||'newest',sortOpen:false,bulkMode:false,bulkSel:new Set(),invFilter:'all',invSearch:'',invSort:'date',user:localStorage.getItem('wfs_user')||'',notifReadAt:parseInt(localStorage.getItem('wfs_notif_read')||'0',10)};
 const UNDO={stack:[],push(op){this.stack.push(op);if(this.stack.length>20)this.stack.shift()},pop(){return this.stack.pop()}};
+
+// ── Company info for invoice letterhead (editable via Settings)
+const COMPANY_DEFAULT={
+  name:'Waterfront Solutions',
+  address:'LaFollette, TN',
+  phone:'',
+  email:'',
+  website:'',
+  license:'',
+  taxRate:'',
+  terms:'Payment due upon receipt unless otherwise noted. Thank you for your business.',
+};
+function loadCompany(){try{const s=localStorage.getItem('wfs_company');return s?{...COMPANY_DEFAULT,...JSON.parse(s)}:{...COMPANY_DEFAULT}}catch(e){return{...COMPANY_DEFAULT}}}
+function saveCompany(c){localStorage.setItem('wfs_company',JSON.stringify(c))}
+let COMPANY=loadCompany();
 
 // ── Workflow stages (BuilderTrend / AccuLynx style)
 const STAGES=['Lead','Estimate','Approved','Scheduled','In Progress','Punch List','Complete'];
@@ -1066,6 +1274,47 @@ function fmtShort(s){if(!s)return'';try{const d=new Date(s+(s.length===10?'T00:0
 function daysUntil(s){if(!s)return null;try{const d=new Date(s+(s.length===10?'T00:00:00':''));const t=new Date();t.setHours(0,0,0,0);return Math.round((d-t)/(1000*60*60*24))}catch(e){return null}}
 function jobBalance(j){const inv=Number(j.invoiced||0),paid=Number(j.paid||0);return inv-paid}
 function jobStage(j){return j.stage||(j.status==='complete'?'Complete':j.status==='lead'?'Lead':'In Progress')}
+
+// ── Invoice helpers ──
+function calcInvoice(inv){
+  const items=inv.items||[];
+  const sub=items.reduce((s,i)=>s+(Number(i.qty||0)*Number(i.rate||0)),0);
+  const tax=sub*(Number(inv.taxRate||0)/100);
+  const total=sub+tax;
+  const deposit=Number(inv.deposit||0);
+  const paid=Number(inv.paid||0);
+  const balance=total-paid;
+  return {sub,tax,total,deposit,paid,balance};
+}
+function nextInvoiceNumber(){
+  let max=1000;
+  Object.values(S.jobs).forEach(j=>{
+    (j.invoices||[]).forEach(inv=>{
+      const m=String(inv.number||'').match(/(\d+)/);
+      if(m){const n=parseInt(m[1],10);if(n>max)max=n}
+    });
+  });
+  return 'INV-'+(max+1);
+}
+function invoiceTotals(j){
+  const invs=j.invoices||[];
+  if(!invs.length)return null;
+  const inv=invs.reduce((s,i)=>{const c=calcInvoice(i);return{total:s.total+c.total,paid:s.paid+c.paid,balance:s.balance+c.balance}},{total:0,paid:0,balance:0});
+  return inv;
+}
+function invoiceStatus(inv){
+  const c=calcInvoice(inv);
+  if(c.total>0&&c.balance<=0.005)return'paid';
+  if(inv.status==='sent'){
+    if(inv.dueDate){const d=daysUntil(inv.dueDate);if(d!==null&&d<0)return'overdue'}
+    return'sent';
+  }
+  return inv.status||'draft';
+}
+function getBrandLogoSrc(){
+  const el=document.querySelector('.brand-logo');
+  return el?el.src:'';
+}
 
 function toast(msg,icon='check',undoFn){
   const t=$('toast');
@@ -1117,6 +1366,7 @@ function render(){
   else if(S.view==='jobs')c.innerHTML=renderJobs();
   else if(S.view==='dashboard')c.innerHTML=renderDashboard();
   else if(S.view==='schedule')c.innerHTML=renderSchedule();
+  else if(S.view==='invoices')c.innerHTML=renderInvoicesView();
   else if(S.view==='map')c.innerHTML=renderMap();
   else if(S.view==='reports')c.innerHTML=renderReports();
   else if(S.view==='activity')c.innerHTML=renderActivity();
@@ -1253,6 +1503,26 @@ function renderDashboard(){
   `;
 }
 
+// Returns the date range a job covers (inclusive) as 'YYYY-MM-DD' keys.
+function jobDateRange(j){
+  if(!j.startDate)return[];
+  const start=j.startDate.slice(0,10);
+  const end=(j.dueDate||j.startDate).slice(0,10);
+  // Guard against invalid dates / due before start
+  if(end<start)return[start];
+  const out=[];
+  const s=new Date(start+'T00:00:00');
+  const e=new Date(end+'T00:00:00');
+  for(let d=new Date(s);d<=e;d.setDate(d.getDate()+1)){
+    out.push(dateKey(d));
+  }
+  // Cap at 365 days to avoid runaway iterations on bad data
+  return out.slice(0,365);
+}
+
+function chipClass(status){return{lead:'cs-lead',active:'cs-active',complete:'cs-complete',hold:'cs-hold'}[status]||'cs-active'}
+function chipBarColor(status){return{lead:'#d97706',active:'#16a34a',complete:'#0284c7',hold:'#64748b'}[status]||'#16a34a'}
+
 function renderSchedule(){
   const y=S.calYear,m=S.calMonth;
   const first=new Date(y,m,1);
@@ -1260,52 +1530,669 @@ function renderSchedule(){
   const startDow=first.getDay();
   const monthName=first.toLocaleDateString(undefined,{month:'long',year:'numeric'});
   const today=dateKey(new Date());
-  // Map day -> jobs
+  // Build map: dateKey -> [{job, dayIdx, totalDays}]
   const byDay={};
   jobs().forEach(j=>{
-    if(!j.startDate)return;
-    const k=j.startDate.slice(0,10);
-    (byDay[k]=byDay[k]||[]).push(j);
+    const range=jobDateRange(j);
+    range.forEach((k,i)=>{
+      (byDay[k]=byDay[k]||[]).push({job:j,dayIdx:i,totalDays:range.length,firstDay:range[0],lastDay:range[range.length-1]});
+    });
   });
-  let cells='';
-  const DOW=['S','M','T','W','T','F','S'];
-  DOW.forEach(d=>cells+=`<div class="cal-dow">${d}</div>`);
-  for(let i=0;i<startDow;i++)cells+='<div class="cal-day empty"></div>';
-  for(let d=1;d<=daysInMonth;d++){
-    const k=`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-    const list=byDay[k]||[];
-    const isToday=k===today;
-    const cls='cal-day'+(isToday?' today':'')+(list.length?' has-jobs':'');
-    const dots=list.slice(0,4).map(()=>'<div class="cal-day-dot"></div>').join('');
-    const count=list.length>4?`<div class="cal-day-count">+${list.length-4}</div>`:'';
-    cells+=`<div class="${cls}" data-cal-day="${k}"><div class="cal-day-num">${d}</div><div class="cal-day-dots">${dots}</div>${count}</div>`;
-  }
+  // Sort each day's chips so multi-day jobs come first and stay in stable order
+  Object.values(byDay).forEach(arr=>arr.sort((a,b)=>{
+    if(b.totalDays!==a.totalDays)return b.totalDays-a.totalDays;
+    return a.job.name.localeCompare(b.job.name);
+  }));
+
   const sel=S.calSelected||today;
-  const selJobs=byDay[sel]||[];
+  const isMonth=S.calMode!=='agenda';
 
   return `
     <div class="cal-head">
-      <div class="cal-title">${monthName}</div>
+      <div class="cal-title">${isMonth?monthName:'Upcoming'}</div>
       <div class="cal-nav">
-        <button id="cal-prev"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5"/></svg></button>
+        <button id="cal-prev" aria-label="Previous"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5"/></svg></button>
         <button id="cal-today" style="width:auto;padding:0 12px;font-size:12px;font-weight:600">Today</button>
-        <button id="cal-next"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5"/></svg></button>
+        <button id="cal-next" aria-label="Next"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5"/></svg></button>
       </div>
     </div>
-    <div class="cal-grid">${cells}</div>
-    <div class="cal-day-list">
-      <div class="cal-day-list-hd">${new Date(sel+'T00:00:00').toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'})}</div>
-      ${selJobs.length===0?'<p style="font-size:12.5px;color:var(--text-3);padding:4px 0">No jobs scheduled for this day.</p>'
-        :selJobs.map(j=>`<div class="cal-job-row" data-open="${j.id}">
-          <span class="status-dot ${sdClass(j.status)}" style="position:static"></span>
-          <div style="flex:1;min-width:0">
-            <div style="font-weight:600">${esc(j.name)}</div>
-            <div style="font-size:11.5px;color:var(--text-3)">${esc(j.address||'No address')}${j.assigned?' · '+esc(j.assigned):''}</div>
+    <div class="cal-view-toggle" role="tablist">
+      <button class="${isMonth?'active':''}" data-cal-mode="month" role="tab" aria-selected="${isMonth}">Month</button>
+      <button class="${!isMonth?'active':''}" data-cal-mode="agenda" role="tab" aria-selected="${!isMonth}">Agenda</button>
+    </div>
+    <div class="cal-legend">
+      <div class="cal-legend-item"><div class="cal-legend-sw" style="background:#dcfce7;border-left:3px solid #16a34a"></div>Active</div>
+      <div class="cal-legend-item"><div class="cal-legend-sw" style="background:var(--gold-light);border-left:3px solid #d97706"></div>Lead</div>
+      <div class="cal-legend-item"><div class="cal-legend-sw" style="background:#e0f2fe;border-left:3px solid #0284c7"></div>Complete</div>
+      <div class="cal-legend-item"><div class="cal-legend-sw" style="background:var(--surface-3);border-left:3px solid #64748b"></div>On Hold</div>
+    </div>
+    ${isMonth?renderCalMonth(y,m,daysInMonth,startDow,byDay,today,sel):renderCalAgenda(byDay,today)}
+    ${isMonth?renderSelectedDay(byDay,sel,today):''}
+  `;
+}
+
+function renderCalMonth(y,m,daysInMonth,startDow,byDay,today,sel){
+  const MAX_CHIPS=3;
+  let cells='';
+  const DOW=['S','M','T','W','T','F','S'];
+  DOW.forEach(d=>cells+=`<div class="cal-dow">${d}</div>`);
+  // Leading days from previous month
+  const prevDays=new Date(y,m,0).getDate();
+  for(let i=startDow-1;i>=0;i--){
+    const d=prevDays-i;
+    const prevM=m===0?11:m-1;
+    const prevY=m===0?y-1:y;
+    const k=`${prevY}-${String(prevM+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    cells+=renderCalCell(k,d,byDay,today,sel,true,MAX_CHIPS);
+  }
+  // Current month
+  for(let d=1;d<=daysInMonth;d++){
+    const k=`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    cells+=renderCalCell(k,d,byDay,today,sel,false,MAX_CHIPS);
+  }
+  // Trailing days to fill final week
+  const filled=startDow+daysInMonth;
+  const trailing=(7-filled%7)%7;
+  for(let i=1;i<=trailing;i++){
+    const nextM=m===11?0:m+1;
+    const nextY=m===11?y+1:y;
+    const k=`${nextY}-${String(nextM+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
+    cells+=renderCalCell(k,i,byDay,today,sel,true,MAX_CHIPS);
+  }
+  return `<div class="cal-grid">${cells}</div>`;
+}
+
+function renderCalCell(k,dayNum,byDay,today,sel,otherMonth,maxChips){
+  const list=byDay[k]||[];
+  const isToday=k===today;
+  const isSel=k===sel;
+  const cls='cal-day'+(isToday?' today':'')+(isSel?' selected':'')+(otherMonth?' other-month':'');
+  const visible=list.slice(0,maxChips);
+  const overflow=list.length-visible.length;
+  const chips=visible.map(({job,dayIdx,totalDays})=>{
+    const contLeft=dayIdx>0;
+    const contRight=dayIdx<totalDays-1;
+    const isWeekStart=new Date(k+'T00:00:00').getDay()===0;
+    const isWeekEnd=new Date(k+'T00:00:00').getDay()===6;
+    let contCls='';
+    if(contLeft&&contRight)contCls=isWeekStart?'continues-right':(isWeekEnd?'continues-left':'continues-both');
+    else if(contLeft)contCls=isWeekStart?'':'continues-left';
+    else if(contRight)contCls=isWeekEnd?'':'continues-right';
+    // On wrap to a new week, restart the chip with a left border
+    const label=(!contLeft||isWeekStart)?esc(job.name):'';
+    return `<div class="cal-chip ${chipClass(job.status)} ${contCls}" data-open="${job.id}" title="${esc(job.name)} · ${spLabel(job.status)}${totalDays>1?' · day '+(dayIdx+1)+'/'+totalDays:''}">${label||'&nbsp;'}</div>`;
+  }).join('');
+  const more=overflow>0?`<div class="cal-day-more" data-cal-day="${k}">+${overflow} more</div>`:'';
+  return `<div class="${cls}" data-cal-day="${k}"><div class="cal-day-num"><span>${dayNum}</span></div><div class="cal-day-chips">${chips}${more}</div></div>`;
+}
+
+function renderSelectedDay(byDay,sel,today){
+  const selList=(byDay[sel]||[]).slice();
+  // Sort: leads first? Or by status priority. Use status order: lead, active, complete, hold
+  const order={lead:0,active:1,complete:2,hold:3};
+  selList.sort((a,b)=>(order[a.job.status]??9)-(order[b.job.status]??9));
+  const dt=new Date(sel+'T00:00:00');
+  const lbl=dt.toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'});
+  const isToday=sel===today;
+  return `<div class="cal-day-list">
+    <div class="cal-day-list-hd"><span>${esc(lbl)}${isToday?' <span class="kpi-sub" style="color:var(--green-700);font-weight:700;margin-left:6px">Today</span>':''}</span><span class="kpi-sub">${selList.length} job${selList.length!==1?'s':''}</span></div>
+    ${selList.length===0?'<p style="font-size:12.5px;color:var(--text-3);padding:4px 0">Nothing scheduled. Tap a date above with jobs to see what\'s on the books.</p>'
+      :selList.map(({job,dayIdx,totalDays})=>`<div class="cal-job-row" data-open="${job.id}">
+        <div class="cal-job-row-bar" style="background:${chipBarColor(job.status)}"></div>
+        <div style="flex:1;min-width:0">
+          <div style="font-weight:600">${esc(job.name)}${totalDays>1?` <span class="cal-job-row-day">Day ${dayIdx+1}/${totalDays}</span>`:''}</div>
+          <div class="cal-job-row-meta">${esc(job.address||'No address')}${job.assigned?' · '+esc(job.assigned):''}${job.customerName?' · '+esc(job.customerName):''}</div>
+        </div>
+        <span class="status-pill ${spClass(job.status)}">${spLabel(job.status)}</span>
+      </div>`).join('')}
+  </div>`;
+}
+
+function renderCalAgenda(byDay,today){
+  // Show today plus next 14 days that have anything scheduled
+  const days=[];
+  const start=new Date(today+'T00:00:00');
+  for(let i=0;i<21;i++){
+    const d=new Date(start);d.setDate(start.getDate()+i);
+    const k=dateKey(d);
+    if(byDay[k]&&byDay[k].length){
+      days.push({k,date:d,list:byDay[k]});
+    }
+  }
+  if(days.length===0){
+    return `<div class="cal-day-list" style="text-align:center;padding:40px 24px">
+      <p style="font-size:14px;color:var(--text-2);margin-bottom:6px">Nothing scheduled in the next 3 weeks.</p>
+      <p style="font-size:12.5px;color:var(--text-3)">Add a start date (and optional due date) to a job to see it here.</p>
+    </div>`;
+  }
+  return days.map(({k,date,list})=>{
+    const isToday=k===today;
+    const lbl=date.toLocaleDateString(undefined,{weekday:'long',month:'short',day:'numeric'});
+    const order={lead:0,active:1,complete:2,hold:3};
+    const sorted=list.slice().sort((a,b)=>(order[a.job.status]??9)-(order[b.job.status]??9));
+    return `<div class="agenda-day">
+      <div class="agenda-day-hd">${esc(lbl)} ${isToday?'<span class="today-pill">TODAY</span>':''}<span style="margin-left:auto;color:var(--text-3);font-weight:600">${sorted.length} job${sorted.length!==1?'s':''}</span></div>
+      ${sorted.map(({job,dayIdx,totalDays})=>`<div class="cal-job-row" data-open="${job.id}">
+        <div class="cal-job-row-bar" style="background:${chipBarColor(job.status)}"></div>
+        <div style="flex:1;min-width:0">
+          <div style="font-weight:600">${esc(job.name)}${totalDays>1?` <span class="cal-job-row-day">Day ${dayIdx+1}/${totalDays}</span>`:''}</div>
+          <div class="cal-job-row-meta">${esc(job.address||'No address')}${job.assigned?' · '+esc(job.assigned):''}</div>
+        </div>
+        <span class="status-pill ${spClass(job.status)}">${spLabel(job.status)}</span>
+      </div>`).join('')}
+    </div>`;
+  }).join('');
+}
+
+// ══ Invoices view (all invoices across all jobs) ══
+function getAllInvoices(){
+  const out=[];
+  Object.values(S.jobs).forEach(j=>{
+    (j.invoices||[]).forEach(inv=>out.push({inv,job:j}));
+  });
+  return out;
+}
+
+function agingBucket(days){
+  // days = number of days OVERDUE (positive means past due)
+  if(days<=0)return 0; // current / not yet due
+  if(days<=30)return 1;
+  if(days<=60)return 2;
+  if(days<=90)return 3;
+  return 4;
+}
+
+function renderInvoicesView(){
+  const all=getAllInvoices();
+  // Stats
+  let totalInvoiced=0,totalPaid=0,outstanding=0,overdueAmt=0,overdueCount=0;
+  const statusCounts={draft:0,sent:0,paid:0,overdue:0};
+  // Aging buckets: 0=current, 1=1-30, 2=31-60, 3=61-90, 4=90+
+  const aging=[0,0,0,0,0];
+  const agingCounts=[0,0,0,0,0];
+  // Top outstanding customers
+  const byCustomer={};
+
+  all.forEach(({inv,job})=>{
+    const c=calcInvoice(inv);
+    const st=invoiceStatus(inv);
+    totalInvoiced+=c.total;
+    totalPaid+=c.paid;
+    outstanding+=c.balance;
+    statusCounts[st]=(statusCounts[st]||0)+1;
+    // Aging — only on unpaid balances
+    if(c.balance>0.005){
+      const due=inv.dueDate||inv.date;
+      const daysOver=due?-(daysUntil(due)||0):0;
+      const b=agingBucket(daysOver);
+      aging[b]+=c.balance;
+      agingCounts[b]++;
+      if(st==='overdue'){overdueAmt+=c.balance;overdueCount++}
+      // Customer aggregation
+      const key=job.customerName||'(no name)';
+      byCustomer[key]=byCustomer[key]||{name:key,jobs:new Set(),outstanding:0,overdue:0};
+      byCustomer[key].jobs.add(job.id);
+      byCustomer[key].outstanding+=c.balance;
+      if(st==='overdue')byCustomer[key].overdue+=c.balance;
+    }
+  });
+  const topCustomers=Object.values(byCustomer).sort((a,b)=>b.outstanding-a.outstanding).slice(0,5);
+
+  // Filter + search + sort
+  const q=S.invSearch.toLowerCase();
+  let shown=all.filter(({inv,job})=>{
+    if(S.invFilter!=='all'&&invoiceStatus(inv)!==S.invFilter)return false;
+    if(!q)return true;
+    const hay=((inv.number||'')+' '+(job.name||'')+' '+(job.customerName||'')+' '+(job.address||'')).toLowerCase();
+    return hay.includes(q);
+  });
+  const sortFn={
+    date:(a,b)=>(b.inv.date||'').localeCompare(a.inv.date||''),
+    due:(a,b)=>(a.inv.dueDate||'9999').localeCompare(b.inv.dueDate||'9999'),
+    amount:(a,b)=>calcInvoice(b.inv).total-calcInvoice(a.inv).total,
+    balance:(a,b)=>calcInvoice(b.inv).balance-calcInvoice(a.inv).balance,
+    number:(a,b)=>(b.inv.number||'').localeCompare(a.inv.number||''),
+  }[S.invSort]||sortFn?.date;
+  shown.sort(sortFn);
+
+  const collectionRate=totalInvoiced>0?(totalPaid/totalInvoiced)*100:0;
+  const statusChips=[
+    ['all','All',all.length],
+    ['draft','Draft',statusCounts.draft||0],
+    ['sent','Sent',statusCounts.sent||0],
+    ['overdue','Overdue',statusCounts.overdue||0],
+    ['paid','Paid',statusCounts.paid||0],
+  ];
+
+  const agingLabels=['Current','1-30 days','31-60 days','61-90 days','90+ days'];
+
+  return `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+      <div>
+        <div style="font-size:11px;color:var(--text-3);text-transform:uppercase;letter-spacing:0.06em;font-weight:700">Accounts Receivable</div>
+        <div style="font-size:20px;font-weight:700;margin-top:2px">Invoices</div>
+      </div>
+      <button class="btn-add" id="btn-new-inv-global" aria-label="Create new invoice">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+        New Invoice
+      </button>
+    </div>
+
+    <div class="kpi-grid">
+      <div class="kpi-card accent"><div class="kpi-label">Outstanding</div><div class="kpi-value">${money(outstanding)}</div><div class="kpi-sub">${all.filter(({inv})=>calcInvoice(inv).balance>0.005).length} unpaid</div></div>
+      <div class="kpi-card"><div class="kpi-label">Overdue</div><div class="kpi-value" style="color:${overdueCount>0?'var(--red)':'var(--text)'}">${money(overdueAmt)}</div><div class="kpi-sub">${overdueCount} invoice${overdueCount!==1?'s':''}</div></div>
+      <div class="kpi-card"><div class="kpi-label">Collected</div><div class="kpi-value">${money(totalPaid)}</div><div class="kpi-sub">${collectionRate.toFixed(0)}% of invoiced</div></div>
+      <div class="kpi-card"><div class="kpi-label">Total Invoiced</div><div class="kpi-value">${money(totalInvoiced)}</div><div class="kpi-sub">${all.length} invoice${all.length!==1?'s':''}</div></div>
+    </div>
+
+    <div class="report-section">
+      <div class="report-hd">Aging Report <span class="kpi-sub">Outstanding balances by age</span></div>
+      <div class="aging-grid">
+        ${agingLabels.map((lbl,i)=>`<div class="aging-cell bucket-${i}">
+          <div class="aging-lbl">${lbl}</div>
+          <div class="aging-val">${money(aging[i])}</div>
+          <div class="aging-cnt">${agingCounts[i]} invoice${agingCounts[i]!==1?'s':''}</div>
+        </div>`).join('')}
+      </div>
+    </div>
+
+    ${topCustomers.length?`<div class="report-section">
+      <div class="report-hd">Top Outstanding Customers</div>
+      <div class="leaderboard top-customers">
+        ${topCustomers.map((c,i)=>{
+          const rankCls=i===0?'gold':i===1?'silver':i===2?'bronze':'';
+          return `<div class="lb-row">
+            <div class="lb-rank ${rankCls}">${i+1}</div>
+            <div class="member-ava" style="width:30px;height:30px;font-size:12px">${initials(c.name)}</div>
+            <div class="lb-name">${esc(c.name)}<div style="font-size:11px;color:var(--text-3);font-weight:500">${c.jobs.size} job${c.jobs.size!==1?'s':''}${c.overdue>0?' · '+money(c.overdue)+' overdue':''}</div></div>
+            <div class="lb-stats"><strong>${money(c.outstanding)}</strong><div>balance</div></div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`:''}
+
+    <div class="toolbar" style="margin-top:8px">
+      <div class="search-wrap">
+        <div class="search-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 15.803a7.5 7.5 0 0010.607 0z"/></svg></div>
+        <input class="search" id="inv-search" placeholder="Search invoice #, job, customer…" value="${esc(S.invSearch)}" aria-label="Search invoices">
+      </div>
+      <select class="form-select" id="inv-sort" style="max-width:160px;font-size:13px;padding:8px 10px" aria-label="Sort invoices">
+        <option value="date" ${S.invSort==='date'?'selected':''}>Newest first</option>
+        <option value="due" ${S.invSort==='due'?'selected':''}>Due soonest</option>
+        <option value="amount" ${S.invSort==='amount'?'selected':''}>Largest total</option>
+        <option value="balance" ${S.invSort==='balance'?'selected':''}>Largest balance</option>
+        <option value="number" ${S.invSort==='number'?'selected':''}>Invoice #</option>
+      </select>
+    </div>
+
+    <div class="filter-row" style="margin-bottom:14px">
+      ${statusChips.map(([k,lbl,n])=>`<div class="filter-chip ${S.invFilter===k?'active':''}" data-inv-filter="${k}">${lbl} ${n}</div>`).join('')}
+    </div>
+
+    <div class="invoice-list">
+      ${shown.length===0?`<div class="empty" style="padding:40px 20px">
+        <div class="empty-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75M3.75 9.75h16.5m-16.5 3.75h16.5"/></svg></div>
+        <h3>${all.length===0?'No invoices yet':'No matches'}</h3>
+        <p>${all.length===0?'Create your first invoice. It will use your company letterhead and pull from job line items.':'Try a different search or filter.'}</p>
+      </div>`
+        :shown.map(({inv,job})=>{
+          const c=calcInvoice(inv);
+          const st=invoiceStatus(inv);
+          const daysOver=inv.dueDate?-(daysUntil(inv.dueDate)||0):0;
+          const overInfo=st==='overdue'&&daysOver>0?` · <span style="color:var(--red);font-weight:700">${daysOver}d late</span>`:'';
+          return `<div class="invoice-row ${st}">
+            <div class="invoice-row-main" data-open-inv="${esc(job.id)}|${esc(inv.id)}" style="cursor:pointer">
+              <div class="invoice-num">${esc(inv.number||'')} <span class="invoice-status ${st}">${st}</span></div>
+              <div class="invoice-meta">${esc(job.customerName||'(no customer)')} · ${fmtDate(inv.date)}${inv.dueDate?' · due '+fmtDate(inv.dueDate):''}${overInfo}</div>
+              <div class="inv-row-job">${esc(job.name||'')}</div>
+            </div>
+            <div class="invoice-row-amt" style="margin-right:8px">
+              <div class="invoice-row-total">${money(c.total)}</div>
+              <div class="invoice-row-bal" style="color:${c.balance>0.005?'var(--orange)':'var(--green-700)'};font-weight:600">${c.balance>0.005?money(c.balance)+' due':'Paid'}</div>
+            </div>
+            <div class="inv-quick-actions">
+              <button class="inv-quick-btn" data-inv-print="${esc(job.id)}|${esc(inv.id)}" title="Print" aria-label="Print invoice ${esc(inv.number||'')}">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.72 13.829c-.24.03-.48.062-.72.096m.72-.096a42.415 42.415 0 0110.56 0m-10.56 0L6.34 18m10.94-4.171c.24.03.48.062.72.096m-.72-.096L17.66 18m0 0l.229 2.523a1.125 1.125 0 01-1.12 1.227H7.231c-.662 0-1.18-.568-1.12-1.227L6.34 18m11.318 0h1.091A2.25 2.25 0 0021 15.75V9.456c0-1.081-.768-2.015-1.837-2.175a48.055 48.055 0 00-1.913-.247M6.34 18H5.25A2.25 2.25 0 013 15.75V9.456c0-1.081.768-2.015 1.837-2.175a48.041 48.041 0 011.913-.247m10.5 0a48.536 48.536 0 00-10.5 0m10.5 0V3.375c0-.621-.504-1.125-1.125-1.125h-8.25c-.621 0-1.125.504-1.125 1.125v3.659"/></svg>
+              </button>
+              ${c.balance>0.005?`<button class="inv-quick-btn" data-inv-paid="${esc(job.id)}|${esc(inv.id)}" title="Mark paid in full" aria-label="Mark invoice ${esc(inv.number||'')} as paid">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
+              </button>`:''}
+              <button class="inv-quick-btn" data-inv-email="${esc(job.id)}|${esc(inv.id)}" title="Send invoice via email" aria-label="Send invoice ${esc(inv.number||'')}">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5"/></svg>
+              </button>
+            </div>
+          </div>`;
+        }).join('')}
+    </div>
+  `;
+}
+
+// Pick a job, then open invoice editor for it
+function showJobPickerModal(onPick){
+  const all=jobs();
+  if(all.length===0){toast('Add a job first','');return}
+  $('modal-root').innerHTML=`<div class="modal-bd" id="mbd" role="dialog" aria-modal="true" aria-label="Pick a job"><div class="modal"><div class="modal-handle"></div>
+    <div class="modal-head"><div class="modal-title">Pick a Job</div><button class="modal-close" id="mc" aria-label="Close"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button></div>
+    <div class="modal-body">
+      <p style="font-size:12.5px;color:var(--text-2);margin-bottom:10px">Invoices are attached to a job so the customer info and project details pull through automatically.</p>
+      <div class="search-wrap" style="margin-bottom:12px"><div class="search-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 15.803a7.5 7.5 0 0010.607 0z"/></svg></div>
+        <input class="search" id="picker-search" placeholder="Search jobs…" aria-label="Search jobs" autofocus>
+      </div>
+      <div id="picker-list" style="display:flex;flex-direction:column;gap:6px;max-height:50vh;overflow-y:auto">
+        ${all.map(j=>`<div class="invoice-row" data-pick="${esc(j.id)}" style="cursor:pointer;border-left-color:${j.status==='complete'?'#0284c7':j.status==='active'?'#16a34a':j.status==='lead'?'#d97706':'#94a3b8'}">
+          <div class="invoice-row-main">
+            <div class="invoice-num">${esc(j.name)}</div>
+            <div class="invoice-meta">${esc(j.customerName||'No customer')}${j.address?' · '+esc(j.address):''}</div>
           </div>
           <span class="status-pill ${spClass(j.status)}">${spLabel(j.status)}</span>
         </div>`).join('')}
+      </div>
     </div>
-  `;
+  </div></div>`;
+  $('mc').onclick=closeModal;
+  $('mbd').onclick=e=>{if(e.target===e.currentTarget)closeModal()};
+  const filterList=q=>{
+    const ql=q.toLowerCase();
+    document.querySelectorAll('[data-pick]').forEach(r=>{
+      const hay=r.textContent.toLowerCase();
+      r.style.display=!ql||hay.includes(ql)?'':'none';
+    });
+  };
+  $('picker-search').oninput=e=>filterList(e.target.value);
+  document.querySelectorAll('[data-pick]').forEach(r=>r.onclick=()=>{
+    closeModal();onPick(r.dataset.pick);
+  });
+}
+
+// ── Build polished HTML email body for an invoice ──
+function buildInvoiceEmailHTML(j,inv,customMsg){
+  const c=calcInvoice(inv);
+  const co=COMPANY;
+  const logoSrc=getBrandLogoSrc();
+  const firstName=((j.customerName||'').trim().split(/\s+/)[0])||'there';
+  const itemsRows=(inv.items||[]).map(it=>{
+    const amt=Number(it.qty||0)*Number(it.rate||0);
+    return `<tr><td style="padding:10px 8px;border-bottom:1px solid #eef3f1;font-size:13px;color:#0a1f18">${esc(it.desc||'')}</td>
+      <td style="padding:10px 8px;border-bottom:1px solid #eef3f1;font-size:13px;color:#3d6358;text-align:right;white-space:nowrap">${esc(String(it.qty??''))} × ${money(Number(it.rate||0))}</td>
+      <td style="padding:10px 8px;border-bottom:1px solid #eef3f1;font-size:13px;color:#0a1f18;text-align:right;font-weight:600;white-space:nowrap">${money(amt)}</td></tr>`;
+  }).join('');
+  const greeting=`Hi ${esc(firstName)},`;
+  const intro=customMsg?esc(customMsg).replace(/\n/g,'<br>'):`Thank you for letting <strong>${esc(co.name||'us')}</strong> work with you on <strong>${esc(j.name||'your project')}</strong>. Your invoice is ready and the details are below.`;
+  const balanceLine=c.balance<=0.005
+    ?`<div style="background:#dcfce7;color:#166534;padding:14px 18px;border-radius:10px;margin:18px 0;font-size:15px;font-weight:700;text-align:center">✓ Paid in Full — Thank you!</div>`
+    :`<div style="background:#fef3c7;color:#92400e;padding:16px 18px;border-radius:10px;margin:18px 0;text-align:center">
+        <div style="font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#92400e;opacity:0.85">Balance Due${inv.dueDate?' by '+fmtDate(inv.dueDate):''}</div>
+        <div style="font-size:26px;font-weight:800;color:#92400e;margin-top:4px;font-variant-numeric:tabular-nums">${money(c.balance)}</div>
+      </div>`;
+  const contactLine=[co.phone?`<a href="tel:${esc(co.phone)}" style="color:#0f5040;text-decoration:none">${esc(co.phone)}</a>`:'',
+    co.email?`<a href="mailto:${esc(co.email)}" style="color:#0f5040;text-decoration:none">${esc(co.email)}</a>`:'',
+    co.website?`<a href="${esc(co.website)}" style="color:#0f5040;text-decoration:none">${esc(co.website)}</a>`:''
+  ].filter(Boolean).join(' &nbsp;·&nbsp; ');
+
+  return `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Invoice ${esc(inv.number||'')}</title></head>
+<body style="margin:0;padding:0;background:#f0faf6;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#0a1f18">
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:#f0faf6">
+  <tr><td align="center" style="padding:24px 12px">
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="600" style="max-width:600px;background:#ffffff;border-radius:14px;overflow:hidden;box-shadow:0 4px 24px rgba(10,61,46,0.08)">
+      <tr><td style="background:linear-gradient(135deg,#0a3d2e 0%,#1a6e55 100%);padding:28px 32px;text-align:center">
+        ${logoSrc?`<img src="${logoSrc}" alt="${esc(co.name||'Waterfront Solutions')}" width="84" height="84" style="display:inline-block;width:84px;height:84px;object-fit:contain;filter:drop-shadow(0 2px 6px rgba(0,0,0,0.25))">`:''}
+        <div style="font-family:Georgia,'Times New Roman',serif;font-size:22px;font-weight:600;color:#ffffff;letter-spacing:0.01em;margin-top:10px">${esc(co.name||'Waterfront Solutions')}</div>
+        ${co.address?`<div style="font-size:11.5px;color:rgba(255,255,255,0.75);margin-top:4px;letter-spacing:0.02em">${esc(co.address.replace(/\n/g,' · '))}</div>`:''}
+      </td></tr>
+      <tr><td style="padding:28px 32px 8px">
+        <div style="font-size:11px;font-weight:700;color:#7aa898;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:6px">Invoice ${esc(inv.number||'')}</div>
+        <h1 style="font-size:22px;font-weight:700;color:#0a3d2e;margin:0 0 18px;line-height:1.25">${greeting}</h1>
+        <p style="font-size:14.5px;color:#3d6358;line-height:1.65;margin:0 0 8px">${intro}</p>
+      </td></tr>
+      <tr><td style="padding:8px 32px">
+        ${balanceLine}
+      </td></tr>
+      <tr><td style="padding:0 32px">
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border:1px solid #e6f0eb;border-radius:10px;overflow:hidden;background:#fafdfb">
+          <tr><td style="padding:14px 16px;background:#f0faf6;border-bottom:1px solid #e6f0eb">
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+              <tr>
+                <td style="font-size:11px;font-weight:700;color:#7aa898;text-transform:uppercase;letter-spacing:0.06em">Invoice Date</td>
+                <td style="font-size:11px;font-weight:700;color:#7aa898;text-transform:uppercase;letter-spacing:0.06em;text-align:right">${inv.dueDate?'Due Date':''}</td>
+              </tr>
+              <tr>
+                <td style="font-size:13.5px;color:#0a1f18;font-weight:600;padding-top:2px">${fmtDate(inv.date)||'—'}</td>
+                <td style="font-size:13.5px;color:#0a1f18;font-weight:600;text-align:right;padding-top:2px">${inv.dueDate?fmtDate(inv.dueDate):''}</td>
+              </tr>
+            </table>
+          </td></tr>
+          <tr><td style="padding:4px 8px 8px">
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+              ${itemsRows||'<tr><td style="padding:14px;text-align:center;color:#7aa898;font-size:12px">No line items</td></tr>'}
+            </table>
+          </td></tr>
+          <tr><td style="padding:6px 16px 14px">
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="font-size:13px">
+              <tr><td style="padding:3px 0;color:#3d6358">Subtotal</td><td style="padding:3px 0;text-align:right;font-variant-numeric:tabular-nums;font-weight:600;color:#0a1f18">${money(c.sub)}</td></tr>
+              <tr><td style="padding:3px 0;color:#3d6358">Tax (${Number(inv.taxRate||0)}%)</td><td style="padding:3px 0;text-align:right;font-variant-numeric:tabular-nums;font-weight:600;color:#0a1f18">${money(c.tax)}</td></tr>
+              <tr><td style="padding:9px 0 3px;color:#0a3d2e;font-size:14px;font-weight:700;border-top:2px solid #0a3d2e">Total</td><td style="padding:9px 0 3px;text-align:right;font-variant-numeric:tabular-nums;font-weight:800;color:#0a3d2e;font-size:15px;border-top:2px solid #0a3d2e">${money(c.total)}</td></tr>
+              ${c.paid>0?`<tr><td style="padding:3px 0;color:#3d6358">Paid</td><td style="padding:3px 0;text-align:right;font-variant-numeric:tabular-nums;color:#3d6358">-${money(c.paid)}</td></tr>`:''}
+            </table>
+          </td></tr>
+        </table>
+      </td></tr>
+      ${inv.notes?`<tr><td style="padding:18px 32px 0">
+        <div style="padding:14px 16px;background:#f7f9f8;border-left:3px solid #1a6e55;border-radius:8px">
+          <div style="font-size:10px;font-weight:700;color:#0f5040;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:5px">Notes</div>
+          <div style="font-size:13px;color:#3d6358;line-height:1.6">${esc(inv.notes).replace(/\n/g,'<br>')}</div>
+        </div>
+      </td></tr>`:''}
+      ${co.phone||co.email?`<tr><td style="padding:24px 32px 0">
+        <p style="font-size:14px;color:#3d6358;line-height:1.65;margin:0">
+          Questions? Just reply to this email${co.phone?` or give us a call at <a href="tel:${esc(co.phone)}" style="color:#0f5040;font-weight:600;text-decoration:none">${esc(co.phone)}</a>`:''}. We appreciate your business!
+        </p>
+      </td></tr>`:''}
+      <tr><td style="padding:24px 32px 8px">
+        <p style="font-size:14.5px;color:#0a1f18;margin:0;line-height:1.5">Thanks,<br><strong style="color:#0a3d2e">${esc(S.user||co.name||'The Waterfront Solutions Team')}</strong></p>
+      </td></tr>
+      ${inv.terms?`<tr><td style="padding:14px 32px 0">
+        <div style="font-size:11px;color:#7aa898;line-height:1.6;border-top:1px solid #e6f0eb;padding-top:14px;font-style:italic">${esc(inv.terms).replace(/\n/g,'<br>')}</div>
+      </td></tr>`:''}
+      <tr><td style="background:#f0faf6;padding:18px 32px;text-align:center;border-top:1px solid #e6f0eb;margin-top:24px">
+        <div style="font-family:Georgia,serif;font-size:13px;font-weight:600;color:#0a3d2e">${esc(co.name||'Waterfront Solutions')}</div>
+        ${contactLine?`<div style="font-size:11.5px;color:#7aa898;margin-top:4px">${contactLine}</div>`:''}
+        ${co.license?`<div style="font-size:10.5px;color:#7aa898;margin-top:3px;letter-spacing:0.04em">License #${esc(co.license)}</div>`:''}
+      </td></tr>
+    </table>
+    <div style="font-size:11px;color:#7aa898;text-align:center;margin-top:14px">This invoice was sent from your ${esc(co.name||'Waterfront Solutions')} job tracker.</div>
+  </td></tr>
+</table>
+</body></html>`;
+}
+
+function buildInvoiceEmailText(j,inv,customMsg){
+  const c=calcInvoice(inv);
+  const co=COMPANY;
+  const firstName=((j.customerName||'').trim().split(/\s+/)[0])||'there';
+  const intro=customMsg||`Thanks for letting ${co.name||'us'} work with you on ${j.name||'your project'}. Your invoice is ready — details below.`;
+  const items=(inv.items||[]).map(it=>{
+    const amt=Number(it.qty||0)*Number(it.rate||0);
+    return `  • ${(it.desc||'').padEnd(40)} ${(it.qty??'')+' × '+money(Number(it.rate||0))}   ${money(amt)}`;
+  }).join('\n');
+  const lines=[
+    `Hi ${firstName},`,'',
+    intro,'',
+    `INVOICE ${inv.number||''}`,
+    `Date: ${fmtDate(inv.date)||''}`,
+    inv.dueDate?`Due:  ${fmtDate(inv.dueDate)}`:'',
+    '','Line Items:',items||'  (none)','',
+    `Subtotal:   ${money(c.sub)}`,
+    `Tax (${Number(inv.taxRate||0)}%):  ${money(c.tax)}`,
+    `Total:      ${money(c.total)}`,
+    c.paid>0?`Paid:      -${money(c.paid)}`:'',
+    c.balance<=0.005?`PAID IN FULL — Thank you!`:`Balance Due: ${money(c.balance)}`,
+    '',
+    inv.notes?'Notes:\n'+inv.notes+'\n':'',
+    `Questions? Just reply to this email${co.phone?' or call '+co.phone:''}. We appreciate your business!`,'',
+    `Thanks,`,S.user||co.name||'The Waterfront Solutions Team','',
+    [co.name,co.phone,co.email,co.website].filter(Boolean).join(' · '),
+    co.license?`License #${co.license}`:'',
+    inv.terms?'\n'+inv.terms:''
+  ].filter(l=>l!==undefined);
+  return lines.join('\n').replace(/\n{3,}/g,'\n\n');
+}
+
+function buildInvoiceEml(j,inv,customMsg){
+  const co=COMPANY;
+  const subject=`Invoice ${inv.number||''} from ${co.name||'Waterfront Solutions'}`;
+  const fromName=co.name||'Waterfront Solutions';
+  const fromEmail=co.email||'noreply@example.com';
+  const toName=j.customerName||'';
+  const toEmail=j.customerEmail||'';
+  const html=buildInvoiceEmailHTML(j,inv,customMsg);
+  const text=buildInvoiceEmailText(j,inv,customMsg);
+  const bnd='----=_Boundary_'+Date.now().toString(36);
+  // Use base64 encoding to safely handle Unicode & long lines
+  const enc=s=>{
+    try{const b=typeof btoa==='function'?btoa(unescape(encodeURIComponent(s))):Buffer.from(s,'utf8').toString('base64');
+      // Wrap to 76-char lines per RFC
+      return b.replace(/(.{76})/g,'$1\r\n');
+    }catch(e){return s}
+  };
+  const headers=[
+    'MIME-Version: 1.0',
+    `From: "${fromName}" <${fromEmail}>`,
+    toEmail?`To: "${toName}" <${toEmail}>`:'',
+    `Subject: ${subject}`,
+    'X-Unsent: 1',
+    `Content-Type: multipart/alternative; boundary="${bnd}"`,
+  ].filter(Boolean).join('\r\n');
+  const body=[
+    '',
+    `--${bnd}`,
+    'Content-Type: text/plain; charset="UTF-8"',
+    'Content-Transfer-Encoding: base64','',
+    enc(text),
+    `--${bnd}`,
+    'Content-Type: text/html; charset="UTF-8"',
+    'Content-Transfer-Encoding: base64','',
+    enc(html),
+    `--${bnd}--`,'',
+  ].join('\r\n');
+  return headers+'\r\n'+body;
+}
+
+async function copyHtmlToClipboard(html,text){
+  try{
+    if(window.ClipboardItem&&navigator.clipboard&&navigator.clipboard.write){
+      const item=new ClipboardItem({
+        'text/html':new Blob([html],{type:'text/html'}),
+        'text/plain':new Blob([text],{type:'text/plain'}),
+      });
+      await navigator.clipboard.write([item]);
+      return true;
+    }
+  }catch(e){}
+  try{await navigator.clipboard.writeText(text);return true}catch(e){}
+  return false;
+}
+
+function downloadFile(filename,content,mime){
+  const blob=new Blob([content],{type:mime||'text/plain;charset=utf-8'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=filename;
+  document.body.appendChild(a);a.click();a.remove();
+  setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+}
+
+function emailInvoice(j,inv){showSendInvoiceModal(j,inv)}
+
+function showSendInvoiceModal(j,inv){
+  const co=COMPANY;
+  const defaultSubject=`Invoice ${inv.number||''} from ${co.name||'Waterfront Solutions'}`;
+  $('modal-root').innerHTML=`<div class="modal-bd" id="mbd" role="dialog" aria-modal="true" aria-label="Send invoice"><div class="modal" style="max-width:680px"><div class="modal-handle"></div>
+    <div class="modal-head"><div class="modal-title">Send Invoice ${esc(inv.number||'')}</div><button class="modal-close" id="mc" aria-label="Close"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button></div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">To</label><input class="form-input" id="em-to" value="${esc(j.customerEmail||'')}" placeholder="customer@example.com"></div>
+        <div class="form-group"><label class="form-label">Subject</label><input class="form-input" id="em-subject" value="${esc(defaultSubject)}"></div>
+      </div>
+      <div class="form-group"><label class="form-label">Personal Message <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text-3)">(optional — replaces the default intro)</span></label>
+        <div class="textarea-with-mic"><textarea class="form-textarea" id="em-msg" placeholder="Add a personal note for the customer (optional)…" style="min-height:64px"></textarea>${micButton('#em-msg')}</div>
+      </div>
+      <label class="form-label" style="display:block;margin-bottom:6px">Preview</label>
+      <div class="email-preview-wrap"><iframe class="email-preview-frame" id="em-iframe" title="Email preview" style="height:560px"></iframe></div>
+      <div class="email-send-grid">
+        <a class="email-send-btn primary" id="em-mailto" href="#">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25"/></svg>
+          <span>Open in Email App<span class="email-send-sub">Default mail client (plain text)</span></span>
+        </a>
+        <a class="email-send-btn" id="em-gmail" href="#" target="_blank" rel="noopener">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 6.75c0-.414.336-.75.75-.75h18c.414 0 .75.336.75.75v10.5a.75.75 0 01-.75.75H3a.75.75 0 01-.75-.75V6.75z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 7l9.75 7.5L21.75 7"/></svg>
+          <span>Compose in Gmail Web<span class="email-send-sub">Opens gmail.com compose</span></span>
+        </a>
+        <button class="email-send-btn" id="em-copy" type="button">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 01-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9 9 0 011.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 00-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5"/></svg>
+          <span>Copy Rich Email<span class="email-send-sub">Paste into any webmail</span></span>
+        </button>
+        <button class="email-send-btn" id="em-eml" type="button">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>
+          <span>Download .eml<span class="email-send-sub">Opens as draft in Outlook / Apple Mail</span></span>
+        </button>
+      </div>
+      <p style="font-size:11.5px;color:var(--text-3);margin-top:14px;line-height:1.55">
+        <strong>Tip:</strong> "Copy Rich Email" pastes the styled invoice (with logo) directly into Gmail or Outlook web compose windows. ".eml" preserves the formatting in Outlook desktop, Apple Mail, and Thunderbird.
+      </p>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-cancel" id="btn-cx">Close</button>
+      <button class="btn-sm" id="em-print" style="background:var(--surface);border:1.5px solid var(--border-md);font-weight:600">Also Print PDF</button>
+    </div>
+  </div></div>`;
+
+  function currentMsg(){return $('em-msg')?.value.trim()||''}
+  function currentSubject(){return $('em-subject')?.value||''}
+  function currentTo(){return $('em-to')?.value.trim()||''}
+  function refreshPreview(){
+    const html=buildInvoiceEmailHTML(j,inv,currentMsg());
+    const f=$('em-iframe');if(!f)return;
+    const d=f.contentDocument||f.contentWindow.document;
+    d.open();d.write(html);d.close();
+  }
+  function refreshSendLinks(){
+    const to=currentTo();
+    const subject=currentSubject();
+    const text=buildInvoiceEmailText(j,inv,currentMsg());
+    const enc=encodeURIComponent;
+    const mailto=`mailto:${enc(to)}?subject=${enc(subject)}&body=${enc(text)}`;
+    const gmail=`https://mail.google.com/mail/?view=cm&fs=1&to=${enc(to)}&su=${enc(subject)}&body=${enc(text)}`;
+    $('em-mailto').href=mailto;
+    $('em-gmail').href=gmail;
+  }
+
+  $('em-msg').oninput=()=>{refreshPreview();refreshSendLinks()};
+  $('em-subject').oninput=refreshSendLinks;
+  $('em-to').oninput=refreshSendLinks;
+  refreshPreview();refreshSendLinks();wireMicButtons();
+
+  $('mc').onclick=$('btn-cx').onclick=closeModal;
+  $('mbd').onclick=e=>{if(e.target===e.currentTarget)closeModal()};
+  $('em-mailto').onclick=async()=>{
+    if(!inv.sent){inv.sent=Date.now();if(inv.status==='draft')inv.status='sent';await writeJob(j);await logAct('emailed invoice '+(inv.number||'')+' for',j.name)}
+  };
+  $('em-gmail').onclick=async()=>{
+    if(!inv.sent){inv.sent=Date.now();if(inv.status==='draft')inv.status='sent';await writeJob(j);await logAct('emailed invoice '+(inv.number||'')+' for',j.name)}
+  };
+  $('em-copy').onclick=async()=>{
+    const ok=await copyHtmlToClipboard(buildInvoiceEmailHTML(j,inv,currentMsg()),buildInvoiceEmailText(j,inv,currentMsg()));
+    if(ok){
+      if(!inv.sent){inv.sent=Date.now();if(inv.status==='draft')inv.status='sent';await writeJob(j);await logAct('prepared invoice '+(inv.number||'')+' to send for',j.name)}
+      toast('Copied — paste into your email');
+    }else{toast('Copy failed','')}
+  };
+  $('em-eml').onclick=async()=>{
+    const eml=buildInvoiceEml(j,inv,currentMsg());
+    downloadFile(`Invoice-${inv.number||'draft'}.eml`,eml,'message/rfc822');
+    if(!inv.sent){inv.sent=Date.now();if(inv.status==='draft')inv.status='sent';await writeJob(j);await logAct('downloaded invoice '+(inv.number||'')+' draft for',j.name)}
+    toast('.eml downloaded — open it to send');
+  };
+  $('em-print').onclick=()=>printInvoice(j,inv);
 }
 
 // ══ Reports ══
@@ -1738,6 +2625,7 @@ function renderDetail(id){
     {id:'log',label:'Daily Log',count:(j.dailyLogs||[]).length},
     {id:'photos',label:'Photos',count:photos.length},
     {id:'docs',label:'Files',count:(j.documents||[]).length},
+    {id:'invoices',label:'Invoices',count:(j.invoices||[]).length},
     {id:'financial',label:'Financials'},
     {id:'comms',label:'Comms',count:(j.comms||[]).length},
     {id:'notes',label:'Notes',count:(j.notes||[]).length},
@@ -1952,14 +2840,16 @@ function renderDetailTab(j,tab){
   }
   if(tab==='financial'){
     const est=Number(j.value||0);
-    const inv=Number(j.invoiced||0);
-    const paid=Number(j.paid||0);
+    const invTot=invoiceTotals(j);
+    const inv=invTot?invTot.total:Number(j.invoiced||0);
+    const paid=invTot?invTot.paid:Number(j.paid||0);
     const bal=inv-paid;
     const pctPaid=inv>0?(paid/inv)*100:0;
     const margin=est-Number(j.costs||0);
+    const lockedByInv=!!invTot;
     return `
       <div class="section">
-        <div class="section-hd">Financial Summary</div>
+        <div class="section-hd">Financial Summary${lockedByInv?' <span style="font-weight:400;text-transform:none;letter-spacing:0">From '+((j.invoices||[]).length)+' invoice'+((j.invoices||[]).length===1?'':'s')+'</span>':''}</div>
         <div class="fin-grid">
           <div class="fin-cell"><div class="fin-label">Estimate</div><div class="fin-value">${money(est)}</div></div>
           <div class="fin-cell"><div class="fin-label">Costs / Materials</div><div class="fin-value">${money(j.costs||0)}</div></div>
@@ -1976,10 +2866,11 @@ function renderDetailTab(j,tab){
           <div class="form-group"><label class="form-label">Costs ($)</label><input class="form-input" type="number" id="fin-costs" value="${esc(j.costs||'')}"></div>
         </div>
         <div class="form-row">
-          <div class="form-group"><label class="form-label">Invoiced ($)</label><input class="form-input" type="number" id="fin-inv" value="${esc(inv||'')}"></div>
-          <div class="form-group"><label class="form-label">Paid ($)</label><input class="form-input" type="number" id="fin-paid" value="${esc(paid||'')}"></div>
+          <div class="form-group"><label class="form-label">Invoiced ($)${lockedByInv?' <span style="color:var(--text-3);font-weight:400;text-transform:none;letter-spacing:0;font-size:10px">auto</span>':''}</label><input class="form-input" type="number" id="fin-inv" value="${esc(inv||'')}" ${lockedByInv?'disabled':''}></div>
+          <div class="form-group"><label class="form-label">Paid ($)${lockedByInv?' <span style="color:var(--text-3);font-weight:400;text-transform:none;letter-spacing:0;font-size:10px">auto</span>':''}</label><input class="form-input" type="number" id="fin-paid" value="${esc(paid||'')}" ${lockedByInv?'disabled':''}></div>
         </div>
-        <button class="btn-post" id="btn-save-fin" style="margin-top:6px">Save Financials</button>
+        <button class="btn-post" id="btn-save-fin" style="margin-top:6px" ${lockedByInv?'disabled':''}>Save Financials</button>
+        ${lockedByInv?'<p style="font-size:11.5px;color:var(--text-3);margin-top:10px">Invoiced and Paid totals are computed from the Invoices tab. Edit individual invoices there.</p>':''}
       </div>`;
   }
   if(tab==='comms'){
@@ -2015,6 +2906,37 @@ function renderDetailTab(j,tab){
           </div>
           <button class="btn-post" id="btn-add-comm">Log Communication</button>
         </div>
+      </div>`;
+  }
+  if(tab==='invoices'){
+    const invs=(j.invoices||[]).slice().sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+    const tot=invoiceTotals(j);
+    return `
+      <div class="section">
+        <div class="section-hd" style="margin-bottom:12px">Invoices <span>${invs.length}</span></div>
+        ${tot?`<div class="inv-totals" style="margin-bottom:14px">
+          <div class="inv-total-row"><span>Total Invoiced</span><span class="v">${money(tot.total)}</span></div>
+          <div class="inv-total-row"><span>Paid</span><span class="v">${money(tot.paid)}</span></div>
+          <div class="inv-total-row grand"><span>Balance Due</span><span class="v">${money(tot.balance)}</span></div>
+        </div>`:''}
+        <div class="invoice-list">
+          ${invs.length===0?'<p style="font-size:13px;color:var(--text-3);padding:4px 0">No invoices yet. Create your first one — it will use your company letterhead and pull from line items.</p>'
+            :invs.map(inv=>{
+              const c=calcInvoice(inv);
+              const st=invoiceStatus(inv);
+              return `<div class="invoice-row ${st}" data-inv-id="${esc(inv.id)}">
+                <div class="invoice-row-main">
+                  <div class="invoice-num">${esc(inv.number||'')} <span class="invoice-status ${st}">${st}</span></div>
+                  <div class="invoice-meta">${fmtDate(inv.date)}${inv.dueDate?' · due '+fmtDate(inv.dueDate):''} · ${(inv.items||[]).length} item${(inv.items||[]).length!==1?'s':''}</div>
+                </div>
+                <div class="invoice-row-amt">
+                  <div class="invoice-row-total">${money(c.total)}</div>
+                  <div class="invoice-row-bal">${c.balance>0.005?money(c.balance)+' due':'Paid'}</div>
+                </div>
+              </div>`;
+            }).join('')}
+        </div>
+        <button class="btn-post" id="btn-new-inv" style="margin-top:6px">+ New Invoice</button>
       </div>`;
   }
   if(tab==='notes'){
@@ -2235,16 +3157,369 @@ async function shareJob(j){
   try{await navigator.clipboard.writeText(text);toast('Copied to clipboard')}catch(e){alert(text)}
 }
 
+// ══ Invoice editor ══
+let INV_DRAFT=null; // current draft being edited
+
+function defaultInvoice(j){
+  const today=dateKey(new Date());
+  const due=new Date();due.setDate(due.getDate()+30);
+  return {
+    id:'inv_'+Date.now()+'_'+Math.random().toString(36).slice(2,6),
+    number:nextInvoiceNumber(),
+    date:today,
+    dueDate:dateKey(due),
+    items:[{desc:j.name||'Services rendered',qty:1,rate:Number(j.value||0)||0}],
+    taxRate:COMPANY.taxRate||'',
+    notes:'',
+    terms:COMPANY.terms||'',
+    paid:0,
+    status:'draft',
+    created:Date.now(),
+  };
+}
+
+function showInvoiceModal(jobId,invoiceId){
+  const j=S.jobs[jobId];if(!j)return;
+  let inv;
+  if(invoiceId){
+    inv=(j.invoices||[]).find(i=>i.id===invoiceId);
+    if(!inv)return;
+    INV_DRAFT=JSON.parse(JSON.stringify(inv));
+  }else{
+    INV_DRAFT=defaultInvoice(j);
+  }
+  renderInvoiceModal(jobId,!!invoiceId);
+}
+
+function renderInvoiceModal(jobId,isEdit){
+  const inv=INV_DRAFT;
+  const c=calcInvoice(inv);
+  const itemsHtml=(inv.items||[]).map((it,i)=>`<div class="li-row" data-li="${i}">
+    <input type="text" data-li-field="desc" value="${esc(it.desc||'')}" placeholder="Description (e.g. Dock repair labor)" aria-label="Description">
+    <input type="number" step="0.01" data-li-field="qty" value="${esc(it.qty??'')}" placeholder="Qty" aria-label="Quantity">
+    <input type="number" step="0.01" data-li-field="rate" value="${esc(it.rate??'')}" placeholder="Rate" aria-label="Unit rate">
+    <div class="li-amt">${money((Number(it.qty||0)*Number(it.rate||0)))}</div>
+    <button class="li-del" data-li-del="${i}" aria-label="Remove line item">×</button>
+  </div>`).join('');
+
+  $('modal-root').innerHTML=`<div class="modal-bd" id="mbd" role="dialog" aria-modal="true" aria-label="Invoice editor"><div class="modal"><div class="modal-handle"></div>
+    <div class="modal-head"><div class="modal-title">${isEdit?'Edit Invoice':'New Invoice'}</div><button class="modal-close" id="mc" aria-label="Close"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button></div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Invoice #</label><input class="form-input" id="inv-num" value="${esc(inv.number||'')}"></div>
+        <div class="form-group"><label class="form-label">Status</label>
+          <select class="form-select" id="inv-status">
+            <option value="draft" ${inv.status==='draft'?'selected':''}>Draft</option>
+            <option value="sent" ${inv.status==='sent'?'selected':''}>Sent</option>
+            <option value="paid" ${inv.status==='paid'?'selected':''}>Paid</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Invoice Date</label><input class="form-input" type="date" id="inv-date" value="${esc(inv.date||'')}"></div>
+        <div class="form-group"><label class="form-label">Due Date</label><input class="form-input" type="date" id="inv-due" value="${esc(inv.dueDate||'')}"></div>
+      </div>
+      <div class="form-group"><label class="form-label">Line Items</label>
+        <div class="li-head"><div>Description</div><div>Qty</div><div>Rate</div><div>Amount</div><div></div></div>
+        <div class="line-items" id="line-items">${itemsHtml}</div>
+        <button class="li-add-btn" id="li-add" type="button">+ Add Line Item</button>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Tax Rate (%)</label><input class="form-input" type="number" step="0.01" id="inv-tax" value="${esc(inv.taxRate??'')}"></div>
+        <div class="form-group"><label class="form-label">Amount Paid</label><input class="form-input" type="number" step="0.01" id="inv-paid" value="${esc(inv.paid??'')}"></div>
+      </div>
+      <div class="inv-totals" id="inv-totals">
+        <div class="inv-total-row"><span>Subtotal</span><span class="v" id="t-sub">${money(c.sub)}</span></div>
+        <div class="inv-total-row"><span>Tax (${Number(inv.taxRate||0)}%)</span><span class="v" id="t-tax">${money(c.tax)}</span></div>
+        <div class="inv-total-row grand"><span>Total</span><span class="v" id="t-total">${money(c.total)}</span></div>
+        <div class="inv-total-row" style="color:var(--text-3);margin-top:4px"><span>Paid</span><span class="v" id="t-paid">${money(c.paid)}</span></div>
+        <div class="inv-total-row" style="font-weight:700"><span>Balance Due</span><span class="v" id="t-bal">${money(c.balance)}</span></div>
+      </div>
+      <div class="form-group"><label class="form-label">Notes (visible on invoice)</label>
+        <div class="textarea-with-mic"><textarea class="form-textarea" id="inv-notes" placeholder="Additional notes for the customer…">${esc(inv.notes||'')}</textarea>${micButton('#inv-notes')}</div>
+      </div>
+      <div class="form-group"><label class="form-label">Payment Terms</label><textarea class="form-textarea" id="inv-terms">${esc(inv.terms||'')}</textarea></div>
+    </div>
+    <div class="modal-foot">
+      ${isEdit?`<button class="btn-delete" id="inv-del">Delete</button>`:''}
+      <button class="btn-cancel" id="btn-cx">Cancel</button>
+      <button class="btn-sm" id="inv-print" style="background:var(--surface);border:1.5px solid var(--border-md);font-weight:600">Save & Print</button>
+      <button class="btn-sm" id="inv-send" style="background:var(--green-100);border:1.5px solid var(--green-600);color:var(--green-700);font-weight:700"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="width:13px;height:13px"><path stroke-linecap="round" stroke-linejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5"/></svg>Save & Send</button>
+      <button class="btn-save" id="inv-save">Save</button>
+    </div>
+  </div></div>`;
+
+  $('mc').onclick=$('btn-cx').onclick=()=>{INV_DRAFT=null;closeModal()};
+  $('mbd').onclick=e=>{if(e.target===e.currentTarget){INV_DRAFT=null;closeModal()}};
+
+  function refreshLineItems(){
+    const wrap=$('line-items');
+    wrap.innerHTML=(INV_DRAFT.items||[]).map((it,i)=>`<div class="li-row" data-li="${i}">
+      <input type="text" data-li-field="desc" value="${esc(it.desc||'')}" placeholder="Description">
+      <input type="number" step="0.01" data-li-field="qty" value="${esc(it.qty??'')}" placeholder="Qty">
+      <input type="number" step="0.01" data-li-field="rate" value="${esc(it.rate??'')}" placeholder="Rate">
+      <div class="li-amt">${money(Number(it.qty||0)*Number(it.rate||0))}</div>
+      <button class="li-del" data-li-del="${i}">×</button>
+    </div>`).join('');
+    wireLineItemHandlers();
+    refreshTotals();
+  }
+  function refreshTotals(){
+    const c=calcInvoice(INV_DRAFT);
+    const tsub=$('t-sub'),ttax=$('t-tax'),ttot=$('t-total'),tpaid=$('t-paid'),tbal=$('t-bal');
+    if(tsub)tsub.textContent=money(c.sub);
+    if(ttax)ttax.textContent=money(c.tax);
+    if(ttot)ttot.textContent=money(c.total);
+    if(tpaid)tpaid.textContent=money(c.paid);
+    if(tbal)tbal.textContent=money(c.balance);
+    // Update tax row label
+    const taxLabel=document.querySelector('#inv-totals .inv-total-row:nth-child(2) span:first-child');
+    if(taxLabel)taxLabel.textContent='Tax ('+Number(INV_DRAFT.taxRate||0)+'%)';
+    // Update line-row amounts
+    document.querySelectorAll('[data-li]').forEach(row=>{
+      const i=parseInt(row.dataset.li);const it=INV_DRAFT.items[i];if(!it)return;
+      const amt=row.querySelector('.li-amt');
+      if(amt)amt.textContent=money(Number(it.qty||0)*Number(it.rate||0));
+    });
+  }
+  function wireLineItemHandlers(){
+    document.querySelectorAll('[data-li]').forEach(row=>{
+      const i=parseInt(row.dataset.li);
+      row.querySelectorAll('[data-li-field]').forEach(inp=>{
+        inp.oninput=()=>{
+          const f=inp.dataset.liField;
+          INV_DRAFT.items[i][f]=f==='desc'?inp.value:inp.value;
+          refreshTotals();
+        };
+      });
+    });
+    document.querySelectorAll('[data-li-del]').forEach(b=>b.onclick=()=>{
+      const i=parseInt(b.dataset.liDel);
+      INV_DRAFT.items.splice(i,1);
+      if(INV_DRAFT.items.length===0)INV_DRAFT.items.push({desc:'',qty:1,rate:0});
+      refreshLineItems();
+    });
+  }
+  wireLineItemHandlers();
+  wireMicButtons();
+
+  $('li-add').onclick=()=>{INV_DRAFT.items=INV_DRAFT.items||[];INV_DRAFT.items.push({desc:'',qty:1,rate:0});refreshLineItems();};
+  ['inv-num','inv-date','inv-due','inv-status','inv-tax','inv-paid','inv-notes','inv-terms'].forEach(id=>{
+    const el=$(id);if(!el)return;
+    const k=id.replace('inv-','');
+    const fieldMap={num:'number',date:'date',due:'dueDate',status:'status',tax:'taxRate',paid:'paid',notes:'notes',terms:'terms'};
+    el.oninput=el.onchange=()=>{INV_DRAFT[fieldMap[k]]=el.value;refreshTotals()};
+  });
+
+  async function saveInvoice(){
+    const j=S.jobs[jobId];if(!j)return null;
+    // Drop empty trailing items
+    INV_DRAFT.items=(INV_DRAFT.items||[]).filter(it=>(it.desc&&it.desc.trim())||Number(it.qty||0)!==0||Number(it.rate||0)!==0);
+    if(INV_DRAFT.items.length===0){toast('Add at least one line item','');return null}
+    j.invoices=j.invoices||[];
+    const existing=j.invoices.findIndex(i=>i.id===INV_DRAFT.id);
+    if(existing>=0)j.invoices[existing]=INV_DRAFT;else j.invoices.push(INV_DRAFT);
+    // Update aggregate invoiced/paid totals on the job for the financial summary
+    const tot=invoiceTotals(j);
+    j.invoiced=tot.total;
+    j.paid=tot.paid;
+    await writeJob(j);
+    await logAct(existing>=0?'updated invoice on':'created invoice on',j.name);
+    return INV_DRAFT;
+  }
+
+  $('inv-save').onclick=async()=>{
+    const saved=await saveInvoice();
+    if(saved){toast('Invoice saved');INV_DRAFT=null;closeModal();render()}
+  };
+  $('inv-print').onclick=async()=>{
+    const saved=await saveInvoice();
+    if(saved){INV_DRAFT=null;closeModal();render();printInvoice(S.jobs[jobId],saved)}
+  };
+  $('inv-send').onclick=async()=>{
+    const saved=await saveInvoice();
+    if(saved){INV_DRAFT=null;closeModal();render();showSendInvoiceModal(S.jobs[jobId],saved)}
+  };
+  if(isEdit){
+    $('inv-del').onclick=async()=>{
+      const j=S.jobs[jobId];if(!j)return;
+      const backup=JSON.parse(JSON.stringify(INV_DRAFT));
+      j.invoices=(j.invoices||[]).filter(i=>i.id!==INV_DRAFT.id);
+      const tot=invoiceTotals(j);j.invoiced=tot?tot.total:0;j.paid=tot?tot.paid:0;
+      await writeJob(j);await logAct('deleted invoice on',j.name);
+      INV_DRAFT=null;closeModal();render();
+      const restore=async()=>{const jj=S.jobs[jobId];if(jj){jj.invoices=jj.invoices||[];jj.invoices.push(backup);const t=invoiceTotals(jj);jj.invoiced=t.total;jj.paid=t.paid;await writeJob(jj);render();toast('Invoice restored')}};
+      UNDO.push(restore);
+      toast('Invoice deleted','undo',restore);
+    };
+  }
+}
+
+// ══ Printable invoice with company letterhead ══
+function printInvoice(j,inv){
+  const w=window.open('','_blank');
+  if(!w){toast('Pop-up blocked — allow pop-ups to print','');return}
+  const c=calcInvoice(inv);
+  const logoSrc=getBrandLogoSrc();
+  const co=COMPANY;
+  const itemsRows=(inv.items||[]).map(it=>{
+    const amt=Number(it.qty||0)*Number(it.rate||0);
+    return `<tr>
+      <td>${esc(it.desc||'')}</td>
+      <td class="num">${esc(String(it.qty??''))}</td>
+      <td class="num">${money(Number(it.rate||0))}</td>
+      <td class="num">${money(amt)}</td>
+    </tr>`;
+  }).join('');
+
+  w.document.write(`<!DOCTYPE html><html><head>
+    <meta charset="utf-8">
+    <title>${esc(inv.number||'Invoice')} — ${esc(j.name||'')}</title>
+    <style>
+      *{box-sizing:border-box;margin:0;padding:0}
+      body{font-family:Helvetica,Arial,sans-serif;color:#0a1f18;background:#fff;max-width:780px;margin:30px auto;padding:0 32px;font-size:13px;line-height:1.5}
+      .lh{display:flex;justify-content:space-between;align-items:flex-start;padding-bottom:18px;border-bottom:3px solid #0a3d2e;margin-bottom:24px;gap:20px}
+      .lh-l{display:flex;align-items:center;gap:14px;flex:1}
+      .lh-l img{width:78px;height:78px;object-fit:contain}
+      .lh-co{flex:1}
+      .lh-co h1{font-family:Georgia,serif;font-size:24px;font-weight:600;color:#0a3d2e;letter-spacing:0.01em;line-height:1.1;margin-bottom:4px}
+      .lh-co .tag{font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#666}
+      .lh-co .addr{font-size:11.5px;color:#555;margin-top:6px;line-height:1.5;white-space:pre-line}
+      .lh-r{text-align:right}
+      .lh-r .title{font-size:36px;font-weight:800;color:#0a3d2e;letter-spacing:0.04em;line-height:1}
+      .lh-r .num{font-size:13px;color:#555;margin-top:6px}
+      .lh-r .status{display:inline-block;margin-top:8px;font-size:10.5px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;padding:4px 12px;border-radius:20px;background:#fef3c7;color:#92400e}
+      .lh-r .status.paid{background:#dcfce7;color:#166534}
+      .lh-r .status.draft{background:#f1f5f9;color:#475569}
+      .lh-r .status.overdue{background:#fee2e2;color:#991b1b}
+      .meta{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:24px}
+      .meta-box .lbl{font-size:9.5px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#888;margin-bottom:4px}
+      .meta-box .v{font-size:13px;color:#0a1f18;line-height:1.5}
+      .meta-box .v strong{display:block;font-size:14px;margin-bottom:1px}
+      table{width:100%;border-collapse:collapse;margin-bottom:18px}
+      thead th{text-align:left;font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#666;padding:8px 10px;background:#f0faf6;border-top:1px solid #ddd;border-bottom:1px solid #ddd}
+      th.num,td.num{text-align:right}
+      tbody td{padding:10px;border-bottom:1px solid #eee;font-size:13px;vertical-align:top}
+      tbody tr:last-child td{border-bottom:1px solid #ddd}
+      .totals{margin-left:auto;width:300px;margin-bottom:20px}
+      .totals .row{display:flex;justify-content:space-between;padding:5px 0;font-size:13px}
+      .totals .row .v{font-variant-numeric:tabular-nums;font-weight:600}
+      .totals .grand{padding:10px 0;border-top:2px solid #0a3d2e;margin-top:6px;font-size:16px;font-weight:700;color:#0a3d2e}
+      .totals .due{margin-top:8px;padding:10px 14px;background:#fef3c7;border-radius:6px;font-size:14px;font-weight:700;color:#92400e;display:flex;justify-content:space-between}
+      .totals .due.zero{background:#dcfce7;color:#166534}
+      .notes{margin-top:16px;padding:14px;background:#f7f9f8;border-left:3px solid #0a3d2e;border-radius:6px;font-size:12px;color:#3d6358;line-height:1.6}
+      .notes .lbl{font-size:9.5px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#0a3d2e;margin-bottom:5px}
+      .terms{margin-top:14px;font-size:11px;color:#777;line-height:1.6;white-space:pre-line}
+      .ft{margin-top:28px;padding-top:14px;border-top:1px solid #ddd;text-align:center;font-size:10.5px;color:#888;letter-spacing:0.04em}
+      @media print{body{margin:0;padding:18mm 16mm;max-width:none}.no-print{display:none}}
+      .print-bar{position:fixed;top:12px;right:12px;display:flex;gap:8px}
+      .print-bar button{padding:8px 16px;background:#0a3d2e;color:#fff;border:none;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;font-family:Helvetica,sans-serif}
+      .print-bar button.alt{background:#fff;color:#0a3d2e;border:1.5px solid #0a3d2e}
+    </style></head><body>
+    <div class="no-print print-bar">
+      <button class="alt" onclick="window.close()">Close</button>
+      <button onclick="window.print()">Print / Save PDF</button>
+    </div>
+    <header class="lh">
+      <div class="lh-l">
+        ${logoSrc?`<img src="${logoSrc}" alt="">`:''}
+        <div class="lh-co">
+          <h1>${esc(co.name||'Waterfront Solutions')}</h1>
+          <div class="tag">${esc(co.license?'Lic. '+co.license:'Construction & Waterfront Services')}</div>
+          <div class="addr">${esc(co.address||'')}${co.phone?'\n'+esc(co.phone):''}${co.email?' · '+esc(co.email):''}${co.website?'\n'+esc(co.website):''}</div>
+        </div>
+      </div>
+      <div class="lh-r">
+        <div class="title">INVOICE</div>
+        <div class="num">${esc(inv.number||'')}</div>
+        <div class="status ${invoiceStatus(inv)}">${invoiceStatus(inv)}</div>
+      </div>
+    </header>
+    <section class="meta">
+      <div class="meta-box">
+        <div class="lbl">Bill To</div>
+        <div class="v"><strong>${esc(j.customerName||'Customer')}</strong>${j.billingAddress?'\n'+esc(j.billingAddress):(j.address?'\n'+esc(j.address):'')}${j.customerPhone?'\n'+esc(j.customerPhone):''}${j.customerEmail?'\n'+esc(j.customerEmail):''}</div>
+      </div>
+      <div class="meta-box">
+        <div class="lbl">Project</div>
+        <div class="v"><strong>${esc(j.name||'')}</strong>${j.address?'\n'+esc(j.address):''}</div>
+        <div style="margin-top:12px"><div class="lbl">Invoice Date</div><div class="v">${fmtDate(inv.date)||''}</div></div>
+        ${inv.dueDate?`<div style="margin-top:8px"><div class="lbl">Due Date</div><div class="v">${fmtDate(inv.dueDate)}</div></div>`:''}
+      </div>
+    </section>
+    <table>
+      <thead><tr><th style="width:50%">Description</th><th class="num">Qty</th><th class="num">Rate</th><th class="num">Amount</th></tr></thead>
+      <tbody>${itemsRows||'<tr><td colspan="4" style="text-align:center;color:#999;padding:20px">No line items</td></tr>'}</tbody>
+    </table>
+    <div class="totals">
+      <div class="row"><span>Subtotal</span><span class="v">${money(c.sub)}</span></div>
+      <div class="row"><span>Tax (${Number(inv.taxRate||0)}%)</span><span class="v">${money(c.tax)}</span></div>
+      <div class="row grand"><span>Total</span><span class="v">${money(c.total)}</span></div>
+      ${c.paid>0?`<div class="row"><span>Paid</span><span class="v">-${money(c.paid)}</span></div>`:''}
+      <div class="due ${c.balance<=0.005?'zero':''}"><span>${c.balance<=0.005?'Paid in Full':'Balance Due'}</span><span class="v">${money(Math.max(0,c.balance))}</span></div>
+    </div>
+    ${inv.notes?`<div class="notes"><div class="lbl">Notes</div>${esc(inv.notes).replace(/\n/g,'<br>')}</div>`:''}
+    ${inv.terms?`<div class="terms">${esc(inv.terms)}</div>`:''}
+    <div class="ft">${esc(co.name||'Waterfront Solutions')}${co.phone?' · '+esc(co.phone):''}${co.email?' · '+esc(co.email):''} — Thank you for your business</div>
+    </body></html>`);
+  w.document.close();
+}
+
+// ══ Company / settings modal ══
+function showSettingsModal(){
+  const c={...COMPANY};
+  $('modal-root').innerHTML=`<div class="modal-bd" id="mbd" role="dialog" aria-modal="true" aria-label="Settings"><div class="modal"><div class="modal-handle"></div>
+    <div class="modal-head"><div class="modal-title">Settings</div><button class="modal-close" id="mc" aria-label="Close"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button></div>
+    <div class="modal-body">
+      <div class="form-group"><label class="form-label">Your Name (appears on notes & activity)</label><input class="form-input" id="set-user" value="${esc(S.user||'')}" placeholder="Your name"></div>
+      <div style="margin:14px 0 10px;padding-top:14px;border-top:1px solid var(--border)"><div class="form-label" style="font-size:12px">Company Info (used on invoices)</div></div>
+      <div class="form-group"><label class="form-label">Company Name</label><input class="form-input" id="set-co-name" value="${esc(c.name||'')}"></div>
+      <div class="form-group"><label class="form-label">Address</label><textarea class="form-textarea" id="set-co-addr" style="min-height:56px">${esc(c.address||'')}</textarea></div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Phone</label><input class="form-input" type="tel" id="set-co-phone" value="${esc(c.phone||'')}"></div>
+        <div class="form-group"><label class="form-label">Email</label><input class="form-input" type="email" id="set-co-email" value="${esc(c.email||'')}"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Website</label><input class="form-input" id="set-co-web" value="${esc(c.website||'')}"></div>
+        <div class="form-group"><label class="form-label">License #</label><input class="form-input" id="set-co-lic" value="${esc(c.license||'')}"></div>
+      </div>
+      <div class="form-group"><label class="form-label">Default Tax Rate (%)</label><input class="form-input" type="number" step="0.01" id="set-co-tax" value="${esc(c.taxRate||'')}"></div>
+      <div class="form-group"><label class="form-label">Default Invoice Terms</label><textarea class="form-textarea" id="set-co-terms">${esc(c.terms||'')}</textarea></div>
+    </div>
+    <div class="modal-foot"><button class="btn-cancel" id="btn-cx">Cancel</button><button class="btn-save" id="btn-set-save">Save</button></div>
+  </div></div>`;
+  $('mc').onclick=$('btn-cx').onclick=closeModal;
+  $('mbd').onclick=e=>{if(e.target===e.currentTarget)closeModal()};
+  $('btn-set-save').onclick=()=>{
+    const newUser=$('set-user').value.trim();
+    if(newUser!==S.user){S.user=newUser;localStorage.setItem('wfs_user',S.user)}
+    COMPANY={
+      name:$('set-co-name').value.trim()||COMPANY_DEFAULT.name,
+      address:$('set-co-addr').value.trim(),
+      phone:$('set-co-phone').value.trim(),
+      email:$('set-co-email').value.trim(),
+      website:$('set-co-web').value.trim(),
+      license:$('set-co-lic').value.trim(),
+      taxRate:$('set-co-tax').value,
+      terms:$('set-co-terms').value.trim(),
+    };
+    saveCompany(COMPANY);
+    closeModal();render();toast('Settings saved');
+  };
+}
+
 // ══ Command Palette ══
 let CMD={open:false,query:'',idx:0,items:[]};
 function cmdItems(){
   const out=[];
   // Views
-  [['dashboard','Home / Dashboard','home'],['jobs','Jobs','briefcase'],['schedule','Schedule','calendar'],['map','Map','map'],['reports','Reports','chart'],['activity','Activity','list'],['team','Team','team']].forEach(([v,name,ico])=>{
+  [['dashboard','Home / Dashboard','home'],['jobs','Jobs','briefcase'],['schedule','Schedule','calendar'],['invoices','Invoices','invoice'],['map','Map','map'],['reports','Reports','chart'],['activity','Activity','list'],['team','Team','team']].forEach(([v,name,ico])=>{
     out.push({type:'view',name:'Go to '+name,sub:'View',ico,run:()=>{S.view=v;S.detail=null;render()}});
   });
   // Actions
   out.push({type:'action',name:'New Job',sub:'Create a job',ico:'plus',run:()=>showJobModal('add')});
+  out.push({type:'action',name:'New Invoice',sub:'Pick a job, then create invoice',ico:'invoice',run:()=>showJobPickerModal(jobId=>showInvoiceModal(jobId))});
+  out.push({type:'action',name:'Settings & Company Info',sub:'Edit name, logo, invoice defaults',ico:'kbd',run:showSettingsModal});
   out.push({type:'action',name:'Export to CSV',sub:'Download all jobs',ico:'download',run:exportCSV});
   out.push({type:'action',name:'Notifications',sub:'See your inbox',ico:'bell',run:showNotificationsModal});
   out.push({type:'action',name:'Connect Team (Firebase)',sub:'Live sync setup',ico:'link',run:showSetupModal});
@@ -2289,6 +3564,7 @@ const CMD_ICONS={
   kbd:'<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5v10.5H3.75z"/></svg>',
   undo:'<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3"/></svg>',
   job:'<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12"/></svg>',
+  invoice:'<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 3h6m-9-9h12v18l-3-2-3 2-3-2-3 2V6z"/></svg>',
 };
 function showCommandPalette(){
   CMD.open=true;CMD.query='';CMD.idx=0;CMD.items=cmdItems();
@@ -2358,6 +3634,7 @@ function showShortcutsModal(){
     ['Go to Dashboard',['G','D']],
     ['Go to Jobs',['G','J']],
     ['Go to Schedule',['G','S']],
+    ['Go to Invoices',['G','I']],
     ['Go to Map',['G','M']],
     ['Go to Reports',['G','R']],
     ['Notifications',['B']],
@@ -2457,7 +3734,7 @@ function onKey(e){
   // g + (d/j/s/m/r) go-to
   if(k==='g'||k==='G'){KBD_BUFFER='g';clearTimeout(KBD_BUFFER_T);KBD_BUFFER_T=setTimeout(()=>KBD_BUFFER='',1200);return}
   if(KBD_BUFFER==='g'){
-    const map={d:'dashboard',j:'jobs',s:'schedule',m:'map',r:'reports',a:'activity',t:'team'};
+    const map={d:'dashboard',j:'jobs',s:'schedule',i:'invoices',m:'map',r:'reports',a:'activity',t:'team'};
     const target=map[k.toLowerCase()];
     if(target){KBD_BUFFER='';clearTimeout(KBD_BUFFER_T);S.view=target;S.detail=null;render();e.preventDefault()}
   }
@@ -2481,10 +3758,7 @@ function attachHandlers(){
   document.querySelectorAll('.nav-btn').forEach(b=>{
     b.onclick=()=>{S.view=b.dataset.view;S.detail=null;render()}
   });
-  $('user-btn').onclick=()=>{
-    const n=prompt('Your name (appears on notes):',S.user);
-    if(n!==null){S.user=n.trim();localStorage.setItem('wfs_user',S.user);render()}
-  };
+  $('user-btn').onclick=showSettingsModal;
   $('setup-link').onclick=showSetupModal;
   $('bell-btn')?.addEventListener('click',showNotificationsModal);
   $('cmd-btn')?.addEventListener('click',showCommandPalette);
@@ -2551,6 +3825,59 @@ function attachHandlers(){
 
   // Voice dictation mic buttons
   wireMicButtons();
+
+  // Invoices (per-job tab)
+  $('btn-new-inv')?.addEventListener('click',()=>{const id=S.detail;if(id)showInvoiceModal(id)});
+  document.querySelectorAll('[data-inv-id]').forEach(row=>row.onclick=()=>{
+    const id=S.detail;if(id)showInvoiceModal(id,row.dataset.invId);
+  });
+
+  // Invoices (global view)
+  $('btn-new-inv-global')?.addEventListener('click',()=>showJobPickerModal(jobId=>showInvoiceModal(jobId)));
+  $('inv-search')?.addEventListener('input',e=>{S.invSearch=e.target.value;render()});
+  $('inv-sort')?.addEventListener('change',e=>{S.invSort=e.target.value;render()});
+  document.querySelectorAll('[data-inv-filter]').forEach(c=>c.onclick=()=>{S.invFilter=c.dataset.invFilter;render()});
+  document.querySelectorAll('[data-open-inv]').forEach(el=>el.onclick=e=>{
+    e.stopPropagation();
+    const [jobId,invId]=el.dataset.openInv.split('|');
+    showInvoiceModal(jobId,invId);
+  });
+  document.querySelectorAll('[data-inv-print]').forEach(b=>b.onclick=e=>{
+    e.stopPropagation();
+    const [jobId,invId]=b.dataset.invPrint.split('|');
+    const j=S.jobs[jobId];if(!j)return;
+    const inv=(j.invoices||[]).find(i=>i.id===invId);
+    if(inv)printInvoice(j,inv);
+  });
+  document.querySelectorAll('[data-inv-paid]').forEach(b=>b.onclick=async e=>{
+    e.stopPropagation();
+    const [jobId,invId]=b.dataset.invPaid.split('|');
+    const j=S.jobs[jobId];if(!j)return;
+    const inv=(j.invoices||[]).find(i=>i.id===invId);
+    if(!inv)return;
+    const c=calcInvoice(inv);
+    const prevPaid=Number(inv.paid||0);
+    const prevStatus=inv.status;
+    inv.paid=c.total;inv.status='paid';
+    const tot=invoiceTotals(j);if(tot){j.invoiced=tot.total;j.paid=tot.paid}
+    await writeJob(j);await logAct('marked invoice '+(inv.number||'')+' paid on',j.name);render();
+    const restore=async()=>{
+      const jj=S.jobs[jobId];if(!jj)return;
+      const ii=(jj.invoices||[]).find(i=>i.id===invId);if(!ii)return;
+      ii.paid=prevPaid;ii.status=prevStatus;
+      const t=invoiceTotals(jj);if(t){jj.invoiced=t.total;jj.paid=t.paid}
+      await writeJob(jj);render();toast('Reverted');
+    };
+    UNDO.push(restore);
+    toast('Marked paid','undo',restore);
+  });
+  document.querySelectorAll('[data-inv-email]').forEach(b=>b.onclick=e=>{
+    e.stopPropagation();
+    const [jobId,invId]=b.dataset.invEmail.split('|');
+    const j=S.jobs[jobId];if(!j)return;
+    const inv=(j.invoices||[]).find(i=>i.id===invId);
+    if(inv)emailInvoice(j,inv);
+  });
   // Reports
   document.querySelectorAll('[data-range]').forEach(c=>c.onclick=()=>{S.reportRange=c.dataset.range;render()});
   // Map
@@ -2563,6 +3890,7 @@ function attachHandlers(){
   document.querySelectorAll('[data-filter]').forEach(c=>c.onclick=()=>{S.filter=c.dataset.filter;render()});
   document.querySelectorAll('[data-open]').forEach(c=>{
     c.onclick=e=>{
+      e.stopPropagation();
       // Bulk mode: clicks toggle selection instead of opening
       if(S.bulkMode&&c.classList.contains('job-card')){
         const id=c.dataset.open;
@@ -2575,10 +3903,25 @@ function attachHandlers(){
   });
 
   // Calendar
-  $('cal-prev')?.addEventListener('click',()=>{S.calMonth--;if(S.calMonth<0){S.calMonth=11;S.calYear--}render()});
-  $('cal-next')?.addEventListener('click',()=>{S.calMonth++;if(S.calMonth>11){S.calMonth=0;S.calYear++}render()});
+  $('cal-prev')?.addEventListener('click',()=>{
+    if(S.calMode==='agenda'){const n=new Date();S.calMonth=n.getMonth();S.calYear=n.getFullYear();render();return}
+    S.calMonth--;if(S.calMonth<0){S.calMonth=11;S.calYear--}render();
+  });
+  $('cal-next')?.addEventListener('click',()=>{
+    if(S.calMode==='agenda'){const n=new Date();S.calMonth=n.getMonth();S.calYear=n.getFullYear();render();return}
+    S.calMonth++;if(S.calMonth>11){S.calMonth=0;S.calYear++}render();
+  });
   $('cal-today')?.addEventListener('click',()=>{const n=new Date();S.calMonth=n.getMonth();S.calYear=n.getFullYear();S.calSelected=dateKey(n);render()});
-  document.querySelectorAll('[data-cal-day]').forEach(d=>d.onclick=()=>{S.calSelected=d.dataset.calDay;render()});
+  document.querySelectorAll('[data-cal-mode]').forEach(b=>b.onclick=()=>{S.calMode=b.dataset.calMode;localStorage.setItem('wfs_calmode',S.calMode);render()});
+  document.querySelectorAll('[data-cal-day]').forEach(d=>d.onclick=e=>{
+    // Ignore clicks on chips (they have their own handler that stops propagation, but be defensive)
+    if(e.target.closest('[data-open]'))return;
+    // Tapping a day from outside the current month jumps to that month
+    const k=d.dataset.calDay;
+    const [yy,mm]=k.split('-').map(n=>parseInt(n,10));
+    if(yy!==S.calYear||(mm-1)!==S.calMonth){S.calYear=yy;S.calMonth=mm-1}
+    S.calSelected=k;render();
+  });
 
   // Detail
   $('btn-back')?.addEventListener('click',()=>{S.detail=null;S.detailTab='overview';render()});
