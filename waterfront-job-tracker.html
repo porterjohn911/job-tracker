@@ -3362,13 +3362,17 @@ function printInvoice(j,inv){
   const c=calcInvoice(inv);
   const logoSrc=getBrandLogoSrc();
   const co=COMPANY;
-  const itemsRows=(inv.items||[]).map(it=>{
+  const st=invoiceStatus(inv);
+  const balDue=Math.max(0,c.balance);
+  const isPaid=c.balance<=0.005;
+  const itemsRows=(inv.items||[]).map((it,i)=>{
     const amt=Number(it.qty||0)*Number(it.rate||0);
     return `<tr>
-      <td>${esc(it.desc||'')}</td>
+      <td class="row-num">${i+1}.</td>
+      <td class="desc">${esc(it.desc||'')}</td>
       <td class="num">${esc(String(it.qty??''))}</td>
       <td class="num">${money(Number(it.rate||0))}</td>
-      <td class="num">${money(amt)}</td>
+      <td class="num amt">${money(amt)}</td>
     </tr>`;
   }).join('');
 
@@ -3377,90 +3381,162 @@ function printInvoice(j,inv){
     <title>${esc(inv.number||'Invoice')} — ${esc(j.name||'')}</title>
     <style>
       *{box-sizing:border-box;margin:0;padding:0}
-      body{font-family:Helvetica,Arial,sans-serif;color:#0a1f18;background:#fff;max-width:780px;margin:30px auto;padding:0 32px;font-size:13px;line-height:1.5}
-      .lh{display:flex;justify-content:space-between;align-items:flex-start;padding-bottom:18px;border-bottom:3px solid #0a3d2e;margin-bottom:24px;gap:20px}
-      .lh-l{display:flex;align-items:center;gap:14px;flex:1}
-      .lh-l img{width:78px;height:78px;object-fit:contain}
-      .lh-co{flex:1}
-      .lh-co h1{font-family:Georgia,serif;font-size:24px;font-weight:600;color:#0a3d2e;letter-spacing:0.01em;line-height:1.1;margin-bottom:4px}
-      .lh-co .tag{font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#666}
-      .lh-co .addr{font-size:11.5px;color:#555;margin-top:6px;line-height:1.5;white-space:pre-line}
-      .lh-r{text-align:right}
-      .lh-r .title{font-size:36px;font-weight:800;color:#0a3d2e;letter-spacing:0.04em;line-height:1}
-      .lh-r .num{font-size:13px;color:#555;margin-top:6px}
-      .lh-r .status{display:inline-block;margin-top:8px;font-size:10.5px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;padding:4px 12px;border-radius:20px;background:#fef3c7;color:#92400e}
-      .lh-r .status.paid{background:#dcfce7;color:#166534}
-      .lh-r .status.draft{background:#f1f5f9;color:#475569}
-      .lh-r .status.overdue{background:#fee2e2;color:#991b1b}
-      .meta{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:24px}
-      .meta-box .lbl{font-size:9.5px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#888;margin-bottom:4px}
-      .meta-box .v{font-size:13px;color:#0a1f18;line-height:1.5}
-      .meta-box .v strong{display:block;font-size:14px;margin-bottom:1px}
-      table{width:100%;border-collapse:collapse;margin-bottom:18px}
-      thead th{text-align:left;font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#666;padding:8px 10px;background:#f0faf6;border-top:1px solid #ddd;border-bottom:1px solid #ddd}
-      th.num,td.num{text-align:right}
-      tbody td{padding:10px;border-bottom:1px solid #eee;font-size:13px;vertical-align:top}
-      tbody tr:last-child td{border-bottom:1px solid #ddd}
-      .totals{margin-left:auto;width:300px;margin-bottom:20px}
-      .totals .row{display:flex;justify-content:space-between;padding:5px 0;font-size:13px}
-      .totals .row .v{font-variant-numeric:tabular-nums;font-weight:600}
-      .totals .grand{padding:10px 0;border-top:2px solid #0a3d2e;margin-top:6px;font-size:16px;font-weight:700;color:#0a3d2e}
-      .totals .due{margin-top:8px;padding:10px 14px;background:#fef3c7;border-radius:6px;font-size:14px;font-weight:700;color:#92400e;display:flex;justify-content:space-between}
-      .totals .due.zero{background:#dcfce7;color:#166534}
-      .notes{margin-top:16px;padding:14px;background:#f7f9f8;border-left:3px solid #0a3d2e;border-radius:6px;font-size:12px;color:#3d6358;line-height:1.6}
-      .notes .lbl{font-size:9.5px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#0a3d2e;margin-bottom:5px}
-      .terms{margin-top:14px;font-size:11px;color:#777;line-height:1.6;white-space:pre-line}
-      .ft{margin-top:28px;padding-top:14px;border-top:1px solid #ddd;text-align:center;font-size:10.5px;color:#888;letter-spacing:0.04em}
-      @media print{body{margin:0;padding:18mm 16mm;max-width:none}.no-print{display:none}}
-      .print-bar{position:fixed;top:12px;right:12px;display:flex;gap:8px}
-      .print-bar button{padding:8px 16px;background:#0a3d2e;color:#fff;border:none;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;font-family:Helvetica,sans-serif}
-      .print-bar button.alt{background:#fff;color:#0a3d2e;border:1.5px solid #0a3d2e}
+      html,body{background:#f3f4f6}
+      body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;color:#1f2937;font-size:13px;line-height:1.5;-webkit-font-smoothing:antialiased}
+      .page{background:#fff;max-width:820px;margin:30px auto;padding:48px 56px 40px;box-shadow:0 1px 3px rgba(0,0,0,0.08),0 4px 16px rgba(0,0,0,0.04);border-radius:2px}
+      /* ── Header ── */
+      .hd{display:flex;justify-content:space-between;align-items:flex-start;gap:32px;margin-bottom:36px}
+      .hd-l{display:flex;align-items:flex-start;gap:16px;flex:1;min-width:0}
+      .hd-l img{width:72px;height:72px;object-fit:contain;flex-shrink:0}
+      .hd-co h1{font-size:20px;font-weight:700;color:#0a3d2e;letter-spacing:-0.01em;line-height:1.15;margin-bottom:3px}
+      .hd-co .tag{font-size:10.5px;font-weight:600;letter-spacing:0.04em;color:#6b7280;margin-bottom:8px}
+      .hd-co .addr{font-size:11.5px;color:#4b5563;line-height:1.55;white-space:pre-line}
+      .hd-r{text-align:right;flex-shrink:0}
+      .hd-r .title{font-size:32px;font-weight:300;color:#0a3d2e;letter-spacing:0.08em;line-height:1;margin-bottom:6px}
+      .hd-r .num{font-size:13.5px;color:#4b5563;font-weight:500}
+      .hd-r .status{display:inline-block;margin-top:10px;font-size:9.5px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;padding:4px 10px;border-radius:3px;background:#fef3c7;color:#92400e;border:1px solid #fcd34d}
+      .hd-r .status.paid{background:#dcfce7;color:#166534;border-color:#86efac}
+      .hd-r .status.draft{background:#f3f4f6;color:#4b5563;border-color:#d1d5db}
+      .hd-r .status.overdue{background:#fee2e2;color:#991b1b;border-color:#fca5a5}
+      .hd-r .status.sent{background:#dbeafe;color:#1e40af;border-color:#93c5fd}
+      /* ── Balance Due card ── */
+      .bal-card{display:flex;justify-content:space-between;align-items:stretch;background:#f9fafb;border:1px solid #e5e7eb;border-left:4px solid #0a3d2e;border-radius:3px;padding:18px 22px;margin-bottom:28px}
+      .bal-card.paid{border-left-color:#16a34a;background:#f0fdf4}
+      .bal-card .col{display:flex;flex-direction:column;justify-content:center;padding:0 14px;border-right:1px solid #e5e7eb;min-width:0}
+      .bal-card .col:last-child{border-right:none;padding-right:0;text-align:right}
+      .bal-card .col:first-child{padding-left:0}
+      .bal-card .lbl{font-size:9.5px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#6b7280;margin-bottom:4px}
+      .bal-card .v{font-size:14px;color:#111827;font-weight:600;font-variant-numeric:tabular-nums}
+      .bal-card .v.big{font-size:22px;font-weight:700;color:#0a3d2e;letter-spacing:-0.01em}
+      .bal-card.paid .v.big{color:#15803d}
+      /* ── Bill-to row ── */
+      .meta{display:grid;grid-template-columns:1fr 1fr;gap:32px;margin-bottom:28px}
+      .meta-box .lbl{font-size:9.5px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#6b7280;margin-bottom:6px;padding-bottom:5px;border-bottom:1px solid #e5e7eb}
+      .meta-box .v{font-size:12.5px;color:#1f2937;line-height:1.6;white-space:pre-line}
+      .meta-box .v strong{display:block;font-size:13.5px;font-weight:600;color:#111827;margin-bottom:2px}
+      /* ── Line items table ── */
+      table{width:100%;border-collapse:collapse;margin-bottom:0}
+      thead th{text-align:left;font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#fff;padding:11px 12px;background:#0a3d2e}
+      thead th:first-child{padding-left:16px;border-top-left-radius:3px}
+      thead th:last-child{padding-right:16px;border-top-right-radius:3px}
+      th.num,td.num{text-align:right;font-variant-numeric:tabular-nums}
+      tbody td{padding:13px 12px;border-bottom:1px solid #e5e7eb;font-size:12.5px;color:#1f2937;vertical-align:top}
+      tbody td:first-child{padding-left:16px}
+      tbody td:last-child{padding-right:16px}
+      tbody tr:nth-child(even){background:#f9fafb}
+      tbody td.row-num{color:#9ca3af;font-weight:500;width:28px}
+      tbody td.desc{color:#111827}
+      tbody td.amt{font-weight:600;color:#111827}
+      tbody td.empty{text-align:center;color:#9ca3af;padding:24px;font-style:italic}
+      /* ── Totals ── */
+      .totals-wrap{display:flex;justify-content:flex-end;margin-top:0;margin-bottom:24px}
+      .totals{width:320px}
+      .totals .row{display:flex;justify-content:space-between;padding:9px 16px;font-size:12.5px;color:#4b5563}
+      .totals .row .v{font-variant-numeric:tabular-nums;color:#111827;font-weight:500}
+      .totals .row.sub{border-bottom:1px solid #e5e7eb}
+      .totals .grand{background:#f9fafb;font-size:13.5px;font-weight:700;color:#111827;border-top:1px solid #e5e7eb;border-bottom:2px solid #0a3d2e;padding:12px 16px}
+      .totals .grand .v{color:#0a3d2e;font-weight:700}
+      .totals .paid-row{color:#15803d}
+      .totals .paid-row .v{color:#15803d}
+      .totals .due{margin-top:6px;padding:14px 16px;background:#0a3d2e;color:#fff;border-radius:3px;font-size:14px;font-weight:700;display:flex;justify-content:space-between;align-items:center}
+      .totals .due.zero{background:#15803d}
+      .totals .due .v{font-size:18px;font-weight:700;color:#fff;font-variant-numeric:tabular-nums}
+      /* ── Notes / Terms / Footer ── */
+      .pay-info{margin-top:8px;padding:16px 18px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:3px;display:grid;grid-template-columns:1fr 1fr;gap:18px}
+      .pay-info .blk .lbl{font-size:9.5px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#6b7280;margin-bottom:5px}
+      .pay-info .blk .v{font-size:12px;color:#374151;line-height:1.55;white-space:pre-line}
+      .notes{margin-top:18px;padding:14px 16px;background:#fffbeb;border-left:3px solid #f59e0b;border-radius:2px;font-size:12px;color:#78350f;line-height:1.6}
+      .notes .lbl{font-size:9.5px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#92400e;margin-bottom:5px}
+      .terms{margin-top:14px;padding:12px 0;font-size:11px;color:#6b7280;line-height:1.6;white-space:pre-line;border-top:1px solid #e5e7eb}
+      .terms .lbl{font-size:9.5px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#4b5563;margin-bottom:5px}
+      .ft{margin-top:32px;padding-top:16px;border-top:1px solid #e5e7eb;text-align:center;font-size:11px;color:#6b7280;line-height:1.6}
+      .ft .thanks{font-size:13px;font-weight:600;color:#0a3d2e;margin-bottom:4px;letter-spacing:0.02em}
+      @media print{
+        html,body{background:#fff}
+        .page{margin:0;padding:18mm 16mm;max-width:none;box-shadow:none;border-radius:0}
+        .no-print{display:none!important}
+        thead{display:table-header-group}
+        tr{page-break-inside:avoid}
+      }
+      .print-bar{position:fixed;top:14px;right:14px;display:flex;gap:8px;z-index:100}
+      .print-bar button{padding:9px 18px;background:#0a3d2e;color:#fff;border:none;border-radius:4px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit;box-shadow:0 1px 3px rgba(0,0,0,0.2)}
+      .print-bar button.alt{background:#fff;color:#374151;border:1px solid #d1d5db}
+      .print-bar button:hover{opacity:0.92}
     </style></head><body>
     <div class="no-print print-bar">
       <button class="alt" onclick="window.close()">Close</button>
       <button onclick="window.print()">Print / Save PDF</button>
     </div>
-    <header class="lh">
-      <div class="lh-l">
-        ${logoSrc?`<img src="${logoSrc}" alt="">`:''}
-        <div class="lh-co">
-          <h1>${esc(co.name||'Waterfront Solutions')}</h1>
-          <div class="tag">${esc(co.license?'Lic. '+co.license:'Construction & Waterfront Services')}</div>
-          <div class="addr">${esc(co.address||'')}${co.phone?'\n'+esc(co.phone):''}${co.email?' · '+esc(co.email):''}${co.website?'\n'+esc(co.website):''}</div>
+    <div class="page">
+      <header class="hd">
+        <div class="hd-l">
+          ${logoSrc?`<img src="${logoSrc}" alt="">`:''}
+          <div class="hd-co">
+            <h1>${esc(co.name||'Waterfront Solutions')}</h1>
+            <div class="tag">${esc(co.license?'License #'+co.license:'Construction & Waterfront Services')}</div>
+            <div class="addr">${esc(co.address||'')}${co.phone?'\n'+esc(co.phone):''}${co.email?'  ·  '+esc(co.email):''}${co.website?'\n'+esc(co.website):''}</div>
+          </div>
+        </div>
+        <div class="hd-r">
+          <div class="title">INVOICE</div>
+          <div class="num">#${esc(inv.number||'')}</div>
+          <div class="status ${st}">${st}</div>
+        </div>
+      </header>
+      <div class="bal-card ${isPaid?'paid':''}">
+        <div class="col">
+          <div class="lbl">Invoice Date</div>
+          <div class="v">${fmtDate(inv.date)||'—'}</div>
+        </div>
+        <div class="col">
+          <div class="lbl">${inv.dueDate?'Due Date':'Terms'}</div>
+          <div class="v">${inv.dueDate?fmtDate(inv.dueDate):'On Receipt'}</div>
+        </div>
+        <div class="col">
+          <div class="lbl">${isPaid?'Amount Paid':'Balance Due'}</div>
+          <div class="v big">${money(isPaid?c.total:balDue)}</div>
         </div>
       </div>
-      <div class="lh-r">
-        <div class="title">INVOICE</div>
-        <div class="num">${esc(inv.number||'')}</div>
-        <div class="status ${invoiceStatus(inv)}">${invoiceStatus(inv)}</div>
+      <section class="meta">
+        <div class="meta-box">
+          <div class="lbl">Bill To</div>
+          <div class="v"><strong>${esc(j.customerName||'Customer')}</strong>${j.billingAddress?'\n'+esc(j.billingAddress):(j.address?'\n'+esc(j.address):'')}${j.customerPhone?'\n'+esc(j.customerPhone):''}${j.customerEmail?'\n'+esc(j.customerEmail):''}</div>
+        </div>
+        <div class="meta-box">
+          <div class="lbl">Project / Job</div>
+          <div class="v"><strong>${esc(j.name||'')}</strong>${j.address&&j.address!==(j.billingAddress||'')?'\n'+esc(j.address):''}</div>
+        </div>
+      </section>
+      <table>
+        <thead><tr>
+          <th style="width:28px">#</th>
+          <th>Description</th>
+          <th class="num" style="width:70px">Qty</th>
+          <th class="num" style="width:100px">Rate</th>
+          <th class="num" style="width:110px">Amount</th>
+        </tr></thead>
+        <tbody>${itemsRows||'<tr><td colspan="5" class="empty">No line items</td></tr>'}</tbody>
+      </table>
+      <div class="totals-wrap">
+        <div class="totals">
+          <div class="row sub"><span>Subtotal</span><span class="v">${money(c.sub)}</span></div>
+          ${Number(inv.taxRate||0)>0?`<div class="row sub"><span>Tax (${Number(inv.taxRate||0)}%)</span><span class="v">${money(c.tax)}</span></div>`:''}
+          <div class="row grand"><span>Total</span><span class="v">${money(c.total)}</span></div>
+          ${c.paid>0?`<div class="row paid-row"><span>Payments Received</span><span class="v">−${money(c.paid)}</span></div>`:''}
+          <div class="due ${isPaid?'zero':''}"><span>${isPaid?'PAID IN FULL':'BALANCE DUE'}</span><span class="v">${money(balDue)}</span></div>
+        </div>
       </div>
-    </header>
-    <section class="meta">
-      <div class="meta-box">
-        <div class="lbl">Bill To</div>
-        <div class="v"><strong>${esc(j.customerName||'Customer')}</strong>${j.billingAddress?'\n'+esc(j.billingAddress):(j.address?'\n'+esc(j.address):'')}${j.customerPhone?'\n'+esc(j.customerPhone):''}${j.customerEmail?'\n'+esc(j.customerEmail):''}</div>
+      ${(co.phone||co.email)?`<div class="pay-info">
+        <div class="blk"><div class="lbl">Questions?</div><div class="v">${esc(co.name||'Waterfront Solutions')}${co.phone?'\n'+esc(co.phone):''}${co.email?'\n'+esc(co.email):''}</div></div>
+        <div class="blk"><div class="lbl">Make Checks Payable To</div><div class="v">${esc(co.name||'Waterfront Solutions')}${co.address?'\n'+esc(co.address):''}</div></div>
+      </div>`:''}
+      ${inv.notes?`<div class="notes"><div class="lbl">Notes</div>${esc(inv.notes).replace(/\n/g,'<br>')}</div>`:''}
+      ${inv.terms?`<div class="terms"><div class="lbl">Terms &amp; Conditions</div>${esc(inv.terms)}</div>`:''}
+      <div class="ft">
+        <div class="thanks">Thank you for your business!</div>
+        ${esc(co.name||'Waterfront Solutions')}${co.phone?'  ·  '+esc(co.phone):''}${co.email?'  ·  '+esc(co.email):''}${co.website?'  ·  '+esc(co.website):''}
       </div>
-      <div class="meta-box">
-        <div class="lbl">Project</div>
-        <div class="v"><strong>${esc(j.name||'')}</strong>${j.address?'\n'+esc(j.address):''}</div>
-        <div style="margin-top:12px"><div class="lbl">Invoice Date</div><div class="v">${fmtDate(inv.date)||''}</div></div>
-        ${inv.dueDate?`<div style="margin-top:8px"><div class="lbl">Due Date</div><div class="v">${fmtDate(inv.dueDate)}</div></div>`:''}
-      </div>
-    </section>
-    <table>
-      <thead><tr><th style="width:50%">Description</th><th class="num">Qty</th><th class="num">Rate</th><th class="num">Amount</th></tr></thead>
-      <tbody>${itemsRows||'<tr><td colspan="4" style="text-align:center;color:#999;padding:20px">No line items</td></tr>'}</tbody>
-    </table>
-    <div class="totals">
-      <div class="row"><span>Subtotal</span><span class="v">${money(c.sub)}</span></div>
-      <div class="row"><span>Tax (${Number(inv.taxRate||0)}%)</span><span class="v">${money(c.tax)}</span></div>
-      <div class="row grand"><span>Total</span><span class="v">${money(c.total)}</span></div>
-      ${c.paid>0?`<div class="row"><span>Paid</span><span class="v">-${money(c.paid)}</span></div>`:''}
-      <div class="due ${c.balance<=0.005?'zero':''}"><span>${c.balance<=0.005?'Paid in Full':'Balance Due'}</span><span class="v">${money(Math.max(0,c.balance))}</span></div>
     </div>
-    ${inv.notes?`<div class="notes"><div class="lbl">Notes</div>${esc(inv.notes).replace(/\n/g,'<br>')}</div>`:''}
-    ${inv.terms?`<div class="terms">${esc(inv.terms)}</div>`:''}
-    <div class="ft">${esc(co.name||'Waterfront Solutions')}${co.phone?' · '+esc(co.phone):''}${co.email?' · '+esc(co.email):''} — Thank you for your business</div>
     </body></html>`);
   w.document.close();
 }
