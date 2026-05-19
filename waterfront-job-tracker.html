@@ -430,6 +430,28 @@ input[type=range]{width:100%;accent-color:var(--green-700);height:4px;cursor:poi
 .form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--green-600)}
 .form-textarea{min-height:80px;resize:vertical}
 .form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
+/* ── Customer typeahead ── */
+.ta-wrap{position:relative}
+.ta-dropdown{
+  position:absolute;top:calc(100% + 2px);left:0;right:0;z-index:20;
+  background:var(--surface);border:1px solid var(--border-md);
+  border-radius:var(--r-sm);box-shadow:0 8px 24px rgba(0,0,0,0.14),0 2px 6px rgba(0,0,0,0.06);
+  max-height:280px;overflow-y:auto;
+}
+.ta-item{
+  display:flex;align-items:center;gap:10px;padding:9px 12px;
+  border-bottom:1px solid var(--border);cursor:pointer;
+  transition:background 0.1s;
+}
+.ta-item:last-child{border-bottom:none}
+.ta-item.hi,.ta-item:hover{background:var(--green-50)}
+@media(prefers-color-scheme:dark){.ta-item.hi,.ta-item:hover{background:rgba(16,163,74,0.12)}}
+.ta-item-main{flex:1;min-width:0}
+.ta-item-name{font-size:13.5px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ta-item-sub{font-size:11.5px;color:var(--text-3);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ta-item-meta{font-size:10.5px;color:var(--text-3);font-weight:600;flex-shrink:0;background:var(--surface-3);padding:3px 7px;border-radius:10px}
+
 .btn-cancel{
   background:none;border:1.5px solid var(--border-md);padding:10px 16px;
   border-radius:var(--r-sm);font-size:13.5px;cursor:pointer;color:var(--text-2);
@@ -2145,6 +2167,100 @@ function aggregateCustomers(){
   return Object.values(map);
 }
 
+// ── Customer typeahead / autofill ──
+function getCustomerSuggestions(query,limit){
+  limit=limit||6;
+  const q=(query||'').toLowerCase().trim();
+  if(q.length<2)return [];
+  const all=aggregateCustomers().filter(c=>c.name&&c.name!=='(No customer name)');
+  // For each customer, also collect all distinct job-site addresses
+  const byKey={};
+  jobs().forEach(j=>{
+    const k=((j.customerName||'').trim()).toLowerCase();
+    if(!k)return;
+    byKey[k]=byKey[k]||new Set();
+    if(j.address)byKey[k].add(j.address);
+    if(j.billingAddress)byKey[k].add(j.billingAddress);
+  });
+  const matches=[];
+  all.forEach(c=>{
+    const name=c.name.toLowerCase();
+    const phone=(c.phone||'').toLowerCase();
+    const email=(c.email||'').toLowerCase();
+    const addrs=Array.from(byKey[c.key]||new Set());
+    const hitName=name.includes(q);
+    const hitPhone=phone.includes(q);
+    const hitEmail=email.includes(q);
+    const hitAddr=addrs.some(a=>a.toLowerCase().includes(q));
+    if(!hitName&&!hitPhone&&!hitEmail&&!hitAddr)return;
+    // Pick the matching address (if any) to show as the suggested fill
+    const matchedAddr=hitAddr?addrs.find(a=>a.toLowerCase().includes(q)):(addrs[0]||c.address||'');
+    matches.push({
+      key:c.key,name:c.name,phone:c.phone,email:c.email,
+      address:matchedAddr,allAddresses:addrs,
+      jobs:c.jobs.length,
+      score:(name.startsWith(q)?0:hitName?1:hitAddr?2:hitPhone?3:4)
+    });
+  });
+  matches.sort((a,b)=>a.score-b.score||b.jobs-a.jobs||a.name.localeCompare(b.name));
+  return matches.slice(0,limit);
+}
+
+function mountCustomerTypeahead(inputEl,onPick){
+  if(!inputEl||inputEl.dataset.taBound==='1')return;
+  inputEl.dataset.taBound='1';
+  inputEl.setAttribute('autocomplete','off');
+  inputEl.setAttribute('autocorrect','off');
+  inputEl.setAttribute('autocapitalize','words');
+  inputEl.setAttribute('spellcheck','false');
+  // Wrap input in a positioning context if not already
+  let wrap=inputEl.parentElement;
+  if(!wrap.classList.contains('ta-wrap')){
+    const w=document.createElement('div');
+    w.className='ta-wrap';
+    inputEl.parentNode.insertBefore(w,inputEl);
+    w.appendChild(inputEl);
+    wrap=w;
+  }
+  const dd=document.createElement('div');
+  dd.className='ta-dropdown';dd.style.display='none';dd.setAttribute('role','listbox');
+  wrap.appendChild(dd);
+  let items=[],hi=-1;
+  const closeDD=()=>{dd.style.display='none';hi=-1};
+  const renderDD=q=>{
+    items=getCustomerSuggestions(q);
+    if(items.length===0){closeDD();return}
+    dd.innerHTML=items.map((m,i)=>`<div class="ta-item ${i===hi?'hi':''}" role="option" data-ta-idx="${i}">
+      <div class="ta-item-main">
+        <div class="ta-item-name">${esc(m.name)}</div>
+        <div class="ta-item-sub">${[m.address,m.phone,m.email].filter(Boolean).map(esc).join(' · ')||'No contact info'}</div>
+      </div>
+      <div class="ta-item-meta">${m.jobs} job${m.jobs!==1?'s':''}</div>
+    </div>`).join('');
+    dd.style.display='block';
+    dd.querySelectorAll('[data-ta-idx]').forEach(el=>{
+      el.addEventListener('mousedown',e=>{
+        e.preventDefault();
+        const i=parseInt(el.dataset.taIdx);
+        if(items[i]){onPick(items[i]);closeDD()}
+      });
+      el.addEventListener('mouseover',()=>{
+        hi=parseInt(el.dataset.taIdx);
+        dd.querySelectorAll('.ta-item').forEach((x,j)=>x.classList.toggle('hi',j===hi));
+      });
+    });
+  };
+  inputEl.addEventListener('input',()=>renderDD(inputEl.value));
+  inputEl.addEventListener('blur',()=>setTimeout(closeDD,150));
+  inputEl.addEventListener('keydown',e=>{
+    if(dd.style.display==='none')return;
+    if(e.key==='ArrowDown'){e.preventDefault();hi=Math.min(items.length-1,hi+1);dd.querySelectorAll('.ta-item').forEach((x,j)=>x.classList.toggle('hi',j===hi))}
+    else if(e.key==='ArrowUp'){e.preventDefault();hi=Math.max(0,hi-1);dd.querySelectorAll('.ta-item').forEach((x,j)=>x.classList.toggle('hi',j===hi))}
+    else if(e.key==='Enter'&&hi>=0){e.preventDefault();onPick(items[hi]);closeDD()}
+    else if(e.key==='Escape'){closeDD()}
+  });
+}
+
 function renderCustomersView(){
   const list=aggregateCustomers();
   // KPIs across all customers
@@ -3667,6 +3783,23 @@ function showJobModal(mode,job){
   $('mbd').onclick=e=>{if(e.target===e.currentTarget)closeModal()};
   $('f-assigned').onchange=function(){$('custom-wrap').style.display=this.value==='__custom__'?'block':'none'};
   if(j.assigned&&S.members.includes(j.assigned))$('f-assigned').value=j.assigned;
+
+  // ── Customer autofill: typeahead on name, job-site address, and billing address ──
+  const fillFromCustomer=(m,opts)=>{
+    opts=opts||{};
+    if(m.name)$('f-cust-name').value=m.name;
+    if(m.phone&&!$('f-cust-phone').value.trim())$('f-cust-phone').value=m.phone;
+    if(m.email&&!$('f-cust-email').value.trim())$('f-cust-email').value=m.email;
+    if(m.address){
+      if(opts.fillJobAddr&&!$('f-addr').value.trim())$('f-addr').value=m.address;
+      if(!$('f-bill-addr').value.trim())$('f-bill-addr').value=m.address;
+    }
+    toast('Filled from '+m.name+' ('+m.jobs+' prior job'+(m.jobs!==1?'s':'')+')','photo');
+  };
+  mountCustomerTypeahead($('f-cust-name'),m=>fillFromCustomer(m,{fillJobAddr:!$('f-addr').value.trim()}));
+  mountCustomerTypeahead($('f-addr'),m=>{$('f-addr').value=m.address||$('f-addr').value;fillFromCustomer(m,{fillJobAddr:false})});
+  mountCustomerTypeahead($('f-bill-addr'),m=>{$('f-bill-addr').value=m.address||$('f-bill-addr').value;fillFromCustomer(m,{fillJobAddr:false})});
+
   $('btn-sv').onclick=async()=>{
     const name=$('f-name').value.trim();
     if(!name){toast('Please enter a job name','');return}
