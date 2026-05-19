@@ -808,6 +808,46 @@ input[type=range]{width:100%;accent-color:var(--green-700);height:4px;cursor:poi
 .lb-stats{font-size:12px;color:var(--text-3);font-weight:600;text-align:right}
 .lb-stats strong{color:var(--text);font-size:13px}
 
+/* Pipeline funnel */
+.funnel{display:flex;flex-direction:column;gap:6px}
+.funnel-row{display:grid;grid-template-columns:110px 1fr 150px 48px;gap:10px;align-items:center;font-size:12.5px}
+.funnel-lbl{font-weight:600;color:var(--text-2);font-size:12px}
+.funnel-track{height:22px;background:var(--surface-3);border-radius:4px;overflow:hidden}
+.funnel-fill{height:100%;background:linear-gradient(90deg,var(--green-700),var(--green-400));border-radius:4px;transition:width 0.4s}
+.funnel-cnt{font-size:11.5px;color:var(--text-3);text-align:right;font-variant-numeric:tabular-nums}
+.funnel-cnt strong{color:var(--text);font-size:12.5px;font-weight:700;margin-right:2px}
+.funnel-conv{font-size:11.5px;color:var(--green-700);font-weight:700;text-align:right;font-variant-numeric:tabular-nums}
+@media(max-width:520px){
+  .funnel-row{grid-template-columns:90px 1fr 40px;row-gap:2px}
+  .funnel-cnt{grid-column:1/-1;text-align:left;padding-left:100px}
+}
+
+/* Cash flow chart (paired bars) */
+.cash-chart{gap:10px}
+.cash-bar-wrap{flex:1;display:flex;flex-direction:column;align-items:center;height:100%;position:relative;min-width:0}
+.cash-bars{flex:1;display:flex;align-items:flex-end;gap:3px;width:100%;justify-content:center}
+.cash-bar{flex:1;border-radius:3px 3px 0 0;min-height:2px;max-width:30px}
+.cash-bar.inv{background:linear-gradient(180deg,var(--green-700),var(--green-400))}
+.cash-bar.col{background:linear-gradient(180deg,#0284c7,#38bdf8)}
+.cash-bar-wrap .report-bar-label{position:static;transform:none;margin-top:6px}
+.cash-legend{display:flex;gap:14px;justify-content:center;margin-top:6px;font-size:11.5px;color:var(--text-2);font-weight:600}
+.cash-key{display:inline-flex;align-items:center;gap:5px}
+.cash-dot{width:10px;height:10px;border-radius:2px;display:inline-block}
+.cash-dot.inv{background:var(--green-600)}
+.cash-dot.col{background:#0284c7}
+
+/* Job type performance table */
+.type-table{display:flex;flex-direction:column}
+.type-row{display:grid;grid-template-columns:1.4fr 50px 50px 60px 80px 90px;gap:8px;align-items:center;padding:8px 4px;border-bottom:1px solid var(--border);font-size:12.5px}
+.type-row.type-hd{font-size:10px;color:var(--text-3);text-transform:uppercase;letter-spacing:0.06em;font-weight:700;border-bottom:1px solid var(--border)}
+.type-row .num{text-align:right;font-variant-numeric:tabular-nums}
+.type-row:last-child{border-bottom:none}
+@media(max-width:520px){
+  .type-row{grid-template-columns:1.2fr 40px 50px 70px;gap:6px;font-size:12px}
+  .type-row .num:nth-child(5),.type-row .num:nth-child(6){display:none}
+  .type-row.type-hd div:nth-child(5),.type-row.type-hd div:nth-child(6){display:none}
+}
+
 /* ── MAP ── */
 .map-wrap{height:calc(100dvh - var(--header-h) - var(--nav-h) - 110px);min-height:380px;border-radius:var(--r-md);overflow:hidden;border:1px solid var(--border);box-shadow:var(--shadow-sm);position:relative}
 #leaflet-map{height:100%;width:100%}
@@ -1071,6 +1111,48 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
   .li-row input{font-size:13px;padding:7px 8px}
 }
 
+/* ── CUSTOMERS VIEW ── */
+.customer-list{display:flex;flex-direction:column;gap:8px;margin-bottom:14px}
+.customer-card{
+  display:flex;align-items:center;gap:12px;
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r-md);padding:12px 14px;cursor:pointer;
+  transition:all 0.15s;
+}
+.customer-card:hover{border-color:var(--green-600);transform:translateY(-1px);box-shadow:var(--shadow-sm)}
+.cust-ava{
+  width:42px;height:42px;border-radius:50%;flex-shrink:0;
+  background:linear-gradient(135deg,var(--green-700),var(--green-400));
+  color:#fff;font-weight:700;font-size:14px;
+  display:flex;align-items:center;justify-content:center;
+}
+.cust-main{flex:1;min-width:0}
+.cust-name{font-size:14.5px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.cust-badge{font-size:10px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;padding:2px 7px;border-radius:10px}
+.cust-badge.repeat{background:var(--gold-light);color:#92400e}
+.cust-badge.bal{background:var(--red-light);color:var(--red)}
+@media(prefers-color-scheme:dark){
+  .cust-badge.repeat{background:#3d2800;color:#fbbf24}
+  .cust-badge.bal{background:#2d1515;color:#fca5a5}
+}
+.cust-meta{font-size:11.5px;color:var(--text-3);margin-top:3px;display:flex;flex-wrap:wrap;gap:10px}
+.cust-stats{font-size:11.5px;color:var(--text-2);margin-top:6px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.cust-stats .dot{width:6px;height:6px;border-radius:50%;display:inline-block}
+.cust-stats .dot-a{background:#16a34a}
+.cust-stats .dot-c{background:#0284c7}
+.cust-stats .dot-l{background:var(--gold)}
+.cust-amt{text-align:right;flex-shrink:0;min-width:110px}
+.cust-amt-val{font-size:15px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--text)}
+.cust-amt-lbl{font-size:10.5px;color:var(--text-3);margin-top:1px;text-transform:uppercase;letter-spacing:0.04em}
+.cust-amt-bal{font-size:11.5px;color:var(--orange);font-weight:700;margin-top:4px;font-variant-numeric:tabular-nums}
+.cust-amt-paid{font-size:11px;color:var(--green-700);font-weight:600;margin-top:4px}
+@media(max-width:520px){
+  .customer-card{flex-wrap:wrap}
+  .cust-amt{text-align:left;width:100%;border-top:1px solid var(--border);padding-top:8px;margin-top:4px}
+  .cust-amt-lbl{display:inline}
+  .cust-amt-val{display:inline;margin-right:6px}
+}
+
 /* ── INVOICES VIEW ── */
 .aging-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:4px}
 @media(max-width:520px){.aging-grid{grid-template-columns:repeat(3,1fr)}}
@@ -1185,6 +1267,10 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25zM6.75 12h.008v.008H6.75V12zm0 3h.008v.008H6.75V15zm0 3h.008v.008H6.75V18z"/></svg>
     Invoices
   </button>
+  <button class="nav-btn" data-view="customers">
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M17.982 18.725A7.488 7.488 0 0012 15.75a7.488 7.488 0 00-5.982 2.975m11.963 0a9 9 0 10-11.963 0m11.963 0A8.966 8.966 0 0112 21a8.966 8.966 0 01-5.982-2.275M15 9.75a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+    Customers
+  </button>
   <button class="nav-btn" data-view="map">
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 6.75V15m6-6v8.25m.503 3.498l4.875-2.437c.381-.19.622-.58.622-1.006V4.82c0-.836-.88-1.38-1.628-1.006l-3.869 1.934c-.317.159-.69.159-1.006 0L9.503 3.252a1.125 1.125 0 00-1.006 0L3.622 5.689C3.24 5.88 3 6.27 3 6.695V19.18c0 .836.88 1.38 1.628 1.006l3.869-1.934c.317-.159.69-.159 1.006 0l4.994 2.497c.317.158.69.158 1.006 0z"/></svg>
     Map
@@ -1220,7 +1306,7 @@ try{const s=localStorage.getItem('wfs_fb');if(s)FIREBASE_CONFIG=JSON.parse(s)}ca
 // ══ State ══
 let DB=null;
 let MAP=null,MAP_MARKERS=[];
-const S={jobs:{},activity:[],members:[],view:'dashboard',detail:null,detailTab:'overview',filter:'all',search:'',photoCat:'all',calMonth:new Date().getMonth(),calYear:new Date().getFullYear(),calSelected:null,calMode:localStorage.getItem('wfs_calmode')||'month',reportRange:'90',sort:localStorage.getItem('wfs_sort')||'newest',sortOpen:false,bulkMode:false,bulkSel:new Set(),invFilter:'all',invSearch:'',invSort:'date',user:localStorage.getItem('wfs_user')||'',notifReadAt:parseInt(localStorage.getItem('wfs_notif_read')||'0',10)};
+const S={jobs:{},activity:[],members:[],view:'dashboard',detail:null,detailTab:'overview',filter:'all',search:'',photoCat:'all',calMonth:new Date().getMonth(),calYear:new Date().getFullYear(),calSelected:null,calMode:localStorage.getItem('wfs_calmode')||'month',reportRange:'90',sort:localStorage.getItem('wfs_sort')||'newest',sortOpen:false,bulkMode:false,bulkSel:new Set(),invFilter:'all',invSearch:'',invSort:'date',custSearch:'',custSort:'revenue',user:localStorage.getItem('wfs_user')||'',notifReadAt:parseInt(localStorage.getItem('wfs_notif_read')||'0',10)};
 const UNDO={stack:[],push(op){this.stack.push(op);if(this.stack.length>20)this.stack.shift()},pop(){return this.stack.pop()}};
 
 // ── Company info for invoice letterhead (editable via Settings)
@@ -1367,6 +1453,7 @@ function render(){
   else if(S.view==='dashboard')c.innerHTML=renderDashboard();
   else if(S.view==='schedule')c.innerHTML=renderSchedule();
   else if(S.view==='invoices')c.innerHTML=renderInvoicesView();
+  else if(S.view==='customers')c.innerHTML=renderCustomersView();
   else if(S.view==='map')c.innerHTML=renderMap();
   else if(S.view==='reports')c.innerHTML=renderReports();
   else if(S.view==='activity')c.innerHTML=renderActivity();
@@ -1904,6 +1991,137 @@ function showJobPickerModal(onPick){
   });
 }
 
+// ══ Customers view (deduped roll-up of all jobs by customer) ══
+function aggregateCustomers(){
+  const all=jobs();
+  const map={};
+  all.forEach(j=>{
+    const rawName=(j.customerName||'').trim();
+    const key=rawName?rawName.toLowerCase():('__nojob_'+j.id);
+    if(!map[key]){
+      map[key]={
+        key,name:rawName||'(No customer name)',phone:'',email:'',address:'',
+        jobs:[],active:0,complete:0,leads:0,
+        totalInvoiced:0,totalPaid:0,outstanding:0,
+        firstSeen:Infinity,lastActivity:0
+      };
+    }
+    const c=map[key];
+    c.jobs.push(j);
+    if(j.status==='complete')c.complete++;
+    else if(j.status==='active')c.active++;
+    else if(j.status==='lead')c.leads++;
+    const invTot=invoiceTotals(j);
+    const inv=invTot?invTot.total:Number(j.invoiced||0);
+    const paid=invTot?invTot.paid:Number(j.paid||0);
+    c.totalInvoiced+=inv;
+    c.totalPaid+=paid;
+    c.outstanding+=Math.max(0,inv-paid);
+    if(!c.phone&&j.customerPhone)c.phone=j.customerPhone;
+    if(!c.email&&j.customerEmail)c.email=j.customerEmail;
+    if(!c.address&&(j.billingAddress||j.address))c.address=j.billingAddress||j.address;
+    if(j.created&&j.created<c.firstSeen)c.firstSeen=j.created;
+    const last=Math.max(j.completedAt||0,j.created||0);
+    if(last>c.lastActivity)c.lastActivity=last;
+  });
+  return Object.values(map);
+}
+
+function renderCustomersView(){
+  const list=aggregateCustomers();
+  // KPIs across all customers
+  const totalCust=list.length;
+  const repeat=list.filter(c=>c.jobs.length>1).length;
+  const totalLTV=list.reduce((s,c)=>s+c.totalInvoiced,0);
+  const avgLTV=totalCust>0?totalLTV/totalCust:0;
+  const totalOutstanding=list.reduce((s,c)=>s+c.outstanding,0);
+  const withOutstanding=list.filter(c=>c.outstanding>0.005).length;
+
+  // Filter + sort
+  const q=(S.custSearch||'').toLowerCase().trim();
+  let filtered=q?list.filter(c=>
+    c.name.toLowerCase().includes(q)||
+    (c.phone||'').toLowerCase().includes(q)||
+    (c.email||'').toLowerCase().includes(q)||
+    (c.address||'').toLowerCase().includes(q)
+  ):list.slice();
+  const sortBy=S.custSort||'revenue';
+  const sorters={
+    revenue:(a,b)=>b.totalInvoiced-a.totalInvoiced,
+    outstanding:(a,b)=>b.outstanding-a.outstanding,
+    jobs:(a,b)=>b.jobs.length-a.jobs.length,
+    recent:(a,b)=>b.lastActivity-a.lastActivity,
+    name:(a,b)=>a.name.localeCompare(b.name),
+  };
+  filtered.sort(sorters[sortBy]||sorters.revenue);
+
+  return `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+      <div>
+        <div style="font-size:11px;color:var(--text-3);text-transform:uppercase;letter-spacing:0.06em;font-weight:700">Contacts</div>
+        <div style="font-size:20px;font-weight:700;margin-top:2px">Customers</div>
+      </div>
+    </div>
+
+    <div class="kpi-grid">
+      <div class="kpi-card accent"><div class="kpi-label">Total Customers</div><div class="kpi-value">${totalCust}</div><div class="kpi-sub">${repeat} repeat${repeat!==1?'s':''}</div></div>
+      <div class="kpi-card"><div class="kpi-label">Lifetime Value</div><div class="kpi-value">${money(totalLTV)}</div><div class="kpi-sub">${money(avgLTV)} avg</div></div>
+      <div class="kpi-card"><div class="kpi-label">Outstanding</div><div class="kpi-value" style="color:${totalOutstanding>0?'var(--orange)':'var(--text)'}">${money(totalOutstanding)}</div><div class="kpi-sub">${withOutstanding} with balance</div></div>
+      <div class="kpi-card"><div class="kpi-label">Repeat Rate</div><div class="kpi-value">${totalCust>0?((repeat/totalCust)*100).toFixed(0):0}%</div><div class="kpi-sub">of all customers</div></div>
+    </div>
+
+    <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+      <div style="flex:1;min-width:200px">
+        <input class="search" id="cust-search" placeholder="Search customers, phone, email…" value="${esc(S.custSearch)}" aria-label="Search customers">
+      </div>
+      <select class="form-select" id="cust-sort" style="max-width:180px;font-size:13px;padding:8px 10px" aria-label="Sort customers">
+        <option value="revenue" ${sortBy==='revenue'?'selected':''}>Top Revenue</option>
+        <option value="outstanding" ${sortBy==='outstanding'?'selected':''}>Outstanding Balance</option>
+        <option value="jobs" ${sortBy==='jobs'?'selected':''}>Most Jobs</option>
+        <option value="recent" ${sortBy==='recent'?'selected':''}>Recently Active</option>
+        <option value="name" ${sortBy==='name'?'selected':''}>Name A–Z</option>
+      </select>
+    </div>
+
+    <div class="customer-list">
+      ${filtered.length===0?`<div class="empty" style="padding:40px 20px">
+        <h3 style="font-size:15px;margin-bottom:6px">${list.length===0?'No customers yet':'No matches'}</h3>
+        <p style="font-size:13px;color:var(--text-3)">${list.length===0?'Add a job with a customer name and they\'ll appear here.':'Try a different search.'}</p>
+      </div>`:filtered.map(c=>{
+        const isRepeat=c.jobs.length>1;
+        const hasBalance=c.outstanding>0.005;
+        return `<div class="customer-card" data-cust-name="${esc(c.name)}">
+          <div class="cust-ava">${initials(c.name)}</div>
+          <div class="cust-main">
+            <div class="cust-name">
+              ${esc(c.name)}
+              ${isRepeat?`<span class="cust-badge repeat" title="${c.jobs.length} jobs">★ Repeat</span>`:''}
+              ${hasBalance?'<span class="cust-badge bal">Balance Due</span>':''}
+            </div>
+            <div class="cust-meta">
+              ${c.phone?`<span>📞 ${esc(c.phone)}</span>`:''}
+              ${c.email?`<span>✉ ${esc(c.email)}</span>`:''}
+              ${c.address?`<span>📍 ${esc(c.address)}</span>`:''}
+            </div>
+            <div class="cust-stats">
+              <span><strong>${c.jobs.length}</strong> job${c.jobs.length!==1?'s':''}</span>
+              ${c.active?`<span class="dot dot-a"></span><span>${c.active} active</span>`:''}
+              ${c.complete?`<span class="dot dot-c"></span><span>${c.complete} done</span>`:''}
+              ${c.leads?`<span class="dot dot-l"></span><span>${c.leads} lead${c.leads!==1?'s':''}</span>`:''}
+              <span style="margin-left:auto;color:var(--text-3)">Last: ${c.lastActivity?fmtDate(new Date(c.lastActivity).toISOString().slice(0,10)):'—'}</span>
+            </div>
+          </div>
+          <div class="cust-amt">
+            <div class="cust-amt-val">${money(c.totalInvoiced)}</div>
+            <div class="cust-amt-lbl">lifetime billed</div>
+            ${hasBalance?`<div class="cust-amt-bal">${money(c.outstanding)} due</div>`:`<div class="cust-amt-paid">Paid up</div>`}
+          </div>
+        </div>`;
+      }).join('')}
+    </div>
+  `;
+}
+
 // ── Build polished HTML email body for an invoice ──
 function buildInvoiceEmailHTML(j,inv,customMsg){
   const c=calcInvoice(inv);
@@ -2258,6 +2476,66 @@ function renderReports(){
   });
   const leaderboard=Object.values(byMember).sort((a,b)=>b.revenue-a.revenue).slice(0,8);
 
+  // ── Pipeline funnel (count + value at each stage) ──
+  const stageBuckets={};STAGES.forEach(s=>stageBuckets[s]={count:0,value:0});
+  inRange.forEach(j=>{
+    const s=jobStage(j);
+    if(stageBuckets[s]){stageBuckets[s].count++;stageBuckets[s].value+=Number(j.value||0)}
+  });
+  const maxStage=Math.max(1,...STAGES.map(s=>stageBuckets[s].count));
+
+  // ── Top customers (within range) ──
+  const byCust={};
+  inRange.forEach(j=>{
+    const n=(j.customerName||'').trim();
+    if(!n)return;
+    if(!byCust[n])byCust[n]={name:n,jobs:0,revenue:0,outstanding:0};
+    byCust[n].jobs++;
+    const inv=Number(j.invoiced||0),paid=Number(j.paid||0);
+    byCust[n].revenue+=inv;
+    byCust[n].outstanding+=Math.max(0,inv-paid);
+  });
+  const topCustomers=Object.values(byCust).sort((a,b)=>b.revenue-a.revenue).slice(0,8);
+
+  // ── Cash flow: invoiced vs collected per month ──
+  const cashMonths=months.map(m=>({label:m.label,key:m.key,invoiced:0,collected:0}));
+  all.forEach(j=>{
+    (j.invoices||[]).forEach(iv=>{
+      if(!iv.date)return;
+      const d=new Date(iv.date);if(isNaN(d))return;
+      const k=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+      const m=cashMonths.find(x=>x.key===k);
+      if(m){const cc=calcInvoice(iv);m.invoiced+=cc.total;m.collected+=cc.paid}
+    });
+  });
+  const maxCash=Math.max(1,...cashMonths.flatMap(m=>[m.invoiced,m.collected]));
+
+  // ── Job type performance ──
+  const byType={};
+  inRange.forEach(j=>{
+    const t=j.type||'Other';
+    if(!byType[t])byType[t]={type:t,count:0,won:0,value:0,revenue:0};
+    byType[t].count++;
+    byType[t].value+=Number(j.value||0);
+    if(j.status==='complete'){byType[t].won++;byType[t].revenue+=Number(j.invoiced||j.value||0)}
+  });
+  const typeRows=Object.values(byType).sort((a,b)=>b.revenue-a.revenue);
+
+  // ── Cycle time (lead → complete) ──
+  let cycleSum=0,cycleN=0;
+  const cycleByType={};
+  all.forEach(j=>{
+    if(j.status!=='complete'||!j.created||!j.completedAt)return;
+    if(cutoff>0&&(j.completedAt||0)<cutoff)return;
+    const days=Math.max(0,Math.round((j.completedAt-j.created)/86400000));
+    cycleSum+=days;cycleN++;
+    const t=j.type||'Other';
+    if(!cycleByType[t])cycleByType[t]={type:t,sum:0,n:0};
+    cycleByType[t].sum+=days;cycleByType[t].n++;
+  });
+  const avgCycle=cycleN>0?Math.round(cycleSum/cycleN):0;
+  const cycleRows=Object.values(cycleByType).map(c=>({type:c.type,avg:Math.round(c.sum/c.n),n:c.n})).sort((a,b)=>a.avg-b.avg);
+
   // Donut chart for win rate
   const circumference=2*Math.PI*52;
   const donutDash=(winRate/100)*circumference;
@@ -2348,6 +2626,105 @@ function renderReports(){
             </div>`;
           }).join('')}
         </div>`}
+    </div>
+
+    <div class="report-section">
+      <div class="report-hd">Pipeline Funnel <span class="kpi-sub">Jobs at each stage</span></div>
+      <div class="funnel">
+        ${STAGES.map((s,i)=>{
+          const b=stageBuckets[s];
+          const pct=(b.count/maxStage)*100;
+          const conv=i>0&&stageBuckets[STAGES[i-1]].count>0?((b.count/stageBuckets[STAGES[i-1]].count)*100).toFixed(0):null;
+          return `<div class="funnel-row">
+            <div class="funnel-lbl">${esc(s)}</div>
+            <div class="funnel-track"><div class="funnel-fill" style="width:${Math.max(2,pct)}%"></div></div>
+            <div class="funnel-cnt"><strong>${b.count}</strong> job${b.count!==1?'s':''}${b.value>0?' · '+money(b.value):''}</div>
+            ${conv!==null?`<div class="funnel-conv">${conv}%</div>`:'<div class="funnel-conv"></div>'}
+          </div>`;
+        }).join('')}
+      </div>
+      <div style="font-size:11px;color:var(--text-3);margin-top:8px">Right column shows conversion from the previous stage.</div>
+    </div>
+
+    <div class="report-section">
+      <div class="report-hd">Cash Flow <span class="kpi-sub">Invoiced vs Collected · last 6 months</span></div>
+      <div class="report-chart cash-chart">
+        ${cashMonths.map(m=>{
+          const hi=(m.invoiced/maxCash)*100;
+          const hc=(m.collected/maxCash)*100;
+          return `<div class="cash-bar-wrap">
+            <div class="cash-bars">
+              <div class="cash-bar inv" style="height:${Math.max(2,hi)}%" title="Invoiced: ${money(m.invoiced)}"></div>
+              <div class="cash-bar col" style="height:${Math.max(2,hc)}%" title="Collected: ${money(m.collected)}"></div>
+            </div>
+            <div class="report-bar-label">${m.label}</div>
+          </div>`;
+        }).join('')}
+      </div>
+      <div class="report-x-pad"></div>
+      <div class="cash-legend">
+        <span class="cash-key"><span class="cash-dot inv"></span>Invoiced</span>
+        <span class="cash-key"><span class="cash-dot col"></span>Collected</span>
+      </div>
+    </div>
+
+    <div class="report-section">
+      <div class="report-hd">Top Customers <span class="kpi-sub">By revenue in range</span></div>
+      ${topCustomers.length===0?'<p style="font-size:13px;color:var(--text-3);padding:4px 0">No customer revenue yet for this range.</p>'
+        :`<div style="display:flex;flex-direction:column;gap:6px">
+          ${topCustomers.map((c,i)=>`<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)">
+            <div class="lb-rank ${i===0?'gold':i===1?'silver':i===2?'bronze':''}">${i+1}</div>
+            <div style="flex:1;min-width:0">
+              <div style="font-weight:600;font-size:13.5px">${esc(c.name)}</div>
+              <div style="font-size:11.5px;color:var(--text-3)">${c.jobs} job${c.jobs!==1?'s':''}${c.outstanding>0.005?' · '+money(c.outstanding)+' outstanding':''}</div>
+            </div>
+            <div style="text-align:right">
+              <div style="font-weight:700;font-size:14px">${money(c.revenue)}</div>
+              <div style="font-size:11px;color:var(--text-3)">revenue</div>
+            </div>
+          </div>`).join('')}
+        </div>`}
+    </div>
+
+    <div class="report-section">
+      <div class="report-hd">Job Type Performance <span class="kpi-sub">${typeRows.length} type${typeRows.length!==1?'s':''}</span></div>
+      ${typeRows.length===0?'<p style="font-size:13px;color:var(--text-3);padding:4px 0">Set the Job Type on jobs to see breakdown.</p>'
+        :`<div class="type-table">
+          <div class="type-row type-hd"><div>Type</div><div class="num">Jobs</div><div class="num">Won</div><div class="num">Win %</div><div class="num">Avg $</div><div class="num">Revenue</div></div>
+          ${typeRows.map(t=>{
+            const win=t.count>0?(t.won/t.count)*100:0;
+            const avg=t.won>0?t.revenue/t.won:0;
+            return `<div class="type-row">
+              <div><strong>${esc(t.type)}</strong></div>
+              <div class="num">${t.count}</div>
+              <div class="num">${t.won}</div>
+              <div class="num">${win.toFixed(0)}%</div>
+              <div class="num">${money(avg)}</div>
+              <div class="num"><strong>${money(t.revenue)}</strong></div>
+            </div>`;
+          }).join('')}
+        </div>`}
+    </div>
+
+    <div class="report-section">
+      <div class="report-hd">Cycle Time <span class="kpi-sub">Avg days lead → complete</span></div>
+      ${cycleN===0?'<p style="font-size:13px;color:var(--text-3);padding:4px 0">Complete some jobs to see cycle time.</p>'
+        :`<div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:10px">
+          <div style="text-align:center;padding:6px 18px 6px 0;border-right:1px solid var(--border)">
+            <div style="font-size:28px;font-weight:700;color:var(--green-700);line-height:1">${avgCycle}</div>
+            <div style="font-size:11px;color:var(--text-3);text-transform:uppercase;letter-spacing:0.06em;font-weight:600;margin-top:3px">avg days</div>
+          </div>
+          <div style="flex:1;min-width:200px">
+            <div style="font-size:12px;color:var(--text-2)">Across ${cycleN} completed job${cycleN!==1?'s':''} in range. Faster cycle time = more throughput.</div>
+          </div>
+        </div>
+        ${cycleRows.length>0?`<div style="display:flex;flex-direction:column;gap:4px">
+          ${cycleRows.map(c=>`<div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--border);font-size:13px">
+            <div style="flex:1">${esc(c.type)}</div>
+            <div style="color:var(--text-3);font-size:11.5px">${c.n} job${c.n!==1?'s':''}</div>
+            <div style="font-weight:700;min-width:60px;text-align:right;font-variant-numeric:tabular-nums">${c.avg} day${c.avg!==1?'s':''}</div>
+          </div>`).join('')}
+        </div>`:''}`}
     </div>
   `;
 }
@@ -3589,7 +3966,7 @@ let CMD={open:false,query:'',idx:0,items:[]};
 function cmdItems(){
   const out=[];
   // Views
-  [['dashboard','Home / Dashboard','home'],['jobs','Jobs','briefcase'],['schedule','Schedule','calendar'],['invoices','Invoices','invoice'],['map','Map','map'],['reports','Reports','chart'],['activity','Activity','list'],['team','Team','team']].forEach(([v,name,ico])=>{
+  [['dashboard','Home / Dashboard','home'],['jobs','Jobs','briefcase'],['schedule','Schedule','calendar'],['invoices','Invoices','invoice'],['customers','Customers','team'],['map','Map','map'],['reports','Reports','chart'],['activity','Activity','list'],['team','Team','team']].forEach(([v,name,ico])=>{
     out.push({type:'view',name:'Go to '+name,sub:'View',ico,run:()=>{S.view=v;S.detail=null;render()}});
   });
   // Actions
@@ -3953,6 +4330,13 @@ function attachHandlers(){
     const j=S.jobs[jobId];if(!j)return;
     const inv=(j.invoices||[]).find(i=>i.id===invId);
     if(inv)emailInvoice(j,inv);
+  });
+  // Customers
+  $('cust-search')?.addEventListener('input',e=>{S.custSearch=e.target.value;render()});
+  $('cust-sort')?.addEventListener('change',e=>{S.custSort=e.target.value;render()});
+  document.querySelectorAll('[data-cust-name]').forEach(card=>card.onclick=()=>{
+    S.view='jobs';S.search=card.dataset.custName;S.filter='all';S.detail=null;render();
+    toast('Showing jobs for '+card.dataset.custName);
   });
   // Reports
   document.querySelectorAll('[data-range]').forEach(c=>c.onclick=()=>{S.reportRange=c.dataset.range;render()});
