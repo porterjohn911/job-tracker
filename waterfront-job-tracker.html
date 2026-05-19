@@ -430,6 +430,28 @@ input[type=range]{width:100%;accent-color:var(--green-700);height:4px;cursor:poi
 .form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--green-600)}
 .form-textarea{min-height:80px;resize:vertical}
 .form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
+/* ── Customer typeahead ── */
+.ta-wrap{position:relative}
+.ta-dropdown{
+  position:absolute;top:calc(100% + 2px);left:0;right:0;z-index:20;
+  background:var(--surface);border:1px solid var(--border-md);
+  border-radius:var(--r-sm);box-shadow:0 8px 24px rgba(0,0,0,0.14),0 2px 6px rgba(0,0,0,0.06);
+  max-height:280px;overflow-y:auto;
+}
+.ta-item{
+  display:flex;align-items:center;gap:10px;padding:9px 12px;
+  border-bottom:1px solid var(--border);cursor:pointer;
+  transition:background 0.1s;
+}
+.ta-item:last-child{border-bottom:none}
+.ta-item.hi,.ta-item:hover{background:var(--green-50)}
+@media(prefers-color-scheme:dark){.ta-item.hi,.ta-item:hover{background:rgba(16,163,74,0.12)}}
+.ta-item-main{flex:1;min-width:0}
+.ta-item-name{font-size:13.5px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ta-item-sub{font-size:11.5px;color:var(--text-3);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ta-item-meta{font-size:10.5px;color:var(--text-3);font-weight:600;flex-shrink:0;background:var(--surface-3);padding:3px 7px;border-radius:10px}
+
 .btn-cancel{
   background:none;border:1.5px solid var(--border-md);padding:10px 16px;
   border-radius:var(--r-sm);font-size:13.5px;cursor:pointer;color:var(--text-2);
@@ -602,7 +624,8 @@ input[type=range]{width:100%;accent-color:var(--green-700);height:4px;cursor:poi
 .detail-tab:not(.active):active{background:rgba(0,0,0,0.05)}
 
 /* ── QUICK ACTIONS ── */
-.quick-actions{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:18px}
+.quick-actions{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:18px}
+@media(max-width:520px){.quick-actions{grid-template-columns:repeat(5,1fr);gap:6px}.qa-btn{padding:8px 4px;font-size:11px}.qa-btn svg{width:16px;height:16px}}
 .qa-btn{
   display:flex;flex-direction:column;align-items:center;gap:5px;
   background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);
@@ -738,7 +761,50 @@ input[type=range]{width:100%;accent-color:var(--green-700);height:4px;cursor:poi
   font-family:var(--font);
 }
 .photo-cat-chip.active{background:var(--green-700);color:#fff;border-color:var(--green-700)}
-.photo-cat-label{position:absolute;top:5px;left:5px;background:rgba(0,0,0,0.55);color:#fff;font-size:9.5px;font-weight:700;padding:2px 6px;border-radius:8px;text-transform:uppercase;letter-spacing:0.04em}
+.photo-cat-label{position:absolute;top:5px;left:5px;background:rgba(0,0,0,0.55);color:#fff;font-size:9.5px;font-weight:700;padding:2px 6px;border-radius:8px;text-transform:uppercase;letter-spacing:0.04em;z-index:2}
+.photo-cat-label.cat-progress{background:rgba(16,163,74,0.92)}
+.photo-cat-label.cat-before{background:rgba(100,116,139,0.92)}
+.photo-cat-label.cat-during{background:rgba(217,119,6,0.92)}
+.photo-cat-label.cat-after{background:rgba(2,132,199,0.92)}
+.photo-cat-label.cat-damage{background:rgba(220,38,38,0.92)}
+.photo-cat-label.cat-docs{background:rgba(91,33,182,0.92)}
+.photo-date-overlay{position:absolute;top:5px;right:5px;background:rgba(0,0,0,0.55);color:#fff;font-size:9.5px;font-weight:600;padding:2px 6px;border-radius:8px;letter-spacing:0.02em;pointer-events:none;z-index:2}
+.photo-caption-overlay{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(0deg,rgba(0,0,0,0.85),transparent);color:#fff;font-size:11px;font-weight:500;padding:14px 8px 5px;line-height:1.3;text-overflow:ellipsis;overflow:hidden;white-space:nowrap;pointer-events:none;z-index:1}
+.photo-controls{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap}
+.photo-view-toggle{display:inline-flex;background:var(--surface-3);border-radius:var(--r-sm);padding:2px;flex-shrink:0}
+.photo-view-toggle button{background:transparent;border:none;padding:6px 10px;color:var(--text-3);cursor:pointer;border-radius:calc(var(--r-sm) - 2px);display:flex;align-items:center;justify-content:center;transition:all 0.15s}
+.photo-view-toggle button.active{background:var(--surface);color:var(--green-700);box-shadow:var(--shadow-sm)}
+.photo-timeline{display:flex;flex-direction:column;gap:18px}
+.photo-tl-group{}
+.photo-tl-date{font-size:12px;font-weight:700;color:var(--text-2);margin-bottom:8px;padding-bottom:5px;border-bottom:1px solid var(--border);text-transform:uppercase;letter-spacing:0.04em;display:flex;justify-content:space-between;align-items:baseline}
+.photo-tl-cnt{font-size:10.5px;color:var(--text-3);font-weight:600;text-transform:none;letter-spacing:0}
+.photo-upload-row{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
+.photo-capture-btn{flex:1;display:flex;align-items:center;justify-content:center;gap:8px;padding:14px 16px;background:var(--surface);border:1.5px dashed var(--border-md);border-radius:var(--r-md);color:var(--text-2);font-size:13.5px;font-weight:600;cursor:pointer;transition:all 0.15s;min-width:140px}
+.photo-capture-btn:hover{border-color:var(--green-600);color:var(--green-700);background:var(--green-50)}
+.photo-capture-btn svg{width:18px;height:18px}
+.photo-capture-btn.primary{background:linear-gradient(135deg,var(--green-700),var(--green-600));border-color:var(--green-700);color:#fff;border-style:solid}
+.photo-capture-btn.primary:hover{filter:brightness(1.05);color:#fff}
+.qa-btn.qa-snap{background:linear-gradient(135deg,rgba(16,163,74,0.08),transparent);border-color:var(--green-600);color:var(--green-700)}
+.qa-btn.qa-snap:hover{background:linear-gradient(135deg,rgba(16,163,74,0.16),rgba(16,163,74,0.04));border-color:var(--green-700)}
+/* Enhanced fullscreen viewer */
+.photo-fs-nav{position:absolute;top:50%;transform:translateY(-50%);width:48px;height:48px;border-radius:50%;background:rgba(0,0,0,0.55);color:#fff;border:none;font-size:32px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;z-index:10;backdrop-filter:blur(6px);transition:background 0.15s}
+.photo-fs-nav:hover{background:rgba(0,0,0,0.75)}
+.photo-fs-nav.prev{left:14px}
+.photo-fs-nav.next{right:14px}
+@media(max-width:480px){.photo-fs-nav{width:40px;height:40px;font-size:26px}}
+.photo-fs-inner{display:flex;flex-direction:column;align-items:center;gap:10px;max-width:95vw;max-height:95dvh}
+.photo-fs-inner img{max-width:95vw;max-height:75dvh;border-radius:var(--r-sm);object-fit:contain;box-shadow:0 8px 32px rgba(0,0,0,0.6)}
+.photo-fs-info{width:100%;max-width:720px;background:rgba(0,0,0,0.6);backdrop-filter:blur(8px);border-radius:var(--r-md);padding:10px 14px;color:#fff}
+.photo-fs-meta{font-size:11.5px;color:rgba(255,255,255,0.85);margin-bottom:8px;display:flex;align-items:center;flex-wrap:wrap;gap:4px}
+.photo-fs-count{margin-left:auto;font-size:11px;color:rgba(255,255,255,0.65);font-weight:600}
+.photo-fs-caption-row{display:flex;gap:6px;align-items:center}
+.photo-fs-caption{flex:1;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.18);color:#fff;border-radius:var(--r-sm);padding:8px 12px;font-size:13px;font-family:inherit;outline:none}
+.photo-fs-caption:focus{border-color:rgba(255,255,255,0.4);background:rgba(255,255,255,0.18)}
+.photo-fs-caption::placeholder{color:rgba(255,255,255,0.5)}
+.photo-fs-save{background:var(--green-600);color:#fff;border:none;padding:8px 14px;border-radius:var(--r-sm);font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit}
+.photo-fs-save:hover{background:var(--green-700)}
+.photo-fs-del{background:rgba(220,38,38,0.6);color:#fff;border:none;padding:8px 12px;border-radius:var(--r-sm);font-size:14px;cursor:pointer}
+.photo-fs-del:hover{background:rgba(220,38,38,0.85)}
 
 /* ── NOTIFICATIONS BELL ── */
 .bell-btn{
@@ -807,6 +873,46 @@ input[type=range]{width:100%;accent-color:var(--green-700);height:4px;cursor:poi
 .lb-name{flex:1;font-size:13.5px;font-weight:500}
 .lb-stats{font-size:12px;color:var(--text-3);font-weight:600;text-align:right}
 .lb-stats strong{color:var(--text);font-size:13px}
+
+/* Pipeline funnel */
+.funnel{display:flex;flex-direction:column;gap:6px}
+.funnel-row{display:grid;grid-template-columns:110px 1fr 150px 48px;gap:10px;align-items:center;font-size:12.5px}
+.funnel-lbl{font-weight:600;color:var(--text-2);font-size:12px}
+.funnel-track{height:22px;background:var(--surface-3);border-radius:4px;overflow:hidden}
+.funnel-fill{height:100%;background:linear-gradient(90deg,var(--green-700),var(--green-400));border-radius:4px;transition:width 0.4s}
+.funnel-cnt{font-size:11.5px;color:var(--text-3);text-align:right;font-variant-numeric:tabular-nums}
+.funnel-cnt strong{color:var(--text);font-size:12.5px;font-weight:700;margin-right:2px}
+.funnel-conv{font-size:11.5px;color:var(--green-700);font-weight:700;text-align:right;font-variant-numeric:tabular-nums}
+@media(max-width:520px){
+  .funnel-row{grid-template-columns:90px 1fr 40px;row-gap:2px}
+  .funnel-cnt{grid-column:1/-1;text-align:left;padding-left:100px}
+}
+
+/* Cash flow chart (paired bars) */
+.cash-chart{gap:10px}
+.cash-bar-wrap{flex:1;display:flex;flex-direction:column;align-items:center;height:100%;position:relative;min-width:0}
+.cash-bars{flex:1;display:flex;align-items:flex-end;gap:3px;width:100%;justify-content:center}
+.cash-bar{flex:1;border-radius:3px 3px 0 0;min-height:2px;max-width:30px}
+.cash-bar.inv{background:linear-gradient(180deg,var(--green-700),var(--green-400))}
+.cash-bar.col{background:linear-gradient(180deg,#0284c7,#38bdf8)}
+.cash-bar-wrap .report-bar-label{position:static;transform:none;margin-top:6px}
+.cash-legend{display:flex;gap:14px;justify-content:center;margin-top:6px;font-size:11.5px;color:var(--text-2);font-weight:600}
+.cash-key{display:inline-flex;align-items:center;gap:5px}
+.cash-dot{width:10px;height:10px;border-radius:2px;display:inline-block}
+.cash-dot.inv{background:var(--green-600)}
+.cash-dot.col{background:#0284c7}
+
+/* Job type performance table */
+.type-table{display:flex;flex-direction:column}
+.type-row{display:grid;grid-template-columns:1.4fr 50px 50px 60px 80px 90px;gap:8px;align-items:center;padding:8px 4px;border-bottom:1px solid var(--border);font-size:12.5px}
+.type-row.type-hd{font-size:10px;color:var(--text-3);text-transform:uppercase;letter-spacing:0.06em;font-weight:700;border-bottom:1px solid var(--border)}
+.type-row .num{text-align:right;font-variant-numeric:tabular-nums}
+.type-row:last-child{border-bottom:none}
+@media(max-width:520px){
+  .type-row{grid-template-columns:1.2fr 40px 50px 70px;gap:6px;font-size:12px}
+  .type-row .num:nth-child(5),.type-row .num:nth-child(6){display:none}
+  .type-row.type-hd div:nth-child(5),.type-row.type-hd div:nth-child(6){display:none}
+}
 
 /* ── MAP ── */
 .map-wrap{height:calc(100dvh - var(--header-h) - var(--nav-h) - 110px);min-height:380px;border-radius:var(--r-md);overflow:hidden;border:1px solid var(--border);box-shadow:var(--shadow-sm);position:relative}
@@ -1065,10 +1171,100 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .inv-total-row .v{font-variant-numeric:tabular-nums;font-weight:600}
 @media(prefers-color-scheme:dark){.inv-total-row.grand{color:var(--green-400)}}
 
+/* ── EXPENSES ── */
+.expense-list{display:flex;flex-direction:column;gap:6px;margin-bottom:8px}
+.expense-row{
+  display:flex;align-items:center;gap:12px;
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r-md);padding:10px 12px;cursor:pointer;
+  transition:all 0.15s;
+}
+.expense-row:hover{border-color:var(--green-600)}
+.exp-cat-pill{
+  font-size:10px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;
+  padding:4px 8px;border-radius:4px;flex-shrink:0;min-width:84px;text-align:center;
+  background:var(--surface-3);color:var(--text-2);
+}
+.exp-cat-pill.exp-materials{background:#dbeafe;color:#1e40af}
+.exp-cat-pill.exp-labor{background:#fef3c7;color:#92400e}
+.exp-cat-pill.exp-subcontractor{background:#ede9fe;color:#5b21b6}
+.exp-cat-pill.exp-equipment{background:#fce7f3;color:#9d174d}
+.exp-cat-pill.exp-fuel{background:#fed7aa;color:#9a3412}
+.exp-cat-pill.exp-permits{background:#dcfce7;color:#166534}
+.exp-cat-pill.exp-rentals{background:#cffafe;color:#155e75}
+.exp-cat-pill.exp-other{background:var(--surface-3);color:var(--text-2)}
+@media(prefers-color-scheme:dark){
+  .exp-cat-pill.exp-materials{background:#1e3a5f;color:#93c5fd}
+  .exp-cat-pill.exp-labor{background:#3d2800;color:#fbbf24}
+  .exp-cat-pill.exp-subcontractor{background:#2e1065;color:#c4b5fd}
+  .exp-cat-pill.exp-equipment{background:#500724;color:#f9a8d4}
+  .exp-cat-pill.exp-fuel{background:#431407;color:#fdba74}
+  .exp-cat-pill.exp-permits{background:#052e16;color:#86efac}
+  .exp-cat-pill.exp-rentals{background:#083344;color:#a5f3fc}
+}
+.exp-main{flex:1;min-width:0}
+.exp-desc{font-size:13px;font-weight:600;color:var(--text);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.exp-flag{font-size:9.5px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;padding:2px 6px;border-radius:3px}
+.exp-flag.bill{background:var(--gold-light);color:#92400e}
+.exp-flag.unpaid{background:var(--red-light);color:var(--red)}
+@media(prefers-color-scheme:dark){
+  .exp-flag.bill{background:#3d2800;color:#fbbf24}
+  .exp-flag.unpaid{background:#2d1515;color:#fca5a5}
+}
+.exp-meta{font-size:11.5px;color:var(--text-3);margin-top:2px}
+.exp-amt{font-size:14px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--text);flex-shrink:0}
+@media(max-width:520px){
+  .expense-row{flex-wrap:wrap;gap:8px}
+  .exp-cat-pill{min-width:auto}
+  .exp-amt{margin-left:auto}
+}
+
 @media(max-width:480px){
   .li-head{grid-template-columns:1fr 56px 80px 80px 24px}
   .li-row{grid-template-columns:1fr 56px 80px 80px 24px}
   .li-row input{font-size:13px;padding:7px 8px}
+}
+
+/* ── CUSTOMERS VIEW ── */
+.customer-list{display:flex;flex-direction:column;gap:8px;margin-bottom:14px}
+.customer-card{
+  display:flex;align-items:center;gap:12px;
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r-md);padding:12px 14px;cursor:pointer;
+  transition:all 0.15s;
+}
+.customer-card:hover{border-color:var(--green-600);transform:translateY(-1px);box-shadow:var(--shadow-sm)}
+.cust-ava{
+  width:42px;height:42px;border-radius:50%;flex-shrink:0;
+  background:linear-gradient(135deg,var(--green-700),var(--green-400));
+  color:#fff;font-weight:700;font-size:14px;
+  display:flex;align-items:center;justify-content:center;
+}
+.cust-main{flex:1;min-width:0}
+.cust-name{font-size:14.5px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.cust-badge{font-size:10px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;padding:2px 7px;border-radius:10px}
+.cust-badge.repeat{background:var(--gold-light);color:#92400e}
+.cust-badge.bal{background:var(--red-light);color:var(--red)}
+@media(prefers-color-scheme:dark){
+  .cust-badge.repeat{background:#3d2800;color:#fbbf24}
+  .cust-badge.bal{background:#2d1515;color:#fca5a5}
+}
+.cust-meta{font-size:11.5px;color:var(--text-3);margin-top:3px;display:flex;flex-wrap:wrap;gap:10px}
+.cust-stats{font-size:11.5px;color:var(--text-2);margin-top:6px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.cust-stats .dot{width:6px;height:6px;border-radius:50%;display:inline-block}
+.cust-stats .dot-a{background:#16a34a}
+.cust-stats .dot-c{background:#0284c7}
+.cust-stats .dot-l{background:var(--gold)}
+.cust-amt{text-align:right;flex-shrink:0;min-width:110px}
+.cust-amt-val{font-size:15px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--text)}
+.cust-amt-lbl{font-size:10.5px;color:var(--text-3);margin-top:1px;text-transform:uppercase;letter-spacing:0.04em}
+.cust-amt-bal{font-size:11.5px;color:var(--orange);font-weight:700;margin-top:4px;font-variant-numeric:tabular-nums}
+.cust-amt-paid{font-size:11px;color:var(--green-700);font-weight:600;margin-top:4px}
+@media(max-width:520px){
+  .customer-card{flex-wrap:wrap}
+  .cust-amt{text-align:left;width:100%;border-top:1px solid var(--border);padding-top:8px;margin-top:4px}
+  .cust-amt-lbl{display:inline}
+  .cust-amt-val{display:inline;margin-right:6px}
 }
 
 /* ── INVOICES VIEW ── */
@@ -1185,6 +1381,10 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25zM6.75 12h.008v.008H6.75V12zm0 3h.008v.008H6.75V15zm0 3h.008v.008H6.75V18z"/></svg>
     Invoices
   </button>
+  <button class="nav-btn" data-view="customers">
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M17.982 18.725A7.488 7.488 0 0012 15.75a7.488 7.488 0 00-5.982 2.975m11.963 0a9 9 0 10-11.963 0m11.963 0A8.966 8.966 0 0112 21a8.966 8.966 0 01-5.982-2.275M15 9.75a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+    Customers
+  </button>
   <button class="nav-btn" data-view="map">
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 6.75V15m6-6v8.25m.503 3.498l4.875-2.437c.381-.19.622-.58.622-1.006V4.82c0-.836-.88-1.38-1.628-1.006l-3.869 1.934c-.317.159-.69.159-1.006 0L9.503 3.252a1.125 1.125 0 00-1.006 0L3.622 5.689C3.24 5.88 3 6.27 3 6.695V19.18c0 .836.88 1.38 1.628 1.006l3.869-1.934c.317-.159.69-.159 1.006 0l4.994 2.497c.317.158.69.158 1.006 0z"/></svg>
     Map
@@ -1220,7 +1420,7 @@ try{const s=localStorage.getItem('wfs_fb');if(s)FIREBASE_CONFIG=JSON.parse(s)}ca
 // ══ State ══
 let DB=null;
 let MAP=null,MAP_MARKERS=[];
-const S={jobs:{},activity:[],members:[],view:'dashboard',detail:null,detailTab:'overview',filter:'all',search:'',photoCat:'all',calMonth:new Date().getMonth(),calYear:new Date().getFullYear(),calSelected:null,calMode:localStorage.getItem('wfs_calmode')||'month',reportRange:'90',sort:localStorage.getItem('wfs_sort')||'newest',sortOpen:false,bulkMode:false,bulkSel:new Set(),invFilter:'all',invSearch:'',invSort:'date',user:localStorage.getItem('wfs_user')||'',notifReadAt:parseInt(localStorage.getItem('wfs_notif_read')||'0',10)};
+const S={jobs:{},activity:[],members:[],view:'dashboard',detail:null,detailTab:'overview',filter:'all',search:'',photoCat:'all',calMonth:new Date().getMonth(),calYear:new Date().getFullYear(),calSelected:null,calMode:localStorage.getItem('wfs_calmode')||'month',reportRange:'90',sort:localStorage.getItem('wfs_sort')||'newest',sortOpen:false,bulkMode:false,bulkSel:new Set(),invFilter:'all',invSearch:'',invSort:'date',custSearch:'',custSort:'revenue',photoView:localStorage.getItem('wfs_photoview')||'grid',user:localStorage.getItem('wfs_user')||'',notifReadAt:parseInt(localStorage.getItem('wfs_notif_read')||'0',10)};
 const UNDO={stack:[],push(op){this.stack.push(op);if(this.stack.length>20)this.stack.shift()},pop(){return this.stack.pop()}};
 
 // ── Company info for invoice letterhead (editable via Settings)
@@ -1241,7 +1441,7 @@ let COMPANY=loadCompany();
 // ── Workflow stages (BuilderTrend / AccuLynx style)
 const STAGES=['Lead','Estimate','Approved','Scheduled','In Progress','Punch List','Complete'];
 const STAGE_TO_STATUS={'Lead':'lead','Estimate':'lead','Approved':'active','Scheduled':'active','In Progress':'active','Punch List':'active','Complete':'complete'};
-const PHOTO_CATS=['all','before','during','after','damage','docs'];
+const PHOTO_CATS=['all','progress','before','during','after','damage','docs'];
 const LEAD_SOURCES=['Referral','Repeat Customer','Google Search','Facebook / Social','Yard Sign','Drive-By','Website','Phone Call','Walk-In','Other'];
 
 // ══ Helpers ══
@@ -1274,6 +1474,19 @@ function fmtShort(s){if(!s)return'';try{const d=new Date(s+(s.length===10?'T00:0
 function daysUntil(s){if(!s)return null;try{const d=new Date(s+(s.length===10?'T00:00:00':''));const t=new Date();t.setHours(0,0,0,0);return Math.round((d-t)/(1000*60*60*24))}catch(e){return null}}
 function jobBalance(j){const inv=Number(j.invoiced||0),paid=Number(j.paid||0);return inv-paid}
 function jobStage(j){return j.stage||(j.status==='complete'?'Complete':j.status==='lead'?'Lead':'In Progress')}
+
+// ── Expense helpers ──
+const EXPENSE_CATEGORIES=['Materials','Labor','Subcontractor','Equipment','Fuel & Travel','Permits & Fees','Rentals','Other'];
+function jobTotalExpenses(j){
+  const ledger=(j.expenses||[]).reduce((s,e)=>s+Number(e.amount||0),0);
+  return ledger+Number(j.costs||0);
+}
+function jobRevenue(j){
+  const invTot=invoiceTotals(j);
+  return invTot?invTot.total:Number(j.invoiced||0);
+}
+function jobProfit(j){return jobRevenue(j)-jobTotalExpenses(j)}
+function jobMargin(j){const r=jobRevenue(j);return r>0?(jobProfit(j)/r)*100:0}
 
 // ── Invoice helpers ──
 function calcInvoice(inv){
@@ -1367,6 +1580,7 @@ function render(){
   else if(S.view==='dashboard')c.innerHTML=renderDashboard();
   else if(S.view==='schedule')c.innerHTML=renderSchedule();
   else if(S.view==='invoices')c.innerHTML=renderInvoicesView();
+  else if(S.view==='customers')c.innerHTML=renderCustomersView();
   else if(S.view==='map')c.innerHTML=renderMap();
   else if(S.view==='reports')c.innerHTML=renderReports();
   else if(S.view==='activity')c.innerHTML=renderActivity();
@@ -1397,6 +1611,9 @@ function renderDashboard(){
   const totalPaid=all.reduce((s,j)=>s+Number(j.paid||0),0);
   const outstanding=totalInvoiced-totalPaid;
   const pipeline=leads.reduce((s,j)=>s+Number(j.value||0),0);
+  const totalExpensesAll=all.reduce((s,j)=>s+jobTotalExpenses(j),0);
+  const netProfitAll=totalInvoiced-totalExpensesAll;
+  const marginAll=totalInvoiced>0?(netProfitAll/totalInvoiced)*100:0;
   // Upcoming: jobs with start date in next 14 days, or not yet started
   const upcoming=all.filter(j=>{
     if(j.status==='complete')return false;
@@ -1438,6 +1655,16 @@ function renderDashboard(){
         <div class="kpi-label">Outstanding</div>
         <div class="kpi-value" style="color:${outstanding>0?'var(--orange)':'var(--green-700)'}">${money(outstanding)}</div>
         <div class="kpi-sub">${outstanding>0?'awaiting payment':'all paid up'}</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Net Profit</div>
+        <div class="kpi-value" style="color:${netProfitAll>=0?'var(--green-700)':'var(--red)'}">${money(netProfitAll)}</div>
+        <div class="kpi-sub">${marginAll.toFixed(1)}% margin · ${money(totalExpensesAll)} expenses</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Win Rate</div>
+        <div class="kpi-value">${(()=>{const decided=done.length+all.filter(j=>j.status==='hold').length;return decided>0?Math.round((done.length/decided)*100):0})()}%</div>
+        <div class="kpi-sub">${done.length} won · ${all.filter(j=>j.status==='hold').length} lost</div>
       </div>
     </div>
 
@@ -1904,6 +2131,231 @@ function showJobPickerModal(onPick){
   });
 }
 
+// ══ Customers view (deduped roll-up of all jobs by customer) ══
+function aggregateCustomers(){
+  const all=jobs();
+  const map={};
+  all.forEach(j=>{
+    const rawName=(j.customerName||'').trim();
+    const key=rawName?rawName.toLowerCase():('__nojob_'+j.id);
+    if(!map[key]){
+      map[key]={
+        key,name:rawName||'(No customer name)',phone:'',email:'',address:'',
+        jobs:[],active:0,complete:0,leads:0,
+        totalInvoiced:0,totalPaid:0,outstanding:0,
+        firstSeen:Infinity,lastActivity:0
+      };
+    }
+    const c=map[key];
+    c.jobs.push(j);
+    if(j.status==='complete')c.complete++;
+    else if(j.status==='active')c.active++;
+    else if(j.status==='lead')c.leads++;
+    const invTot=invoiceTotals(j);
+    const inv=invTot?invTot.total:Number(j.invoiced||0);
+    const paid=invTot?invTot.paid:Number(j.paid||0);
+    c.totalInvoiced+=inv;
+    c.totalPaid+=paid;
+    c.outstanding+=Math.max(0,inv-paid);
+    if(!c.phone&&j.customerPhone)c.phone=j.customerPhone;
+    if(!c.email&&j.customerEmail)c.email=j.customerEmail;
+    if(!c.address&&(j.billingAddress||j.address))c.address=j.billingAddress||j.address;
+    if(j.created&&j.created<c.firstSeen)c.firstSeen=j.created;
+    const last=Math.max(j.completedAt||0,j.created||0);
+    if(last>c.lastActivity)c.lastActivity=last;
+  });
+  return Object.values(map);
+}
+
+// ── Customer typeahead / autofill ──
+function getCustomerSuggestions(query,limit){
+  limit=limit||6;
+  const q=(query||'').toLowerCase().trim();
+  if(q.length<2)return [];
+  const all=aggregateCustomers().filter(c=>c.name&&c.name!=='(No customer name)');
+  // For each customer, also collect all distinct job-site addresses
+  const byKey={};
+  jobs().forEach(j=>{
+    const k=((j.customerName||'').trim()).toLowerCase();
+    if(!k)return;
+    byKey[k]=byKey[k]||new Set();
+    if(j.address)byKey[k].add(j.address);
+    if(j.billingAddress)byKey[k].add(j.billingAddress);
+  });
+  const matches=[];
+  all.forEach(c=>{
+    const name=c.name.toLowerCase();
+    const phone=(c.phone||'').toLowerCase();
+    const email=(c.email||'').toLowerCase();
+    const addrs=Array.from(byKey[c.key]||new Set());
+    const hitName=name.includes(q);
+    const hitPhone=phone.includes(q);
+    const hitEmail=email.includes(q);
+    const hitAddr=addrs.some(a=>a.toLowerCase().includes(q));
+    if(!hitName&&!hitPhone&&!hitEmail&&!hitAddr)return;
+    // Pick the matching address (if any) to show as the suggested fill
+    const matchedAddr=hitAddr?addrs.find(a=>a.toLowerCase().includes(q)):(addrs[0]||c.address||'');
+    matches.push({
+      key:c.key,name:c.name,phone:c.phone,email:c.email,
+      address:matchedAddr,allAddresses:addrs,
+      jobs:c.jobs.length,
+      score:(name.startsWith(q)?0:hitName?1:hitAddr?2:hitPhone?3:4)
+    });
+  });
+  matches.sort((a,b)=>a.score-b.score||b.jobs-a.jobs||a.name.localeCompare(b.name));
+  return matches.slice(0,limit);
+}
+
+function mountCustomerTypeahead(inputEl,onPick){
+  if(!inputEl||inputEl.dataset.taBound==='1')return;
+  inputEl.dataset.taBound='1';
+  inputEl.setAttribute('autocomplete','off');
+  inputEl.setAttribute('autocorrect','off');
+  inputEl.setAttribute('autocapitalize','words');
+  inputEl.setAttribute('spellcheck','false');
+  // Wrap input in a positioning context if not already
+  let wrap=inputEl.parentElement;
+  if(!wrap.classList.contains('ta-wrap')){
+    const w=document.createElement('div');
+    w.className='ta-wrap';
+    inputEl.parentNode.insertBefore(w,inputEl);
+    w.appendChild(inputEl);
+    wrap=w;
+  }
+  const dd=document.createElement('div');
+  dd.className='ta-dropdown';dd.style.display='none';dd.setAttribute('role','listbox');
+  wrap.appendChild(dd);
+  let items=[],hi=-1;
+  const closeDD=()=>{dd.style.display='none';hi=-1};
+  const renderDD=q=>{
+    items=getCustomerSuggestions(q);
+    if(items.length===0){closeDD();return}
+    dd.innerHTML=items.map((m,i)=>`<div class="ta-item ${i===hi?'hi':''}" role="option" data-ta-idx="${i}">
+      <div class="ta-item-main">
+        <div class="ta-item-name">${esc(m.name)}</div>
+        <div class="ta-item-sub">${[m.address,m.phone,m.email].filter(Boolean).map(esc).join(' · ')||'No contact info'}</div>
+      </div>
+      <div class="ta-item-meta">${m.jobs} job${m.jobs!==1?'s':''}</div>
+    </div>`).join('');
+    dd.style.display='block';
+    dd.querySelectorAll('[data-ta-idx]').forEach(el=>{
+      el.addEventListener('mousedown',e=>{
+        e.preventDefault();
+        const i=parseInt(el.dataset.taIdx);
+        if(items[i]){onPick(items[i]);closeDD()}
+      });
+      el.addEventListener('mouseover',()=>{
+        hi=parseInt(el.dataset.taIdx);
+        dd.querySelectorAll('.ta-item').forEach((x,j)=>x.classList.toggle('hi',j===hi));
+      });
+    });
+  };
+  inputEl.addEventListener('input',()=>renderDD(inputEl.value));
+  inputEl.addEventListener('blur',()=>setTimeout(closeDD,150));
+  inputEl.addEventListener('keydown',e=>{
+    if(dd.style.display==='none')return;
+    if(e.key==='ArrowDown'){e.preventDefault();hi=Math.min(items.length-1,hi+1);dd.querySelectorAll('.ta-item').forEach((x,j)=>x.classList.toggle('hi',j===hi))}
+    else if(e.key==='ArrowUp'){e.preventDefault();hi=Math.max(0,hi-1);dd.querySelectorAll('.ta-item').forEach((x,j)=>x.classList.toggle('hi',j===hi))}
+    else if(e.key==='Enter'&&hi>=0){e.preventDefault();onPick(items[hi]);closeDD()}
+    else if(e.key==='Escape'){closeDD()}
+  });
+}
+
+function renderCustomersView(){
+  const list=aggregateCustomers();
+  // KPIs across all customers
+  const totalCust=list.length;
+  const repeat=list.filter(c=>c.jobs.length>1).length;
+  const totalLTV=list.reduce((s,c)=>s+c.totalInvoiced,0);
+  const avgLTV=totalCust>0?totalLTV/totalCust:0;
+  const totalOutstanding=list.reduce((s,c)=>s+c.outstanding,0);
+  const withOutstanding=list.filter(c=>c.outstanding>0.005).length;
+
+  // Filter + sort
+  const q=(S.custSearch||'').toLowerCase().trim();
+  let filtered=q?list.filter(c=>
+    c.name.toLowerCase().includes(q)||
+    (c.phone||'').toLowerCase().includes(q)||
+    (c.email||'').toLowerCase().includes(q)||
+    (c.address||'').toLowerCase().includes(q)
+  ):list.slice();
+  const sortBy=S.custSort||'revenue';
+  const sorters={
+    revenue:(a,b)=>b.totalInvoiced-a.totalInvoiced,
+    outstanding:(a,b)=>b.outstanding-a.outstanding,
+    jobs:(a,b)=>b.jobs.length-a.jobs.length,
+    recent:(a,b)=>b.lastActivity-a.lastActivity,
+    name:(a,b)=>a.name.localeCompare(b.name),
+  };
+  filtered.sort(sorters[sortBy]||sorters.revenue);
+
+  return `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+      <div>
+        <div style="font-size:11px;color:var(--text-3);text-transform:uppercase;letter-spacing:0.06em;font-weight:700">Contacts</div>
+        <div style="font-size:20px;font-weight:700;margin-top:2px">Customers</div>
+      </div>
+    </div>
+
+    <div class="kpi-grid">
+      <div class="kpi-card accent"><div class="kpi-label">Total Customers</div><div class="kpi-value">${totalCust}</div><div class="kpi-sub">${repeat} repeat${repeat!==1?'s':''}</div></div>
+      <div class="kpi-card"><div class="kpi-label">Lifetime Value</div><div class="kpi-value">${money(totalLTV)}</div><div class="kpi-sub">${money(avgLTV)} avg</div></div>
+      <div class="kpi-card"><div class="kpi-label">Outstanding</div><div class="kpi-value" style="color:${totalOutstanding>0?'var(--orange)':'var(--text)'}">${money(totalOutstanding)}</div><div class="kpi-sub">${withOutstanding} with balance</div></div>
+      <div class="kpi-card"><div class="kpi-label">Repeat Rate</div><div class="kpi-value">${totalCust>0?((repeat/totalCust)*100).toFixed(0):0}%</div><div class="kpi-sub">of all customers</div></div>
+    </div>
+
+    <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+      <div style="flex:1;min-width:200px">
+        <input class="search" id="cust-search" placeholder="Search customers, phone, email…" value="${esc(S.custSearch)}" aria-label="Search customers">
+      </div>
+      <select class="form-select" id="cust-sort" style="max-width:180px;font-size:13px;padding:8px 10px" aria-label="Sort customers">
+        <option value="revenue" ${sortBy==='revenue'?'selected':''}>Top Revenue</option>
+        <option value="outstanding" ${sortBy==='outstanding'?'selected':''}>Outstanding Balance</option>
+        <option value="jobs" ${sortBy==='jobs'?'selected':''}>Most Jobs</option>
+        <option value="recent" ${sortBy==='recent'?'selected':''}>Recently Active</option>
+        <option value="name" ${sortBy==='name'?'selected':''}>Name A–Z</option>
+      </select>
+    </div>
+
+    <div class="customer-list">
+      ${filtered.length===0?`<div class="empty" style="padding:40px 20px">
+        <h3 style="font-size:15px;margin-bottom:6px">${list.length===0?'No customers yet':'No matches'}</h3>
+        <p style="font-size:13px;color:var(--text-3)">${list.length===0?'Add a job with a customer name and they\'ll appear here.':'Try a different search.'}</p>
+      </div>`:filtered.map(c=>{
+        const isRepeat=c.jobs.length>1;
+        const hasBalance=c.outstanding>0.005;
+        return `<div class="customer-card" data-cust-name="${esc(c.name)}">
+          <div class="cust-ava">${initials(c.name)}</div>
+          <div class="cust-main">
+            <div class="cust-name">
+              ${esc(c.name)}
+              ${isRepeat?`<span class="cust-badge repeat" title="${c.jobs.length} jobs">★ Repeat</span>`:''}
+              ${hasBalance?'<span class="cust-badge bal">Balance Due</span>':''}
+            </div>
+            <div class="cust-meta">
+              ${c.phone?`<span>📞 ${esc(c.phone)}</span>`:''}
+              ${c.email?`<span>✉ ${esc(c.email)}</span>`:''}
+              ${c.address?`<span>📍 ${esc(c.address)}</span>`:''}
+            </div>
+            <div class="cust-stats">
+              <span><strong>${c.jobs.length}</strong> job${c.jobs.length!==1?'s':''}</span>
+              ${c.active?`<span class="dot dot-a"></span><span>${c.active} active</span>`:''}
+              ${c.complete?`<span class="dot dot-c"></span><span>${c.complete} done</span>`:''}
+              ${c.leads?`<span class="dot dot-l"></span><span>${c.leads} lead${c.leads!==1?'s':''}</span>`:''}
+              <span style="margin-left:auto;color:var(--text-3)">Last: ${c.lastActivity?fmtDate(new Date(c.lastActivity).toISOString().slice(0,10)):'—'}</span>
+            </div>
+          </div>
+          <div class="cust-amt">
+            <div class="cust-amt-val">${money(c.totalInvoiced)}</div>
+            <div class="cust-amt-lbl">lifetime billed</div>
+            ${hasBalance?`<div class="cust-amt-bal">${money(c.outstanding)} due</div>`:`<div class="cust-amt-paid">Paid up</div>`}
+          </div>
+        </div>`;
+      }).join('')}
+    </div>
+  `;
+}
+
 // ── Build polished HTML email body for an invoice ──
 function buildInvoiceEmailHTML(j,inv,customMsg){
   const c=calcInvoice(inv);
@@ -2216,6 +2668,10 @@ function renderReports(){
   const collected=inRange.reduce((s,j)=>s+Number(j.paid||0),0);
   const avgDeal=won>0?revenue/won:0;
   const pipeline=inRange.filter(j=>j.status!=='complete'&&j.status!=='hold').reduce((s,j)=>s+Number(j.value||0),0);
+  const inRangeTotalExpenses=inRange.reduce((s,j)=>s+jobTotalExpenses(j),0);
+  const inRangeTotalRevenue=inRange.reduce((s,j)=>s+jobRevenue(j),0);
+  const inRangeTotalProfit=inRangeTotalRevenue-inRangeTotalExpenses;
+  const inRangeAvgMargin=inRangeTotalRevenue>0?(inRangeTotalProfit/inRangeTotalRevenue)*100:0;
 
   // Monthly revenue chart — last 6 months
   const months=[];
@@ -2258,6 +2714,77 @@ function renderReports(){
   });
   const leaderboard=Object.values(byMember).sort((a,b)=>b.revenue-a.revenue).slice(0,8);
 
+  // ── Pipeline funnel (count + value at each stage) ──
+  const stageBuckets={};STAGES.forEach(s=>stageBuckets[s]={count:0,value:0});
+  inRange.forEach(j=>{
+    const s=jobStage(j);
+    if(stageBuckets[s]){stageBuckets[s].count++;stageBuckets[s].value+=Number(j.value||0)}
+  });
+  const maxStage=Math.max(1,...STAGES.map(s=>stageBuckets[s].count));
+
+  // ── Top customers (within range) ──
+  const byCust={};
+  inRange.forEach(j=>{
+    const n=(j.customerName||'').trim();
+    if(!n)return;
+    if(!byCust[n])byCust[n]={name:n,jobs:0,revenue:0,outstanding:0};
+    byCust[n].jobs++;
+    const inv=Number(j.invoiced||0),paid=Number(j.paid||0);
+    byCust[n].revenue+=inv;
+    byCust[n].outstanding+=Math.max(0,inv-paid);
+  });
+  const topCustomers=Object.values(byCust).sort((a,b)=>b.revenue-a.revenue).slice(0,8);
+
+  // ── Cash flow: invoiced vs collected per month ──
+  const cashMonths=months.map(m=>({label:m.label,key:m.key,invoiced:0,collected:0}));
+  all.forEach(j=>{
+    (j.invoices||[]).forEach(iv=>{
+      if(!iv.date)return;
+      const d=new Date(iv.date);if(isNaN(d))return;
+      const k=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+      const m=cashMonths.find(x=>x.key===k);
+      if(m){const cc=calcInvoice(iv);m.invoiced+=cc.total;m.collected+=cc.paid}
+    });
+  });
+  const maxCash=Math.max(1,...cashMonths.flatMap(m=>[m.invoiced,m.collected]));
+
+  // ── Job type performance ──
+  const byType={};
+  inRange.forEach(j=>{
+    const t=j.type||'Other';
+    if(!byType[t])byType[t]={type:t,count:0,won:0,value:0,revenue:0};
+    byType[t].count++;
+    byType[t].value+=Number(j.value||0);
+    if(j.status==='complete'){byType[t].won++;byType[t].revenue+=Number(j.invoiced||j.value||0)}
+  });
+  const typeRows=Object.values(byType).sort((a,b)=>b.revenue-a.revenue);
+
+  // ── Profitability (top profit & margin per job) ──
+  const profitJobs=inRange.map(j=>{
+    const rev=jobRevenue(j);
+    const exp=jobTotalExpenses(j);
+    return {j,rev,exp,profit:rev-exp,margin:rev>0?((rev-exp)/rev)*100:0};
+  }).filter(p=>p.rev>0||p.exp>0);
+  const topProfit=profitJobs.slice().sort((a,b)=>b.profit-a.profit).slice(0,8);
+  const totalProfit=profitJobs.reduce((s,p)=>s+p.profit,0);
+  const totalRev=profitJobs.reduce((s,p)=>s+p.rev,0);
+  const avgMargin=totalRev>0?(totalProfit/totalRev)*100:0;
+
+  // ── Cycle time (lead → complete) ──
+  let cycleSum=0,cycleN=0;
+  const cycleByType={};
+  all.forEach(j=>{
+    if(j.status!=='complete'||!j.created||!j.completedAt)return;
+    if(cutoff>0&&(j.completedAt||0)<cutoff)return;
+    const days=Math.max(0,Math.round((j.completedAt-j.created)/86400000));
+    cycleSum+=days;cycleN++;
+    const t=j.type||'Other';
+    if(!cycleByType[t])cycleByType[t]={type:t,sum:0,n:0};
+    cycleByType[t].sum+=days;cycleByType[t].n++;
+  });
+  const avgCycle=cycleN>0?Math.round(cycleSum/cycleN):0;
+  const cycleRows=Object.values(cycleByType).map(c=>({type:c.type,avg:Math.round(c.sum/c.n),n:c.n})).sort((a,b)=>a.avg-b.avg);
+
   // Donut chart for win rate
   const circumference=2*Math.PI*52;
   const donutDash=(winRate/100)*circumference;
@@ -2275,6 +2802,7 @@ function renderReports(){
 
     <div class="kpi-grid">
       <div class="kpi-card accent"><div class="kpi-label">Won Revenue</div><div class="kpi-value">${money(revenue)}</div><div class="kpi-sub">${won} job${won!==1?'s':''} completed</div></div>
+      <div class="kpi-card"><div class="kpi-label">Net Profit</div><div class="kpi-value" style="color:${inRangeTotalProfit>=0?'var(--green-700)':'var(--red)'}">${money(inRangeTotalProfit)}</div><div class="kpi-sub">${inRangeAvgMargin.toFixed(1)}% margin · ${money(inRangeTotalExpenses)} costs</div></div>
       <div class="kpi-card"><div class="kpi-label">Pipeline Value</div><div class="kpi-value">${money(pipeline)}</div><div class="kpi-sub">${open} open</div></div>
       <div class="kpi-card"><div class="kpi-label">Avg Job Size</div><div class="kpi-value">${money(avgDeal)}</div><div class="kpi-sub">across won jobs</div></div>
       <div class="kpi-card"><div class="kpi-label">Collected</div><div class="kpi-value">${money(collected)}</div><div class="kpi-sub">${revenue>0?((collected/revenue)*100).toFixed(0):0}% of revenue</div></div>
@@ -2348,6 +2876,137 @@ function renderReports(){
             </div>`;
           }).join('')}
         </div>`}
+    </div>
+
+    <div class="report-section">
+      <div class="report-hd">Pipeline Funnel <span class="kpi-sub">Jobs at each stage</span></div>
+      <div class="funnel">
+        ${STAGES.map((s,i)=>{
+          const b=stageBuckets[s];
+          const pct=(b.count/maxStage)*100;
+          const conv=i>0&&stageBuckets[STAGES[i-1]].count>0?((b.count/stageBuckets[STAGES[i-1]].count)*100).toFixed(0):null;
+          return `<div class="funnel-row">
+            <div class="funnel-lbl">${esc(s)}</div>
+            <div class="funnel-track"><div class="funnel-fill" style="width:${Math.max(2,pct)}%"></div></div>
+            <div class="funnel-cnt"><strong>${b.count}</strong> job${b.count!==1?'s':''}${b.value>0?' · '+money(b.value):''}</div>
+            ${conv!==null?`<div class="funnel-conv">${conv}%</div>`:'<div class="funnel-conv"></div>'}
+          </div>`;
+        }).join('')}
+      </div>
+      <div style="font-size:11px;color:var(--text-3);margin-top:8px">Right column shows conversion from the previous stage.</div>
+    </div>
+
+    <div class="report-section">
+      <div class="report-hd">Cash Flow <span class="kpi-sub">Invoiced vs Collected · last 6 months</span></div>
+      <div class="report-chart cash-chart">
+        ${cashMonths.map(m=>{
+          const hi=(m.invoiced/maxCash)*100;
+          const hc=(m.collected/maxCash)*100;
+          return `<div class="cash-bar-wrap">
+            <div class="cash-bars">
+              <div class="cash-bar inv" style="height:${Math.max(2,hi)}%" title="Invoiced: ${money(m.invoiced)}"></div>
+              <div class="cash-bar col" style="height:${Math.max(2,hc)}%" title="Collected: ${money(m.collected)}"></div>
+            </div>
+            <div class="report-bar-label">${m.label}</div>
+          </div>`;
+        }).join('')}
+      </div>
+      <div class="report-x-pad"></div>
+      <div class="cash-legend">
+        <span class="cash-key"><span class="cash-dot inv"></span>Invoiced</span>
+        <span class="cash-key"><span class="cash-dot col"></span>Collected</span>
+      </div>
+    </div>
+
+    <div class="report-section">
+      <div class="report-hd">Profitability <span class="kpi-sub">Revenue − Expenses</span></div>
+      <div style="display:flex;align-items:center;gap:18px;flex-wrap:wrap;margin-bottom:14px;padding:12px 14px;background:linear-gradient(135deg,${totalProfit>=0?'rgba(16,163,74,0.08)':'rgba(220,38,38,0.08)'},transparent);border-radius:var(--r-md);border:1px solid var(--border)">
+        <div>
+          <div style="font-size:10.5px;color:var(--text-3);text-transform:uppercase;letter-spacing:0.06em;font-weight:700">Total Profit</div>
+          <div style="font-size:24px;font-weight:700;color:${totalProfit>=0?'var(--green-700)':'var(--red)'};margin-top:2px;font-variant-numeric:tabular-nums">${money(totalProfit)}</div>
+        </div>
+        <div style="padding-left:18px;border-left:1px solid var(--border)">
+          <div style="font-size:10.5px;color:var(--text-3);text-transform:uppercase;letter-spacing:0.06em;font-weight:700">Avg Margin</div>
+          <div style="font-size:24px;font-weight:700;color:${avgMargin>=0?'var(--green-700)':'var(--red)'};margin-top:2px;font-variant-numeric:tabular-nums">${avgMargin.toFixed(1)}%</div>
+        </div>
+        <div style="margin-left:auto;font-size:11.5px;color:var(--text-3);text-align:right;max-width:180px;line-height:1.4">${profitJobs.length} job${profitJobs.length!==1?'s':''} with revenue or expenses in range</div>
+      </div>
+      ${topProfit.length===0?'<p style="font-size:13px;color:var(--text-3);padding:4px 0">Log expenses on jobs to see profitability.</p>'
+        :`<div style="display:flex;flex-direction:column">
+          ${topProfit.map(p=>{
+            const pct=Math.abs(p.profit)/Math.max(1,Math.abs(topProfit[0].profit))*100;
+            return `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);font-size:12.5px">
+              <div style="flex:1;min-width:0">
+                <div style="font-weight:600;font-size:13px">${esc(p.j.name||'')}</div>
+                <div style="font-size:11px;color:var(--text-3)">${esc(p.j.customerName||'')} · ${money(p.rev)} rev · ${money(p.exp)} exp</div>
+              </div>
+              <div style="flex:1;max-width:160px"><div style="height:6px;background:var(--surface-3);border-radius:3px;overflow:hidden"><div style="height:100%;width:${pct}%;background:${p.profit>=0?'linear-gradient(90deg,var(--green-700),var(--green-400))':'linear-gradient(90deg,#dc2626,#fca5a5)'};border-radius:3px"></div></div></div>
+              <div style="text-align:right;min-width:90px">
+                <div style="font-weight:700;color:${p.profit>=0?'var(--green-700)':'var(--red)'};font-variant-numeric:tabular-nums">${money(p.profit)}</div>
+                <div style="font-size:11px;color:var(--text-3);font-variant-numeric:tabular-nums">${p.margin.toFixed(1)}%</div>
+              </div>
+            </div>`;
+          }).join('')}
+        </div>`}
+    </div>
+
+    <div class="report-section">
+      <div class="report-hd">Top Customers <span class="kpi-sub">By revenue in range</span></div>
+      ${topCustomers.length===0?'<p style="font-size:13px;color:var(--text-3);padding:4px 0">No customer revenue yet for this range.</p>'
+        :`<div style="display:flex;flex-direction:column;gap:6px">
+          ${topCustomers.map((c,i)=>`<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)">
+            <div class="lb-rank ${i===0?'gold':i===1?'silver':i===2?'bronze':''}">${i+1}</div>
+            <div style="flex:1;min-width:0">
+              <div style="font-weight:600;font-size:13.5px">${esc(c.name)}</div>
+              <div style="font-size:11.5px;color:var(--text-3)">${c.jobs} job${c.jobs!==1?'s':''}${c.outstanding>0.005?' · '+money(c.outstanding)+' outstanding':''}</div>
+            </div>
+            <div style="text-align:right">
+              <div style="font-weight:700;font-size:14px">${money(c.revenue)}</div>
+              <div style="font-size:11px;color:var(--text-3)">revenue</div>
+            </div>
+          </div>`).join('')}
+        </div>`}
+    </div>
+
+    <div class="report-section">
+      <div class="report-hd">Job Type Performance <span class="kpi-sub">${typeRows.length} type${typeRows.length!==1?'s':''}</span></div>
+      ${typeRows.length===0?'<p style="font-size:13px;color:var(--text-3);padding:4px 0">Set the Job Type on jobs to see breakdown.</p>'
+        :`<div class="type-table">
+          <div class="type-row type-hd"><div>Type</div><div class="num">Jobs</div><div class="num">Won</div><div class="num">Win %</div><div class="num">Avg $</div><div class="num">Revenue</div></div>
+          ${typeRows.map(t=>{
+            const win=t.count>0?(t.won/t.count)*100:0;
+            const avg=t.won>0?t.revenue/t.won:0;
+            return `<div class="type-row">
+              <div><strong>${esc(t.type)}</strong></div>
+              <div class="num">${t.count}</div>
+              <div class="num">${t.won}</div>
+              <div class="num">${win.toFixed(0)}%</div>
+              <div class="num">${money(avg)}</div>
+              <div class="num"><strong>${money(t.revenue)}</strong></div>
+            </div>`;
+          }).join('')}
+        </div>`}
+    </div>
+
+    <div class="report-section">
+      <div class="report-hd">Cycle Time <span class="kpi-sub">Avg days lead → complete</span></div>
+      ${cycleN===0?'<p style="font-size:13px;color:var(--text-3);padding:4px 0">Complete some jobs to see cycle time.</p>'
+        :`<div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:10px">
+          <div style="text-align:center;padding:6px 18px 6px 0;border-right:1px solid var(--border)">
+            <div style="font-size:28px;font-weight:700;color:var(--green-700);line-height:1">${avgCycle}</div>
+            <div style="font-size:11px;color:var(--text-3);text-transform:uppercase;letter-spacing:0.06em;font-weight:600;margin-top:3px">avg days</div>
+          </div>
+          <div style="flex:1;min-width:200px">
+            <div style="font-size:12px;color:var(--text-2)">Across ${cycleN} completed job${cycleN!==1?'s':''} in range. Faster cycle time = more throughput.</div>
+          </div>
+        </div>
+        ${cycleRows.length>0?`<div style="display:flex;flex-direction:column;gap:4px">
+          ${cycleRows.map(c=>`<div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--border);font-size:13px">
+            <div style="flex:1">${esc(c.type)}</div>
+            <div style="color:var(--text-3);font-size:11.5px">${c.n} job${c.n!==1?'s':''}</div>
+            <div style="font-weight:700;min-width:60px;text-align:right;font-variant-numeric:tabular-nums">${c.avg} day${c.avg!==1?'s':''}</div>
+          </div>`).join('')}
+        </div>`:''}`}
     </div>
   `;
 }
@@ -2626,6 +3285,7 @@ function renderDetail(id){
     {id:'photos',label:'Photos',count:photos.length},
     {id:'docs',label:'Files',count:(j.documents||[]).length},
     {id:'invoices',label:'Invoices',count:(j.invoices||[]).length},
+    {id:'expenses',label:'Expenses',count:(j.expenses||[]).length},
     {id:'financial',label:'Financials'},
     {id:'comms',label:'Comms',count:(j.comms||[]).length},
     {id:'notes',label:'Notes',count:(j.notes||[]).length},
@@ -2656,6 +3316,11 @@ function renderDetail(id){
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 6.75V15m6-6v8.25m.503 3.498l4.875-2.437c.381-.19.622-.58.622-1.006V4.82c0-.836-.88-1.38-1.628-1.006l-3.869 1.934c-.317.159-.69.159-1.006 0L9.503 3.252a1.125 1.125 0 00-1.006 0L3.622 5.689C3.24 5.88 3 6.27 3 6.695V19.18c0 .836.88 1.38 1.628 1.006l3.869-1.934c.317-.159.69-.159 1.006 0l4.994 2.497c.317.158.69.158 1.006 0z"/></svg>
         Map
       </a>
+      <label class="qa-btn qa-snap" title="Snap a progress photo">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z"/><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0z"/></svg>
+        Snap
+        <input type="file" accept="image/*" capture="environment" id="qa-snap-input" style="display:none">
+      </label>
     </div>
 
     <div class="stage-pipeline">
@@ -2790,31 +3455,68 @@ function renderDetailTab(j,tab){
   }
   if(tab==='photos'){
     const cat=S.photoCat||'all';
-    const filtered=cat==='all'?photos:photos.filter(p=>(p.cat||'')===cat);
-    const photosHtml=filtered.map((p,i)=>{
-      const idx=photos.indexOf(p);
+    const view=S.photoView||'grid';
+    const filtered=(cat==='all'?photos:photos.filter(p=>(p.cat||'')===cat))
+      .map((p,origIdx)=>({p,idx:photos.indexOf(p)}))
+      .sort((a,b)=>(b.p.time||0)-(a.p.time||0));
+    const thumb=(p,idx)=>{
       const url=p.url||p;
+      const dateLbl=p.time?new Date(p.time).toLocaleDateString(undefined,{month:'short',day:'numeric'}):'';
       return `<div class="photo-wrap">
-        ${p.cat?`<span class="photo-cat-label">${esc(p.cat)}</span>`:''}
-        <img src="${url}" alt="" data-view-photo="${idx}" loading="lazy">
-        <button class="photo-del" data-del-photo="${idx}">×</button>
+        ${p.cat?`<span class="photo-cat-label cat-${esc(p.cat)}">${esc(p.cat)}</span>`:''}
+        <img src="${url}" alt="${esc(p.caption||'')}" data-view-photo="${idx}" loading="lazy">
+        ${p.caption?`<div class="photo-caption-overlay">${esc(p.caption)}</div>`:''}
+        ${dateLbl?`<div class="photo-date-overlay">${dateLbl}</div>`:''}
+        <button class="photo-del" data-del-photo="${idx}" title="Delete photo">×</button>
       </div>`;
-    }).join('');
+    };
+    // Timeline view: group by date (YYYY-MM-DD)
+    let body;
+    if(view==='timeline'&&filtered.length>0){
+      const groups={};
+      filtered.forEach(({p,idx})=>{
+        const k=p.time?new Date(p.time).toISOString().slice(0,10):'undated';
+        (groups[k]=groups[k]||[]).push({p,idx});
+      });
+      const keys=Object.keys(groups).sort((a,b)=>b.localeCompare(a));
+      body=`<div class="photo-timeline">
+        ${keys.map(k=>{
+          const dateStr=k==='undated'?'No date':new Date(k+'T12:00:00').toLocaleDateString(undefined,{weekday:'short',month:'long',day:'numeric',year:'numeric'});
+          return `<div class="photo-tl-group">
+            <div class="photo-tl-date">${esc(dateStr)} <span class="photo-tl-cnt">${groups[k].length} photo${groups[k].length!==1?'s':''}</span></div>
+            <div class="photos-grid">${groups[k].map(g=>thumb(g.p,g.idx)).join('')}</div>
+          </div>`;
+        }).join('')}
+      </div>`;
+    } else {
+      body=`<div class="photos-grid">${filtered.map(g=>thumb(g.p,g.idx)).join('')}</div>`;
+    }
     return `
       <div class="section">
         <div class="section-hd">Photos <span>${photos.length} total</span></div>
-        <div class="photo-cat-tabs">
-          ${PHOTO_CATS.map(c=>`<div class="photo-cat-chip ${cat===c?'active':''}" data-photo-cat="${c}">${c==='all'?'All':c.charAt(0).toUpperCase()+c.slice(1)} ${c==='all'?photos.length:photos.filter(p=>(p.cat||'')===c).length}</div>`).join('')}
+        <div class="photo-controls">
+          <div class="photo-cat-tabs">
+            ${PHOTO_CATS.map(c=>`<div class="photo-cat-chip ${cat===c?'active':''}" data-photo-cat="${c}">${c==='all'?'All':c.charAt(0).toUpperCase()+c.slice(1)} ${c==='all'?photos.length:photos.filter(p=>(p.cat||'')===c).length}</div>`).join('')}
+          </div>
+          <div class="photo-view-toggle" role="group" aria-label="View mode">
+            <button class="${view==='grid'?'active':''}" data-photo-view="grid" title="Grid view" aria-label="Grid view"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="14" height="14"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z"/></svg></button>
+            <button class="${view==='timeline'?'active':''}" data-photo-view="timeline" title="Timeline view" aria-label="Timeline view"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="14" height="14"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 5.25h16.5m-16.5 4.5h16.5m-16.5 4.5h16.5m-16.5 4.5h16.5"/></svg></button>
+          </div>
         </div>
-        <div class="photos-grid">
-          ${photosHtml}
-          <label class="photo-add-btn">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z"/><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zM18.75 10.5h.008v.008h-.008V10.5z"/></svg>
-            <span>Add Photos</span>
+        ${filtered.length===0?`<p style="font-size:13px;color:var(--text-3);padding:8px 0">No photos${cat==='all'?'':' in this category'} yet. Use the buttons below to capture progress.</p>`:body}
+        <div class="photo-upload-row">
+          <label class="photo-capture-btn primary">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z"/><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0z"/></svg>
+            Take Photo
+            <input type="file" accept="image/*" capture="environment" id="photo-camera" style="display:none">
+          </label>
+          <label class="photo-capture-btn">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 16.5V9.75m0 0l3 3m-3-3l-3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.233-2.33 3 3 0 013.758 3.848A3.752 3.752 0 0118 19.5H6.75z"/></svg>
+            Upload Files
             <input type="file" accept="image/*" multiple id="photo-upload" style="display:none">
           </label>
         </div>
-        <p style="font-size:11.5px;color:var(--text-3);margin-top:10px">Tip: Upload tags photos as “${cat==='all'?'before':cat}”. Switch tabs first to choose a category.</p>
+        <p style="font-size:11.5px;color:var(--text-3);margin-top:10px">New photos are tagged <strong>${cat==='all'?'progress':esc(cat)}</strong>. Switch the category chip to change the tag. Tap a photo to view, edit caption, or delete.</p>
       </div>`;
   }
   if(tab==='docs'){
@@ -2845,25 +3547,31 @@ function renderDetailTab(j,tab){
     const paid=invTot?invTot.paid:Number(j.paid||0);
     const bal=inv-paid;
     const pctPaid=inv>0?(paid/inv)*100:0;
-    const margin=est-Number(j.costs||0);
+    const expLedger=(j.expenses||[]).reduce((s,e)=>s+Number(e.amount||0),0);
+    const legacyCosts=Number(j.costs||0);
+    const totalExp=expLedger+legacyCosts;
+    const profit=inv-totalExp;
+    const margin=inv>0?(profit/inv)*100:0;
+    const projectedProfit=est-totalExp;
+    const projectedMargin=est>0?(projectedProfit/est)*100:0;
     const lockedByInv=!!invTot;
     return `
       <div class="section">
-        <div class="section-hd">Financial Summary${lockedByInv?' <span style="font-weight:400;text-transform:none;letter-spacing:0">From '+((j.invoices||[]).length)+' invoice'+((j.invoices||[]).length===1?'':'s')+'</span>':''}</div>
+        <div class="section-hd">Financial Summary${lockedByInv?' <span style="font-weight:400;text-transform:none;letter-spacing:0">From '+((j.invoices||[]).length)+' invoice'+((j.invoices||[]).length===1?'':'s')+'</span>':''}<button class="btn-sm" id="btn-print-job-summary" style="padding:5px 10px;font-size:11px;margin-left:auto">Print Summary</button></div>
         <div class="fin-grid">
           <div class="fin-cell"><div class="fin-label">Estimate</div><div class="fin-value">${money(est)}</div></div>
-          <div class="fin-cell"><div class="fin-label">Costs / Materials</div><div class="fin-value">${money(j.costs||0)}</div></div>
           <div class="fin-cell"><div class="fin-label">Invoiced</div><div class="fin-value">${money(inv)}</div></div>
+          <div class="fin-cell"><div class="fin-label">Expenses</div><div class="fin-value">${money(totalExp)}</div><div style="font-size:11px;color:var(--text-3);margin-top:2px">${(j.expenses||[]).length} entr${(j.expenses||[]).length===1?'y':'ies'}${legacyCosts?' + lump sum':''}</div></div>
           <div class="fin-cell"><div class="fin-label">Paid</div><div class="fin-value">${money(paid)}</div></div>
           <div class="fin-cell ${bal>0?'bal-neg':'bal-pos'}" style="grid-column:1/-1"><div class="fin-label">Balance Due</div><div class="fin-value">${money(bal)}</div>
             <div class="fin-bar"><div class="fin-bar-fill" style="width:${Math.min(100,pctPaid)}%"></div></div>
             <div style="font-size:11.5px;color:var(--text-3)">${pctPaid.toFixed(0)}% collected</div>
           </div>
-          <div class="fin-cell" style="grid-column:1/-1"><div class="fin-label">Projected Margin</div><div class="fin-value" style="color:${margin>=0?'var(--green-700)':'var(--orange)'}">${money(margin)} <span style="font-size:12px;color:var(--text-3);font-weight:500">${est>0?'('+((margin/est)*100).toFixed(0)+'%)':''}</span></div></div>
+          <div class="fin-cell ${profit>=0?'bal-pos':'bal-neg'}" style="grid-column:1/-1;background:linear-gradient(135deg,${profit>=0?'rgba(16,163,74,0.06)':'rgba(220,38,38,0.06)'},transparent)"><div class="fin-label">${inv>0?'Profit':'Projected Profit'} <span style="font-weight:500;text-transform:none;letter-spacing:0;color:var(--text-3)">${inv>0?'(invoiced − expenses)':'(estimate − expenses)'}</span></div><div class="fin-value" style="font-size:22px;color:${profit>=0?'var(--green-700)':'var(--red)'}">${money(inv>0?profit:projectedProfit)} <span style="font-size:13px;color:var(--text-3);font-weight:600;margin-left:6px">${inv>0?margin.toFixed(1):projectedMargin.toFixed(1)}% margin</span></div></div>
         </div>
         <div class="form-row">
           <div class="form-group"><label class="form-label">Estimate ($)</label><input class="form-input" type="number" id="fin-est" value="${esc(est||'')}"></div>
-          <div class="form-group"><label class="form-label">Costs ($)</label><input class="form-input" type="number" id="fin-costs" value="${esc(j.costs||'')}"></div>
+          <div class="form-group"><label class="form-label">Lump-Sum Costs ($) <span style="color:var(--text-3);font-weight:400;text-transform:none;letter-spacing:0;font-size:10px">use Expenses tab for itemized</span></label><input class="form-input" type="number" id="fin-costs" value="${esc(j.costs||'')}"></div>
         </div>
         <div class="form-row">
           <div class="form-group"><label class="form-label">Invoiced ($)${lockedByInv?' <span style="color:var(--text-3);font-weight:400;text-transform:none;letter-spacing:0;font-size:10px">auto</span>':''}</label><input class="form-input" type="number" id="fin-inv" value="${esc(inv||'')}" ${lockedByInv?'disabled':''}></div>
@@ -2871,6 +3579,53 @@ function renderDetailTab(j,tab){
         </div>
         <button class="btn-post" id="btn-save-fin" style="margin-top:6px" ${lockedByInv?'disabled':''}>Save Financials</button>
         ${lockedByInv?'<p style="font-size:11.5px;color:var(--text-3);margin-top:10px">Invoiced and Paid totals are computed from the Invoices tab. Edit individual invoices there.</p>':''}
+      </div>`;
+  }
+
+  if(tab==='expenses'){
+    const exps=(j.expenses||[]).slice().sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+    const total=exps.reduce((s,e)=>s+Number(e.amount||0),0);
+    const billable=exps.filter(e=>e.billable).reduce((s,e)=>s+Number(e.amount||0),0);
+    const unpaid=exps.filter(e=>!e.paid).reduce((s,e)=>s+Number(e.amount||0),0);
+    const inv=jobRevenue(j);
+    const profit=inv-(total+Number(j.costs||0));
+    const margin=inv>0?(profit/inv)*100:0;
+    // category breakdown
+    const byCat={};
+    exps.forEach(e=>{const k=e.category||'Other';byCat[k]=(byCat[k]||0)+Number(e.amount||0)});
+    const catRows=Object.entries(byCat).sort((a,b)=>b[1]-a[1]);
+    return `
+      <div class="section">
+        <div class="section-hd" style="margin-bottom:12px">Expenses <span>${exps.length}</span></div>
+        <div class="inv-totals">
+          <div class="inv-total-row"><span>Total Expenses</span><span class="v">${money(total)}</span></div>
+          <div class="inv-total-row"><span>Billable to Customer</span><span class="v">${money(billable)}</span></div>
+          <div class="inv-total-row"><span>Unpaid (owed to vendors)</span><span class="v" style="color:${unpaid>0.005?'var(--orange)':'var(--text)'}">${money(unpaid)}</span></div>
+          <div class="inv-total-row grand"><span>${inv>0?'Profit on this job':'Projected Profit'}</span><span class="v" style="color:${profit>=0?'var(--green-700)':'var(--red)'}">${money(profit)} <span style="font-size:11px;font-weight:600;color:var(--text-3)">${inv>0?margin.toFixed(1)+'%':''}</span></span></div>
+        </div>
+        ${catRows.length>0?`<div style="margin:10px 0 14px;padding:10px 12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md)">
+          <div style="font-size:10.5px;color:var(--text-3);text-transform:uppercase;letter-spacing:0.06em;font-weight:700;margin-bottom:6px">By Category</div>
+          ${catRows.map(([cat,amt])=>{
+            const pct=total>0?(amt/total)*100:0;
+            return `<div style="display:flex;align-items:center;gap:10px;font-size:12.5px;padding:3px 0">
+              <div style="min-width:110px">${esc(cat)}</div>
+              <div style="flex:1;height:6px;background:var(--surface-3);border-radius:3px;overflow:hidden"><div style="height:100%;width:${pct}%;background:linear-gradient(90deg,var(--green-700),var(--green-400))"></div></div>
+              <div style="min-width:80px;text-align:right;font-weight:600;font-variant-numeric:tabular-nums">${money(amt)}</div>
+            </div>`;
+          }).join('')}
+        </div>`:''}
+        <div class="expense-list">
+          ${exps.length===0?'<p style="font-size:13px;color:var(--text-3);padding:4px 0">No expenses logged yet. Track materials, labor, subcontractors, and other costs to see real profit.</p>'
+            :exps.map(e=>`<div class="expense-row" data-exp-id="${esc(e.id)}">
+              <div class="exp-cat-pill exp-${esc((e.category||'other').toLowerCase().split(' ')[0])}">${esc(e.category||'Other')}</div>
+              <div class="exp-main">
+                <div class="exp-desc">${esc(e.description||e.vendor||'Expense')}${e.billable?'<span class="exp-flag bill">Billable</span>':''}${!e.paid?'<span class="exp-flag unpaid">Unpaid</span>':''}</div>
+                <div class="exp-meta">${fmtDate(e.date)}${e.vendor?' · '+esc(e.vendor):''}</div>
+              </div>
+              <div class="exp-amt">${money(Number(e.amount||0))}</div>
+            </div>`).join('')}
+        </div>
+        <button class="btn-post" id="btn-new-exp" style="margin-top:6px">+ Add Expense</button>
       </div>`;
   }
   if(tab==='comms'){
@@ -3028,6 +3783,23 @@ function showJobModal(mode,job){
   $('mbd').onclick=e=>{if(e.target===e.currentTarget)closeModal()};
   $('f-assigned').onchange=function(){$('custom-wrap').style.display=this.value==='__custom__'?'block':'none'};
   if(j.assigned&&S.members.includes(j.assigned))$('f-assigned').value=j.assigned;
+
+  // ── Customer autofill: typeahead on name, job-site address, and billing address ──
+  const fillFromCustomer=(m,opts)=>{
+    opts=opts||{};
+    if(m.name)$('f-cust-name').value=m.name;
+    if(m.phone&&!$('f-cust-phone').value.trim())$('f-cust-phone').value=m.phone;
+    if(m.email&&!$('f-cust-email').value.trim())$('f-cust-email').value=m.email;
+    if(m.address){
+      if(opts.fillJobAddr&&!$('f-addr').value.trim())$('f-addr').value=m.address;
+      if(!$('f-bill-addr').value.trim())$('f-bill-addr').value=m.address;
+    }
+    toast('Filled from '+m.name+' ('+m.jobs+' prior job'+(m.jobs!==1?'s':'')+')','photo');
+  };
+  mountCustomerTypeahead($('f-cust-name'),m=>fillFromCustomer(m,{fillJobAddr:!$('f-addr').value.trim()}));
+  mountCustomerTypeahead($('f-addr'),m=>{$('f-addr').value=m.address||$('f-addr').value;fillFromCustomer(m,{fillJobAddr:false})});
+  mountCustomerTypeahead($('f-bill-addr'),m=>{$('f-bill-addr').value=m.address||$('f-bill-addr').value;fillFromCustomer(m,{fillJobAddr:false})});
+
   $('btn-sv').onclick=async()=>{
     const name=$('f-name').value.trim();
     if(!name){toast('Please enter a job name','');return}
@@ -3101,11 +3873,98 @@ function showSetupModal(){
 // ══ Helpers for photo backward compat ══
 function photoURL(p){return typeof p==='string'?p:(p&&p.url)||''}
 
+// ══ Photo viewer (lightbox with prev/next, caption edit, metadata) ══
+let PHOTO_VIEW={idx:0,onKey:null};
+function openPhotoViewer(idx){
+  const j=S.jobs[S.detail];if(!j||!j.photos||!j.photos[idx])return;
+  PHOTO_VIEW.idx=idx;
+  renderPhotoViewer();
+  PHOTO_VIEW.onKey=e=>{
+    if(e.key==='Escape')closePhotoViewer();
+    else if(e.key==='ArrowLeft')photoStep(-1);
+    else if(e.key==='ArrowRight')photoStep(1);
+  };
+  document.addEventListener('keydown',PHOTO_VIEW.onKey);
+}
+function closePhotoViewer(){
+  $('fs-root').innerHTML='';
+  if(PHOTO_VIEW.onKey)document.removeEventListener('keydown',PHOTO_VIEW.onKey);
+  PHOTO_VIEW.onKey=null;
+}
+function photoStep(delta){
+  const j=S.jobs[S.detail];if(!j||!j.photos)return;
+  const n=j.photos.length;
+  PHOTO_VIEW.idx=(PHOTO_VIEW.idx+delta+n)%n;
+  renderPhotoViewer();
+}
+function renderPhotoViewer(){
+  const j=S.jobs[S.detail];if(!j||!j.photos)return;
+  const idx=PHOTO_VIEW.idx;
+  const p=j.photos[idx];if(!p){closePhotoViewer();return}
+  const url=photoURL(p);
+  const when=p.time?new Date(p.time).toLocaleString(undefined,{weekday:'short',month:'short',day:'numeric',year:'numeric',hour:'numeric',minute:'2-digit'}):'';
+  $('fs-root').innerHTML=`<div class="photo-fs" id="fs" role="dialog" aria-modal="true">
+    <button class="photo-fs-close" id="fsc" aria-label="Close">×</button>
+    <button class="photo-fs-nav prev" id="fs-prev" aria-label="Previous photo">‹</button>
+    <button class="photo-fs-nav next" id="fs-next" aria-label="Next photo">›</button>
+    <div class="photo-fs-inner">
+      <img src="${url}" alt="${esc(p.caption||'')}">
+      <div class="photo-fs-info">
+        <div class="photo-fs-meta">
+          ${p.cat?`<span class="photo-cat-label cat-${esc(p.cat)}" style="position:static;display:inline-block;margin-right:8px">${esc(p.cat)}</span>`:''}
+          <span class="photo-fs-when">${esc(when)}</span>
+          ${p.user?`<span class="photo-fs-user"> · by ${esc(p.user)}</span>`:''}
+          <span class="photo-fs-count">${idx+1} of ${j.photos.length}</span>
+        </div>
+        <div class="photo-fs-caption-row">
+          <input class="photo-fs-caption" id="fs-caption" placeholder="Add a caption…" value="${esc(p.caption||'')}" maxlength="200">
+          <button class="photo-fs-save" id="fs-save">Save</button>
+          <button class="photo-fs-del" id="fs-del" title="Delete photo" aria-label="Delete photo">🗑</button>
+        </div>
+      </div>
+    </div>
+  </div>`;
+  const fs=$('fs');
+  $('fsc').onclick=closePhotoViewer;
+  fs.onclick=e=>{if(e.target===fs)closePhotoViewer()};
+  $('fs-prev').onclick=e=>{e.stopPropagation();photoStep(-1)};
+  $('fs-next').onclick=e=>{e.stopPropagation();photoStep(1)};
+  $('fs-save').onclick=async e=>{
+    e.stopPropagation();
+    const v=$('fs-caption').value.trim();
+    p.caption=v;
+    await writeJob(j);
+    toast('Caption saved','photo');
+    render();
+    // Keep viewer open at same idx
+    renderPhotoViewer();
+  };
+  $('fs-caption').addEventListener('keydown',e=>{
+    if(e.key==='Enter'){e.preventDefault();$('fs-save').click()}
+    e.stopPropagation();
+  });
+  $('fs-del').onclick=async e=>{
+    e.stopPropagation();
+    if(!confirm('Delete this photo? This cannot be undone.'))return;
+    j.photos.splice(idx,1);
+    await writeJob(j);
+    toast('Photo deleted');
+    if(j.photos.length===0){closePhotoViewer();render();return}
+    PHOTO_VIEW.idx=Math.min(idx,j.photos.length-1);
+    renderPhotoViewer();
+    render();
+  };
+}
+
 // ══ CSV export ══
 function exportCSV(){
-  const rows=[['Name','Customer','Phone','Email','Address','Status','Stage','Type','Assigned','Start','Due','Estimate','Invoiced','Paid','Balance','Progress','Created']];
+  const rows=[['Name','Customer','Phone','Email','Address','Status','Stage','Type','Assigned','Start','Due','Estimate','Invoiced','Paid','Balance','Expenses','Profit','Margin %','Progress','Created']];
   jobs().forEach(j=>{
-    rows.push([j.name,j.customerName,j.customerPhone,j.customerEmail,j.address,j.status,jobStage(j),j.type,j.assigned,j.startDate,j.dueDate,j.value,j.invoiced,j.paid,jobBalance(j),(j.progress||0)+'%',j.created?new Date(j.created).toLocaleDateString():''].map(v=>v==null?'':String(v)));
+    const inv=jobRevenue(j);
+    const exp=jobTotalExpenses(j);
+    const profit=inv-exp;
+    const mgn=inv>0?((profit/inv)*100).toFixed(1):'';
+    rows.push([j.name,j.customerName,j.customerPhone,j.customerEmail,j.address,j.status,jobStage(j),j.type,j.assigned,j.startDate,j.dueDate,j.value,j.invoiced,j.paid,jobBalance(j),exp,profit,mgn,(j.progress||0)+'%',j.created?new Date(j.created).toLocaleDateString():''].map(v=>v==null?'':String(v)));
   });
   const csv=rows.map(r=>r.map(c=>/[",\n]/.test(c)?'"'+c.replace(/"/g,'""')+'"':c).join(',')).join('\n');
   const blob=new Blob([csv],{type:'text/csv'});
@@ -3176,6 +4035,82 @@ function defaultInvoice(j){
     status:'draft',
     created:Date.now(),
   };
+}
+
+// ══ Expense modal ══
+function showExpenseModal(jobId,expenseId){
+  const j=S.jobs[jobId];if(!j)return;
+  const isNew=!expenseId;
+  const exp=isNew?{
+    id:'e_'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),
+    date:new Date().toISOString().slice(0,10),
+    category:'Materials',vendor:'',description:'',amount:'',
+    billable:false,paid:true,created:Date.now()
+  }:(j.expenses||[]).find(e=>e.id===expenseId);
+  if(!exp){toast('Expense not found','');return}
+  const draft={...exp};
+
+  $('modal-root').innerHTML=`<div class="modal-bd" id="mbd" role="dialog" aria-modal="true" aria-label="${isNew?'Add':'Edit'} expense"><div class="modal" style="max-width:540px"><div class="modal-handle"></div>
+    <div class="modal-head"><div class="modal-title">${isNew?'Add Expense':'Edit Expense'}</div><button class="modal-close" id="mc" aria-label="Close"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button></div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Date</label><input class="form-input" type="date" id="exp-date" value="${esc(draft.date||'')}"></div>
+        <div class="form-group"><label class="form-label">Category</label><select class="form-select" id="exp-cat">${EXPENSE_CATEGORIES.map(c=>`<option value="${esc(c)}" ${draft.category===c?'selected':''}>${esc(c)}</option>`).join('')}</select></div>
+      </div>
+      <div class="form-group"><label class="form-label">Vendor / Paid To</label><input class="form-input" id="exp-vendor" value="${esc(draft.vendor||'')}" placeholder="e.g. Home Depot, Mike's Marine"></div>
+      <div class="form-group"><label class="form-label">Description</label>
+        <div class="textarea-with-mic"><textarea class="form-textarea" id="exp-desc" placeholder="What was purchased / what work was done?">${esc(draft.description||'')}</textarea>${micButton('#exp-desc')}</div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Amount ($)</label><input class="form-input" type="number" step="0.01" id="exp-amt" value="${esc(draft.amount||'')}" placeholder="0.00"></div>
+        <div class="form-group">
+          <label class="form-label" style="margin-bottom:8px">Flags</label>
+          <label style="display:flex;align-items:center;gap:8px;font-size:13px;padding:4px 0;cursor:pointer">
+            <input type="checkbox" id="exp-billable" ${draft.billable?'checked':''}> Bill back to customer
+          </label>
+          <label style="display:flex;align-items:center;gap:8px;font-size:13px;padding:4px 0;cursor:pointer">
+            <input type="checkbox" id="exp-paid" ${draft.paid!==false?'checked':''}> Paid to vendor
+          </label>
+        </div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      ${!isNew?'<button class="btn-cancel" id="btn-exp-del" style="color:var(--red);margin-right:auto">Delete</button>':''}
+      <button class="btn-cancel" id="btn-cx">Cancel</button>
+      <button class="btn-save" id="btn-exp-save">${isNew?'Add Expense':'Save'}</button>
+    </div>
+  </div></div>`;
+  $('mc').onclick=$('btn-cx').onclick=closeModal;
+  $('mbd').onclick=e=>{if(e.target===e.currentTarget)closeModal()};
+  wireMicButtons();
+  $('btn-exp-save').onclick=async()=>{
+    const amt=parseFloat($('exp-amt').value);
+    if(isNaN(amt)||amt<=0){toast('Enter a valid amount','');return}
+    const saved={
+      ...draft,
+      date:$('exp-date').value||draft.date,
+      category:$('exp-cat').value,
+      vendor:$('exp-vendor').value.trim(),
+      description:$('exp-desc').value.trim(),
+      amount:amt,
+      billable:$('exp-billable').checked,
+      paid:$('exp-paid').checked,
+    };
+    const list=(j.expenses||[]).slice();
+    const idx=list.findIndex(e=>e.id===saved.id);
+    if(idx>=0)list[idx]=saved;else list.unshift(saved);
+    j.expenses=list;
+    await writeJob(j);
+    await logAct((isNew?'added':'updated')+' expense '+money(amt)+' on',j.name);
+    closeModal();render();toast(isNew?'Expense added':'Expense updated');
+  };
+  $('btn-exp-del')?.addEventListener('click',async()=>{
+    if(!confirm('Delete this expense?'))return;
+    j.expenses=(j.expenses||[]).filter(e=>e.id!==expenseId);
+    await writeJob(j);
+    await logAct('deleted expense from',j.name);
+    closeModal();render();toast('Expense deleted');
+  });
 }
 
 function showInvoiceModal(jobId,invoiceId){
@@ -3362,13 +4297,17 @@ function printInvoice(j,inv){
   const c=calcInvoice(inv);
   const logoSrc=getBrandLogoSrc();
   const co=COMPANY;
-  const itemsRows=(inv.items||[]).map(it=>{
+  const st=invoiceStatus(inv);
+  const balDue=Math.max(0,c.balance);
+  const isPaid=c.balance<=0.005;
+  const itemsRows=(inv.items||[]).map((it,i)=>{
     const amt=Number(it.qty||0)*Number(it.rate||0);
     return `<tr>
-      <td>${esc(it.desc||'')}</td>
+      <td class="row-num">${i+1}.</td>
+      <td class="desc">${esc(it.desc||'')}</td>
       <td class="num">${esc(String(it.qty??''))}</td>
       <td class="num">${money(Number(it.rate||0))}</td>
-      <td class="num">${money(amt)}</td>
+      <td class="num amt">${money(amt)}</td>
     </tr>`;
   }).join('');
 
@@ -3377,90 +4316,346 @@ function printInvoice(j,inv){
     <title>${esc(inv.number||'Invoice')} — ${esc(j.name||'')}</title>
     <style>
       *{box-sizing:border-box;margin:0;padding:0}
-      body{font-family:Helvetica,Arial,sans-serif;color:#0a1f18;background:#fff;max-width:780px;margin:30px auto;padding:0 32px;font-size:13px;line-height:1.5}
-      .lh{display:flex;justify-content:space-between;align-items:flex-start;padding-bottom:18px;border-bottom:3px solid #0a3d2e;margin-bottom:24px;gap:20px}
-      .lh-l{display:flex;align-items:center;gap:14px;flex:1}
-      .lh-l img{width:78px;height:78px;object-fit:contain}
-      .lh-co{flex:1}
-      .lh-co h1{font-family:Georgia,serif;font-size:24px;font-weight:600;color:#0a3d2e;letter-spacing:0.01em;line-height:1.1;margin-bottom:4px}
-      .lh-co .tag{font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#666}
-      .lh-co .addr{font-size:11.5px;color:#555;margin-top:6px;line-height:1.5;white-space:pre-line}
-      .lh-r{text-align:right}
-      .lh-r .title{font-size:36px;font-weight:800;color:#0a3d2e;letter-spacing:0.04em;line-height:1}
-      .lh-r .num{font-size:13px;color:#555;margin-top:6px}
-      .lh-r .status{display:inline-block;margin-top:8px;font-size:10.5px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;padding:4px 12px;border-radius:20px;background:#fef3c7;color:#92400e}
-      .lh-r .status.paid{background:#dcfce7;color:#166534}
-      .lh-r .status.draft{background:#f1f5f9;color:#475569}
-      .lh-r .status.overdue{background:#fee2e2;color:#991b1b}
-      .meta{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:24px}
-      .meta-box .lbl{font-size:9.5px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#888;margin-bottom:4px}
-      .meta-box .v{font-size:13px;color:#0a1f18;line-height:1.5}
-      .meta-box .v strong{display:block;font-size:14px;margin-bottom:1px}
-      table{width:100%;border-collapse:collapse;margin-bottom:18px}
-      thead th{text-align:left;font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#666;padding:8px 10px;background:#f0faf6;border-top:1px solid #ddd;border-bottom:1px solid #ddd}
-      th.num,td.num{text-align:right}
-      tbody td{padding:10px;border-bottom:1px solid #eee;font-size:13px;vertical-align:top}
-      tbody tr:last-child td{border-bottom:1px solid #ddd}
-      .totals{margin-left:auto;width:300px;margin-bottom:20px}
-      .totals .row{display:flex;justify-content:space-between;padding:5px 0;font-size:13px}
-      .totals .row .v{font-variant-numeric:tabular-nums;font-weight:600}
-      .totals .grand{padding:10px 0;border-top:2px solid #0a3d2e;margin-top:6px;font-size:16px;font-weight:700;color:#0a3d2e}
-      .totals .due{margin-top:8px;padding:10px 14px;background:#fef3c7;border-radius:6px;font-size:14px;font-weight:700;color:#92400e;display:flex;justify-content:space-between}
-      .totals .due.zero{background:#dcfce7;color:#166534}
-      .notes{margin-top:16px;padding:14px;background:#f7f9f8;border-left:3px solid #0a3d2e;border-radius:6px;font-size:12px;color:#3d6358;line-height:1.6}
-      .notes .lbl{font-size:9.5px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#0a3d2e;margin-bottom:5px}
-      .terms{margin-top:14px;font-size:11px;color:#777;line-height:1.6;white-space:pre-line}
-      .ft{margin-top:28px;padding-top:14px;border-top:1px solid #ddd;text-align:center;font-size:10.5px;color:#888;letter-spacing:0.04em}
-      @media print{body{margin:0;padding:18mm 16mm;max-width:none}.no-print{display:none}}
-      .print-bar{position:fixed;top:12px;right:12px;display:flex;gap:8px}
-      .print-bar button{padding:8px 16px;background:#0a3d2e;color:#fff;border:none;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;font-family:Helvetica,sans-serif}
-      .print-bar button.alt{background:#fff;color:#0a3d2e;border:1.5px solid #0a3d2e}
+      html,body{background:#f3f4f6}
+      body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;color:#1f2937;font-size:13px;line-height:1.5;-webkit-font-smoothing:antialiased}
+      .page{background:#fff;max-width:820px;margin:30px auto;padding:48px 56px 40px;box-shadow:0 1px 3px rgba(0,0,0,0.08),0 4px 16px rgba(0,0,0,0.04);border-radius:2px}
+      /* ── Header ── */
+      .hd{display:flex;justify-content:space-between;align-items:flex-start;gap:32px;margin-bottom:36px}
+      .hd-l{display:flex;align-items:flex-start;gap:16px;flex:1;min-width:0}
+      .hd-l img{width:72px;height:72px;object-fit:contain;flex-shrink:0}
+      .hd-co h1{font-size:20px;font-weight:700;color:#0a3d2e;letter-spacing:-0.01em;line-height:1.15;margin-bottom:3px}
+      .hd-co .tag{font-size:10.5px;font-weight:600;letter-spacing:0.04em;color:#6b7280;margin-bottom:8px}
+      .hd-co .addr{font-size:11.5px;color:#4b5563;line-height:1.55;white-space:pre-line}
+      .hd-r{text-align:right;flex-shrink:0}
+      .hd-r .title{font-size:32px;font-weight:300;color:#0a3d2e;letter-spacing:0.08em;line-height:1;margin-bottom:6px}
+      .hd-r .num{font-size:13.5px;color:#4b5563;font-weight:500}
+      .hd-r .status{display:inline-block;margin-top:10px;font-size:9.5px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;padding:4px 10px;border-radius:3px;background:#fef3c7;color:#92400e;border:1px solid #fcd34d}
+      .hd-r .status.paid{background:#dcfce7;color:#166534;border-color:#86efac}
+      .hd-r .status.draft{background:#f3f4f6;color:#4b5563;border-color:#d1d5db}
+      .hd-r .status.overdue{background:#fee2e2;color:#991b1b;border-color:#fca5a5}
+      .hd-r .status.sent{background:#dbeafe;color:#1e40af;border-color:#93c5fd}
+      /* ── Balance Due card ── */
+      .bal-card{display:flex;justify-content:space-between;align-items:stretch;background:#f9fafb;border:1px solid #e5e7eb;border-left:4px solid #0a3d2e;border-radius:3px;padding:18px 22px;margin-bottom:28px}
+      .bal-card.paid{border-left-color:#16a34a;background:#f0fdf4}
+      .bal-card .col{display:flex;flex-direction:column;justify-content:center;padding:0 14px;border-right:1px solid #e5e7eb;min-width:0}
+      .bal-card .col:last-child{border-right:none;padding-right:0;text-align:right}
+      .bal-card .col:first-child{padding-left:0}
+      .bal-card .lbl{font-size:9.5px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#6b7280;margin-bottom:4px}
+      .bal-card .v{font-size:14px;color:#111827;font-weight:600;font-variant-numeric:tabular-nums}
+      .bal-card .v.big{font-size:22px;font-weight:700;color:#0a3d2e;letter-spacing:-0.01em}
+      .bal-card.paid .v.big{color:#15803d}
+      /* ── Bill-to row ── */
+      .meta{display:grid;grid-template-columns:1fr 1fr;gap:32px;margin-bottom:28px}
+      .meta-box .lbl{font-size:9.5px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#6b7280;margin-bottom:6px;padding-bottom:5px;border-bottom:1px solid #e5e7eb}
+      .meta-box .v{font-size:12.5px;color:#1f2937;line-height:1.6;white-space:pre-line}
+      .meta-box .v strong{display:block;font-size:13.5px;font-weight:600;color:#111827;margin-bottom:2px}
+      /* ── Line items table ── */
+      table{width:100%;border-collapse:collapse;margin-bottom:0}
+      thead th{text-align:left;font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#fff;padding:11px 12px;background:#0a3d2e}
+      thead th:first-child{padding-left:16px;border-top-left-radius:3px}
+      thead th:last-child{padding-right:16px;border-top-right-radius:3px}
+      th.num,td.num{text-align:right;font-variant-numeric:tabular-nums}
+      tbody td{padding:13px 12px;border-bottom:1px solid #e5e7eb;font-size:12.5px;color:#1f2937;vertical-align:top}
+      tbody td:first-child{padding-left:16px}
+      tbody td:last-child{padding-right:16px}
+      tbody tr:nth-child(even){background:#f9fafb}
+      tbody td.row-num{color:#9ca3af;font-weight:500;width:28px}
+      tbody td.desc{color:#111827}
+      tbody td.amt{font-weight:600;color:#111827}
+      tbody td.empty{text-align:center;color:#9ca3af;padding:24px;font-style:italic}
+      /* ── Totals ── */
+      .totals-wrap{display:flex;justify-content:flex-end;margin-top:0;margin-bottom:24px}
+      .totals{width:320px}
+      .totals .row{display:flex;justify-content:space-between;padding:9px 16px;font-size:12.5px;color:#4b5563}
+      .totals .row .v{font-variant-numeric:tabular-nums;color:#111827;font-weight:500}
+      .totals .row.sub{border-bottom:1px solid #e5e7eb}
+      .totals .grand{background:#f9fafb;font-size:13.5px;font-weight:700;color:#111827;border-top:1px solid #e5e7eb;border-bottom:2px solid #0a3d2e;padding:12px 16px}
+      .totals .grand .v{color:#0a3d2e;font-weight:700}
+      .totals .paid-row{color:#15803d}
+      .totals .paid-row .v{color:#15803d}
+      .totals .due{margin-top:6px;padding:14px 16px;background:#0a3d2e;color:#fff;border-radius:3px;font-size:14px;font-weight:700;display:flex;justify-content:space-between;align-items:center}
+      .totals .due.zero{background:#15803d}
+      .totals .due .v{font-size:18px;font-weight:700;color:#fff;font-variant-numeric:tabular-nums}
+      /* ── Notes / Terms / Footer ── */
+      .pay-info{margin-top:8px;padding:16px 18px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:3px;display:grid;grid-template-columns:1fr 1fr;gap:18px}
+      .pay-info .blk .lbl{font-size:9.5px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#6b7280;margin-bottom:5px}
+      .pay-info .blk .v{font-size:12px;color:#374151;line-height:1.55;white-space:pre-line}
+      .notes{margin-top:18px;padding:14px 16px;background:#fffbeb;border-left:3px solid #f59e0b;border-radius:2px;font-size:12px;color:#78350f;line-height:1.6}
+      .notes .lbl{font-size:9.5px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#92400e;margin-bottom:5px}
+      .terms{margin-top:14px;padding:12px 0;font-size:11px;color:#6b7280;line-height:1.6;white-space:pre-line;border-top:1px solid #e5e7eb}
+      .terms .lbl{font-size:9.5px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#4b5563;margin-bottom:5px}
+      .ft{margin-top:32px;padding-top:16px;border-top:1px solid #e5e7eb;text-align:center;font-size:11px;color:#6b7280;line-height:1.6}
+      .ft .thanks{font-size:13px;font-weight:600;color:#0a3d2e;margin-bottom:4px;letter-spacing:0.02em}
+      @media print{
+        html,body{background:#fff}
+        .page{margin:0;padding:18mm 16mm;max-width:none;box-shadow:none;border-radius:0}
+        .no-print{display:none!important}
+        thead{display:table-header-group}
+        tr{page-break-inside:avoid}
+      }
+      .print-bar{position:fixed;top:14px;right:14px;display:flex;gap:8px;z-index:100}
+      .print-bar button{padding:9px 18px;background:#0a3d2e;color:#fff;border:none;border-radius:4px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit;box-shadow:0 1px 3px rgba(0,0,0,0.2)}
+      .print-bar button.alt{background:#fff;color:#374151;border:1px solid #d1d5db}
+      .print-bar button:hover{opacity:0.92}
     </style></head><body>
     <div class="no-print print-bar">
       <button class="alt" onclick="window.close()">Close</button>
       <button onclick="window.print()">Print / Save PDF</button>
     </div>
-    <header class="lh">
-      <div class="lh-l">
-        ${logoSrc?`<img src="${logoSrc}" alt="">`:''}
-        <div class="lh-co">
-          <h1>${esc(co.name||'Waterfront Solutions')}</h1>
-          <div class="tag">${esc(co.license?'Lic. '+co.license:'Construction & Waterfront Services')}</div>
-          <div class="addr">${esc(co.address||'')}${co.phone?'\n'+esc(co.phone):''}${co.email?' · '+esc(co.email):''}${co.website?'\n'+esc(co.website):''}</div>
+    <div class="page">
+      <header class="hd">
+        <div class="hd-l">
+          ${logoSrc?`<img src="${logoSrc}" alt="">`:''}
+          <div class="hd-co">
+            <h1>${esc(co.name||'Waterfront Solutions')}</h1>
+            <div class="tag">${esc(co.license?'License #'+co.license:'Construction & Waterfront Services')}</div>
+            <div class="addr">${esc(co.address||'')}${co.phone?'\n'+esc(co.phone):''}${co.email?'  ·  '+esc(co.email):''}${co.website?'\n'+esc(co.website):''}</div>
+          </div>
+        </div>
+        <div class="hd-r">
+          <div class="title">INVOICE</div>
+          <div class="num">#${esc(inv.number||'')}</div>
+          <div class="status ${st}">${st}</div>
+        </div>
+      </header>
+      <div class="bal-card ${isPaid?'paid':''}">
+        <div class="col">
+          <div class="lbl">Invoice Date</div>
+          <div class="v">${fmtDate(inv.date)||'—'}</div>
+        </div>
+        <div class="col">
+          <div class="lbl">${inv.dueDate?'Due Date':'Terms'}</div>
+          <div class="v">${inv.dueDate?fmtDate(inv.dueDate):'On Receipt'}</div>
+        </div>
+        <div class="col">
+          <div class="lbl">${isPaid?'Amount Paid':'Balance Due'}</div>
+          <div class="v big">${money(isPaid?c.total:balDue)}</div>
         </div>
       </div>
-      <div class="lh-r">
-        <div class="title">INVOICE</div>
-        <div class="num">${esc(inv.number||'')}</div>
-        <div class="status ${invoiceStatus(inv)}">${invoiceStatus(inv)}</div>
+      <section class="meta">
+        <div class="meta-box">
+          <div class="lbl">Bill To</div>
+          <div class="v"><strong>${esc(j.customerName||'Customer')}</strong>${j.billingAddress?'\n'+esc(j.billingAddress):(j.address?'\n'+esc(j.address):'')}${j.customerPhone?'\n'+esc(j.customerPhone):''}${j.customerEmail?'\n'+esc(j.customerEmail):''}</div>
+        </div>
+        <div class="meta-box">
+          <div class="lbl">Project / Job</div>
+          <div class="v"><strong>${esc(j.name||'')}</strong>${j.address&&j.address!==(j.billingAddress||'')?'\n'+esc(j.address):''}</div>
+        </div>
+      </section>
+      <table>
+        <thead><tr>
+          <th style="width:28px">#</th>
+          <th>Description</th>
+          <th class="num" style="width:70px">Qty</th>
+          <th class="num" style="width:100px">Rate</th>
+          <th class="num" style="width:110px">Amount</th>
+        </tr></thead>
+        <tbody>${itemsRows||'<tr><td colspan="5" class="empty">No line items</td></tr>'}</tbody>
+      </table>
+      <div class="totals-wrap">
+        <div class="totals">
+          <div class="row sub"><span>Subtotal</span><span class="v">${money(c.sub)}</span></div>
+          ${Number(inv.taxRate||0)>0?`<div class="row sub"><span>Tax (${Number(inv.taxRate||0)}%)</span><span class="v">${money(c.tax)}</span></div>`:''}
+          <div class="row grand"><span>Total</span><span class="v">${money(c.total)}</span></div>
+          ${c.paid>0?`<div class="row paid-row"><span>Payments Received</span><span class="v">−${money(c.paid)}</span></div>`:''}
+          <div class="due ${isPaid?'zero':''}"><span>${isPaid?'PAID IN FULL':'BALANCE DUE'}</span><span class="v">${money(balDue)}</span></div>
+        </div>
       </div>
-    </header>
-    <section class="meta">
-      <div class="meta-box">
-        <div class="lbl">Bill To</div>
-        <div class="v"><strong>${esc(j.customerName||'Customer')}</strong>${j.billingAddress?'\n'+esc(j.billingAddress):(j.address?'\n'+esc(j.address):'')}${j.customerPhone?'\n'+esc(j.customerPhone):''}${j.customerEmail?'\n'+esc(j.customerEmail):''}</div>
+      ${(co.phone||co.email)?`<div class="pay-info">
+        <div class="blk"><div class="lbl">Questions?</div><div class="v">${esc(co.name||'Waterfront Solutions')}${co.phone?'\n'+esc(co.phone):''}${co.email?'\n'+esc(co.email):''}</div></div>
+        <div class="blk"><div class="lbl">Make Checks Payable To</div><div class="v">${esc(co.name||'Waterfront Solutions')}${co.address?'\n'+esc(co.address):''}</div></div>
+      </div>`:''}
+      ${inv.notes?`<div class="notes"><div class="lbl">Notes</div>${esc(inv.notes).replace(/\n/g,'<br>')}</div>`:''}
+      ${inv.terms?`<div class="terms"><div class="lbl">Terms &amp; Conditions</div>${esc(inv.terms)}</div>`:''}
+      <div class="ft">
+        <div class="thanks">Thank you for your business!</div>
+        ${esc(co.name||'Waterfront Solutions')}${co.phone?'  ·  '+esc(co.phone):''}${co.email?'  ·  '+esc(co.email):''}${co.website?'  ·  '+esc(co.website):''}
       </div>
-      <div class="meta-box">
-        <div class="lbl">Project</div>
-        <div class="v"><strong>${esc(j.name||'')}</strong>${j.address?'\n'+esc(j.address):''}</div>
-        <div style="margin-top:12px"><div class="lbl">Invoice Date</div><div class="v">${fmtDate(inv.date)||''}</div></div>
-        ${inv.dueDate?`<div style="margin-top:8px"><div class="lbl">Due Date</div><div class="v">${fmtDate(inv.dueDate)}</div></div>`:''}
-      </div>
-    </section>
-    <table>
-      <thead><tr><th style="width:50%">Description</th><th class="num">Qty</th><th class="num">Rate</th><th class="num">Amount</th></tr></thead>
-      <tbody>${itemsRows||'<tr><td colspan="4" style="text-align:center;color:#999;padding:20px">No line items</td></tr>'}</tbody>
-    </table>
-    <div class="totals">
-      <div class="row"><span>Subtotal</span><span class="v">${money(c.sub)}</span></div>
-      <div class="row"><span>Tax (${Number(inv.taxRate||0)}%)</span><span class="v">${money(c.tax)}</span></div>
-      <div class="row grand"><span>Total</span><span class="v">${money(c.total)}</span></div>
-      ${c.paid>0?`<div class="row"><span>Paid</span><span class="v">-${money(c.paid)}</span></div>`:''}
-      <div class="due ${c.balance<=0.005?'zero':''}"><span>${c.balance<=0.005?'Paid in Full':'Balance Due'}</span><span class="v">${money(Math.max(0,c.balance))}</span></div>
     </div>
-    ${inv.notes?`<div class="notes"><div class="lbl">Notes</div>${esc(inv.notes).replace(/\n/g,'<br>')}</div>`:''}
-    ${inv.terms?`<div class="terms">${esc(inv.terms)}</div>`:''}
-    <div class="ft">${esc(co.name||'Waterfront Solutions')}${co.phone?' · '+esc(co.phone):''}${co.email?' · '+esc(co.email):''} — Thank you for your business</div>
+    </body></html>`);
+  w.document.close();
+}
+
+// ══ Print internal job summary (with expenses & margin) ══
+function printJobSummary(j){
+  const w=window.open('','_blank');
+  if(!w){toast('Pop-up blocked — allow pop-ups to print','');return}
+  const co=COMPANY;
+  const logoSrc=getBrandLogoSrc();
+  const est=Number(j.value||0);
+  const inv=jobRevenue(j);
+  const invTot=invoiceTotals(j);
+  const paid=invTot?invTot.paid:Number(j.paid||0);
+  const bal=inv-paid;
+  const exps=(j.expenses||[]).slice().sort((a,b)=>(a.date||'').localeCompare(b.date||''));
+  const expLedger=exps.reduce((s,e)=>s+Number(e.amount||0),0);
+  const legacyCosts=Number(j.costs||0);
+  const totalExp=expLedger+legacyCosts;
+  const profit=inv-totalExp;
+  const margin=inv>0?(profit/inv)*100:0;
+  const projectedProfit=est-totalExp;
+  const projectedMargin=est>0?(projectedProfit/est)*100:0;
+  const byCat={};
+  exps.forEach(e=>{const k=e.category||'Other';byCat[k]=(byCat[k]||0)+Number(e.amount||0)});
+  const catRows=Object.entries(byCat).sort((a,b)=>b[1]-a[1]);
+  const expRows=exps.map(e=>`<tr>
+    <td>${fmtDate(e.date)||''}</td>
+    <td>${esc(e.category||'')}</td>
+    <td>${esc(e.vendor||'')}</td>
+    <td>${esc(e.description||'')}</td>
+    <td class="num">${money(Number(e.amount||0))}</td>
+  </tr>`).join('');
+  const invRows=(j.invoices||[]).map(iv=>{
+    const c=calcInvoice(iv);
+    return `<tr>
+      <td>${esc(iv.number||'')}</td>
+      <td>${fmtDate(iv.date)||''}</td>
+      <td>${esc(iv.status||'draft')}</td>
+      <td class="num">${money(c.total)}</td>
+      <td class="num">${money(c.paid)}</td>
+      <td class="num">${money(c.balance)}</td>
+    </tr>`;
+  }).join('');
+
+  w.document.write(`<!DOCTYPE html><html><head>
+    <meta charset="utf-8">
+    <title>Job Summary — ${esc(j.name||'')}</title>
+    <style>
+      *{box-sizing:border-box;margin:0;padding:0}
+      html,body{background:#f3f4f6}
+      body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;color:#1f2937;font-size:13px;line-height:1.5;-webkit-font-smoothing:antialiased}
+      .page{background:#fff;max-width:820px;margin:30px auto;padding:48px 56px 40px;box-shadow:0 1px 3px rgba(0,0,0,0.08),0 4px 16px rgba(0,0,0,0.04);border-radius:2px}
+      .conf{background:#fef3c7;color:#92400e;padding:6px 12px;border-radius:3px;font-size:10.5px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;display:inline-block;margin-bottom:18px;border:1px solid #fcd34d}
+      .hd{display:flex;justify-content:space-between;align-items:flex-start;gap:32px;margin-bottom:24px;padding-bottom:18px;border-bottom:2px solid #0a3d2e}
+      .hd-l{display:flex;align-items:flex-start;gap:14px;flex:1}
+      .hd-l img{width:60px;height:60px;object-fit:contain;flex-shrink:0}
+      .hd h1{font-size:18px;color:#0a3d2e;font-weight:700;line-height:1.1}
+      .hd .sub{font-size:11px;color:#6b7280;margin-top:3px;font-weight:600;letter-spacing:0.04em;text-transform:uppercase}
+      .hd-r{text-align:right;flex-shrink:0}
+      .hd-r .title{font-size:24px;font-weight:300;color:#0a3d2e;letter-spacing:0.06em;line-height:1}
+      .hd-r .date{font-size:11px;color:#6b7280;margin-top:6px}
+      .job-name{font-size:22px;font-weight:700;color:#111827;margin-bottom:4px}
+      .job-meta{font-size:12px;color:#4b5563;line-height:1.6;margin-bottom:20px}
+      .job-meta strong{color:#111827}
+      /* Profit hero */
+      .profit-hero{background:linear-gradient(135deg,${profit>=0?'#0a3d2e':'#991b1b'},${profit>=0?'#15803d':'#dc2626'});color:#fff;padding:24px 28px;border-radius:4px;margin-bottom:24px;display:flex;justify-content:space-between;align-items:center;gap:20px}
+      .profit-hero .lbl{font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;opacity:0.85;margin-bottom:6px}
+      .profit-hero .v{font-size:36px;font-weight:700;letter-spacing:-0.02em;line-height:1;font-variant-numeric:tabular-nums}
+      .profit-hero .margin-box{text-align:right;border-left:1px solid rgba(255,255,255,0.25);padding-left:20px}
+      .profit-hero .margin-v{font-size:32px;font-weight:700;line-height:1;font-variant-numeric:tabular-nums}
+      .profit-hero .margin-lbl{font-size:10.5px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;opacity:0.85;margin-top:4px}
+      /* Summary grid */
+      .summary-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:#e5e7eb;border:1px solid #e5e7eb;border-radius:3px;overflow:hidden;margin-bottom:24px}
+      .sum-cell{background:#fff;padding:14px 16px}
+      .sum-cell .lbl{font-size:9.5px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#6b7280;margin-bottom:4px}
+      .sum-cell .v{font-size:16px;font-weight:700;color:#111827;font-variant-numeric:tabular-nums}
+      .sum-cell .sub{font-size:10.5px;color:#6b7280;margin-top:2px}
+      /* Section */
+      .sec{margin-bottom:24px}
+      .sec h2{font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#0a3d2e;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid #e5e7eb}
+      table{width:100%;border-collapse:collapse}
+      thead th{text-align:left;font-size:9.5px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#6b7280;padding:8px 10px;background:#f9fafb;border-bottom:1px solid #e5e7eb}
+      th.num,td.num{text-align:right;font-variant-numeric:tabular-nums}
+      tbody td{padding:9px 10px;border-bottom:1px solid #f3f4f6;font-size:12px;color:#1f2937}
+      tbody tr:nth-child(even){background:#fafafa}
+      tfoot td{padding:10px;font-weight:700;border-top:2px solid #0a3d2e;background:#f9fafb}
+      .cat-bar{display:flex;align-items:center;gap:10px;padding:6px 0;font-size:12.5px}
+      .cat-bar .name{min-width:130px;font-weight:600}
+      .cat-bar .track{flex:1;height:8px;background:#f3f4f6;border-radius:4px;overflow:hidden}
+      .cat-bar .fill{height:100%;background:linear-gradient(90deg,#0a3d2e,#15803d);border-radius:4px}
+      .cat-bar .amt{min-width:90px;text-align:right;font-weight:600;font-variant-numeric:tabular-nums}
+      .empty-msg{font-size:12.5px;color:#9ca3af;padding:12px 0;font-style:italic}
+      .ft{margin-top:32px;padding-top:14px;border-top:1px solid #e5e7eb;text-align:center;font-size:10.5px;color:#9ca3af}
+      @media print{
+        html,body{background:#fff}
+        .page{margin:0;padding:18mm 16mm;max-width:none;box-shadow:none;border-radius:0}
+        .no-print{display:none!important}
+        thead{display:table-header-group}
+        tr{page-break-inside:avoid}
+      }
+      .print-bar{position:fixed;top:14px;right:14px;display:flex;gap:8px;z-index:100}
+      .print-bar button{padding:9px 18px;background:#0a3d2e;color:#fff;border:none;border-radius:4px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit;box-shadow:0 1px 3px rgba(0,0,0,0.2)}
+      .print-bar button.alt{background:#fff;color:#374151;border:1px solid #d1d5db}
+    </style></head><body>
+    <div class="no-print print-bar">
+      <button class="alt" onclick="window.close()">Close</button>
+      <button onclick="window.print()">Print / Save PDF</button>
+    </div>
+    <div class="page">
+      <div class="conf">Internal — Not For Customer</div>
+      <header class="hd">
+        <div class="hd-l">
+          ${logoSrc?`<img src="${logoSrc}" alt="">`:''}
+          <div>
+            <h1>${esc(co.name||'Waterfront Solutions')}</h1>
+            <div class="sub">Job Profitability Summary</div>
+          </div>
+        </div>
+        <div class="hd-r">
+          <div class="title">JOB SUMMARY</div>
+          <div class="date">${new Date().toLocaleDateString(undefined,{year:'numeric',month:'long',day:'numeric'})}</div>
+        </div>
+      </header>
+
+      <div class="job-name">${esc(j.name||'')}</div>
+      <div class="job-meta">
+        ${j.customerName?`<strong>${esc(j.customerName)}</strong>`:''}
+        ${j.address?' · '+esc(j.address):''}
+        ${j.type?' · '+esc(j.type):''}
+        ${j.assigned?' · Lead: '+esc(j.assigned):''}
+        <br>Status: <strong>${esc(j.status||'')}</strong> · Stage: <strong>${esc(jobStage(j))}</strong>${j.startDate?' · Started '+fmtDate(j.startDate):''}${j.completedAt?' · Completed '+new Date(j.completedAt).toLocaleDateString():''}
+      </div>
+
+      <div class="profit-hero">
+        <div>
+          <div class="lbl">${inv>0?'Profit':'Projected Profit'}</div>
+          <div class="v">${money(inv>0?profit:projectedProfit)}</div>
+        </div>
+        <div class="margin-box">
+          <div class="margin-v">${(inv>0?margin:projectedMargin).toFixed(1)}%</div>
+          <div class="margin-lbl">Margin</div>
+        </div>
+      </div>
+
+      <div class="summary-grid">
+        <div class="sum-cell"><div class="lbl">Estimate</div><div class="v">${money(est)}</div></div>
+        <div class="sum-cell"><div class="lbl">Invoiced</div><div class="v">${money(inv)}</div><div class="sub">${(j.invoices||[]).length} invoice${(j.invoices||[]).length===1?'':'s'}</div></div>
+        <div class="sum-cell"><div class="lbl">Collected</div><div class="v">${money(paid)}</div><div class="sub">${money(bal)} outstanding</div></div>
+        <div class="sum-cell"><div class="lbl">Total Expenses</div><div class="v">${money(totalExp)}</div><div class="sub">${exps.length} entr${exps.length===1?'y':'ies'}${legacyCosts?' + lump':''}</div></div>
+      </div>
+
+      ${catRows.length>0?`<div class="sec">
+        <h2>Expenses by Category</h2>
+        ${catRows.map(([cat,amt])=>{
+          const pct=totalExp>0?(amt/totalExp)*100:0;
+          return `<div class="cat-bar">
+            <div class="name">${esc(cat)}</div>
+            <div class="track"><div class="fill" style="width:${pct}%"></div></div>
+            <div class="amt">${money(amt)} <span style="color:#9ca3af;font-weight:500">(${pct.toFixed(0)}%)</span></div>
+          </div>`;
+        }).join('')}
+        ${legacyCosts?`<div class="cat-bar"><div class="name">Lump-Sum (legacy)</div><div class="track"><div class="fill" style="width:${totalExp>0?(legacyCosts/totalExp)*100:0}%;background:#9ca3af"></div></div><div class="amt">${money(legacyCosts)}</div></div>`:''}
+      </div>`:''}
+
+      ${exps.length>0?`<div class="sec">
+        <h2>Expense Detail</h2>
+        <table>
+          <thead><tr><th>Date</th><th>Category</th><th>Vendor</th><th>Description</th><th class="num">Amount</th></tr></thead>
+          <tbody>${expRows}</tbody>
+          <tfoot><tr><td colspan="4">Total Itemized Expenses</td><td class="num">${money(expLedger)}</td></tr></tfoot>
+        </table>
+      </div>`:'<div class="sec"><h2>Expenses</h2><div class="empty-msg">No itemized expenses logged for this job.</div></div>'}
+
+      ${(j.invoices||[]).length>0?`<div class="sec">
+        <h2>Invoices</h2>
+        <table>
+          <thead><tr><th>Invoice #</th><th>Date</th><th>Status</th><th class="num">Total</th><th class="num">Paid</th><th class="num">Balance</th></tr></thead>
+          <tbody>${invRows}</tbody>
+        </table>
+      </div>`:''}
+
+      <div class="ft">Generated ${new Date().toLocaleString()} · ${esc(co.name||'Waterfront Solutions')} · Internal job profitability report</div>
+    </div>
     </body></html>`);
   w.document.close();
 }
@@ -3513,7 +4708,7 @@ let CMD={open:false,query:'',idx:0,items:[]};
 function cmdItems(){
   const out=[];
   // Views
-  [['dashboard','Home / Dashboard','home'],['jobs','Jobs','briefcase'],['schedule','Schedule','calendar'],['invoices','Invoices','invoice'],['map','Map','map'],['reports','Reports','chart'],['activity','Activity','list'],['team','Team','team']].forEach(([v,name,ico])=>{
+  [['dashboard','Home / Dashboard','home'],['jobs','Jobs','briefcase'],['schedule','Schedule','calendar'],['invoices','Invoices','invoice'],['customers','Customers','team'],['map','Map','map'],['reports','Reports','chart'],['activity','Activity','list'],['team','Team','team']].forEach(([v,name,ico])=>{
     out.push({type:'view',name:'Go to '+name,sub:'View',ico,run:()=>{S.view=v;S.detail=null;render()}});
   });
   // Actions
@@ -3878,6 +5073,13 @@ function attachHandlers(){
     const inv=(j.invoices||[]).find(i=>i.id===invId);
     if(inv)emailInvoice(j,inv);
   });
+  // Customers
+  $('cust-search')?.addEventListener('input',e=>{S.custSearch=e.target.value;render()});
+  $('cust-sort')?.addEventListener('change',e=>{S.custSort=e.target.value;render()});
+  document.querySelectorAll('[data-cust-name]').forEach(card=>card.onclick=()=>{
+    S.view='jobs';S.search=card.dataset.custName;S.filter='all';S.detail=null;render();
+    toast('Showing jobs for '+card.dataset.custName);
+  });
   // Reports
   document.querySelectorAll('[data-range]').forEach(c=>c.onclick=()=>{S.reportRange=c.dataset.range;render()});
   // Map
@@ -3950,10 +5152,11 @@ function attachHandlers(){
 
   // Photos
   document.querySelectorAll('[data-photo-cat]').forEach(c=>c.onclick=()=>{S.photoCat=c.dataset.photoCat;render()});
-  $('photo-upload')?.addEventListener('change',function(){
+  document.querySelectorAll('[data-photo-view]').forEach(b=>b.onclick=()=>{S.photoView=b.dataset.photoView;localStorage.setItem('wfs_photoview',S.photoView);render()});
+  const handlePhotoFiles=(files)=>{
     const j=S.jobs[S.detail];if(!j)return;j.photos=j.photos||[];
-    const files=Array.from(this.files);if(!files.length)return;
-    const cat=S.photoCat&&S.photoCat!=='all'?S.photoCat:'';
+    if(!files.length)return;
+    const cat=S.photoCat&&S.photoCat!=='all'?S.photoCat:'progress';
     let done=0;
     files.forEach(file=>{const r=new FileReader();r.onload=e=>{
       const img=new Image();img.onload=()=>{
@@ -3961,22 +5164,25 @@ function attachHandlers(){
         let w=img.width,h=img.height;
         if(w>MAX||h>MAX){if(w>h){h=Math.round(h*MAX/w);w=MAX}else{w=Math.round(w*MAX/h);h=MAX}}
         c.width=w;c.height=h;c.getContext('2d').drawImage(img,0,0,w,h);
-        j.photos.push({url:c.toDataURL('image/jpeg',0.78),cat:cat,user:S.user,time:Date.now()});
-        if(++done===files.length){writeJob(j).then(()=>{logAct('added '+files.length+' photo(s) to',j.name);render();toast(files.length+' photo'+(files.length>1?'s':'')+' added','photo')})}
+        j.photos.push({url:c.toDataURL('image/jpeg',0.78),cat:cat,user:S.user,time:Date.now(),caption:''});
+        if(++done===files.length){writeJob(j).then(()=>{logAct('added '+files.length+' '+cat+' photo(s) to',j.name);render();toast(files.length+' photo'+(files.length>1?'s':'')+' added','photo')})}
       };img.src=e.target.result
     };r.readAsDataURL(file)});
+  };
+  $('photo-upload')?.addEventListener('change',function(){handlePhotoFiles(Array.from(this.files));this.value=''});
+  $('photo-camera')?.addEventListener('change',function(){handlePhotoFiles(Array.from(this.files));this.value=''});
+  $('qa-snap-input')?.addEventListener('change',function(){
+    if(S.photoCat!=='progress')S.photoCat='progress';
+    handlePhotoFiles(Array.from(this.files));this.value='';
   });
   document.querySelectorAll('[data-del-photo]').forEach(b=>b.onclick=async e=>{
     e.stopPropagation();const j=S.jobs[S.detail];if(!j)return;
+    if(!confirm('Delete this photo?'))return;
     j.photos.splice(parseInt(b.dataset.delPhoto),1);await writeJob(j);render();toast('Photo removed');
   });
   document.querySelectorAll('[data-view-photo]').forEach(img=>img.onclick=e=>{
-    e.stopPropagation();const j=S.jobs[S.detail];if(!j)return;
-    const idx=parseInt(img.dataset.viewPhoto);
-    const url=photoURL(j.photos[idx]);
-    $('fs-root').innerHTML=`<div class="photo-fs" id="fs"><button class="photo-fs-close" id="fsc">×</button><img src="${url}" alt=""></div>`;
-    $('fsc').onclick=()=>$('fs-root').innerHTML='';
-    $('fs').onclick=e=>{if(e.target===e.currentTarget)$('fs-root').innerHTML=''};
+    e.stopPropagation();
+    openPhotoViewer(parseInt(img.dataset.viewPhoto));
   });
 
   // Notes
@@ -4051,6 +5257,15 @@ function attachHandlers(){
     j.invoiced=$('fin-inv').value;
     j.paid=$('fin-paid').value;
     await writeJob(j);await logAct('updated financials on',j.name);render();toast('Financials saved');
+  });
+  $('btn-print-job-summary')?.addEventListener('click',()=>{
+    const j=S.jobs[S.detail];if(j)printJobSummary(j);
+  });
+
+  // Expenses
+  $('btn-new-exp')?.addEventListener('click',()=>{const id=S.detail;if(id)showExpenseModal(id)});
+  document.querySelectorAll('[data-exp-id]').forEach(row=>row.onclick=()=>{
+    const id=S.detail;if(id)showExpenseModal(id,row.dataset.expId);
   });
 
   // Communications
