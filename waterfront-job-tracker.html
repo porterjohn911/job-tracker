@@ -1105,6 +1105,54 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .inv-total-row .v{font-variant-numeric:tabular-nums;font-weight:600}
 @media(prefers-color-scheme:dark){.inv-total-row.grand{color:var(--green-400)}}
 
+/* ── EXPENSES ── */
+.expense-list{display:flex;flex-direction:column;gap:6px;margin-bottom:8px}
+.expense-row{
+  display:flex;align-items:center;gap:12px;
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r-md);padding:10px 12px;cursor:pointer;
+  transition:all 0.15s;
+}
+.expense-row:hover{border-color:var(--green-600)}
+.exp-cat-pill{
+  font-size:10px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;
+  padding:4px 8px;border-radius:4px;flex-shrink:0;min-width:84px;text-align:center;
+  background:var(--surface-3);color:var(--text-2);
+}
+.exp-cat-pill.exp-materials{background:#dbeafe;color:#1e40af}
+.exp-cat-pill.exp-labor{background:#fef3c7;color:#92400e}
+.exp-cat-pill.exp-subcontractor{background:#ede9fe;color:#5b21b6}
+.exp-cat-pill.exp-equipment{background:#fce7f3;color:#9d174d}
+.exp-cat-pill.exp-fuel{background:#fed7aa;color:#9a3412}
+.exp-cat-pill.exp-permits{background:#dcfce7;color:#166534}
+.exp-cat-pill.exp-rentals{background:#cffafe;color:#155e75}
+.exp-cat-pill.exp-other{background:var(--surface-3);color:var(--text-2)}
+@media(prefers-color-scheme:dark){
+  .exp-cat-pill.exp-materials{background:#1e3a5f;color:#93c5fd}
+  .exp-cat-pill.exp-labor{background:#3d2800;color:#fbbf24}
+  .exp-cat-pill.exp-subcontractor{background:#2e1065;color:#c4b5fd}
+  .exp-cat-pill.exp-equipment{background:#500724;color:#f9a8d4}
+  .exp-cat-pill.exp-fuel{background:#431407;color:#fdba74}
+  .exp-cat-pill.exp-permits{background:#052e16;color:#86efac}
+  .exp-cat-pill.exp-rentals{background:#083344;color:#a5f3fc}
+}
+.exp-main{flex:1;min-width:0}
+.exp-desc{font-size:13px;font-weight:600;color:var(--text);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.exp-flag{font-size:9.5px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;padding:2px 6px;border-radius:3px}
+.exp-flag.bill{background:var(--gold-light);color:#92400e}
+.exp-flag.unpaid{background:var(--red-light);color:var(--red)}
+@media(prefers-color-scheme:dark){
+  .exp-flag.bill{background:#3d2800;color:#fbbf24}
+  .exp-flag.unpaid{background:#2d1515;color:#fca5a5}
+}
+.exp-meta{font-size:11.5px;color:var(--text-3);margin-top:2px}
+.exp-amt{font-size:14px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--text);flex-shrink:0}
+@media(max-width:520px){
+  .expense-row{flex-wrap:wrap;gap:8px}
+  .exp-cat-pill{min-width:auto}
+  .exp-amt{margin-left:auto}
+}
+
 @media(max-width:480px){
   .li-head{grid-template-columns:1fr 56px 80px 80px 24px}
   .li-row{grid-template-columns:1fr 56px 80px 80px 24px}
@@ -1361,6 +1409,19 @@ function daysUntil(s){if(!s)return null;try{const d=new Date(s+(s.length===10?'T
 function jobBalance(j){const inv=Number(j.invoiced||0),paid=Number(j.paid||0);return inv-paid}
 function jobStage(j){return j.stage||(j.status==='complete'?'Complete':j.status==='lead'?'Lead':'In Progress')}
 
+// ── Expense helpers ──
+const EXPENSE_CATEGORIES=['Materials','Labor','Subcontractor','Equipment','Fuel & Travel','Permits & Fees','Rentals','Other'];
+function jobTotalExpenses(j){
+  const ledger=(j.expenses||[]).reduce((s,e)=>s+Number(e.amount||0),0);
+  return ledger+Number(j.costs||0);
+}
+function jobRevenue(j){
+  const invTot=invoiceTotals(j);
+  return invTot?invTot.total:Number(j.invoiced||0);
+}
+function jobProfit(j){return jobRevenue(j)-jobTotalExpenses(j)}
+function jobMargin(j){const r=jobRevenue(j);return r>0?(jobProfit(j)/r)*100:0}
+
 // ── Invoice helpers ──
 function calcInvoice(inv){
   const items=inv.items||[];
@@ -1484,6 +1545,9 @@ function renderDashboard(){
   const totalPaid=all.reduce((s,j)=>s+Number(j.paid||0),0);
   const outstanding=totalInvoiced-totalPaid;
   const pipeline=leads.reduce((s,j)=>s+Number(j.value||0),0);
+  const totalExpensesAll=all.reduce((s,j)=>s+jobTotalExpenses(j),0);
+  const netProfitAll=totalInvoiced-totalExpensesAll;
+  const marginAll=totalInvoiced>0?(netProfitAll/totalInvoiced)*100:0;
   // Upcoming: jobs with start date in next 14 days, or not yet started
   const upcoming=all.filter(j=>{
     if(j.status==='complete')return false;
@@ -1525,6 +1589,16 @@ function renderDashboard(){
         <div class="kpi-label">Outstanding</div>
         <div class="kpi-value" style="color:${outstanding>0?'var(--orange)':'var(--green-700)'}">${money(outstanding)}</div>
         <div class="kpi-sub">${outstanding>0?'awaiting payment':'all paid up'}</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Net Profit</div>
+        <div class="kpi-value" style="color:${netProfitAll>=0?'var(--green-700)':'var(--red)'}">${money(netProfitAll)}</div>
+        <div class="kpi-sub">${marginAll.toFixed(1)}% margin · ${money(totalExpensesAll)} expenses</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Win Rate</div>
+        <div class="kpi-value">${(()=>{const decided=done.length+all.filter(j=>j.status==='hold').length;return decided>0?Math.round((done.length/decided)*100):0})()}%</div>
+        <div class="kpi-sub">${done.length} won · ${all.filter(j=>j.status==='hold').length} lost</div>
       </div>
     </div>
 
@@ -2434,6 +2508,10 @@ function renderReports(){
   const collected=inRange.reduce((s,j)=>s+Number(j.paid||0),0);
   const avgDeal=won>0?revenue/won:0;
   const pipeline=inRange.filter(j=>j.status!=='complete'&&j.status!=='hold').reduce((s,j)=>s+Number(j.value||0),0);
+  const inRangeTotalExpenses=inRange.reduce((s,j)=>s+jobTotalExpenses(j),0);
+  const inRangeTotalRevenue=inRange.reduce((s,j)=>s+jobRevenue(j),0);
+  const inRangeTotalProfit=inRangeTotalRevenue-inRangeTotalExpenses;
+  const inRangeAvgMargin=inRangeTotalRevenue>0?(inRangeTotalProfit/inRangeTotalRevenue)*100:0;
 
   // Monthly revenue chart — last 6 months
   const months=[];
@@ -2521,6 +2599,17 @@ function renderReports(){
   });
   const typeRows=Object.values(byType).sort((a,b)=>b.revenue-a.revenue);
 
+  // ── Profitability (top profit & margin per job) ──
+  const profitJobs=inRange.map(j=>{
+    const rev=jobRevenue(j);
+    const exp=jobTotalExpenses(j);
+    return {j,rev,exp,profit:rev-exp,margin:rev>0?((rev-exp)/rev)*100:0};
+  }).filter(p=>p.rev>0||p.exp>0);
+  const topProfit=profitJobs.slice().sort((a,b)=>b.profit-a.profit).slice(0,8);
+  const totalProfit=profitJobs.reduce((s,p)=>s+p.profit,0);
+  const totalRev=profitJobs.reduce((s,p)=>s+p.rev,0);
+  const avgMargin=totalRev>0?(totalProfit/totalRev)*100:0;
+
   // ── Cycle time (lead → complete) ──
   let cycleSum=0,cycleN=0;
   const cycleByType={};
@@ -2553,6 +2642,7 @@ function renderReports(){
 
     <div class="kpi-grid">
       <div class="kpi-card accent"><div class="kpi-label">Won Revenue</div><div class="kpi-value">${money(revenue)}</div><div class="kpi-sub">${won} job${won!==1?'s':''} completed</div></div>
+      <div class="kpi-card"><div class="kpi-label">Net Profit</div><div class="kpi-value" style="color:${inRangeTotalProfit>=0?'var(--green-700)':'var(--red)'}">${money(inRangeTotalProfit)}</div><div class="kpi-sub">${inRangeAvgMargin.toFixed(1)}% margin · ${money(inRangeTotalExpenses)} costs</div></div>
       <div class="kpi-card"><div class="kpi-label">Pipeline Value</div><div class="kpi-value">${money(pipeline)}</div><div class="kpi-sub">${open} open</div></div>
       <div class="kpi-card"><div class="kpi-label">Avg Job Size</div><div class="kpi-value">${money(avgDeal)}</div><div class="kpi-sub">across won jobs</div></div>
       <div class="kpi-card"><div class="kpi-label">Collected</div><div class="kpi-value">${money(collected)}</div><div class="kpi-sub">${revenue>0?((collected/revenue)*100).toFixed(0):0}% of revenue</div></div>
@@ -2666,6 +2756,38 @@ function renderReports(){
         <span class="cash-key"><span class="cash-dot inv"></span>Invoiced</span>
         <span class="cash-key"><span class="cash-dot col"></span>Collected</span>
       </div>
+    </div>
+
+    <div class="report-section">
+      <div class="report-hd">Profitability <span class="kpi-sub">Revenue − Expenses</span></div>
+      <div style="display:flex;align-items:center;gap:18px;flex-wrap:wrap;margin-bottom:14px;padding:12px 14px;background:linear-gradient(135deg,${totalProfit>=0?'rgba(16,163,74,0.08)':'rgba(220,38,38,0.08)'},transparent);border-radius:var(--r-md);border:1px solid var(--border)">
+        <div>
+          <div style="font-size:10.5px;color:var(--text-3);text-transform:uppercase;letter-spacing:0.06em;font-weight:700">Total Profit</div>
+          <div style="font-size:24px;font-weight:700;color:${totalProfit>=0?'var(--green-700)':'var(--red)'};margin-top:2px;font-variant-numeric:tabular-nums">${money(totalProfit)}</div>
+        </div>
+        <div style="padding-left:18px;border-left:1px solid var(--border)">
+          <div style="font-size:10.5px;color:var(--text-3);text-transform:uppercase;letter-spacing:0.06em;font-weight:700">Avg Margin</div>
+          <div style="font-size:24px;font-weight:700;color:${avgMargin>=0?'var(--green-700)':'var(--red)'};margin-top:2px;font-variant-numeric:tabular-nums">${avgMargin.toFixed(1)}%</div>
+        </div>
+        <div style="margin-left:auto;font-size:11.5px;color:var(--text-3);text-align:right;max-width:180px;line-height:1.4">${profitJobs.length} job${profitJobs.length!==1?'s':''} with revenue or expenses in range</div>
+      </div>
+      ${topProfit.length===0?'<p style="font-size:13px;color:var(--text-3);padding:4px 0">Log expenses on jobs to see profitability.</p>'
+        :`<div style="display:flex;flex-direction:column">
+          ${topProfit.map(p=>{
+            const pct=Math.abs(p.profit)/Math.max(1,Math.abs(topProfit[0].profit))*100;
+            return `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);font-size:12.5px">
+              <div style="flex:1;min-width:0">
+                <div style="font-weight:600;font-size:13px">${esc(p.j.name||'')}</div>
+                <div style="font-size:11px;color:var(--text-3)">${esc(p.j.customerName||'')} · ${money(p.rev)} rev · ${money(p.exp)} exp</div>
+              </div>
+              <div style="flex:1;max-width:160px"><div style="height:6px;background:var(--surface-3);border-radius:3px;overflow:hidden"><div style="height:100%;width:${pct}%;background:${p.profit>=0?'linear-gradient(90deg,var(--green-700),var(--green-400))':'linear-gradient(90deg,#dc2626,#fca5a5)'};border-radius:3px"></div></div></div>
+              <div style="text-align:right;min-width:90px">
+                <div style="font-weight:700;color:${p.profit>=0?'var(--green-700)':'var(--red)'};font-variant-numeric:tabular-nums">${money(p.profit)}</div>
+                <div style="font-size:11px;color:var(--text-3);font-variant-numeric:tabular-nums">${p.margin.toFixed(1)}%</div>
+              </div>
+            </div>`;
+          }).join('')}
+        </div>`}
     </div>
 
     <div class="report-section">
@@ -3003,6 +3125,7 @@ function renderDetail(id){
     {id:'photos',label:'Photos',count:photos.length},
     {id:'docs',label:'Files',count:(j.documents||[]).length},
     {id:'invoices',label:'Invoices',count:(j.invoices||[]).length},
+    {id:'expenses',label:'Expenses',count:(j.expenses||[]).length},
     {id:'financial',label:'Financials'},
     {id:'comms',label:'Comms',count:(j.comms||[]).length},
     {id:'notes',label:'Notes',count:(j.notes||[]).length},
@@ -3222,25 +3345,31 @@ function renderDetailTab(j,tab){
     const paid=invTot?invTot.paid:Number(j.paid||0);
     const bal=inv-paid;
     const pctPaid=inv>0?(paid/inv)*100:0;
-    const margin=est-Number(j.costs||0);
+    const expLedger=(j.expenses||[]).reduce((s,e)=>s+Number(e.amount||0),0);
+    const legacyCosts=Number(j.costs||0);
+    const totalExp=expLedger+legacyCosts;
+    const profit=inv-totalExp;
+    const margin=inv>0?(profit/inv)*100:0;
+    const projectedProfit=est-totalExp;
+    const projectedMargin=est>0?(projectedProfit/est)*100:0;
     const lockedByInv=!!invTot;
     return `
       <div class="section">
-        <div class="section-hd">Financial Summary${lockedByInv?' <span style="font-weight:400;text-transform:none;letter-spacing:0">From '+((j.invoices||[]).length)+' invoice'+((j.invoices||[]).length===1?'':'s')+'</span>':''}</div>
+        <div class="section-hd">Financial Summary${lockedByInv?' <span style="font-weight:400;text-transform:none;letter-spacing:0">From '+((j.invoices||[]).length)+' invoice'+((j.invoices||[]).length===1?'':'s')+'</span>':''}<button class="btn-sm" id="btn-print-job-summary" style="padding:5px 10px;font-size:11px;margin-left:auto">Print Summary</button></div>
         <div class="fin-grid">
           <div class="fin-cell"><div class="fin-label">Estimate</div><div class="fin-value">${money(est)}</div></div>
-          <div class="fin-cell"><div class="fin-label">Costs / Materials</div><div class="fin-value">${money(j.costs||0)}</div></div>
           <div class="fin-cell"><div class="fin-label">Invoiced</div><div class="fin-value">${money(inv)}</div></div>
+          <div class="fin-cell"><div class="fin-label">Expenses</div><div class="fin-value">${money(totalExp)}</div><div style="font-size:11px;color:var(--text-3);margin-top:2px">${(j.expenses||[]).length} entr${(j.expenses||[]).length===1?'y':'ies'}${legacyCosts?' + lump sum':''}</div></div>
           <div class="fin-cell"><div class="fin-label">Paid</div><div class="fin-value">${money(paid)}</div></div>
           <div class="fin-cell ${bal>0?'bal-neg':'bal-pos'}" style="grid-column:1/-1"><div class="fin-label">Balance Due</div><div class="fin-value">${money(bal)}</div>
             <div class="fin-bar"><div class="fin-bar-fill" style="width:${Math.min(100,pctPaid)}%"></div></div>
             <div style="font-size:11.5px;color:var(--text-3)">${pctPaid.toFixed(0)}% collected</div>
           </div>
-          <div class="fin-cell" style="grid-column:1/-1"><div class="fin-label">Projected Margin</div><div class="fin-value" style="color:${margin>=0?'var(--green-700)':'var(--orange)'}">${money(margin)} <span style="font-size:12px;color:var(--text-3);font-weight:500">${est>0?'('+((margin/est)*100).toFixed(0)+'%)':''}</span></div></div>
+          <div class="fin-cell ${profit>=0?'bal-pos':'bal-neg'}" style="grid-column:1/-1;background:linear-gradient(135deg,${profit>=0?'rgba(16,163,74,0.06)':'rgba(220,38,38,0.06)'},transparent)"><div class="fin-label">${inv>0?'Profit':'Projected Profit'} <span style="font-weight:500;text-transform:none;letter-spacing:0;color:var(--text-3)">${inv>0?'(invoiced − expenses)':'(estimate − expenses)'}</span></div><div class="fin-value" style="font-size:22px;color:${profit>=0?'var(--green-700)':'var(--red)'}">${money(inv>0?profit:projectedProfit)} <span style="font-size:13px;color:var(--text-3);font-weight:600;margin-left:6px">${inv>0?margin.toFixed(1):projectedMargin.toFixed(1)}% margin</span></div></div>
         </div>
         <div class="form-row">
           <div class="form-group"><label class="form-label">Estimate ($)</label><input class="form-input" type="number" id="fin-est" value="${esc(est||'')}"></div>
-          <div class="form-group"><label class="form-label">Costs ($)</label><input class="form-input" type="number" id="fin-costs" value="${esc(j.costs||'')}"></div>
+          <div class="form-group"><label class="form-label">Lump-Sum Costs ($) <span style="color:var(--text-3);font-weight:400;text-transform:none;letter-spacing:0;font-size:10px">use Expenses tab for itemized</span></label><input class="form-input" type="number" id="fin-costs" value="${esc(j.costs||'')}"></div>
         </div>
         <div class="form-row">
           <div class="form-group"><label class="form-label">Invoiced ($)${lockedByInv?' <span style="color:var(--text-3);font-weight:400;text-transform:none;letter-spacing:0;font-size:10px">auto</span>':''}</label><input class="form-input" type="number" id="fin-inv" value="${esc(inv||'')}" ${lockedByInv?'disabled':''}></div>
@@ -3248,6 +3377,53 @@ function renderDetailTab(j,tab){
         </div>
         <button class="btn-post" id="btn-save-fin" style="margin-top:6px" ${lockedByInv?'disabled':''}>Save Financials</button>
         ${lockedByInv?'<p style="font-size:11.5px;color:var(--text-3);margin-top:10px">Invoiced and Paid totals are computed from the Invoices tab. Edit individual invoices there.</p>':''}
+      </div>`;
+  }
+
+  if(tab==='expenses'){
+    const exps=(j.expenses||[]).slice().sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+    const total=exps.reduce((s,e)=>s+Number(e.amount||0),0);
+    const billable=exps.filter(e=>e.billable).reduce((s,e)=>s+Number(e.amount||0),0);
+    const unpaid=exps.filter(e=>!e.paid).reduce((s,e)=>s+Number(e.amount||0),0);
+    const inv=jobRevenue(j);
+    const profit=inv-(total+Number(j.costs||0));
+    const margin=inv>0?(profit/inv)*100:0;
+    // category breakdown
+    const byCat={};
+    exps.forEach(e=>{const k=e.category||'Other';byCat[k]=(byCat[k]||0)+Number(e.amount||0)});
+    const catRows=Object.entries(byCat).sort((a,b)=>b[1]-a[1]);
+    return `
+      <div class="section">
+        <div class="section-hd" style="margin-bottom:12px">Expenses <span>${exps.length}</span></div>
+        <div class="inv-totals">
+          <div class="inv-total-row"><span>Total Expenses</span><span class="v">${money(total)}</span></div>
+          <div class="inv-total-row"><span>Billable to Customer</span><span class="v">${money(billable)}</span></div>
+          <div class="inv-total-row"><span>Unpaid (owed to vendors)</span><span class="v" style="color:${unpaid>0.005?'var(--orange)':'var(--text)'}">${money(unpaid)}</span></div>
+          <div class="inv-total-row grand"><span>${inv>0?'Profit on this job':'Projected Profit'}</span><span class="v" style="color:${profit>=0?'var(--green-700)':'var(--red)'}">${money(profit)} <span style="font-size:11px;font-weight:600;color:var(--text-3)">${inv>0?margin.toFixed(1)+'%':''}</span></span></div>
+        </div>
+        ${catRows.length>0?`<div style="margin:10px 0 14px;padding:10px 12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md)">
+          <div style="font-size:10.5px;color:var(--text-3);text-transform:uppercase;letter-spacing:0.06em;font-weight:700;margin-bottom:6px">By Category</div>
+          ${catRows.map(([cat,amt])=>{
+            const pct=total>0?(amt/total)*100:0;
+            return `<div style="display:flex;align-items:center;gap:10px;font-size:12.5px;padding:3px 0">
+              <div style="min-width:110px">${esc(cat)}</div>
+              <div style="flex:1;height:6px;background:var(--surface-3);border-radius:3px;overflow:hidden"><div style="height:100%;width:${pct}%;background:linear-gradient(90deg,var(--green-700),var(--green-400))"></div></div>
+              <div style="min-width:80px;text-align:right;font-weight:600;font-variant-numeric:tabular-nums">${money(amt)}</div>
+            </div>`;
+          }).join('')}
+        </div>`:''}
+        <div class="expense-list">
+          ${exps.length===0?'<p style="font-size:13px;color:var(--text-3);padding:4px 0">No expenses logged yet. Track materials, labor, subcontractors, and other costs to see real profit.</p>'
+            :exps.map(e=>`<div class="expense-row" data-exp-id="${esc(e.id)}">
+              <div class="exp-cat-pill exp-${esc((e.category||'other').toLowerCase().split(' ')[0])}">${esc(e.category||'Other')}</div>
+              <div class="exp-main">
+                <div class="exp-desc">${esc(e.description||e.vendor||'Expense')}${e.billable?'<span class="exp-flag bill">Billable</span>':''}${!e.paid?'<span class="exp-flag unpaid">Unpaid</span>':''}</div>
+                <div class="exp-meta">${fmtDate(e.date)}${e.vendor?' · '+esc(e.vendor):''}</div>
+              </div>
+              <div class="exp-amt">${money(Number(e.amount||0))}</div>
+            </div>`).join('')}
+        </div>
+        <button class="btn-post" id="btn-new-exp" style="margin-top:6px">+ Add Expense</button>
       </div>`;
   }
   if(tab==='comms'){
@@ -3480,9 +3656,13 @@ function photoURL(p){return typeof p==='string'?p:(p&&p.url)||''}
 
 // ══ CSV export ══
 function exportCSV(){
-  const rows=[['Name','Customer','Phone','Email','Address','Status','Stage','Type','Assigned','Start','Due','Estimate','Invoiced','Paid','Balance','Progress','Created']];
+  const rows=[['Name','Customer','Phone','Email','Address','Status','Stage','Type','Assigned','Start','Due','Estimate','Invoiced','Paid','Balance','Expenses','Profit','Margin %','Progress','Created']];
   jobs().forEach(j=>{
-    rows.push([j.name,j.customerName,j.customerPhone,j.customerEmail,j.address,j.status,jobStage(j),j.type,j.assigned,j.startDate,j.dueDate,j.value,j.invoiced,j.paid,jobBalance(j),(j.progress||0)+'%',j.created?new Date(j.created).toLocaleDateString():''].map(v=>v==null?'':String(v)));
+    const inv=jobRevenue(j);
+    const exp=jobTotalExpenses(j);
+    const profit=inv-exp;
+    const mgn=inv>0?((profit/inv)*100).toFixed(1):'';
+    rows.push([j.name,j.customerName,j.customerPhone,j.customerEmail,j.address,j.status,jobStage(j),j.type,j.assigned,j.startDate,j.dueDate,j.value,j.invoiced,j.paid,jobBalance(j),exp,profit,mgn,(j.progress||0)+'%',j.created?new Date(j.created).toLocaleDateString():''].map(v=>v==null?'':String(v)));
   });
   const csv=rows.map(r=>r.map(c=>/[",\n]/.test(c)?'"'+c.replace(/"/g,'""')+'"':c).join(',')).join('\n');
   const blob=new Blob([csv],{type:'text/csv'});
@@ -3553,6 +3733,82 @@ function defaultInvoice(j){
     status:'draft',
     created:Date.now(),
   };
+}
+
+// ══ Expense modal ══
+function showExpenseModal(jobId,expenseId){
+  const j=S.jobs[jobId];if(!j)return;
+  const isNew=!expenseId;
+  const exp=isNew?{
+    id:'e_'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),
+    date:new Date().toISOString().slice(0,10),
+    category:'Materials',vendor:'',description:'',amount:'',
+    billable:false,paid:true,created:Date.now()
+  }:(j.expenses||[]).find(e=>e.id===expenseId);
+  if(!exp){toast('Expense not found','');return}
+  const draft={...exp};
+
+  $('modal-root').innerHTML=`<div class="modal-bd" id="mbd" role="dialog" aria-modal="true" aria-label="${isNew?'Add':'Edit'} expense"><div class="modal" style="max-width:540px"><div class="modal-handle"></div>
+    <div class="modal-head"><div class="modal-title">${isNew?'Add Expense':'Edit Expense'}</div><button class="modal-close" id="mc" aria-label="Close"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button></div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Date</label><input class="form-input" type="date" id="exp-date" value="${esc(draft.date||'')}"></div>
+        <div class="form-group"><label class="form-label">Category</label><select class="form-select" id="exp-cat">${EXPENSE_CATEGORIES.map(c=>`<option value="${esc(c)}" ${draft.category===c?'selected':''}>${esc(c)}</option>`).join('')}</select></div>
+      </div>
+      <div class="form-group"><label class="form-label">Vendor / Paid To</label><input class="form-input" id="exp-vendor" value="${esc(draft.vendor||'')}" placeholder="e.g. Home Depot, Mike's Marine"></div>
+      <div class="form-group"><label class="form-label">Description</label>
+        <div class="textarea-with-mic"><textarea class="form-textarea" id="exp-desc" placeholder="What was purchased / what work was done?">${esc(draft.description||'')}</textarea>${micButton('#exp-desc')}</div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Amount ($)</label><input class="form-input" type="number" step="0.01" id="exp-amt" value="${esc(draft.amount||'')}" placeholder="0.00"></div>
+        <div class="form-group">
+          <label class="form-label" style="margin-bottom:8px">Flags</label>
+          <label style="display:flex;align-items:center;gap:8px;font-size:13px;padding:4px 0;cursor:pointer">
+            <input type="checkbox" id="exp-billable" ${draft.billable?'checked':''}> Bill back to customer
+          </label>
+          <label style="display:flex;align-items:center;gap:8px;font-size:13px;padding:4px 0;cursor:pointer">
+            <input type="checkbox" id="exp-paid" ${draft.paid!==false?'checked':''}> Paid to vendor
+          </label>
+        </div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      ${!isNew?'<button class="btn-cancel" id="btn-exp-del" style="color:var(--red);margin-right:auto">Delete</button>':''}
+      <button class="btn-cancel" id="btn-cx">Cancel</button>
+      <button class="btn-save" id="btn-exp-save">${isNew?'Add Expense':'Save'}</button>
+    </div>
+  </div></div>`;
+  $('mc').onclick=$('btn-cx').onclick=closeModal;
+  $('mbd').onclick=e=>{if(e.target===e.currentTarget)closeModal()};
+  wireMicButtons();
+  $('btn-exp-save').onclick=async()=>{
+    const amt=parseFloat($('exp-amt').value);
+    if(isNaN(amt)||amt<=0){toast('Enter a valid amount','');return}
+    const saved={
+      ...draft,
+      date:$('exp-date').value||draft.date,
+      category:$('exp-cat').value,
+      vendor:$('exp-vendor').value.trim(),
+      description:$('exp-desc').value.trim(),
+      amount:amt,
+      billable:$('exp-billable').checked,
+      paid:$('exp-paid').checked,
+    };
+    const list=(j.expenses||[]).slice();
+    const idx=list.findIndex(e=>e.id===saved.id);
+    if(idx>=0)list[idx]=saved;else list.unshift(saved);
+    j.expenses=list;
+    await writeJob(j);
+    await logAct((isNew?'added':'updated')+' expense '+money(amt)+' on',j.name);
+    closeModal();render();toast(isNew?'Expense added':'Expense updated');
+  };
+  $('btn-exp-del')?.addEventListener('click',async()=>{
+    if(!confirm('Delete this expense?'))return;
+    j.expenses=(j.expenses||[]).filter(e=>e.id!==expenseId);
+    await writeJob(j);
+    await logAct('deleted expense from',j.name);
+    closeModal();render();toast('Expense deleted');
+  });
 }
 
 function showInvoiceModal(jobId,invoiceId){
@@ -3913,6 +4169,190 @@ function printInvoice(j,inv){
         <div class="thanks">Thank you for your business!</div>
         ${esc(co.name||'Waterfront Solutions')}${co.phone?'  ·  '+esc(co.phone):''}${co.email?'  ·  '+esc(co.email):''}${co.website?'  ·  '+esc(co.website):''}
       </div>
+    </div>
+    </body></html>`);
+  w.document.close();
+}
+
+// ══ Print internal job summary (with expenses & margin) ══
+function printJobSummary(j){
+  const w=window.open('','_blank');
+  if(!w){toast('Pop-up blocked — allow pop-ups to print','');return}
+  const co=COMPANY;
+  const logoSrc=getBrandLogoSrc();
+  const est=Number(j.value||0);
+  const inv=jobRevenue(j);
+  const invTot=invoiceTotals(j);
+  const paid=invTot?invTot.paid:Number(j.paid||0);
+  const bal=inv-paid;
+  const exps=(j.expenses||[]).slice().sort((a,b)=>(a.date||'').localeCompare(b.date||''));
+  const expLedger=exps.reduce((s,e)=>s+Number(e.amount||0),0);
+  const legacyCosts=Number(j.costs||0);
+  const totalExp=expLedger+legacyCosts;
+  const profit=inv-totalExp;
+  const margin=inv>0?(profit/inv)*100:0;
+  const projectedProfit=est-totalExp;
+  const projectedMargin=est>0?(projectedProfit/est)*100:0;
+  const byCat={};
+  exps.forEach(e=>{const k=e.category||'Other';byCat[k]=(byCat[k]||0)+Number(e.amount||0)});
+  const catRows=Object.entries(byCat).sort((a,b)=>b[1]-a[1]);
+  const expRows=exps.map(e=>`<tr>
+    <td>${fmtDate(e.date)||''}</td>
+    <td>${esc(e.category||'')}</td>
+    <td>${esc(e.vendor||'')}</td>
+    <td>${esc(e.description||'')}</td>
+    <td class="num">${money(Number(e.amount||0))}</td>
+  </tr>`).join('');
+  const invRows=(j.invoices||[]).map(iv=>{
+    const c=calcInvoice(iv);
+    return `<tr>
+      <td>${esc(iv.number||'')}</td>
+      <td>${fmtDate(iv.date)||''}</td>
+      <td>${esc(iv.status||'draft')}</td>
+      <td class="num">${money(c.total)}</td>
+      <td class="num">${money(c.paid)}</td>
+      <td class="num">${money(c.balance)}</td>
+    </tr>`;
+  }).join('');
+
+  w.document.write(`<!DOCTYPE html><html><head>
+    <meta charset="utf-8">
+    <title>Job Summary — ${esc(j.name||'')}</title>
+    <style>
+      *{box-sizing:border-box;margin:0;padding:0}
+      html,body{background:#f3f4f6}
+      body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;color:#1f2937;font-size:13px;line-height:1.5;-webkit-font-smoothing:antialiased}
+      .page{background:#fff;max-width:820px;margin:30px auto;padding:48px 56px 40px;box-shadow:0 1px 3px rgba(0,0,0,0.08),0 4px 16px rgba(0,0,0,0.04);border-radius:2px}
+      .conf{background:#fef3c7;color:#92400e;padding:6px 12px;border-radius:3px;font-size:10.5px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;display:inline-block;margin-bottom:18px;border:1px solid #fcd34d}
+      .hd{display:flex;justify-content:space-between;align-items:flex-start;gap:32px;margin-bottom:24px;padding-bottom:18px;border-bottom:2px solid #0a3d2e}
+      .hd-l{display:flex;align-items:flex-start;gap:14px;flex:1}
+      .hd-l img{width:60px;height:60px;object-fit:contain;flex-shrink:0}
+      .hd h1{font-size:18px;color:#0a3d2e;font-weight:700;line-height:1.1}
+      .hd .sub{font-size:11px;color:#6b7280;margin-top:3px;font-weight:600;letter-spacing:0.04em;text-transform:uppercase}
+      .hd-r{text-align:right;flex-shrink:0}
+      .hd-r .title{font-size:24px;font-weight:300;color:#0a3d2e;letter-spacing:0.06em;line-height:1}
+      .hd-r .date{font-size:11px;color:#6b7280;margin-top:6px}
+      .job-name{font-size:22px;font-weight:700;color:#111827;margin-bottom:4px}
+      .job-meta{font-size:12px;color:#4b5563;line-height:1.6;margin-bottom:20px}
+      .job-meta strong{color:#111827}
+      /* Profit hero */
+      .profit-hero{background:linear-gradient(135deg,${profit>=0?'#0a3d2e':'#991b1b'},${profit>=0?'#15803d':'#dc2626'});color:#fff;padding:24px 28px;border-radius:4px;margin-bottom:24px;display:flex;justify-content:space-between;align-items:center;gap:20px}
+      .profit-hero .lbl{font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;opacity:0.85;margin-bottom:6px}
+      .profit-hero .v{font-size:36px;font-weight:700;letter-spacing:-0.02em;line-height:1;font-variant-numeric:tabular-nums}
+      .profit-hero .margin-box{text-align:right;border-left:1px solid rgba(255,255,255,0.25);padding-left:20px}
+      .profit-hero .margin-v{font-size:32px;font-weight:700;line-height:1;font-variant-numeric:tabular-nums}
+      .profit-hero .margin-lbl{font-size:10.5px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;opacity:0.85;margin-top:4px}
+      /* Summary grid */
+      .summary-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:#e5e7eb;border:1px solid #e5e7eb;border-radius:3px;overflow:hidden;margin-bottom:24px}
+      .sum-cell{background:#fff;padding:14px 16px}
+      .sum-cell .lbl{font-size:9.5px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#6b7280;margin-bottom:4px}
+      .sum-cell .v{font-size:16px;font-weight:700;color:#111827;font-variant-numeric:tabular-nums}
+      .sum-cell .sub{font-size:10.5px;color:#6b7280;margin-top:2px}
+      /* Section */
+      .sec{margin-bottom:24px}
+      .sec h2{font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#0a3d2e;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid #e5e7eb}
+      table{width:100%;border-collapse:collapse}
+      thead th{text-align:left;font-size:9.5px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#6b7280;padding:8px 10px;background:#f9fafb;border-bottom:1px solid #e5e7eb}
+      th.num,td.num{text-align:right;font-variant-numeric:tabular-nums}
+      tbody td{padding:9px 10px;border-bottom:1px solid #f3f4f6;font-size:12px;color:#1f2937}
+      tbody tr:nth-child(even){background:#fafafa}
+      tfoot td{padding:10px;font-weight:700;border-top:2px solid #0a3d2e;background:#f9fafb}
+      .cat-bar{display:flex;align-items:center;gap:10px;padding:6px 0;font-size:12.5px}
+      .cat-bar .name{min-width:130px;font-weight:600}
+      .cat-bar .track{flex:1;height:8px;background:#f3f4f6;border-radius:4px;overflow:hidden}
+      .cat-bar .fill{height:100%;background:linear-gradient(90deg,#0a3d2e,#15803d);border-radius:4px}
+      .cat-bar .amt{min-width:90px;text-align:right;font-weight:600;font-variant-numeric:tabular-nums}
+      .empty-msg{font-size:12.5px;color:#9ca3af;padding:12px 0;font-style:italic}
+      .ft{margin-top:32px;padding-top:14px;border-top:1px solid #e5e7eb;text-align:center;font-size:10.5px;color:#9ca3af}
+      @media print{
+        html,body{background:#fff}
+        .page{margin:0;padding:18mm 16mm;max-width:none;box-shadow:none;border-radius:0}
+        .no-print{display:none!important}
+        thead{display:table-header-group}
+        tr{page-break-inside:avoid}
+      }
+      .print-bar{position:fixed;top:14px;right:14px;display:flex;gap:8px;z-index:100}
+      .print-bar button{padding:9px 18px;background:#0a3d2e;color:#fff;border:none;border-radius:4px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit;box-shadow:0 1px 3px rgba(0,0,0,0.2)}
+      .print-bar button.alt{background:#fff;color:#374151;border:1px solid #d1d5db}
+    </style></head><body>
+    <div class="no-print print-bar">
+      <button class="alt" onclick="window.close()">Close</button>
+      <button onclick="window.print()">Print / Save PDF</button>
+    </div>
+    <div class="page">
+      <div class="conf">Internal — Not For Customer</div>
+      <header class="hd">
+        <div class="hd-l">
+          ${logoSrc?`<img src="${logoSrc}" alt="">`:''}
+          <div>
+            <h1>${esc(co.name||'Waterfront Solutions')}</h1>
+            <div class="sub">Job Profitability Summary</div>
+          </div>
+        </div>
+        <div class="hd-r">
+          <div class="title">JOB SUMMARY</div>
+          <div class="date">${new Date().toLocaleDateString(undefined,{year:'numeric',month:'long',day:'numeric'})}</div>
+        </div>
+      </header>
+
+      <div class="job-name">${esc(j.name||'')}</div>
+      <div class="job-meta">
+        ${j.customerName?`<strong>${esc(j.customerName)}</strong>`:''}
+        ${j.address?' · '+esc(j.address):''}
+        ${j.type?' · '+esc(j.type):''}
+        ${j.assigned?' · Lead: '+esc(j.assigned):''}
+        <br>Status: <strong>${esc(j.status||'')}</strong> · Stage: <strong>${esc(jobStage(j))}</strong>${j.startDate?' · Started '+fmtDate(j.startDate):''}${j.completedAt?' · Completed '+new Date(j.completedAt).toLocaleDateString():''}
+      </div>
+
+      <div class="profit-hero">
+        <div>
+          <div class="lbl">${inv>0?'Profit':'Projected Profit'}</div>
+          <div class="v">${money(inv>0?profit:projectedProfit)}</div>
+        </div>
+        <div class="margin-box">
+          <div class="margin-v">${(inv>0?margin:projectedMargin).toFixed(1)}%</div>
+          <div class="margin-lbl">Margin</div>
+        </div>
+      </div>
+
+      <div class="summary-grid">
+        <div class="sum-cell"><div class="lbl">Estimate</div><div class="v">${money(est)}</div></div>
+        <div class="sum-cell"><div class="lbl">Invoiced</div><div class="v">${money(inv)}</div><div class="sub">${(j.invoices||[]).length} invoice${(j.invoices||[]).length===1?'':'s'}</div></div>
+        <div class="sum-cell"><div class="lbl">Collected</div><div class="v">${money(paid)}</div><div class="sub">${money(bal)} outstanding</div></div>
+        <div class="sum-cell"><div class="lbl">Total Expenses</div><div class="v">${money(totalExp)}</div><div class="sub">${exps.length} entr${exps.length===1?'y':'ies'}${legacyCosts?' + lump':''}</div></div>
+      </div>
+
+      ${catRows.length>0?`<div class="sec">
+        <h2>Expenses by Category</h2>
+        ${catRows.map(([cat,amt])=>{
+          const pct=totalExp>0?(amt/totalExp)*100:0;
+          return `<div class="cat-bar">
+            <div class="name">${esc(cat)}</div>
+            <div class="track"><div class="fill" style="width:${pct}%"></div></div>
+            <div class="amt">${money(amt)} <span style="color:#9ca3af;font-weight:500">(${pct.toFixed(0)}%)</span></div>
+          </div>`;
+        }).join('')}
+        ${legacyCosts?`<div class="cat-bar"><div class="name">Lump-Sum (legacy)</div><div class="track"><div class="fill" style="width:${totalExp>0?(legacyCosts/totalExp)*100:0}%;background:#9ca3af"></div></div><div class="amt">${money(legacyCosts)}</div></div>`:''}
+      </div>`:''}
+
+      ${exps.length>0?`<div class="sec">
+        <h2>Expense Detail</h2>
+        <table>
+          <thead><tr><th>Date</th><th>Category</th><th>Vendor</th><th>Description</th><th class="num">Amount</th></tr></thead>
+          <tbody>${expRows}</tbody>
+          <tfoot><tr><td colspan="4">Total Itemized Expenses</td><td class="num">${money(expLedger)}</td></tr></tfoot>
+        </table>
+      </div>`:'<div class="sec"><h2>Expenses</h2><div class="empty-msg">No itemized expenses logged for this job.</div></div>'}
+
+      ${(j.invoices||[]).length>0?`<div class="sec">
+        <h2>Invoices</h2>
+        <table>
+          <thead><tr><th>Invoice #</th><th>Date</th><th>Status</th><th class="num">Total</th><th class="num">Paid</th><th class="num">Balance</th></tr></thead>
+          <tbody>${invRows}</tbody>
+        </table>
+      </div>`:''}
+
+      <div class="ft">Generated ${new Date().toLocaleString()} · ${esc(co.name||'Waterfront Solutions')} · Internal job profitability report</div>
     </div>
     </body></html>`);
   w.document.close();
@@ -4511,6 +4951,15 @@ function attachHandlers(){
     j.invoiced=$('fin-inv').value;
     j.paid=$('fin-paid').value;
     await writeJob(j);await logAct('updated financials on',j.name);render();toast('Financials saved');
+  });
+  $('btn-print-job-summary')?.addEventListener('click',()=>{
+    const j=S.jobs[S.detail];if(j)printJobSummary(j);
+  });
+
+  // Expenses
+  $('btn-new-exp')?.addEventListener('click',()=>{const id=S.detail;if(id)showExpenseModal(id)});
+  document.querySelectorAll('[data-exp-id]').forEach(row=>row.onclick=()=>{
+    const id=S.detail;if(id)showExpenseModal(id,row.dataset.expId);
   });
 
   // Communications
