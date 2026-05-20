@@ -233,6 +233,54 @@ body{display:flex;flex-direction:column;max-width:680px;margin:0 auto;min-height
   font-family:var(--font);
 }
 
+/* ── RECEIPTS ── */
+.dmi-receipts{background:linear-gradient(135deg,#7c3aed,#a855f7)}
+.rec-row{
+  display:flex;align-items:center;gap:12px;
+  padding:11px 13px;background:var(--surface);
+  border:1px solid var(--border);border-left:3px solid #a855f7;
+  border-radius:10px;transition:border-color 0.15s;
+}
+.rec-row:hover{border-color:#7c3aed}
+.rec-row.nondeductible{border-left-color:#94a3b8;opacity:0.92}
+.rec-row-thumb{
+  width:44px;height:44px;border-radius:8px;flex-shrink:0;
+  background:var(--surface-3);overflow:hidden;
+  display:flex;align-items:center;justify-content:center;color:var(--text-3);
+}
+.rec-row-thumb img{width:100%;height:100%;object-fit:cover}
+.rec-row-thumb svg{width:20px;height:20px;stroke-width:1.8}
+.rec-row-main{flex:1;min-width:0;cursor:pointer}
+.rec-row-vendor{font-size:13.5px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rec-row-meta{font-size:11.5px;color:var(--text-3);margin-top:2px;line-height:1.35}
+.rec-row-amt{text-align:right;flex-shrink:0;font-variant-numeric:tabular-nums}
+.rec-row-amt-val{font-size:14.5px;font-weight:700;color:var(--text)}
+.rec-row-amt-ded{font-size:11px;color:var(--green-700);font-weight:600;margin-top:1px}
+.rec-row-amt-ded.no{color:var(--text-3)}
+.rec-cat-pill{
+  font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:12px;
+  background:#f3e8ff;color:#6b21a8;text-transform:uppercase;letter-spacing:0.04em;
+  margin-right:6px;
+}
+@media(prefers-color-scheme:dark){.rec-cat-pill{background:#2a1740;color:#d8b4fe}}
+.rec-del{background:none;border:none;color:var(--text-3);cursor:pointer;padding:6px;flex-shrink:0;font-size:18px}
+.rec-del:hover{color:var(--red)}
+.rec-cat-grid{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));
+  gap:8px;margin-bottom:14px;
+}
+.rec-cat-tile{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:10px;padding:10px 12px;cursor:pointer;
+  transition:all 0.15s;
+}
+.rec-cat-tile:hover{border-color:#7c3aed;transform:translateY(-1px)}
+.rec-cat-tile.active{background:#f3e8ff;border-color:#7c3aed}
+@media(prefers-color-scheme:dark){.rec-cat-tile.active{background:#1f102f}}
+.rec-cat-tile-lbl{font-size:11px;font-weight:700;color:var(--text-2);text-transform:uppercase;letter-spacing:0.04em}
+.rec-cat-tile-val{font-size:16px;font-weight:700;margin-top:3px;font-variant-numeric:tabular-nums}
+.rec-cat-tile-sub{font-size:11px;color:var(--text-3);margin-top:1px}
+
 /* ── CONTENT ── */
 .content{flex:1;overflow-y:auto;padding:16px;-webkit-overflow-scrolling:touch;display:flex;flex-direction:column;gap:0}
 
@@ -1341,7 +1389,7 @@ try{const s=localStorage.getItem('wfs_fb');if(s)FIREBASE_CONFIG=JSON.parse(s)}ca
 // ══ State ══
 let DB=null;
 let MAP=null,MAP_MARKERS=[];
-const S={jobs:{},activity:[],members:[],view:'dashboard',detail:null,detailTab:'overview',filter:'all',search:'',photoCat:'all',calMonth:new Date().getMonth(),calYear:new Date().getFullYear(),calSelected:null,calMode:localStorage.getItem('wfs_calmode')||'month',reportRange:'90',sort:localStorage.getItem('wfs_sort')||'newest',sortOpen:false,bulkMode:false,bulkSel:new Set(),invFilter:'all',invSearch:'',invSort:'date',docOtherFilter:'all',docOverviewFilter:'all',user:localStorage.getItem('wfs_user')||'',notifReadAt:parseInt(localStorage.getItem('wfs_notif_read')||'0',10)};
+const S={jobs:{},activity:[],members:[],receipts:{},view:'dashboard',detail:null,detailTab:'overview',filter:'all',search:'',photoCat:'all',calMonth:new Date().getMonth(),calYear:new Date().getFullYear(),calSelected:null,calMode:localStorage.getItem('wfs_calmode')||'month',reportRange:'90',sort:localStorage.getItem('wfs_sort')||'newest',sortOpen:false,bulkMode:false,bulkSel:new Set(),invFilter:'all',invSearch:'',invSort:'date',docOtherFilter:'all',docOverviewFilter:'all',recCatFilter:'all',recJobFilter:'all',recRange:'ytd',recSearch:'',user:localStorage.getItem('wfs_user')||'',notifReadAt:parseInt(localStorage.getItem('wfs_notif_read')||'0',10)};
 const UNDO={stack:[],push(op){this.stack.push(op);if(this.stack.length>20)this.stack.shift()},pop(){return this.stack.pop()}};
 
 // ── Company info for invoice letterhead (editable via Settings)
@@ -1453,10 +1501,11 @@ function undoLast(){const op=UNDO.pop();if(!op){toast('Nothing to undo','');retu
 
 // ══ DB layer ══
 const LOCAL={
-  load(){try{S.jobs=JSON.parse(localStorage.getItem('wfs_jobs')||'{}')}catch(e){S.jobs={}}try{S.activity=JSON.parse(localStorage.getItem('wfs_activity')||'[]')}catch(e){S.activity=[]}try{S.members=JSON.parse(localStorage.getItem('wfs_members')||'[]')}catch(e){S.members=[]}},
+  load(){try{S.jobs=JSON.parse(localStorage.getItem('wfs_jobs')||'{}')}catch(e){S.jobs={}}try{S.activity=JSON.parse(localStorage.getItem('wfs_activity')||'[]')}catch(e){S.activity=[]}try{S.members=JSON.parse(localStorage.getItem('wfs_members')||'[]')}catch(e){S.members=[]}try{S.receipts=JSON.parse(localStorage.getItem('wfs_receipts')||'{}')}catch(e){S.receipts={}}},
   saveJobs(){try{localStorage.setItem('wfs_jobs',JSON.stringify(S.jobs))}catch(e){}},
   saveActivity(){try{localStorage.setItem('wfs_activity',JSON.stringify(S.activity.slice(0,300)))}catch(e){}},
-  saveMembers(){try{localStorage.setItem('wfs_members',JSON.stringify(S.members))}catch(e){}}
+  saveMembers(){try{localStorage.setItem('wfs_members',JSON.stringify(S.members))}catch(e){}},
+  saveReceipts(){try{localStorage.setItem('wfs_receipts',JSON.stringify(S.receipts))}catch(e){}}
 };
 function syncStatus(state,msg){const d=$('sync-dot'),t=$('sync-text');d.className='sync-dot '+state;t.textContent=msg}
 function initFB(cfg){
@@ -1467,6 +1516,7 @@ function initFB(cfg){
     DB.child('jobs').on('value',s=>{S.jobs=s.val()||{};LOCAL.saveJobs();syncStatus('ok','Team sync live');render()});
     DB.child('activity').on('value',s=>{const r=s.val();S.activity=r?Object.values(r).sort((a,b)=>b.time-a.time):[];LOCAL.saveActivity()});
     DB.child('members').on('value',s=>{S.members=s.val()||[];LOCAL.saveMembers();render()});
+    DB.child('receipts').on('value',s=>{S.receipts=s.val()||{};LOCAL.saveReceipts();render()});
     DB.child('.info/connected').on('value',s=>{if(!s.val())syncStatus('err','Reconnecting…')});
     return true;
   }catch(e){syncStatus('err','Firebase error');return false}
@@ -1475,6 +1525,8 @@ async function writeJob(j){S.jobs[j.id]=j;LOCAL.saveJobs();if(DB)await DB.child(
 async function deleteJobDB(id){delete S.jobs[id];LOCAL.saveJobs();if(DB)await DB.child('jobs/'+id).remove().catch(()=>{})}
 async function logAct(action,job){const e={user:S.user||'Someone',action,job:job||'',time:Date.now()};S.activity.unshift(e);LOCAL.saveActivity();if(DB)await DB.child('activity').push(e).catch(()=>{})}
 async function saveMembers(){LOCAL.saveMembers();if(DB)await DB.child('members').set(S.members).catch(()=>{})}
+async function writeReceipt(r){S.receipts[r.id]=r;LOCAL.saveReceipts();if(DB)await DB.child('receipts/'+r.id).set(r).catch(()=>{})}
+async function deleteReceiptDB(id){delete S.receipts[id];LOCAL.saveReceipts();if(DB)await DB.child('receipts/'+id).remove().catch(()=>{})}
 
 LOCAL.load();
 if(FIREBASE_CONFIG)initFB(FIREBASE_CONFIG);
@@ -1482,7 +1534,7 @@ if(FIREBASE_CONFIG)initFB(FIREBASE_CONFIG);
 // ══ Render ══
 function render(){
   const c=$('content');
-  const docsViews=new Set(['documents','invoices','contracts','otherdocs']);
+  const docsViews=new Set(['documents','invoices','contracts','receipts','otherdocs']);
   document.querySelectorAll('.nav-btn').forEach(b=>{
     const v=b.dataset.view;
     const active = v===S.view || (v==='documents' && docsViews.has(S.view));
@@ -1495,6 +1547,7 @@ function render(){
   else if(S.view==='documents')c.innerHTML=renderDocumentsOverview();
   else if(S.view==='invoices')c.innerHTML=renderInvoicesView();
   else if(S.view==='contracts')c.innerHTML=renderContractsView();
+  else if(S.view==='receipts')c.innerHTML=renderReceiptsView();
   else if(S.view==='otherdocs')c.innerHTML=renderOtherDocsView();
   else if(S.view==='map')c.innerHTML=renderMap();
   else if(S.view==='reports')c.innerHTML=renderReports();
@@ -1864,12 +1917,24 @@ function invoiceQuickStats(){
 function fileExt(name){const m=(name||'').match(/\.([a-z0-9]+)$/i);return m?m[1].toUpperCase():''}
 const FILE_ICON=`<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/></svg>`;
 
+function receiptsQuickStats(){
+  const list=allReceipts().filter(r=>{
+    if(!r.date)return true;
+    const d=new Date(r.date+(r.date.length===10?'T00:00:00':''));
+    return d.getFullYear()===new Date().getFullYear();
+  });
+  const total=list.reduce((s,r)=>s+Number(r.amount||0),0);
+  const ded=list.reduce((s,r)=>s+receiptDeductible(r),0);
+  return {count:list.length,total,ded,totalAll:allReceipts().length};
+}
+
 function renderDocsMenu(){
   const menu=$('nav-docs-menu');if(!menu)return;
   const inv=invoiceQuickStats();
   const counts=docCategoryCounts();
   const contractCount=counts.contract||0;
   const otherCount=OTHER_DOC_CATS.reduce((s,k)=>s+(counts[k]||0),0);
+  const rec=receiptsQuickStats();
   menu.innerHTML=`
     <div class="docs-menu-hd">Document Center</div>
     <div class="docs-menu-grid">
@@ -1893,6 +1958,16 @@ function renderDocsMenu(){
         </div>
         <div class="docs-menu-item-val">${contractCount}<small>file${contractCount!==1?'s':''}</small></div>
       </button>
+      <button class="docs-menu-item" data-docs-go="receipts" role="menuitem">
+        <div class="docs-menu-item-icon dmi-receipts">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 17h6m-6 0a3 3 0 11-6 0V7a2 2 0 012-2h11a2 2 0 012 2v10a3 3 0 11-6 0M9 7h6M9 11h6"/></svg>
+        </div>
+        <div class="docs-menu-item-main">
+          <div class="docs-menu-item-title">Receipts &amp; Expenses</div>
+          <div class="docs-menu-item-sub">Track spending, write-offs, and job costs</div>
+        </div>
+        <div class="docs-menu-item-val">${moneyCents(rec.total)}<small>${rec.count} YTD</small></div>
+      </button>
       <button class="docs-menu-item" data-docs-go="otherdocs" role="menuitem">
         <div class="docs-menu-item-icon dmi-other">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 9.776c.112-.017.227-.026.344-.026h15.812c.117 0 .232.009.344.026m-16.5 0a2.25 2.25 0 00-1.883 2.542l.857 6a2.25 2.25 0 002.227 1.932H19.05a2.25 2.25 0 002.227-1.932l.857-6a2.25 2.25 0 00-1.883-2.542m-16.5 0V6A2.25 2.25 0 016 3.75h3.879a1.5 1.5 0 011.06.44l2.122 2.12a1.5 1.5 0 001.06.44H18A2.25 2.25 0 0120.25 9v.776"/></svg>
@@ -1905,8 +1980,8 @@ function renderDocsMenu(){
       </button>
     </div>
     <div class="docs-menu-foot">
-      <button class="docs-menu-foot-btn" data-docs-go="documents">All Documents</button>
-      <button class="docs-menu-foot-btn" id="docs-menu-upload">+ Upload Document</button>
+      <button class="docs-menu-foot-btn" id="docs-menu-upload">+ Upload Doc</button>
+      <button class="docs-menu-foot-btn" id="docs-menu-receipt">+ Add Receipt</button>
     </div>
   `;
 }
@@ -1916,7 +1991,8 @@ function renderDocumentsOverview(){
   const counts=docCategoryCounts();
   const contractCount=counts.contract||0;
   const otherCount=OTHER_DOC_CATS.reduce((s,k)=>s+(counts[k]||0),0);
-  const totalDocs=inv.count+contractCount+otherCount;
+  const rec=receiptsQuickStats();
+  const totalDocs=inv.count+contractCount+otherCount+rec.totalAll;
   const recent=getAllDocsRaw()
     .filter(x=>x.doc.uploaded)
     .sort((a,b)=>(b.doc.uploaded||0)-(a.doc.uploaded||0))
@@ -1946,6 +2022,7 @@ function renderDocumentsOverview(){
       <div class="kpi-card"><div class="kpi-label">Invoices</div><div class="kpi-value">${inv.count}</div><div class="kpi-sub">${money(inv.outstanding)} outstanding</div></div>
       <div class="kpi-card"><div class="kpi-label">Contracts</div><div class="kpi-value">${contractCount}</div><div class="kpi-sub">signed agreements</div></div>
       <div class="kpi-card"><div class="kpi-label">Other Docs</div><div class="kpi-value">${otherCount}</div><div class="kpi-sub">permits, COs, warranties…</div></div>
+      <div class="kpi-card"><div class="kpi-label">Receipts (YTD)</div><div class="kpi-value">${moneyCents(rec.total)}</div><div class="kpi-sub">${rec.count} · ${moneyCents(rec.ded)} deductible</div></div>
     </div>
 
     <div class="docs-cat-grid">
@@ -1977,6 +2054,21 @@ function renderDocumentsOverview(){
         <div class="docs-cat-card-stats">
           <div><div class="docs-cat-stat-lbl">On File</div><div class="docs-cat-stat-val">${contractCount}</div></div>
           <div><div class="docs-cat-stat-lbl">Jobs Covered</div><div class="docs-cat-stat-val">${new Set(getAllDocsByCategory('contract').map(x=>x.job.id)).size}</div></div>
+        </div>
+      </div>
+      <div class="docs-cat-card" data-docs-go="receipts">
+        <div class="docs-cat-card-hd">
+          <div class="docs-cat-card-icon dmi-receipts">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 17h6m-6 0a3 3 0 11-6 0V7a2 2 0 012-2h11a2 2 0 012 2v10a3 3 0 11-6 0M9 7h6M9 11h6"/></svg>
+          </div>
+          <div>
+            <div class="docs-cat-card-title">Receipts &amp; Expenses</div>
+            <div class="docs-cat-card-desc">Track spending, tax write-offs &amp; job costs</div>
+          </div>
+        </div>
+        <div class="docs-cat-card-stats">
+          <div><div class="docs-cat-stat-lbl">Spent YTD</div><div class="docs-cat-stat-val">${moneyCents(rec.total)}</div></div>
+          <div><div class="docs-cat-stat-lbl">Deductible</div><div class="docs-cat-stat-val" style="color:var(--green-700)">${moneyCents(rec.ded)}</div></div>
         </div>
       </div>
       <div class="docs-cat-card" data-docs-go="otherdocs">
@@ -2133,6 +2225,285 @@ function renderOtherDocsView(){
     </div>
     ${renderDocsList(items,{emptyTitle:'No documents in this category',emptyDesc:'Upload files from inside a job and pick a category to organize them here.'})}
   `;
+}
+
+// ══ Receipts: categories, helpers, view, modal ══
+// pct = % deductible per IRS guidance (Schedule C / Form 1120). meals=50%, others=100%.
+const RECEIPT_CAT_ORDER=['materials','tools','rental','fuel','vehicle','subcontractor','meals','travel','office','insurance','permits','utilities','safety','training','advertising','professional','other'];
+const RECEIPT_CAT={
+  materials:{label:'Materials & Supplies',deductible:true,pct:100},
+  tools:{label:'Tools (under $2,500)',deductible:true,pct:100},
+  rental:{label:'Equipment Rental',deductible:true,pct:100},
+  fuel:{label:'Vehicle Fuel',deductible:true,pct:100},
+  vehicle:{label:'Vehicle Repair / Maint.',deductible:true,pct:100},
+  subcontractor:{label:'Subcontractor',deductible:true,pct:100},
+  meals:{label:'Meals (50% deductible)',deductible:true,pct:50},
+  travel:{label:'Travel & Lodging',deductible:true,pct:100},
+  office:{label:'Office Supplies',deductible:true,pct:100},
+  insurance:{label:'Insurance',deductible:true,pct:100},
+  permits:{label:'Licenses & Permits',deductible:true,pct:100},
+  utilities:{label:'Utilities',deductible:true,pct:100},
+  safety:{label:'Safety Equipment / PPE',deductible:true,pct:100},
+  training:{label:'Training / Education',deductible:true,pct:100},
+  advertising:{label:'Advertising',deductible:true,pct:100},
+  professional:{label:'Professional Services',deductible:true,pct:100},
+  other:{label:'Other / Personal',deductible:false,pct:0},
+};
+function recCat(r){return r&&r.category&&RECEIPT_CAT[r.category]?r.category:'other'}
+function moneyCents(n){const v=Number(n||0);return '$'+v.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}
+function allReceipts(){return Object.values(S.receipts||{})}
+function inRange(dateStr,range){
+  if(!dateStr)return range==='all';
+  if(range==='all')return true;
+  const d=new Date(dateStr+(dateStr.length===10?'T00:00:00':''));
+  const now=new Date();
+  if(range==='month')return d.getFullYear()===now.getFullYear()&&d.getMonth()===now.getMonth();
+  if(range==='qtr'){const q=Math.floor(now.getMonth()/3);return d.getFullYear()===now.getFullYear()&&Math.floor(d.getMonth()/3)===q}
+  if(range==='ytd')return d.getFullYear()===now.getFullYear();
+  if(range==='lastyear')return d.getFullYear()===now.getFullYear()-1;
+  return true;
+}
+function receiptDeductible(r){const cat=RECEIPT_CAT[recCat(r)];if(!cat||!cat.deductible||r.deductible===false)return 0;return Number(r.amount||0)*(cat.pct/100)}
+function receiptsForJob(jobId){return allReceipts().filter(r=>r.jobId===jobId)}
+
+function renderReceiptsView(){
+  const all=allReceipts();
+  const range=S.recRange||'ytd';
+  const inRangeList=all.filter(r=>inRange(r.date,range));
+  // Stats over range
+  const total=inRangeList.reduce((s,r)=>s+Number(r.amount||0),0);
+  const ded=inRangeList.reduce((s,r)=>s+receiptDeductible(r),0);
+  const linked=inRangeList.filter(r=>r.jobId).length;
+  const unlinked=inRangeList.length-linked;
+  // Category breakdown
+  const byCat={};RECEIPT_CAT_ORDER.forEach(k=>byCat[k]={total:0,count:0,ded:0});
+  inRangeList.forEach(r=>{const k=recCat(r);byCat[k].total+=Number(r.amount||0);byCat[k].count++;byCat[k].ded+=receiptDeductible(r)});
+  // Job breakdown
+  const byJob={};
+  inRangeList.forEach(r=>{
+    const key=r.jobId||'__none__';
+    byJob[key]=byJob[key]||{total:0,count:0,name:r.jobId&&S.jobs[r.jobId]?S.jobs[r.jobId].name:'Overhead / Unassigned'};
+    byJob[key].total+=Number(r.amount||0);byJob[key].count++;
+  });
+  const topJobs=Object.entries(byJob).sort((a,b)=>b[1].total-a[1].total).slice(0,5);
+
+  // Apply secondary filters
+  let shown=inRangeList.slice();
+  if(S.recCatFilter!=='all')shown=shown.filter(r=>recCat(r)===S.recCatFilter);
+  if(S.recJobFilter!=='all'){
+    if(S.recJobFilter==='__none__')shown=shown.filter(r=>!r.jobId);
+    else shown=shown.filter(r=>r.jobId===S.recJobFilter);
+  }
+  if(S.recSearch){const q=S.recSearch.toLowerCase();shown=shown.filter(r=>((r.vendor||'')+' '+(r.notes||'')+' '+(RECEIPT_CAT[recCat(r)]?.label||'')).toLowerCase().includes(q))}
+  shown.sort((a,b)=>(b.date||'').localeCompare(a.date||'')||((b.created||0)-(a.created||0)));
+
+  const ranges=[['month','This Month'],['qtr','This Quarter'],['ytd','Year to Date'],['lastyear','Last Year'],['all','All Time']];
+  const jobOpts=Object.values(S.jobs).map(j=>`<option value="${esc(j.id)}" ${S.recJobFilter===j.id?'selected':''}>${esc(j.name)}</option>`).join('');
+
+  return `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+      <div>
+        <div style="font-size:11px;color:var(--text-3);text-transform:uppercase;letter-spacing:0.06em;font-weight:700">Document Center</div>
+        <div style="font-size:20px;font-weight:700;margin-top:2px">Receipts &amp; Expenses</div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="docs-menu-foot-btn" data-docs-go="documents" aria-label="Back to documents overview">← All Documents</button>
+        <button class="btn-add" id="btn-new-receipt" aria-label="Add new receipt" style="background:#7c3aed;box-shadow:0 2px 8px rgba(124,58,237,0.35)">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+          Add Receipt
+        </button>
+      </div>
+    </div>
+
+    <div class="filter-row" style="margin-bottom:12px">
+      ${ranges.map(([k,lbl])=>`<div class="filter-chip ${range===k?'active':''}" data-rec-range="${k}">${lbl}</div>`).join('')}
+    </div>
+
+    <div class="kpi-grid">
+      <div class="kpi-card accent"><div class="kpi-label">Total Spent</div><div class="kpi-value">${moneyCents(total)}</div><div class="kpi-sub">${inRangeList.length} receipt${inRangeList.length!==1?'s':''}</div></div>
+      <div class="kpi-card"><div class="kpi-label">Tax-Deductible</div><div class="kpi-value" style="color:var(--green-700)">${moneyCents(ded)}</div><div class="kpi-sub">${total>0?Math.round(ded/total*100):0}% of total</div></div>
+      <div class="kpi-card"><div class="kpi-label">Linked to Jobs</div><div class="kpi-value">${linked}</div><div class="kpi-sub">${unlinked} overhead / unassigned</div></div>
+      <div class="kpi-card"><div class="kpi-label">Avg Receipt</div><div class="kpi-value">${moneyCents(inRangeList.length?total/inRangeList.length:0)}</div><div class="kpi-sub">in selected range</div></div>
+    </div>
+
+    <div class="report-section">
+      <div class="report-hd">By Category <span class="kpi-sub">click a tile to filter</span></div>
+      <div class="rec-cat-grid">
+        <div class="rec-cat-tile ${S.recCatFilter==='all'?'active':''}" data-rec-catfilter="all">
+          <div class="rec-cat-tile-lbl">All Categories</div>
+          <div class="rec-cat-tile-val">${moneyCents(total)}</div>
+          <div class="rec-cat-tile-sub">${inRangeList.length} receipt${inRangeList.length!==1?'s':''}</div>
+        </div>
+        ${RECEIPT_CAT_ORDER.filter(k=>byCat[k].count>0).map(k=>`
+          <div class="rec-cat-tile ${S.recCatFilter===k?'active':''}" data-rec-catfilter="${k}">
+            <div class="rec-cat-tile-lbl">${esc(RECEIPT_CAT[k].label)}</div>
+            <div class="rec-cat-tile-val">${moneyCents(byCat[k].total)}</div>
+            <div class="rec-cat-tile-sub">${byCat[k].count} · ${moneyCents(byCat[k].ded)} ded.</div>
+          </div>`).join('')}
+      </div>
+    </div>
+
+    ${topJobs.length?`<div class="report-section">
+      <div class="report-hd">Top Spend by Job</div>
+      <div class="leaderboard">
+        ${topJobs.map(([key,info],i)=>{
+          const rankCls=i===0?'gold':i===1?'silver':i===2?'bronze':'';
+          return `<div class="lb-row">
+            <div class="lb-rank ${rankCls}">${i+1}</div>
+            <div class="lb-name">${esc(info.name)}<div style="font-size:11px;color:var(--text-3);font-weight:500">${info.count} receipt${info.count!==1?'s':''}</div></div>
+            <div class="lb-stats"><strong>${moneyCents(info.total)}</strong><div>total</div></div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`:''}
+
+    <div class="toolbar" style="margin-top:8px">
+      <div class="search-wrap">
+        <div class="search-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 15.803a7.5 7.5 0 0010.607 0z"/></svg></div>
+        <input class="search" id="rec-search" placeholder="Search vendor, notes…" value="${esc(S.recSearch||'')}" aria-label="Search receipts">
+      </div>
+      <select class="form-select" id="rec-jobfilter" style="max-width:200px;font-size:13px;padding:8px 10px" aria-label="Filter by job">
+        <option value="all" ${S.recJobFilter==='all'?'selected':''}>All jobs</option>
+        <option value="__none__" ${S.recJobFilter==='__none__'?'selected':''}>Overhead / Unassigned</option>
+        ${jobOpts}
+      </select>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:6px;margin-top:6px">
+      ${shown.length===0?`<div class="empty" style="padding:40px 20px">
+        <div class="empty-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 17h6m-6 0a3 3 0 11-6 0V7a2 2 0 012-2h11a2 2 0 012 2v10a3 3 0 11-6 0M9 7h6M9 11h6"/></svg></div>
+        <h3>${all.length===0?'No receipts yet':'No matches'}</h3>
+        <p>${all.length===0?'Start tracking expenses by adding your first receipt. Snap a photo, set the category, and link it to a job.':'Try a different filter or date range.'}</p>
+      </div>`
+        :shown.map(r=>{
+          const cat=recCat(r);
+          const catInfo=RECEIPT_CAT[cat];
+          const job=r.jobId?S.jobs[r.jobId]:null;
+          const ded=receiptDeductible(r);
+          const isDed=ded>0;
+          return `<div class="rec-row ${isDed?'':'nondeductible'}">
+            <div class="rec-row-thumb">${r.photoUrl?`<img src="${r.photoUrl}" alt="">`:`<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 17h6m-6 0a3 3 0 11-6 0V7a2 2 0 012-2h11a2 2 0 012 2v10a3 3 0 11-6 0M9 7h6M9 11h6"/></svg>`}</div>
+            <div class="rec-row-main" data-rec-open="${esc(r.id)}">
+              <div class="rec-row-vendor"><span class="rec-cat-pill">${esc(catInfo.label.split(' ')[0])}</span>${esc(r.vendor||'(no vendor)')}</div>
+              <div class="rec-row-meta">${fmtDate(r.date)}${job?' · <strong>'+esc(job.name)+'</strong>':' · Overhead'}${r.notes?' · '+esc(r.notes.slice(0,50))+(r.notes.length>50?'…':''):''}</div>
+            </div>
+            <div class="rec-row-amt">
+              <div class="rec-row-amt-val">${moneyCents(r.amount)}</div>
+              <div class="rec-row-amt-ded ${isDed?'':'no'}">${isDed?(catInfo.pct<100?catInfo.pct+'% ded · ':'')+moneyCents(ded):'not deductible'}</div>
+            </div>
+            <button class="rec-del" data-rec-del="${esc(r.id)}" title="Delete receipt" aria-label="Delete receipt">✕</button>
+          </div>`;
+        }).join('')}
+    </div>
+  `;
+}
+
+function showReceiptModal(receiptId,presetJobId){
+  const editing=receiptId&&S.receipts[receiptId];
+  const r=editing?JSON.parse(JSON.stringify(S.receipts[receiptId])):{id:'r_'+Date.now()+'_'+Math.random().toString(36).slice(2,6),date:dateKey(new Date()),vendor:'',amount:'',category:'materials',jobId:presetJobId||'',deductible:true,notes:'',photoUrl:'',created:Date.now(),user:S.user};
+  const jobOpts=`<option value="">— Overhead / Unassigned —</option>`+Object.values(S.jobs).map(j=>`<option value="${esc(j.id)}" ${r.jobId===j.id?'selected':''}>${esc(j.name)}${j.customerName?' — '+esc(j.customerName):''}</option>`).join('');
+  const catOpts=RECEIPT_CAT_ORDER.map(k=>`<option value="${k}" ${r.category===k?'selected':''}>${esc(RECEIPT_CAT[k].label)}</option>`).join('');
+  $('modal-root').innerHTML=`<div class="modal-bd" id="mbd" role="dialog" aria-modal="true" aria-label="${editing?'Edit':'Add'} receipt"><div class="modal"><div class="modal-handle"></div>
+    <div class="modal-head"><div class="modal-title">${editing?'Edit Receipt':'Add Receipt'}</div><button class="modal-close" id="mc" aria-label="Close"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button></div>
+    <div class="modal-body">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div class="form-group"><label class="form-label" for="rec-date">Date</label>
+          <input type="date" class="form-input" id="rec-date" value="${esc(r.date||'')}">
+        </div>
+        <div class="form-group"><label class="form-label" for="rec-amount">Amount</label>
+          <input type="number" step="0.01" min="0" class="form-input" id="rec-amount" value="${esc(r.amount||'')}" placeholder="0.00" inputmode="decimal">
+        </div>
+      </div>
+      <div class="form-group"><label class="form-label" for="rec-vendor">Vendor / Payee</label>
+        <input type="text" class="form-input" id="rec-vendor" value="${esc(r.vendor||'')}" placeholder="Home Depot, Lowe's, Shell…">
+      </div>
+      <div class="form-group"><label class="form-label" for="rec-category">Tax Category</label>
+        <select class="form-select" id="rec-category">${catOpts}</select>
+        <div id="rec-cat-note" style="font-size:11.5px;color:var(--text-3);margin-top:6px"></div>
+      </div>
+      <div class="form-group"><label class="form-label" for="rec-job">Job <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text-3)">(track where the money went)</span></label>
+        <select class="form-select" id="rec-job">${jobOpts}</select>
+      </div>
+      <div class="form-group">
+        <label style="display:flex;align-items:center;gap:8px;font-size:13.5px;cursor:pointer">
+          <input type="checkbox" id="rec-ded" ${r.deductible!==false?'checked':''} style="width:18px;height:18px;cursor:pointer">
+          <span><strong>Tax deductible</strong> — uncheck if this is personal or non-business</span>
+        </label>
+      </div>
+      <div class="form-group"><label class="form-label" for="rec-notes">Notes</label>
+        <textarea class="form-textarea" id="rec-notes" rows="2" placeholder="Optional details">${esc(r.notes||'')}</textarea>
+      </div>
+      <div class="form-group"><label class="form-label">Receipt Photo <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text-3)">(optional — max 5MB)</span></label>
+        ${r.photoUrl?`<div style="margin-bottom:8px"><img src="${r.photoUrl}" alt="Receipt" style="max-width:180px;max-height:180px;border-radius:8px;border:1px solid var(--border)"></div>`:''}
+        <input type="file" id="rec-photo" class="form-input" accept="image/*">
+      </div>
+      <div style="display:flex;gap:8px;justify-content:space-between;margin-top:8px;flex-wrap:wrap">
+        ${editing?`<button class="docs-menu-foot-btn" id="rec-delete" style="color:var(--red);border-color:var(--red)">Delete</button>`:'<div></div>'}
+        <div style="display:flex;gap:8px">
+          <button class="docs-menu-foot-btn" id="rec-cancel">Cancel</button>
+          <button class="btn-add" id="rec-save" style="background:#7c3aed">${editing?'Save Changes':'Add Receipt'}</button>
+        </div>
+      </div>
+    </div>
+  </div></div>`;
+  const noteEl=$('rec-cat-note');
+  const updateNote=()=>{
+    const c=RECEIPT_CAT[$('rec-category').value];
+    if(!c){noteEl.textContent='';return}
+    if(!c.deductible)noteEl.innerHTML='⚠️ This category is not tax-deductible by default.';
+    else if(c.pct<100)noteEl.innerHTML=`Only <strong>${c.pct}%</strong> of this expense is deductible per IRS rules.`;
+    else noteEl.innerHTML='Fully deductible business expense.';
+  };
+  updateNote();
+  $('rec-category').onchange=()=>{
+    const c=RECEIPT_CAT[$('rec-category').value];
+    if(c)$('rec-ded').checked=c.deductible;
+    updateNote();
+  };
+  $('mc').onclick=$('rec-cancel').onclick=closeModal;
+  $('mbd').onclick=e=>{if(e.target===e.currentTarget)closeModal()};
+  if(editing){
+    $('rec-delete').onclick=async()=>{
+      if(!confirm('Delete this receipt? This can be undone right after.'))return;
+      const backup=JSON.parse(JSON.stringify(S.receipts[receiptId]));
+      await deleteReceiptDB(receiptId);
+      await logAct('deleted receipt from '+(backup.vendor||'vendor'),backup.jobId&&S.jobs[backup.jobId]?S.jobs[backup.jobId].name:'');
+      closeModal();render();
+      UNDO.push(async()=>{await writeReceipt(backup);render();toast('Receipt restored')});
+      toast('Receipt deleted','undo',()=>{UNDO.pop()()});
+    };
+  }
+  const doSave=async(photoUrl)=>{
+    const rec={
+      id:r.id,
+      date:$('rec-date').value||dateKey(new Date()),
+      vendor:$('rec-vendor').value.trim(),
+      amount:parseFloat($('rec-amount').value)||0,
+      category:$('rec-category').value,
+      jobId:$('rec-job').value||'',
+      deductible:$('rec-ded').checked,
+      notes:$('rec-notes').value.trim(),
+      photoUrl:photoUrl!==undefined?photoUrl:(r.photoUrl||''),
+      created:r.created||Date.now(),
+      updated:Date.now(),
+      user:S.user||r.user||'',
+    };
+    if(rec.amount<=0){toast('Enter an amount','');return}
+    if(!rec.vendor){toast('Enter a vendor','');return}
+    await writeReceipt(rec);
+    const jobName=rec.jobId&&S.jobs[rec.jobId]?S.jobs[rec.jobId].name:'overhead';
+    await logAct((editing?'updated':'added')+' receipt from '+rec.vendor+' ('+moneyCents(rec.amount)+')',jobName==='overhead'?'':jobName);
+    closeModal();render();toast(editing?'Receipt updated':'Receipt added');
+  };
+  $('rec-save').onclick=()=>{
+    const file=$('rec-photo').files[0];
+    if(file){
+      if(file.size>5*1024*1024){toast('Photo too large (max 5MB)','');return}
+      const reader=new FileReader();
+      reader.onload=e=>doSave(e.target.result);
+      reader.readAsDataURL(file);
+    }else doSave();
+  };
 }
 
 // ══ Invoices view (all invoices across all jobs) ══
@@ -3132,6 +3503,7 @@ function renderDetail(id){
     {id:'photos',label:'Photos',count:photos.length},
     {id:'docs',label:'Files',count:(j.documents||[]).length},
     {id:'invoices',label:'Invoices',count:(j.invoices||[]).length},
+    {id:'receipts',label:'Receipts',count:receiptsForJob(j.id).length},
     {id:'financial',label:'Financials'},
     {id:'comms',label:'Comms',count:(j.comms||[]).length},
     {id:'notes',label:'Notes',count:(j.notes||[]).length},
@@ -3356,6 +3728,42 @@ function renderDetailTab(j,tab){
         </div>
       </div>`;
   }
+  if(tab==='receipts'){
+    const recs=receiptsForJob(j.id).sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+    const total=recs.reduce((s,r)=>s+Number(r.amount||0),0);
+    const ded=recs.reduce((s,r)=>s+receiptDeductible(r),0);
+    return `
+      <div class="section">
+        <div class="section-hd">Receipts for this Job <span>${recs.length}</span></div>
+        <div class="kpi-grid" style="margin-bottom:14px">
+          <div class="kpi-card accent"><div class="kpi-label">Total Tracked</div><div class="kpi-value">${moneyCents(total)}</div><div class="kpi-sub">${recs.length} receipt${recs.length!==1?'s':''}</div></div>
+          <div class="kpi-card"><div class="kpi-label">Deductible</div><div class="kpi-value" style="color:var(--green-700)">${moneyCents(ded)}</div><div class="kpi-sub">tax write-off portion</div></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px">
+          ${recs.length===0?'<p style="font-size:13px;color:var(--text-3);padding:4px 0">No receipts linked to this job yet. Add one to track materials, fuel, subcontractors, and other expenses.</p>'
+            :recs.map(r=>{
+              const cat=recCat(r);
+              const catInfo=RECEIPT_CAT[cat];
+              const d=receiptDeductible(r);
+              return `<div class="rec-row ${d>0?'':'nondeductible'}">
+                <div class="rec-row-thumb">${r.photoUrl?`<img src="${r.photoUrl}" alt="">`:`<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 17h6m-6 0a3 3 0 11-6 0V7a2 2 0 012-2h11a2 2 0 012 2v10a3 3 0 11-6 0M9 7h6M9 11h6"/></svg>`}</div>
+                <div class="rec-row-main" data-rec-open="${esc(r.id)}">
+                  <div class="rec-row-vendor"><span class="rec-cat-pill">${esc(catInfo.label.split(' ')[0])}</span>${esc(r.vendor||'(no vendor)')}</div>
+                  <div class="rec-row-meta">${fmtDate(r.date)}${r.notes?' · '+esc(r.notes.slice(0,50))+(r.notes.length>50?'…':''):''}</div>
+                </div>
+                <div class="rec-row-amt">
+                  <div class="rec-row-amt-val">${moneyCents(r.amount)}</div>
+                  <div class="rec-row-amt-ded ${d>0?'':'no'}">${d>0?moneyCents(d)+' ded':'not ded.'}</div>
+                </div>
+              </div>`;
+            }).join('')}
+        </div>
+        <button class="btn-add" id="btn-new-receipt-job" style="background:#7c3aed;box-shadow:0 2px 8px rgba(124,58,237,0.35)">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+          Add Receipt
+        </button>
+      </div>`;
+  }
   if(tab==='financial'){
     const est=Number(j.value||0);
     const invTot=invoiceTotals(j);
@@ -3365,9 +3773,15 @@ function renderDetailTab(j,tab){
     const pctPaid=inv>0?(paid/inv)*100:0;
     const margin=est-Number(j.costs||0);
     const lockedByInv=!!invTot;
+    const jobRecs=receiptsForJob(j.id);
+    const recTotal=jobRecs.reduce((s,r)=>s+Number(r.amount||0),0);
     return `
       <div class="section">
         <div class="section-hd">Financial Summary${lockedByInv?' <span style="font-weight:400;text-transform:none;letter-spacing:0">From '+((j.invoices||[]).length)+' invoice'+((j.invoices||[]).length===1?'':'s')+'</span>':''}</div>
+        ${jobRecs.length?`<div style="background:#f3e8ff;border:1px solid #d8b4fe;border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:12.5px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap" id="fin-rec-hint">
+          <span><strong>${moneyCents(recTotal)}</strong> tracked across <strong>${jobRecs.length}</strong> receipt${jobRecs.length!==1?'s':''} for this job.</span>
+          <button class="docs-menu-foot-btn" data-fin-go-receipts="1" style="margin:0">View Receipts →</button>
+        </div>`:''}
         <div class="fin-grid">
           <div class="fin-cell"><div class="fin-label">Estimate</div><div class="fin-value">${money(est)}</div></div>
           <div class="fin-cell"><div class="fin-label">Costs / Materials</div><div class="fin-value">${money(j.costs||0)}</div></div>
@@ -4031,7 +4445,7 @@ let CMD={open:false,query:'',idx:0,items:[]};
 function cmdItems(){
   const out=[];
   // Views
-  [['dashboard','Home / Dashboard','home'],['jobs','Jobs','briefcase'],['schedule','Schedule','calendar'],['documents','Documents','invoice'],['invoices','Invoices','invoice'],['contracts','Contracts','invoice'],['otherdocs','Other Documents','invoice'],['map','Map','map'],['reports','Reports','chart'],['activity','Activity','list'],['team','Team','team']].forEach(([v,name,ico])=>{
+  [['dashboard','Home / Dashboard','home'],['jobs','Jobs','briefcase'],['schedule','Schedule','calendar'],['documents','Documents','invoice'],['invoices','Invoices','invoice'],['contracts','Contracts','invoice'],['receipts','Receipts & Expenses','invoice'],['otherdocs','Other Documents','invoice'],['map','Map','map'],['reports','Reports','chart'],['activity','Activity','list'],['team','Team','team']].forEach(([v,name,ico])=>{
     out.push({type:'view',name:'Go to '+name,sub:'View',ico,run:()=>{S.view=v;S.detail=null;render()}});
   });
   // Actions
@@ -4039,6 +4453,7 @@ function cmdItems(){
   out.push({type:'action',name:'New Invoice',sub:'Pick a job, then create invoice',ico:'invoice',run:()=>showJobPickerModal(jobId=>showInvoiceModal(jobId))});
   out.push({type:'action',name:'Upload Document',sub:'Contract, permit, warranty, change order…',ico:'invoice',run:()=>showDocumentUploadModal()});
   out.push({type:'action',name:'Upload Contract',sub:'Add a signed contract to a job',ico:'invoice',run:()=>showDocumentUploadModal('contract')});
+  out.push({type:'action',name:'Add Receipt',sub:'Track an expense for tax write-off / job costing',ico:'invoice',run:()=>showReceiptModal()});
   out.push({type:'action',name:'Settings & Company Info',sub:'Edit name, logo, invoice defaults',ico:'kbd',run:showSettingsModal});
   out.push({type:'action',name:'Export to CSV',sub:'Download all jobs',ico:'download',run:exportCSV});
   out.push({type:'action',name:'Notifications',sub:'See your inbox',ico:'bell',run:showNotificationsModal});
@@ -4364,6 +4779,31 @@ function attachHandlers(){
     const menu=$('nav-docs-menu');if(menu)menu.classList.remove('open');
     showDocumentUploadModal();
   });
+  $('docs-menu-receipt')?.addEventListener('click',e=>{
+    e.stopPropagation();
+    const menu=$('nav-docs-menu');if(menu)menu.classList.remove('open');
+    showReceiptModal();
+  });
+  // Receipts handlers
+  $('btn-new-receipt')?.addEventListener('click',()=>showReceiptModal());
+  $('btn-new-receipt-job')?.addEventListener('click',()=>{const id=S.detail;if(id)showReceiptModal(null,id)});
+  $('rec-search')?.addEventListener('input',e=>{S.recSearch=e.target.value;render()});
+  $('rec-jobfilter')?.addEventListener('change',e=>{S.recJobFilter=e.target.value;render()});
+  document.querySelectorAll('[data-rec-range]').forEach(c=>c.onclick=()=>{S.recRange=c.dataset.recRange;render()});
+  document.querySelectorAll('[data-rec-catfilter]').forEach(c=>c.onclick=()=>{S.recCatFilter=c.dataset.recCatfilter;render()});
+  document.querySelectorAll('[data-rec-open]').forEach(el=>el.onclick=()=>showReceiptModal(el.dataset.recOpen));
+  document.querySelectorAll('[data-rec-del]').forEach(b=>b.onclick=async e=>{
+    e.stopPropagation();
+    const id=b.dataset.recDel;const backup=S.receipts[id];if(!backup)return;
+    if(!confirm('Delete this receipt? This can be undone right after.'))return;
+    const copy=JSON.parse(JSON.stringify(backup));
+    await deleteReceiptDB(id);
+    await logAct('deleted receipt from '+(copy.vendor||'vendor'),copy.jobId&&S.jobs[copy.jobId]?S.jobs[copy.jobId].name:'');
+    render();
+    UNDO.push(async()=>{await writeReceipt(copy);render();toast('Receipt restored')});
+    toast('Receipt deleted','undo',()=>{UNDO.pop()()});
+  });
+  $('fin-rec-hint')?.querySelector('[data-fin-go-receipts]')?.addEventListener('click',()=>{S.detailTab='receipts';render()});
   $('btn-new-doc-global')?.addEventListener('click',()=>showDocumentUploadModal());
   $('btn-new-contract')?.addEventListener('click',()=>showDocumentUploadModal('contract'));
   $('btn-new-otherdoc')?.addEventListener('click',()=>showDocumentUploadModal(S.docOtherFilter&&S.docOtherFilter!=='all'?S.docOtherFilter:'other'));
