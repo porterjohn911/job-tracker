@@ -393,6 +393,34 @@ body{display:flex;flex-direction:column;max-width:680px;margin:0 auto;min-height
 .client-row-amt{text-align:right;flex-shrink:0;font-weight:700;font-size:14px;font-variant-numeric:tabular-nums}
 .client-row-amt-sub{font-size:11px;color:var(--text-3);font-weight:500;margin-top:1px}
 
+/* ── TIME TRACKING ── */
+.time-day{margin-bottom:14px}
+.time-day-hd{
+  display:flex;justify-content:space-between;align-items:center;
+  font-size:12.5px;font-weight:700;color:var(--text-2);
+  padding:4px 2px 8px;position:sticky;top:0;
+}
+.time-multi{
+  font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:12px;
+  background:var(--gold-light);color:#92600a;margin-left:6px;
+}
+@media(prefers-color-scheme:dark){.time-multi{background:#3d2800;color:#fbbf24}}
+.time-day-total{font-size:13px;font-weight:700;color:var(--text);font-variant-numeric:tabular-nums}
+.time-entry{
+  display:flex;align-items:stretch;gap:0;margin-bottom:6px;
+  background:var(--surface);border:1px solid var(--border);border-radius:10px;
+  overflow:hidden;cursor:pointer;transition:border-color 0.15s;
+}
+.time-entry:hover{border-color:var(--green-600)}
+.time-entry-bar{width:4px;flex-shrink:0;background:var(--green-600)}
+.time-entry-main{flex:1;min-width:0;padding:11px 12px}
+.time-entry-job{font-size:13.5px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.time-entry-cust{font-size:11px;font-weight:600;color:var(--green-700);background:var(--green-100);padding:1px 7px;border-radius:10px}
+.time-entry-meta{font-size:11.5px;color:var(--text-3);margin-top:3px}
+.time-entry-amt{text-align:right;flex-shrink:0;padding:11px 13px 11px 8px}
+.time-entry-hrs{font-size:14.5px;font-weight:700;font-variant-numeric:tabular-nums}
+.time-entry-cost{font-size:11px;color:var(--text-3);font-weight:600;margin-top:1px}
+
 /* ── CONTENT ── */
 .content{flex:1;overflow-y:auto;padding:16px;-webkit-overflow-scrolling:touch;display:flex;flex-direction:column;gap:0}
 
@@ -1463,6 +1491,10 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5"/></svg>
     Schedule
   </button>
+  <button class="nav-btn" data-view="time">
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+    Time
+  </button>
   <div class="nav-docs-wrap" id="nav-docs-wrap">
     <button class="nav-btn" data-view="documents" id="nav-docs-btn" aria-haspopup="true" aria-expanded="false">
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/></svg>
@@ -1505,7 +1537,7 @@ try{const s=localStorage.getItem('wfs_fb');if(s)FIREBASE_CONFIG=JSON.parse(s)}ca
 // ══ State ══
 let DB=null;
 let MAP=null,MAP_MARKERS=[];
-const S={jobs:{},activity:[],members:[],receipts:{},view:'dashboard',detail:null,detailTab:'overview',filter:'all',search:'',photoCat:'all',calMonth:new Date().getMonth(),calYear:new Date().getFullYear(),calSelected:null,calMode:localStorage.getItem('wfs_calmode')||'month',reportRange:'90',reportTab:localStorage.getItem('wfs_reporttab')||'overview',sort:localStorage.getItem('wfs_sort')||'newest',sortOpen:false,bulkMode:false,bulkSel:new Set(),invFilter:'all',invSearch:'',invSort:'date',docOtherFilter:'all',docOverviewFilter:'all',recCatFilter:'all',recJobFilter:'all',recRange:'ytd',recSearch:'',clientSearch:'',clientSort:'revenue',clientDetail:null,clientTab:'overview',user:localStorage.getItem('wfs_user')||'',notifReadAt:parseInt(localStorage.getItem('wfs_notif_read')||'0',10)};
+const S={jobs:{},activity:[],members:[],receipts:{},time:{},view:'dashboard',detail:null,detailTab:'overview',filter:'all',search:'',photoCat:'all',calMonth:new Date().getMonth(),calYear:new Date().getFullYear(),calSelected:null,calMode:localStorage.getItem('wfs_calmode')||'month',reportRange:'90',reportTab:localStorage.getItem('wfs_reporttab')||'overview',sort:localStorage.getItem('wfs_sort')||'newest',sortOpen:false,bulkMode:false,bulkSel:new Set(),invFilter:'all',invSearch:'',invSort:'date',docOtherFilter:'all',docOverviewFilter:'all',recCatFilter:'all',recJobFilter:'all',recRange:'ytd',recSearch:'',clientSearch:'',clientSort:'revenue',clientDetail:null,clientTab:'overview',timeRange:'week',timeJobFilter:'all',timeWorkerFilter:'all',user:localStorage.getItem('wfs_user')||'',notifReadAt:parseInt(localStorage.getItem('wfs_notif_read')||'0',10)};
 const UNDO={stack:[],push(op){this.stack.push(op);if(this.stack.length>20)this.stack.shift()},pop(){return this.stack.pop()}};
 
 // ── Company info for invoice letterhead (editable via Settings)
@@ -1617,11 +1649,12 @@ function undoLast(){const op=UNDO.pop();if(!op){toast('Nothing to undo','');retu
 
 // ══ DB layer ══
 const LOCAL={
-  load(){try{S.jobs=JSON.parse(localStorage.getItem('wfs_jobs')||'{}')}catch(e){S.jobs={}}try{S.activity=JSON.parse(localStorage.getItem('wfs_activity')||'[]')}catch(e){S.activity=[]}try{S.members=JSON.parse(localStorage.getItem('wfs_members')||'[]')}catch(e){S.members=[]}try{S.receipts=JSON.parse(localStorage.getItem('wfs_receipts')||'{}')}catch(e){S.receipts={}}},
+  load(){try{S.jobs=JSON.parse(localStorage.getItem('wfs_jobs')||'{}')}catch(e){S.jobs={}}try{S.activity=JSON.parse(localStorage.getItem('wfs_activity')||'[]')}catch(e){S.activity=[]}try{S.members=JSON.parse(localStorage.getItem('wfs_members')||'[]')}catch(e){S.members=[]}try{S.receipts=JSON.parse(localStorage.getItem('wfs_receipts')||'{}')}catch(e){S.receipts={}}try{S.time=JSON.parse(localStorage.getItem('wfs_time')||'{}')}catch(e){S.time={}}},
   saveJobs(){try{localStorage.setItem('wfs_jobs',JSON.stringify(S.jobs))}catch(e){}},
   saveActivity(){try{localStorage.setItem('wfs_activity',JSON.stringify(S.activity.slice(0,300)))}catch(e){}},
   saveMembers(){try{localStorage.setItem('wfs_members',JSON.stringify(S.members))}catch(e){}},
-  saveReceipts(){try{localStorage.setItem('wfs_receipts',JSON.stringify(S.receipts))}catch(e){}}
+  saveReceipts(){try{localStorage.setItem('wfs_receipts',JSON.stringify(S.receipts))}catch(e){}},
+  saveTime(){try{localStorage.setItem('wfs_time',JSON.stringify(S.time))}catch(e){}}
 };
 function syncStatus(state,msg){const d=$('sync-dot'),t=$('sync-text');d.className='sync-dot '+state;t.textContent=msg}
 function initFB(cfg){
@@ -1633,6 +1666,7 @@ function initFB(cfg){
     DB.child('activity').on('value',s=>{const r=s.val();S.activity=r?Object.values(r).sort((a,b)=>b.time-a.time):[];LOCAL.saveActivity()});
     DB.child('members').on('value',s=>{S.members=s.val()||[];LOCAL.saveMembers();render()});
     DB.child('receipts').on('value',s=>{S.receipts=s.val()||{};LOCAL.saveReceipts();render()});
+    DB.child('time').on('value',s=>{S.time=s.val()||{};LOCAL.saveTime();render()});
     DB.child('.info/connected').on('value',s=>{if(!s.val())syncStatus('err','Reconnecting…')});
     return true;
   }catch(e){syncStatus('err','Firebase error');return false}
@@ -1643,6 +1677,8 @@ async function logAct(action,job){const e={user:S.user||'Someone',action,job:job
 async function saveMembers(){LOCAL.saveMembers();if(DB)await DB.child('members').set(S.members).catch(()=>{})}
 async function writeReceipt(r){S.receipts[r.id]=r;LOCAL.saveReceipts();if(DB)await DB.child('receipts/'+r.id).set(r).catch(()=>{})}
 async function deleteReceiptDB(id){delete S.receipts[id];LOCAL.saveReceipts();if(DB)await DB.child('receipts/'+id).remove().catch(()=>{})}
+async function writeTime(t){S.time[t.id]=t;LOCAL.saveTime();if(DB)await DB.child('time/'+t.id).set(t).catch(()=>{})}
+async function deleteTimeDB(id){delete S.time[id];LOCAL.saveTime();if(DB)await DB.child('time/'+id).remove().catch(()=>{})}
 
 LOCAL.load();
 if(FIREBASE_CONFIG)initFB(FIREBASE_CONFIG);
@@ -1662,6 +1698,7 @@ function render(){
   else if(S.view==='clients'&&S.clientDetail)c.innerHTML=renderClientDetail(S.clientDetail);
   else if(S.view==='clients')c.innerHTML=renderClients();
   else if(S.view==='schedule')c.innerHTML=renderSchedule();
+  else if(S.view==='time')c.innerHTML=renderTimeView();
   else if(S.view==='documents')c.innerHTML=renderDocumentsOverview();
   else if(S.view==='invoices')c.innerHTML=renderInvoicesView();
   else if(S.view==='contracts')c.innerHTML=renderContractsView();
@@ -3322,6 +3359,286 @@ function showSendInvoiceModal(j,inv){
   $('em-print').onclick=()=>printInvoice(j,inv);
 }
 
+// ══ Time Tracking ══
+// Each entry links to a job (→ client) and a date. Multiple entries per day across
+// different jobs are fully supported — that's how a crew at 2+ sites in one day is logged.
+function allTime(){return Object.values(S.time||{})}
+function timeForJob(jobId){return allTime().filter(t=>t.jobId===jobId)}
+function parseHHMM(s){if(!s||!/^\d{1,2}:\d{2}$/.test(s))return null;const[h,m]=s.split(':').map(Number);return h*60+m}
+function entryHours(t){
+  const a=parseHHMM(t.start),b=parseHHMM(t.end);
+  if(a!=null&&b!=null){let diff=b-a;if(diff<0)diff+=24*60;/*overnight*/return Math.round((diff/60)*100)/100}
+  return Math.round((Number(t.hours||0))*100)/100;
+}
+function entryCost(t){return entryHours(t)*Number(t.rate||0)}
+function fmtHours(h){const v=Math.round(h*100)/100;return v.toLocaleString(undefined,{maximumFractionDigits:2})+'h'}
+function fmt12(hhmm){const m=parseHHMM(hhmm);if(m==null)return'';let h=Math.floor(m/60),min=m%60;const ap=h>=12?'PM':'AM';h=h%12;if(h===0)h=12;return h+(min?':'+String(min).padStart(2,'0'):'')+ap}
+function weekStart(d){const x=new Date(d);x.setHours(0,0,0,0);x.setDate(x.getDate()-x.getDay());return x} // Sunday start
+function timeInRange(dateStr,range){
+  if(!dateStr)return range==='all';
+  if(range==='all')return true;
+  const d=new Date(dateStr+(dateStr.length===10?'T00:00:00':''));
+  const now=new Date();
+  if(range==='week'){const ws=weekStart(now);const we=new Date(ws);we.setDate(we.getDate()+7);return d>=ws&&d<we}
+  if(range==='month')return d.getFullYear()===now.getFullYear()&&d.getMonth()===now.getMonth();
+  if(range==='ytd')return d.getFullYear()===now.getFullYear();
+  return true;
+}
+
+function renderTimeView(){
+  const range=S.timeRange||'week';
+  const all=allTime();
+  let inRangeList=all.filter(t=>timeInRange(t.date,range));
+  // Stats over range
+  const totalHours=inRangeList.reduce((s,t)=>s+entryHours(t),0);
+  const totalCost=inRangeList.reduce((s,t)=>s+entryCost(t),0);
+  const billableHours=inRangeList.filter(t=>t.billable!==false).reduce((s,t)=>s+entryHours(t),0);
+  const workers=new Set(inRangeList.map(t=>t.worker).filter(Boolean));
+
+  // By client/job
+  const byJob={};
+  inRangeList.forEach(t=>{
+    const j=S.jobs[t.jobId];
+    const key=t.jobId||'__none__';
+    const cust=j?(j.customerName||'(no customer)'):'(deleted job)';
+    byJob[key]=byJob[key]||{name:j?j.name:'(deleted job)',cust,hours:0,cost:0,count:0};
+    byJob[key].hours+=entryHours(t);byJob[key].cost+=entryCost(t);byJob[key].count++;
+  });
+  const jobRows=Object.entries(byJob).sort((a,b)=>b[1].hours-a[1].hours);
+  const maxJobHours=jobRows.reduce((m,[,v])=>Math.max(m,v.hours),0)||1;
+
+  // By worker
+  const byWorker={};
+  inRangeList.forEach(t=>{
+    const w=t.worker||'Unassigned';
+    byWorker[w]=byWorker[w]||{hours:0,cost:0,count:0};
+    byWorker[w].hours+=entryHours(t);byWorker[w].cost+=entryCost(t);byWorker[w].count++;
+  });
+  const workerRows=Object.entries(byWorker).sort((a,b)=>b[1].hours-a[1].hours);
+
+  // Apply secondary filters to the list
+  let shown=inRangeList.slice();
+  if(S.timeJobFilter!=='all')shown=shown.filter(t=>t.jobId===S.timeJobFilter);
+  if(S.timeWorkerFilter!=='all')shown=shown.filter(t=>(t.worker||'Unassigned')===S.timeWorkerFilter);
+  // Group by date desc, entries within a day by start time
+  shown.sort((a,b)=>(b.date||'').localeCompare(a.date||'')||((parseHHMM(a.start)??0)-(parseHHMM(b.start)??0)));
+  const byDate={};
+  shown.forEach(t=>{(byDate[t.date]=byDate[t.date]||[]).push(t)});
+  const dateKeys=Object.keys(byDate).sort((a,b)=>b.localeCompare(a));
+
+  const ranges=[['week','This Week'],['month','This Month'],['ytd','Year to Date'],['all','All Time']];
+  const jobOpts=Object.values(S.jobs).map(j=>`<option value="${esc(j.id)}" ${S.timeJobFilter===j.id?'selected':''}>${esc(j.name)}${j.customerName?' — '+esc(j.customerName):''}</option>`).join('');
+  const workerOpts=Array.from(new Set(all.map(t=>t.worker).filter(Boolean))).sort().map(w=>`<option value="${esc(w)}" ${S.timeWorkerFilter===w?'selected':''}>${esc(w)}</option>`).join('');
+
+  return `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+      <div>
+        <div style="font-size:11px;color:var(--text-3);text-transform:uppercase;letter-spacing:0.06em;font-weight:700">Labor</div>
+        <div style="font-size:20px;font-weight:700;margin-top:2px">Time Tracking</div>
+      </div>
+      <button class="btn-add" id="btn-new-time" aria-label="Log time">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+        Log Time
+      </button>
+    </div>
+
+    <div class="filter-row" style="margin-bottom:12px">
+      ${ranges.map(([k,lbl])=>`<div class="filter-chip ${range===k?'active':''}" data-time-range="${k}">${lbl}</div>`).join('')}
+    </div>
+
+    <div class="kpi-grid">
+      <div class="kpi-card accent"><div class="kpi-label">Total Hours</div><div class="kpi-value">${fmtHours(totalHours)}</div><div class="kpi-sub">${inRangeList.length} entr${inRangeList.length!==1?'ies':'y'}</div></div>
+      <div class="kpi-card"><div class="kpi-label">Labor Cost</div><div class="kpi-value">${money(totalCost)}</div><div class="kpi-sub">at logged rates</div></div>
+      <div class="kpi-card"><div class="kpi-label">Billable Hours</div><div class="kpi-value">${fmtHours(billableHours)}</div><div class="kpi-sub">${totalHours>0?Math.round(billableHours/totalHours*100):0}% of total</div></div>
+      <div class="kpi-card"><div class="kpi-label">Crew Members</div><div class="kpi-value">${workers.size}</div><div class="kpi-sub">logged this range</div></div>
+    </div>
+
+    ${jobRows.length?`<div class="report-section">
+      <div class="report-hd">Hours by Job / Client <span class="kpi-sub">where labor is going</span></div>
+      <div class="hbar-list">
+        ${jobRows.slice(0,10).map(([key,v],i)=>{
+          const color=CUSTOMER_BAR_COLORS[i%CUSTOMER_BAR_COLORS.length];
+          const pct=(v.hours/maxJobHours)*100;
+          return `<div class="hbar-row">
+            <div class="hbar-top">
+              <div class="hbar-name">${esc(v.name)}<small>${esc(v.cust)}</small></div>
+              <div class="hbar-val">${fmtHours(v.hours)}</div>
+            </div>
+            <div class="hbar-track"><div class="hbar-fill" style="width:${pct.toFixed(2)}%;background:${color}"></div></div>
+            <div class="hbar-meta"><span>${v.count} entr${v.count!==1?'ies':'y'}</span><span>${v.cost>0?money(v.cost)+' labor':''}</span></div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`:''}
+
+    ${workerRows.length?`<div class="report-section">
+      <div class="report-hd">Hours by Crew Member</div>
+      <div class="leaderboard">
+        ${workerRows.slice(0,8).map(([name,v],i)=>{
+          const rankCls=i===0?'gold':i===1?'silver':i===2?'bronze':'';
+          return `<div class="lb-row">
+            <div class="lb-rank ${rankCls}">${i+1}</div>
+            <div class="member-ava" style="width:30px;height:30px;font-size:12px">${initials(name)}</div>
+            <div class="lb-name">${esc(name)}<div style="font-size:11px;color:var(--text-3);font-weight:500">${v.count} entr${v.count!==1?'ies':'y'}${v.cost>0?' · '+money(v.cost):''}</div></div>
+            <div class="lb-stats"><strong>${fmtHours(v.hours)}</strong><div>hours</div></div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`:''}
+
+    <div class="toolbar" style="margin-top:8px">
+      <select class="form-select" id="time-jobfilter" style="flex:1;min-width:140px;font-size:13px;padding:8px 10px" aria-label="Filter by job">
+        <option value="all" ${S.timeJobFilter==='all'?'selected':''}>All jobs</option>
+        ${jobOpts}
+      </select>
+      <select class="form-select" id="time-workerfilter" style="max-width:170px;font-size:13px;padding:8px 10px" aria-label="Filter by crew member">
+        <option value="all" ${S.timeWorkerFilter==='all'?'selected':''}>All crew</option>
+        ${workerOpts}
+      </select>
+    </div>
+
+    ${dateKeys.length===0?`<div class="empty" style="padding:44px 20px">
+      <div class="empty-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div>
+      <h3>${all.length===0?'No time logged yet':'No entries in range'}</h3>
+      <p>${all.length===0?'Tap "Log Time" to record crew hours against a job. You can add multiple entries per day for different jobs.':'Try a different range or filter.'}</p>
+    </div>`
+      :dateKeys.map(dk=>{
+        const entries=byDate[dk];
+        const dayHours=entries.reduce((s,t)=>s+entryHours(t),0);
+        const jobsThatDay=new Set(entries.map(e=>e.jobId)).size;
+        return `<div class="time-day">
+          <div class="time-day-hd">
+            <div>${fmtDate(dk)}${jobsThatDay>1?` <span class="time-multi">${jobsThatDay} jobs</span>`:''}</div>
+            <div class="time-day-total">${fmtHours(dayHours)}</div>
+          </div>
+          ${entries.map(t=>{
+            const j=S.jobs[t.jobId];
+            const rangeTxt=(t.start&&t.end)?fmt12(t.start)+' – '+fmt12(t.end):'';
+            return `<div class="time-entry" data-time-open="${esc(t.id)}">
+              <div class="time-entry-bar"></div>
+              <div class="time-entry-main">
+                <div class="time-entry-job">${j?esc(j.name):'(deleted job)'}${j&&j.customerName?` <span class="time-entry-cust">${esc(j.customerName)}</span>`:''}</div>
+                <div class="time-entry-meta">${rangeTxt?rangeTxt+' · ':''}${t.worker?esc(t.worker):'Unassigned'}${t.billable===false?' · <span style="color:var(--text-3)">non-billable</span>':''}${t.notes?' · '+esc(t.notes.slice(0,40))+(t.notes.length>40?'…':''):''}</div>
+              </div>
+              <div class="time-entry-amt">
+                <div class="time-entry-hrs">${fmtHours(entryHours(t))}</div>
+                ${entryCost(t)>0?`<div class="time-entry-cost">${money(entryCost(t))}</div>`:''}
+              </div>
+            </div>`;
+          }).join('')}
+        </div>`;
+      }).join('')}
+  `;
+}
+
+function showTimeModal(timeId,presetJobId,presetDate){
+  const editing=timeId&&S.time[timeId];
+  const t=editing?JSON.parse(JSON.stringify(S.time[timeId])):{id:'t_'+Date.now()+'_'+Math.random().toString(36).slice(2,6),jobId:presetJobId||'',date:presetDate||dateKey(new Date()),start:'',end:'',hours:'',worker:S.user||'',rate:'',billable:true,notes:'',created:Date.now(),user:S.user};
+  if(Object.keys(S.jobs).length===0){toast('Add a job first','');return}
+  const jobOpts=`<option value="">— Select a job —</option>`+Object.values(S.jobs).map(j=>`<option value="${esc(j.id)}" ${t.jobId===j.id?'selected':''}>${esc(j.name)}${j.customerName?' — '+esc(j.customerName):''}</option>`).join('');
+  const memberSet=Array.from(new Set([...(S.members||[]),...(S.user?[S.user]:[]),...allTime().map(x=>x.worker).filter(Boolean)]));
+  const workerOpts=`<option value="">— Crew member —</option>`+memberSet.sort().map(w=>`<option value="${esc(w)}" ${t.worker===w?'selected':''}>${esc(w)}</option>`).join('');
+  $('modal-root').innerHTML=`<div class="modal-bd" id="mbd" role="dialog" aria-modal="true" aria-label="${editing?'Edit':'Log'} time"><div class="modal"><div class="modal-handle"></div>
+    <div class="modal-head"><div class="modal-title">${editing?'Edit Time Entry':'Log Time'}</div><button class="modal-close" id="mc" aria-label="Close"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button></div>
+    <div class="modal-body">
+      <div class="form-group"><label class="form-label" for="tm-job">Job / Client</label>
+        <select class="form-select" id="tm-job">${jobOpts}</select>
+      </div>
+      <div class="form-group"><label class="form-label" for="tm-date">Date</label>
+        <input type="date" class="form-input" id="tm-date" value="${esc(t.date||'')}">
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div class="form-group"><label class="form-label" for="tm-start">Start</label>
+          <input type="time" class="form-input" id="tm-start" value="${esc(t.start||'')}">
+        </div>
+        <div class="form-group"><label class="form-label" for="tm-end">End</label>
+          <input type="time" class="form-input" id="tm-end" value="${esc(t.end||'')}">
+        </div>
+      </div>
+      <div class="form-group"><label class="form-label" for="tm-hours">Hours <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text-3)">(auto from start/end, or enter manually)</span></label>
+        <input type="number" step="0.25" min="0" class="form-input" id="tm-hours" value="${esc(t.hours||'')}" placeholder="0.0" inputmode="decimal">
+        <div id="tm-calc" style="font-size:11.5px;color:var(--green-700);margin-top:6px;font-weight:600"></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div class="form-group"><label class="form-label" for="tm-worker">Crew Member</label>
+          <input list="tm-worker-list" class="form-input" id="tm-worker" value="${esc(t.worker||'')}" placeholder="Name">
+          <datalist id="tm-worker-list">${memberSet.map(w=>`<option value="${esc(w)}">`).join('')}</datalist>
+        </div>
+        <div class="form-group"><label class="form-label" for="tm-rate">Rate ($/hr)</label>
+          <input type="number" step="0.01" min="0" class="form-input" id="tm-rate" value="${esc(t.rate||'')}" placeholder="optional" inputmode="decimal">
+        </div>
+      </div>
+      <div class="form-group">
+        <label style="display:flex;align-items:center;gap:8px;font-size:13.5px;cursor:pointer">
+          <input type="checkbox" id="tm-billable" ${t.billable!==false?'checked':''} style="width:18px;height:18px;cursor:pointer">
+          <span><strong>Billable</strong> — counts toward billable labor</span>
+        </label>
+      </div>
+      <div class="form-group"><label class="form-label" for="tm-notes">Notes</label>
+        <textarea class="form-textarea" id="tm-notes" rows="2" placeholder="What was done">${esc(t.notes||'')}</textarea>
+      </div>
+      <div style="display:flex;gap:8px;justify-content:space-between;margin-top:8px;flex-wrap:wrap">
+        ${editing?`<button class="docs-menu-foot-btn" id="tm-delete" style="color:var(--red);border-color:var(--red)">Delete</button>`:'<div></div>'}
+        <div style="display:flex;gap:8px">
+          ${!editing?`<button class="docs-menu-foot-btn" id="tm-save-another" title="Save and log another entry for the same day — handy for a second job">Save + Add Another</button>`:''}
+          <button class="docs-menu-foot-btn" id="tm-cancel">Cancel</button>
+          <button class="btn-add" id="tm-save">${editing?'Save':'Log Time'}</button>
+        </div>
+      </div>
+    </div>
+  </div></div>`;
+  const calc=()=>{
+    const a=parseHHMM($('tm-start').value),b=parseHHMM($('tm-end').value);
+    if(a!=null&&b!=null){let d=b-a;if(d<0)d+=1440;const h=Math.round(d/60*100)/100;$('tm-hours').value=h;$('tm-calc').textContent='= '+fmtHours(h)+(parseHHMM($('tm-end').value)<parseHHMM($('tm-start').value)?' (overnight)':'')}
+    else $('tm-calc').textContent='';
+  };
+  $('tm-start').onchange=calc;$('tm-end').onchange=calc;calc();
+  $('mc').onclick=$('tm-cancel').onclick=closeModal;
+  $('mbd').onclick=e=>{if(e.target===e.currentTarget)closeModal()};
+  if(editing){
+    $('tm-delete').onclick=async()=>{
+      if(!confirm('Delete this time entry? This can be undone right after.'))return;
+      const backup=JSON.parse(JSON.stringify(S.time[timeId]));
+      await deleteTimeDB(timeId);
+      const jn=S.jobs[backup.jobId]?S.jobs[backup.jobId].name:'';
+      await logAct('deleted a time entry'+(jn?' from':''),jn);
+      closeModal();render();
+      UNDO.push(async()=>{await writeTime(backup);render();toast('Time entry restored')});
+      toast('Time entry deleted','undo',()=>{UNDO.pop()()});
+    };
+  }
+  const collect=()=>{
+    const jobId=$('tm-job').value;
+    const start=$('tm-start').value,end=$('tm-end').value;
+    let hours=parseFloat($('tm-hours').value)||0;
+    if((!hours||hours<=0)&&parseHHMM(start)!=null&&parseHHMM(end)!=null){let d=parseHHMM(end)-parseHHMM(start);if(d<0)d+=1440;hours=Math.round(d/60*100)/100}
+    return {
+      id:t.id,jobId,date:$('tm-date').value||dateKey(new Date()),
+      start,end,hours,
+      worker:$('tm-worker').value.trim(),
+      rate:parseFloat($('tm-rate').value)||0,
+      billable:$('tm-billable').checked,
+      notes:$('tm-notes').value.trim(),
+      created:t.created||Date.now(),updated:Date.now(),user:S.user||t.user||'',
+    };
+  };
+  const save=async(addAnother)=>{
+    const rec=collect();
+    if(!rec.jobId){toast('Pick a job','');return}
+    if(entryHours(rec)<=0){toast('Enter hours or a start/end time','');return}
+    await writeTime(rec);
+    const j=S.jobs[rec.jobId];
+    await logAct((editing?'edited':'logged')+' '+fmtHours(entryHours(rec))+(j?' on':''),j?j.name:'');
+    if(addAnother){
+      // Keep same date, clear job/time so the next site can be entered fast
+      toast('Saved — add the next job');
+      showTimeModal(null,'',rec.date);
+    }else{closeModal();render();toast(editing?'Time updated':'Time logged')}
+  };
+  $('tm-save').onclick=()=>save(false);
+  if(!editing)$('tm-save-another').onclick=()=>save(true);
+}
+
 // ══ Clients ══
 // Clients are derived by grouping jobs on customer name (case-insensitive).
 function getAllClients(){
@@ -3452,6 +3769,12 @@ function renderClientDetail(key){
   const comms=[];
   c.jobs.forEach(j=>(j.comms||[]).forEach(m=>comms.push({m,job:j})));
   comms.sort((a,b)=>(b.m.time||0)-(a.m.time||0));
+  // Time entries across this client's jobs
+  const timeEntries=[];
+  c.jobs.forEach(j=>timeForJob(j.id).forEach(t=>timeEntries.push({t,job:j})));
+  timeEntries.sort((a,b)=>(b.t.date||'').localeCompare(a.t.date||''));
+  const clientHours=timeEntries.reduce((s,x)=>s+entryHours(x.t),0);
+  const clientLaborCost=timeEntries.reduce((s,x)=>s+entryCost(x.t),0);
 
   const tab=S.clientTab||'overview';
   const tabs=[
@@ -3459,6 +3782,7 @@ function renderClientDetail(key){
     ['jobs','Jobs',c.jobs.length],
     ['invoices','Invoices',invoices.length],
     ['receipts','Receipts',recs.length],
+    ['time','Time',timeEntries.length],
     ['comms','Comms',comms.length],
   ];
 
@@ -3490,6 +3814,7 @@ function renderClientDetail(key){
           <div><div style="color:var(--text-3);font-size:11px">Last job</div><strong>${c.lastJob?fmtDate(new Date(c.lastJob).toISOString().slice(0,10)):'—'}</strong></div>
           <div><div style="color:var(--text-3);font-size:11px">Client for</div><strong>${tenure>=365?(tenure/365).toFixed(1)+' yr':tenure+' days'}</strong></div>
           <div><div style="color:var(--text-3);font-size:11px">Tracked expenses</div><strong>${money(c.receiptTotal)}</strong></div>
+          <div><div style="color:var(--text-3);font-size:11px">Labor logged</div><strong>${fmtHours(clientHours)}${clientLaborCost>0?' · '+money(clientLaborCost):''}</strong></div>
         </div>
       </div>
     `;
@@ -3532,6 +3857,21 @@ function renderClientDetail(key){
               <div class="client-row-sub">${esc(job.name||'')}${r.date?' · '+fmtDate(r.date):''}</div>
             </div>
             <div class="client-row-amt">${moneyCents(r.amount)}</div>
+          </div>`;
+        }).join('')}
+      </div>`;
+  } else if(tab==='time'){
+    body=timeEntries.length===0?'<p style="font-size:13px;color:var(--text-3);padding:10px 2px">No time logged for this client\'s jobs yet.</p>'
+      :`<div style="font-size:12.5px;color:var(--text-2);margin-bottom:10px">Total labor: <strong>${fmtHours(clientHours)}</strong>${clientLaborCost>0?' · <strong>'+money(clientLaborCost)+'</strong>':''} across ${timeEntries.length} entr${timeEntries.length!==1?'ies':'y'}</div>
+        <div class="client-section-list">
+        ${timeEntries.map(({t,job})=>{
+          const rangeTxt=(t.start&&t.end)?fmt12(t.start)+' – '+fmt12(t.end):'';
+          return `<div class="client-row" data-time-open="${esc(t.id)}">
+            <div class="client-row-main">
+              <div class="client-row-title">${esc(job.name||'')}</div>
+              <div class="client-row-sub">${fmtDate(t.date)}${rangeTxt?' · '+rangeTxt:''}${t.worker?' · '+esc(t.worker):''}</div>
+            </div>
+            <div class="client-row-amt">${fmtHours(entryHours(t))}<div class="client-row-amt-sub">${entryCost(t)>0?money(entryCost(t)):''}</div></div>
           </div>`;
         }).join('')}
       </div>`;
@@ -4471,6 +4811,7 @@ function renderDetail(id){
     {id:'docs',label:'Files',count:(j.documents||[]).length},
     {id:'invoices',label:'Invoices',count:(j.invoices||[]).length},
     {id:'receipts',label:'Receipts',count:receiptsForJob(j.id).length},
+    {id:'time',label:'Time',count:timeForJob(j.id).length},
     {id:'financial',label:'Financials'},
     {id:'comms',label:'Comms',count:(j.comms||[]).length},
     {id:'notes',label:'Notes',count:(j.notes||[]).length},
@@ -4728,6 +5069,42 @@ function renderDetailTab(j,tab){
         <button class="btn-add" id="btn-new-receipt-job" style="background:#7c3aed;box-shadow:0 2px 8px rgba(124,58,237,0.35)">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
           Add Receipt
+        </button>
+      </div>`;
+  }
+  if(tab==='time'){
+    const entries=timeForJob(j.id).sort((a,b)=>(b.date||'').localeCompare(a.date||'')||((parseHHMM(a.start)??0)-(parseHHMM(b.start)??0)));
+    const totalHours=entries.reduce((s,t)=>s+entryHours(t),0);
+    const totalCost=entries.reduce((s,t)=>s+entryCost(t),0);
+    const byWorker={};
+    entries.forEach(t=>{const w=t.worker||'Unassigned';byWorker[w]=(byWorker[w]||0)+entryHours(t)});
+    return `
+      <div class="section">
+        <div class="section-hd">Time on this Job <span>${entries.length}</span></div>
+        <div class="kpi-grid" style="margin-bottom:14px">
+          <div class="kpi-card accent"><div class="kpi-label">Total Hours</div><div class="kpi-value">${fmtHours(totalHours)}</div><div class="kpi-sub">${entries.length} entr${entries.length!==1?'ies':'y'}</div></div>
+          <div class="kpi-card"><div class="kpi-label">Labor Cost</div><div class="kpi-value">${money(totalCost)}</div><div class="kpi-sub">${Object.keys(byWorker).length} crew member${Object.keys(byWorker).length!==1?'s':''}</div></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px">
+          ${entries.length===0?'<p style="font-size:13px;color:var(--text-3);padding:4px 0">No time logged on this job yet. Track crew hours to see where labor is going.</p>'
+            :entries.map(t=>{
+              const rangeTxt=(t.start&&t.end)?fmt12(t.start)+' – '+fmt12(t.end):'';
+              return `<div class="time-entry" data-time-open="${esc(t.id)}">
+                <div class="time-entry-bar"></div>
+                <div class="time-entry-main">
+                  <div class="time-entry-job">${fmtDate(t.date)}</div>
+                  <div class="time-entry-meta">${rangeTxt?rangeTxt+' · ':''}${t.worker?esc(t.worker):'Unassigned'}${t.billable===false?' · non-billable':''}${t.notes?' · '+esc(t.notes.slice(0,40))+(t.notes.length>40?'…':''):''}</div>
+                </div>
+                <div class="time-entry-amt">
+                  <div class="time-entry-hrs">${fmtHours(entryHours(t))}</div>
+                  ${entryCost(t)>0?`<div class="time-entry-cost">${money(entryCost(t))}</div>`:''}
+                </div>
+              </div>`;
+            }).join('')}
+        </div>
+        <button class="btn-add" id="btn-new-time-job">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+          Log Time
         </button>
       </div>`;
   }
@@ -5412,7 +5789,7 @@ let CMD={open:false,query:'',idx:0,items:[]};
 function cmdItems(){
   const out=[];
   // Views
-  [['dashboard','Home / Dashboard','home'],['jobs','Jobs','briefcase'],['clients','Clients','team'],['schedule','Schedule','calendar'],['documents','Documents','invoice'],['invoices','Invoices','invoice'],['contracts','Contracts','invoice'],['receipts','Receipts & Expenses','invoice'],['otherdocs','Other Documents','invoice'],['map','Map','map'],['reports','Reports','chart'],['activity','Activity','list'],['team','Team','team']].forEach(([v,name,ico])=>{
+  [['dashboard','Home / Dashboard','home'],['jobs','Jobs','briefcase'],['clients','Clients','team'],['schedule','Schedule','calendar'],['time','Time Tracking','calendar'],['documents','Documents','invoice'],['invoices','Invoices','invoice'],['contracts','Contracts','invoice'],['receipts','Receipts & Expenses','invoice'],['otherdocs','Other Documents','invoice'],['map','Map','map'],['reports','Reports','chart'],['activity','Activity','list'],['team','Team','team']].forEach(([v,name,ico])=>{
     out.push({type:'view',name:'Go to '+name,sub:'View',ico,run:()=>{S.view=v;S.detail=null;S.clientDetail=null;render()}});
   });
   // Actions
@@ -5421,6 +5798,7 @@ function cmdItems(){
   out.push({type:'action',name:'Upload Document',sub:'Contract, permit, warranty, change order…',ico:'invoice',run:()=>showDocumentUploadModal()});
   out.push({type:'action',name:'Upload Contract',sub:'Add a signed contract to a job',ico:'invoice',run:()=>showDocumentUploadModal('contract')});
   out.push({type:'action',name:'Add Receipt',sub:'Track an expense for tax write-off / job costing',ico:'invoice',run:()=>showReceiptModal()});
+  out.push({type:'action',name:'Log Time',sub:'Record crew hours against a job',ico:'calendar',run:()=>showTimeModal()});
   out.push({type:'action',name:'Settings & Company Info',sub:'Edit name, logo, invoice defaults',ico:'kbd',run:showSettingsModal});
   out.push({type:'action',name:'Export to CSV',sub:'Download all jobs',ico:'download',run:exportCSV});
   out.push({type:'action',name:'Notifications',sub:'See your inbox',ico:'bell',run:showNotificationsModal});
@@ -5636,7 +6014,7 @@ function onKey(e){
   // g + (d/j/s/m/r) go-to
   if(k==='g'||k==='G'){KBD_BUFFER='g';clearTimeout(KBD_BUFFER_T);KBD_BUFFER_T=setTimeout(()=>KBD_BUFFER='',1200);return}
   if(KBD_BUFFER==='g'){
-    const map={d:'dashboard',j:'jobs',c:'clients',s:'schedule',i:'invoices',m:'map',r:'reports',a:'activity',t:'team'};
+    const map={d:'dashboard',j:'jobs',c:'clients',s:'schedule',h:'time',i:'invoices',m:'map',r:'reports',a:'activity',t:'team'};
     const target=map[k.toLowerCase()];
     if(target){KBD_BUFFER='';clearTimeout(KBD_BUFFER_T);S.view=target;S.detail=null;S.clientDetail=null;render();e.preventDefault()}
   }
@@ -5876,6 +6254,14 @@ function attachHandlers(){
   document.querySelectorAll('[data-client]').forEach(el=>el.onclick=()=>{S.clientDetail=el.dataset.client;S.clientTab='overview';render();window.scrollTo(0,0)});
   $('btn-client-back')?.addEventListener('click',()=>{S.clientDetail=null;render()});
   document.querySelectorAll('[data-client-tab]').forEach(b=>b.onclick=()=>{S.clientTab=b.dataset.clientTab;render()});
+
+  // Time tracking
+  $('btn-new-time')?.addEventListener('click',()=>showTimeModal());
+  $('btn-new-time-job')?.addEventListener('click',()=>{const id=S.detail;if(id)showTimeModal(null,id)});
+  document.querySelectorAll('[data-time-range]').forEach(c=>c.onclick=()=>{S.timeRange=c.dataset.timeRange;render()});
+  $('time-jobfilter')?.addEventListener('change',e=>{S.timeJobFilter=e.target.value;render()});
+  $('time-workerfilter')?.addEventListener('change',e=>{S.timeWorkerFilter=e.target.value;render()});
+  document.querySelectorAll('[data-time-open]').forEach(el=>el.onclick=()=>showTimeModal(el.dataset.timeOpen));
   // Map
   $('btn-geocode')?.addEventListener('click',geocodeAll);
   $('btn-add-job')?.addEventListener('click',()=>showJobModal('add'));
