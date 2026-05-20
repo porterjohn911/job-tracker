@@ -1341,7 +1341,7 @@ try{const s=localStorage.getItem('wfs_fb');if(s)FIREBASE_CONFIG=JSON.parse(s)}ca
 // ══ State ══
 let DB=null;
 let MAP=null,MAP_MARKERS=[];
-const S={jobs:{},activity:[],members:[],view:'dashboard',detail:null,detailTab:'overview',filter:'all',search:'',photoCat:'all',calMonth:new Date().getMonth(),calYear:new Date().getFullYear(),calSelected:null,calMode:localStorage.getItem('wfs_calmode')||'month',reportRange:'90',sort:localStorage.getItem('wfs_sort')||'newest',sortOpen:false,bulkMode:false,bulkSel:new Set(),invFilter:'all',invSearch:'',invSort:'date',docOtherFilter:'all',user:localStorage.getItem('wfs_user')||'',notifReadAt:parseInt(localStorage.getItem('wfs_notif_read')||'0',10)};
+const S={jobs:{},activity:[],members:[],view:'dashboard',detail:null,detailTab:'overview',filter:'all',search:'',photoCat:'all',calMonth:new Date().getMonth(),calYear:new Date().getFullYear(),calSelected:null,calMode:localStorage.getItem('wfs_calmode')||'month',reportRange:'90',sort:localStorage.getItem('wfs_sort')||'newest',sortOpen:false,bulkMode:false,bulkSel:new Set(),invFilter:'all',invSearch:'',invSort:'date',docOtherFilter:'all',docOverviewFilter:'all',user:localStorage.getItem('wfs_user')||'',notifReadAt:parseInt(localStorage.getItem('wfs_notif_read')||'0',10)};
 const UNDO={stack:[],push(op){this.stack.push(op);if(this.stack.length>20)this.stack.shift()},pop(){return this.stack.pop()}};
 
 // ── Company info for invoice letterhead (editable via Settings)
@@ -1905,7 +1905,8 @@ function renderDocsMenu(){
       </button>
     </div>
     <div class="docs-menu-foot">
-      <button class="docs-menu-foot-btn" data-docs-go="documents">Open Document Center →</button>
+      <button class="docs-menu-foot-btn" data-docs-go="documents">All Documents</button>
+      <button class="docs-menu-foot-btn" id="docs-menu-upload">+ Upload Document</button>
     </div>
   `;
 }
@@ -1927,6 +1928,16 @@ function renderDocumentsOverview(){
       <div>
         <div style="font-size:11px;color:var(--text-3);text-transform:uppercase;letter-spacing:0.06em;font-weight:700">Document Center</div>
         <div style="font-size:20px;font-weight:700;margin-top:2px">Documents</div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn-add" id="btn-new-doc-global" aria-label="Upload new document">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+          Upload Document
+        </button>
+        <button class="btn-add" id="btn-new-inv-from-docs" style="background:var(--green-900)" aria-label="Create new invoice">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+          New Invoice
+        </button>
       </div>
     </div>
 
@@ -1982,23 +1993,58 @@ function renderDocumentsOverview(){
       </div>
     </div>
 
-    ${recent.length?`<div class="report-section">
-      <div class="report-hd">Recently Added</div>
-      <div style="display:flex;flex-direction:column;gap:8px">
-        ${recent.map(({doc,job,idx,category})=>`
-          <a class="doc-row" href="${doc.url||'#'}" download="${esc(doc.name||'')}" target="_blank">
-            <div class="doc-row-icon">${FILE_ICON}</div>
-            <div class="doc-row-main">
-              <div class="doc-row-name"><span class="doc-row-cat">${esc(DOC_CAT[category].label)}</span>${esc(doc.name||'(untitled)')}</div>
-              <div class="doc-row-meta">${esc(job.name||'')}${doc.uploaded?' · '+ago(doc.uploaded):''}${doc.size?' · '+esc(doc.size):''}${fileExt(doc.name)?' · '+fileExt(doc.name):''}</div>
-            </div>
-          </a>`).join('')}
-      </div>
-    </div>`:`<div class="empty" style="padding:40px 20px">
-      <div class="empty-icon">${FILE_ICON}</div>
-      <h3>No documents yet</h3>
-      <p>Upload contracts, permits, warranties and more from inside any job. Files you add will appear here organized by type.</p>
-    </div>`}
+    ${(()=>{
+      const allDocs=getAllDocsRaw().sort((a,b)=>(b.doc.uploaded||0)-(a.doc.uploaded||0));
+      const invAll=getAllInvoices().sort((a,b)=>(b.inv.date||'').localeCompare(a.inv.date||''));
+      const filter=S.docOverviewFilter||'all';
+      const filterCounts={all:allDocs.length+invAll.length,invoices:invAll.length,contracts:counts.contract||0,other:otherCount};
+      const filterChips=[['all','All'],['invoices','Invoices'],['contracts','Contracts'],['other','Other']];
+      let showInvoices=filter==='all'||filter==='invoices';
+      let showContracts=filter==='all'||filter==='contracts';
+      let showOther=filter==='all'||filter==='other';
+      const visibleDocs=allDocs.filter(x=>(showContracts&&x.category==='contract')||(showOther&&x.category!=='contract'));
+      const visibleInv=showInvoices?invAll:[];
+      const total=visibleDocs.length+visibleInv.length;
+      if(allDocs.length===0&&invAll.length===0)return `<div class="empty" style="padding:40px 20px">
+        <div class="empty-icon">${FILE_ICON}</div>
+        <h3>No documents yet</h3>
+        <p>Click "Upload Document" above to add contracts, permits, warranties and more. Or use "New Invoice" to bill a job.</p>
+      </div>`;
+      return `<div class="report-section">
+        <div class="report-hd">All Documents <span class="kpi-sub">${total} item${total!==1?'s':''}</span></div>
+        <div class="filter-row" style="margin-bottom:12px">
+          ${filterChips.map(([k,lbl])=>`<div class="filter-chip ${filter===k?'active':''}" data-docov-filter="${k}">${lbl} ${filterCounts[k]||0}</div>`).join('')}
+        </div>
+        ${total===0?`<p style="font-size:13px;color:var(--text-3);padding:10px 4px">Nothing in this category yet.</p>`:`
+        <div style="display:flex;flex-direction:column;gap:8px">
+          ${visibleInv.map(({inv,job})=>{
+            const c=calcInvoice(inv);const st=invoiceStatus(inv);
+            return `<div class="doc-row" data-open-inv="${esc(job.id)}|${esc(inv.id)}" style="cursor:pointer">
+              <div class="doc-row-icon" style="background:linear-gradient(135deg,#1a6e55,#16a34a);color:#fff">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25"/></svg>
+              </div>
+              <div class="doc-row-main">
+                <div class="doc-row-name"><span class="doc-row-cat">Invoice</span>${esc(inv.number||'(no #)')} <span class="invoice-status ${st}" style="margin-left:4px">${st}</span></div>
+                <div class="doc-row-meta">${esc(job.name||'')}${job.customerName?' · '+esc(job.customerName):''}${inv.date?' · '+fmtDate(inv.date):''} · ${money(c.total)}${c.balance>0.005?' · '+money(c.balance)+' due':' · paid'}</div>
+              </div>
+            </div>`;
+          }).join('')}
+          ${visibleDocs.map(({doc,job,idx,category})=>{
+            const opts=DOC_CAT_ORDER.map(k=>`<option value="${k}" ${category===k?'selected':''}>${esc(DOC_CAT[k].label)}</option>`).join('');
+            return `<div class="doc-row">
+              <div class="doc-row-icon">${FILE_ICON}</div>
+              <div class="doc-row-main">
+                <a href="${doc.url||'#'}" download="${esc(doc.name||'')}" target="_blank" style="text-decoration:none;color:inherit;display:block">
+                  <div class="doc-row-name"><span class="doc-row-cat">${esc(DOC_CAT[category].label)}</span>${esc(doc.name||'(untitled)')}</div>
+                  <div class="doc-row-meta">${esc(job.name||'')}${job.customerName?' · '+esc(job.customerName):''}${doc.uploaded?' · '+ago(doc.uploaded):''}${doc.size?' · '+esc(doc.size):''}</div>
+                </a>
+              </div>
+              <select class="doc-cat-select" data-doc-recat="${esc(job.id)}|${idx}" aria-label="Change category">${opts}</select>
+            </div>`;
+          }).join('')}
+        </div>`}
+      </div>`;
+    })()}
   `;
 }
 
@@ -2034,7 +2080,13 @@ function renderContractsView(){
         <div style="font-size:11px;color:var(--text-3);text-transform:uppercase;letter-spacing:0.06em;font-weight:700">Document Center</div>
         <div style="font-size:20px;font-weight:700;margin-top:2px">Contracts</div>
       </div>
-      <button class="btn-add" data-docs-go="documents" aria-label="Back to documents overview">← All Documents</button>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="docs-menu-foot-btn" data-docs-go="documents" aria-label="Back to documents overview">← All Documents</button>
+        <button class="btn-add" id="btn-new-contract" aria-label="Upload new contract">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+          Upload Contract
+        </button>
+      </div>
     </div>
     <div class="kpi-grid">
       <div class="kpi-card accent"><div class="kpi-label">Contracts on File</div><div class="kpi-value">${items.length}</div><div class="kpi-sub">${jobsCovered} job${jobsCovered!==1?'s':''} covered</div></div>
@@ -2062,7 +2114,13 @@ function renderOtherDocsView(){
         <div style="font-size:11px;color:var(--text-3);text-transform:uppercase;letter-spacing:0.06em;font-weight:700">Document Center</div>
         <div style="font-size:20px;font-weight:700;margin-top:2px">Other Documents</div>
       </div>
-      <button class="btn-add" data-docs-go="documents" aria-label="Back to documents overview">← All Documents</button>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="docs-menu-foot-btn" data-docs-go="documents" aria-label="Back to documents overview">← All Documents</button>
+        <button class="btn-add" id="btn-new-otherdoc" aria-label="Upload new document">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+          Upload Document
+        </button>
+      </div>
     </div>
     <div class="kpi-grid">
       <div class="kpi-card accent"><div class="kpi-label">Total Files</div><div class="kpi-value">${totalOther}</div><div class="kpi-sub">across all sub-categories</div></div>
@@ -2261,6 +2319,61 @@ function renderInvoicesView(){
 }
 
 // Pick a job, then open invoice editor for it
+// Upload a new document (pick job + category + file) from any docs view
+function showDocumentUploadModal(presetCategory){
+  const all=jobs();
+  if(all.length===0){toast('Add a job first','');return}
+  const presetJob=S.detail&&S.jobs[S.detail]?S.detail:'';
+  const cat=presetCategory&&DOC_CAT[presetCategory]?presetCategory:'other';
+  const jobOpts=all.map(j=>`<option value="${esc(j.id)}" ${j.id===presetJob?'selected':''}>${esc(j.name)}${j.customerName?' — '+esc(j.customerName):''}</option>`).join('');
+  const catOpts=DOC_CAT_ORDER.map(k=>`<option value="${k}" ${cat===k?'selected':''}>${esc(DOC_CAT[k].label)}</option>`).join('');
+  $('modal-root').innerHTML=`<div class="modal-bd" id="mbd" role="dialog" aria-modal="true" aria-label="Upload document"><div class="modal"><div class="modal-handle"></div>
+    <div class="modal-head"><div class="modal-title">Upload Document</div><button class="modal-close" id="mc" aria-label="Close"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button></div>
+    <div class="modal-body">
+      <p style="font-size:12.5px;color:var(--text-2);margin-bottom:10px">Documents are attached to a job so they stay organized with the rest of the project.</p>
+      <div class="form-group"><label class="form-label" for="docu-job">Job</label>
+        <select class="form-select" id="docu-job">${jobOpts}</select>
+      </div>
+      <div class="form-group"><label class="form-label" for="docu-cat">Category</label>
+        <select class="form-select" id="docu-cat">${catOpts}</select>
+        <div id="docu-cat-desc" style="font-size:11.5px;color:var(--text-3);margin-top:6px"></div>
+      </div>
+      <div class="form-group"><label class="form-label" for="docu-file">File <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text-3)">(PDF, DOC, IMG — max 5MB)</span></label>
+        <input type="file" id="docu-file" class="form-input" accept="*/*">
+      </div>
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px">
+        <button class="docs-menu-foot-btn" id="docu-cancel">Cancel</button>
+        <button class="btn-add" id="docu-save">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v6m3-3H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          Upload
+        </button>
+      </div>
+    </div>
+  </div></div>`;
+  const updateDesc=()=>{const k=$('docu-cat').value;$('docu-cat-desc').textContent=DOC_CAT[k]?.desc||''};
+  updateDesc();
+  $('docu-cat').onchange=updateDesc;
+  $('mc').onclick=$('docu-cancel').onclick=closeModal;
+  $('mbd').onclick=e=>{if(e.target===e.currentTarget)closeModal()};
+  $('docu-save').onclick=()=>{
+    const jobId=$('docu-job').value;
+    const category=$('docu-cat').value;
+    const file=$('docu-file').files[0];
+    if(!jobId){toast('Pick a job','');return}
+    if(!file){toast('Choose a file','');return}
+    if(file.size>5*1024*1024){toast('File too large (max 5MB)','');return}
+    const j=S.jobs[jobId];if(!j)return;
+    const r=new FileReader();
+    r.onload=async e=>{
+      j.documents=j.documents||[];
+      j.documents.push({name:file.name,url:e.target.result,size:(file.size/1024).toFixed(0)+' KB',type:file.type,uploaded:Date.now(),user:S.user,category});
+      await writeJob(j);await logAct('uploaded '+file.name+' ('+DOC_CAT[category].label+') to',j.name);
+      closeModal();render();toast(DOC_CAT[category].label+' uploaded');
+    };
+    r.readAsDataURL(file);
+  };
+}
+
 function showJobPickerModal(onPick){
   const all=jobs();
   if(all.length===0){toast('Add a job first','');return}
@@ -3924,6 +4037,8 @@ function cmdItems(){
   // Actions
   out.push({type:'action',name:'New Job',sub:'Create a job',ico:'plus',run:()=>showJobModal('add')});
   out.push({type:'action',name:'New Invoice',sub:'Pick a job, then create invoice',ico:'invoice',run:()=>showJobPickerModal(jobId=>showInvoiceModal(jobId))});
+  out.push({type:'action',name:'Upload Document',sub:'Contract, permit, warranty, change order…',ico:'invoice',run:()=>showDocumentUploadModal()});
+  out.push({type:'action',name:'Upload Contract',sub:'Add a signed contract to a job',ico:'invoice',run:()=>showDocumentUploadModal('contract')});
   out.push({type:'action',name:'Settings & Company Info',sub:'Edit name, logo, invoice defaults',ico:'kbd',run:showSettingsModal});
   out.push({type:'action',name:'Export to CSV',sub:'Download all jobs',ico:'download',run:exportCSV});
   out.push({type:'action',name:'Notifications',sub:'See your inbox',ico:'bell',run:showNotificationsModal});
@@ -4242,6 +4357,21 @@ function attachHandlers(){
   $('inv-search')?.addEventListener('input',e=>{S.invSearch=e.target.value;render()});
   $('inv-sort')?.addEventListener('change',e=>{S.invSort=e.target.value;render()});
   document.querySelectorAll('[data-inv-filter]').forEach(c=>c.onclick=()=>{S.invFilter=c.dataset.invFilter;render()});
+
+  // Documents — upload buttons in each view
+  $('docs-menu-upload')?.addEventListener('click',e=>{
+    e.stopPropagation();
+    const menu=$('nav-docs-menu');if(menu)menu.classList.remove('open');
+    showDocumentUploadModal();
+  });
+  $('btn-new-doc-global')?.addEventListener('click',()=>showDocumentUploadModal());
+  $('btn-new-contract')?.addEventListener('click',()=>showDocumentUploadModal('contract'));
+  $('btn-new-otherdoc')?.addEventListener('click',()=>showDocumentUploadModal(S.docOtherFilter&&S.docOtherFilter!=='all'?S.docOtherFilter:'other'));
+  $('btn-new-inv-from-docs')?.addEventListener('click',()=>showJobPickerModal(jobId=>showInvoiceModal(jobId)));
+  // Documents — overview filter chips
+  document.querySelectorAll('[data-docov-filter]').forEach(c=>c.onclick=()=>{
+    S.docOverviewFilter=c.dataset.docovFilter;render();
+  });
 
   // Documents hub navigation
   document.querySelectorAll('[data-docs-go]').forEach(el=>el.onclick=e=>{
