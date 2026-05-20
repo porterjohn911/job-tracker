@@ -281,6 +281,37 @@ body{display:flex;flex-direction:column;max-width:680px;margin:0 auto;min-height
 .rec-cat-tile-val{font-size:16px;font-weight:700;margin-top:3px;font-variant-numeric:tabular-nums}
 .rec-cat-tile-sub{font-size:11px;color:var(--text-3);margin-top:1px}
 
+/* ── RECEIPT CHARTS ── */
+.rec-chart-grid{display:grid;grid-template-columns:minmax(220px,1fr) 2fr;gap:18px;align-items:start}
+@media(max-width:640px){.rec-chart-grid{grid-template-columns:1fr}}
+.rec-donut-wrap{display:flex;flex-direction:column;align-items:center;gap:12px}
+.rec-donut{position:relative;width:180px;height:180px;flex-shrink:0}
+.rec-donut svg{transform:rotate(-90deg);width:100%;height:100%}
+.rec-donut svg circle{transition:stroke-width 0.18s,opacity 0.18s}
+.rec-donut svg circle:hover{stroke-width:30;opacity:0.85}
+.rec-donut-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;pointer-events:none}
+.rec-donut-amt{font-size:18px;font-weight:700;line-height:1.1;font-variant-numeric:tabular-nums}
+.rec-donut-lbl{font-size:10.5px;color:var(--text-3);font-weight:700;text-transform:uppercase;letter-spacing:0.05em;margin-top:3px}
+.rec-legend{display:flex;flex-direction:column;gap:5px;font-size:12.5px;width:100%;max-width:340px}
+.rec-legend-row{display:flex;align-items:center;gap:8px;padding:5px 8px;border-radius:7px;cursor:pointer;transition:background 0.15s}
+.rec-legend-row:hover{background:var(--surface-2)}
+.rec-legend-row.active{background:var(--surface-3)}
+.rec-legend-dot{width:11px;height:11px;border-radius:3px;flex-shrink:0}
+.rec-legend-name{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600;color:var(--text-2)}
+.rec-legend-val{font-variant-numeric:tabular-nums;font-weight:700;color:var(--text);font-size:12.5px}
+.rec-legend-pct{font-size:10.5px;color:var(--text-3);font-weight:600;margin-left:6px;min-width:34px;text-align:right}
+
+.hbar-list{display:flex;flex-direction:column;gap:10px}
+.hbar-row{font-size:12.5px}
+.hbar-top{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:4px}
+.hbar-name{font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;flex:1}
+.hbar-name small{color:var(--text-3);font-weight:500;margin-left:6px}
+.hbar-val{font-variant-numeric:tabular-nums;font-weight:700;color:var(--text);flex-shrink:0}
+.hbar-track{height:10px;background:var(--surface-3);border-radius:6px;overflow:hidden;position:relative}
+.hbar-fill{height:100%;border-radius:6px;transition:width 0.3s ease}
+.hbar-fill-ded{position:absolute;top:0;left:0;height:100%;background:rgba(22,163,74,0.35);border-radius:6px}
+.hbar-meta{font-size:10.5px;color:var(--text-3);font-weight:500;margin-top:3px;display:flex;justify-content:space-between}
+
 /* ── CONTENT ── */
 .content{flex:1;overflow-y:auto;padding:16px;-webkit-overflow-scrolling:touch;display:flex;flex-direction:column;gap:0}
 
@@ -2249,6 +2280,29 @@ const RECEIPT_CAT={
   professional:{label:'Professional Services',deductible:true,pct:100},
   other:{label:'Other / Personal',deductible:false,pct:0},
 };
+// Distinct, accessible colors for each receipt category (used in charts & legend)
+const RECEIPT_CAT_COLORS={
+  materials:'#1a6e55',
+  tools:'#0369a1',
+  rental:'#d97706',
+  fuel:'#dc2626',
+  vehicle:'#7c3aed',
+  subcontractor:'#0891b2',
+  meals:'#f59e0b',
+  travel:'#ec4899',
+  office:'#6366f1',
+  insurance:'#14b8a6',
+  permits:'#65a30d',
+  utilities:'#f97316',
+  safety:'#eab308',
+  training:'#a855f7',
+  advertising:'#06b6d4',
+  professional:'#8b5cf6',
+  other:'#64748b',
+};
+// Cycle of customer bar colors
+const CUSTOMER_BAR_COLORS=['#1a6e55','#0369a1','#d97706','#7c3aed','#dc2626','#0891b2','#ec4899','#14b8a6'];
+
 function recCat(r){return r&&r.category&&RECEIPT_CAT[r.category]?r.category:'other'}
 function moneyCents(n){const v=Number(n||0);return '$'+v.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}
 function allReceipts(){return Object.values(S.receipts||{})}
@@ -2265,6 +2319,113 @@ function inRange(dateStr,range){
 }
 function receiptDeductible(r){const cat=RECEIPT_CAT[recCat(r)];if(!cat||!cat.deductible||r.deductible===false)return 0;return Number(r.amount||0)*(cat.pct/100)}
 function receiptsForJob(jobId){return allReceipts().filter(r=>r.jobId===jobId)}
+
+function renderReceiptCharts(list,total){
+  if(!list.length)return '';
+
+  // ── Category totals (descending, only non-zero) ──
+  const catTotals={};
+  list.forEach(r=>{const k=recCat(r);catTotals[k]=(catTotals[k]||0)+Number(r.amount||0)});
+  const catRows=Object.entries(catTotals)
+    .filter(([,v])=>v>0)
+    .sort((a,b)=>b[1]-a[1])
+    .map(([k,v])=>({key:k,label:RECEIPT_CAT[k].label,color:RECEIPT_CAT_COLORS[k]||'#64748b',value:v,pct:total>0?v/total*100:0}));
+
+  // ── Donut SVG ──
+  const r=65,cx=80,cy=80,sw=22;
+  const circ=2*Math.PI*r;
+  let acc=0;
+  const arcs=catRows.map(seg=>{
+    const dash=(seg.pct/100)*circ;
+    const arc=`<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${seg.color}" stroke-width="${sw}"
+      stroke-dasharray="${dash.toFixed(2)} ${(circ-dash).toFixed(2)}"
+      stroke-dashoffset="${(-acc).toFixed(2)}">
+      <title>${esc(seg.label)} — ${moneyCents(seg.value)} (${seg.pct.toFixed(1)}%)</title>
+    </circle>`;
+    acc+=dash;
+    return arc;
+  }).join('');
+
+  const legend=catRows.map(seg=>`
+    <div class="rec-legend-row ${S.recCatFilter===seg.key?'active':''}" data-rec-catfilter="${seg.key}" title="Click to filter list">
+      <div class="rec-legend-dot" style="background:${seg.color}"></div>
+      <div class="rec-legend-name">${esc(seg.label)}</div>
+      <div class="rec-legend-val">${moneyCents(seg.value)}</div>
+      <div class="rec-legend-pct">${seg.pct.toFixed(0)}%</div>
+    </div>
+  `).join('');
+
+  // ── Customer totals (group by job.customerName) ──
+  const byCust={};
+  list.forEach(rec=>{
+    let key,name;
+    if(rec.jobId&&S.jobs[rec.jobId]){
+      const j=S.jobs[rec.jobId];
+      name=(j.customerName||'').trim()||'(no customer)';
+      key='c:'+name.toLowerCase();
+    }else{
+      key='__overhead__';name='Overhead / Unassigned';
+    }
+    if(!byCust[key])byCust[key]={key,name,total:0,ded:0,count:0,jobIds:new Set()};
+    byCust[key].total+=Number(rec.amount||0);
+    byCust[key].ded+=receiptDeductible(rec);
+    byCust[key].count++;
+    if(rec.jobId)byCust[key].jobIds.add(rec.jobId);
+  });
+  const custRows=Object.values(byCust).sort((a,b)=>b.total-a.total);
+  const maxCust=custRows.reduce((m,c)=>Math.max(m,c.total),0);
+  const topCust=custRows.slice(0,8);
+
+  const custBars=topCust.map((c,i)=>{
+    const color=c.key==='__overhead__'?'#94a3b8':CUSTOMER_BAR_COLORS[i%CUSTOMER_BAR_COLORS.length];
+    const pct=maxCust>0?(c.total/maxCust)*100:0;
+    const dedPct=c.total>0?(c.ded/c.total)*100:0;
+    return `<div class="hbar-row">
+      <div class="hbar-top">
+        <div class="hbar-name">${esc(c.name)}<small>${c.count} receipt${c.count!==1?'s':''}${c.jobIds.size?' · '+c.jobIds.size+' job'+(c.jobIds.size!==1?'s':''):''}</small></div>
+        <div class="hbar-val">${moneyCents(c.total)}</div>
+      </div>
+      <div class="hbar-track" title="${moneyCents(c.ded)} deductible">
+        <div class="hbar-fill" style="width:${pct.toFixed(2)}%;background:${color}"></div>
+        <div class="hbar-fill-ded" style="width:${(pct*dedPct/100).toFixed(2)}%"></div>
+      </div>
+      <div class="hbar-meta">
+        <span>${total>0?(c.total/total*100).toFixed(1):0}% of total spend</span>
+        <span>${moneyCents(c.ded)} deductible</span>
+      </div>
+    </div>`;
+  }).join('');
+
+  return `
+    <div class="report-section">
+      <div class="report-hd">Spending by Category <span class="kpi-sub">${catRows.length} categor${catRows.length===1?'y':'ies'} · click a slice or legend row to filter</span></div>
+      <div class="rec-chart-grid">
+        <div class="rec-donut-wrap">
+          <div class="rec-donut">
+            <svg viewBox="0 0 160 160" role="img" aria-label="Receipt spending by category">
+              <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="var(--surface-3)" stroke-width="${sw}"/>
+              ${arcs}
+            </svg>
+            <div class="rec-donut-center">
+              <div class="rec-donut-amt">${moneyCents(total)}</div>
+              <div class="rec-donut-lbl">Total</div>
+            </div>
+          </div>
+        </div>
+        <div class="rec-legend">${legend}</div>
+      </div>
+    </div>
+
+    <div class="report-section">
+      <div class="report-hd">Spending by Customer <span class="kpi-sub">${custRows.length} customer${custRows.length===1?'':'s'}${custRows.length>topCust.length?' · top '+topCust.length+' shown':''}</span></div>
+      <div class="hbar-list">${custBars}</div>
+      <div style="font-size:11px;color:var(--text-3);margin-top:10px;display:flex;align-items:center;gap:6px">
+        <span style="display:inline-block;width:11px;height:6px;border-radius:2px;background:rgba(22,163,74,0.55)"></span>
+        Darker green overlay shows the tax-deductible portion of each customer's spend.
+      </div>
+    </div>
+  `;
+}
 
 function renderReceiptsView(){
   const all=allReceipts();
@@ -2325,6 +2486,8 @@ function renderReceiptsView(){
       <div class="kpi-card"><div class="kpi-label">Linked to Jobs</div><div class="kpi-value">${linked}</div><div class="kpi-sub">${unlinked} overhead / unassigned</div></div>
       <div class="kpi-card"><div class="kpi-label">Avg Receipt</div><div class="kpi-value">${moneyCents(inRangeList.length?total/inRangeList.length:0)}</div><div class="kpi-sub">in selected range</div></div>
     </div>
+
+    ${renderReceiptCharts(inRangeList,total)}
 
     <div class="report-section">
       <div class="report-hd">By Category <span class="kpi-sub">click a tile to filter</span></div>
