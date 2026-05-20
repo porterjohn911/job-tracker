@@ -115,6 +115,124 @@ body{display:flex;flex-direction:column;max-width:680px;margin:0 auto;min-height
 .nav-btn.active svg{transform:scale(1.12)}
 .nav-btn:active{opacity:0.7}
 
+/* ── DOCUMENTS HOVER MENU ── */
+.nav-docs-wrap{position:relative;flex:1 0 auto;min-width:64px;display:flex}
+.nav-docs-wrap .nav-btn{width:100%}
+.nav-docs-menu{
+  position:absolute;top:100%;left:50%;transform:translateX(-50%) translateY(6px);
+  min-width:300px;max-width:min(94vw,420px);
+  background:var(--surface);border:1px solid var(--border-md);border-radius:14px;
+  box-shadow:0 14px 40px rgba(0,0,0,0.18),0 2px 6px rgba(0,0,0,0.08);
+  padding:10px;display:none;z-index:200;
+  animation:docsMenuIn 0.16s ease;
+}
+@keyframes docsMenuIn{from{opacity:0;transform:translateX(-50%) translateY(0)}to{opacity:1;transform:translateX(-50%) translateY(6px)}}
+.nav-docs-wrap:hover .nav-docs-menu,
+.nav-docs-menu.open{display:block}
+.nav-docs-menu::before{
+  content:'';position:absolute;top:-6px;left:50%;transform:translateX(-50%) rotate(45deg);
+  width:12px;height:12px;background:var(--surface);
+  border-left:1px solid var(--border-md);border-top:1px solid var(--border-md);
+}
+.docs-menu-hd{
+  font-size:10.5px;font-weight:700;color:var(--text-3);
+  text-transform:uppercase;letter-spacing:0.08em;padding:4px 8px 8px;
+}
+.docs-menu-grid{display:grid;grid-template-columns:1fr;gap:6px}
+.docs-menu-item{
+  display:flex;align-items:center;gap:12px;
+  padding:10px 12px;border-radius:10px;cursor:pointer;
+  background:var(--surface-2);border:1px solid transparent;
+  transition:all 0.15s;text-align:left;
+}
+.docs-menu-item:hover{background:var(--green-100);border-color:var(--green-600)}
+.docs-menu-item-icon{
+  width:36px;height:36px;border-radius:9px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;color:#fff;
+}
+.docs-menu-item-icon svg{width:18px;height:18px;stroke-width:2}
+.dmi-invoices{background:linear-gradient(135deg,#1a6e55,#16a34a)}
+.dmi-contracts{background:linear-gradient(135deg,#0369a1,#0ea5e9)}
+.dmi-other{background:linear-gradient(135deg,#92400e,#d97706)}
+.docs-menu-item-main{flex:1;min-width:0}
+.docs-menu-item-title{font-size:13.5px;font-weight:700;color:var(--text)}
+.docs-menu-item-sub{font-size:11.5px;color:var(--text-3);margin-top:2px;line-height:1.35}
+.docs-menu-item-val{font-size:13px;font-weight:700;color:var(--text);font-variant-numeric:tabular-nums;text-align:right;flex-shrink:0}
+.docs-menu-item-val small{display:block;font-size:10.5px;font-weight:600;color:var(--text-3);margin-top:1px}
+.docs-menu-foot{
+  display:flex;gap:6px;margin-top:8px;padding-top:8px;
+  border-top:1px solid var(--border);
+}
+.docs-menu-foot-btn{
+  flex:1;padding:7px 10px;font-size:11.5px;font-weight:600;
+  background:none;border:1px solid var(--border-md);border-radius:8px;
+  color:var(--text-2);cursor:pointer;font-family:var(--font);
+  transition:all 0.15s;
+}
+.docs-menu-foot-btn:hover{background:var(--green-100);border-color:var(--green-600);color:var(--green-700)}
+@media(prefers-color-scheme:dark){
+  .docs-menu-item:hover{background:#0c2a20}
+  .docs-menu-foot-btn:hover{background:#0c2a20}
+}
+
+/* ── DOCUMENTS OVERVIEW ── */
+.docs-cat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;margin-bottom:16px}
+.docs-cat-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r-lg);padding:16px;cursor:pointer;
+  box-shadow:var(--shadow-sm);transition:transform 0.18s,box-shadow 0.18s;
+  display:flex;flex-direction:column;gap:10px;
+}
+.docs-cat-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-md)}
+.docs-cat-card-hd{display:flex;align-items:center;gap:10px}
+.docs-cat-card-icon{
+  width:42px;height:42px;border-radius:11px;
+  display:flex;align-items:center;justify-content:center;color:#fff;flex-shrink:0;
+}
+.docs-cat-card-icon svg{width:22px;height:22px;stroke-width:2}
+.docs-cat-card-title{font-size:15px;font-weight:700}
+.docs-cat-card-desc{font-size:11.5px;color:var(--text-3);margin-top:2px;line-height:1.3}
+.docs-cat-card-stats{
+  display:grid;grid-template-columns:1fr 1fr;gap:8px;
+  padding-top:8px;border-top:1px solid var(--border);
+}
+.docs-cat-stat-lbl{font-size:10.5px;color:var(--text-3);text-transform:uppercase;letter-spacing:0.06em;font-weight:700}
+.docs-cat-stat-val{font-size:15px;font-weight:700;margin-top:2px;font-variant-numeric:tabular-nums}
+.docs-subcat-row{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
+.docs-subcat-chip{
+  font-size:11px;font-weight:600;padding:3px 9px;border-radius:14px;
+  background:var(--surface-3);color:var(--text-2);
+}
+.docs-subcat-chip strong{color:var(--text);margin-left:3px}
+
+/* ── DOC LIST ROWS (Contracts / Other) ── */
+.doc-row{
+  display:flex;align-items:center;gap:12px;
+  padding:12px 14px;background:var(--surface);
+  border:1px solid var(--border);border-left:3px solid var(--green-600);
+  border-radius:10px;transition:border-color 0.15s;
+}
+.doc-row:hover{border-color:var(--green-600)}
+.doc-row-icon{
+  width:38px;height:38px;border-radius:9px;flex-shrink:0;
+  background:var(--surface-3);color:var(--text-2);
+  display:flex;align-items:center;justify-content:center;
+}
+.doc-row-icon svg{width:18px;height:18px;stroke-width:1.8}
+.doc-row-main{flex:1;min-width:0}
+.doc-row-name{font-size:13.5px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.doc-row-meta{font-size:11.5px;color:var(--text-3);margin-top:2px}
+.doc-row-cat{
+  font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:12px;
+  background:var(--green-100);color:var(--green-700);text-transform:uppercase;letter-spacing:0.04em;
+  margin-right:6px;
+}
+.doc-cat-select{
+  font-size:12px;padding:5px 8px;border-radius:7px;
+  border:1px solid var(--border-md);background:var(--surface);color:var(--text);
+  font-family:var(--font);
+}
+
 /* ── CONTENT ── */
 .content{flex:1;overflow-y:auto;padding:16px;-webkit-overflow-scrolling:touch;display:flex;flex-direction:column;gap:0}
 
@@ -1181,10 +1299,13 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5"/></svg>
     Schedule
   </button>
-  <button class="nav-btn" data-view="invoices">
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25zM6.75 12h.008v.008H6.75V12zm0 3h.008v.008H6.75V15zm0 3h.008v.008H6.75V18z"/></svg>
-    Invoices
-  </button>
+  <div class="nav-docs-wrap" id="nav-docs-wrap">
+    <button class="nav-btn" data-view="documents" id="nav-docs-btn" aria-haspopup="true" aria-expanded="false">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/></svg>
+      Documents
+    </button>
+    <div class="nav-docs-menu" id="nav-docs-menu" role="menu" aria-label="Document categories"></div>
+  </div>
   <button class="nav-btn" data-view="map">
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 6.75V15m6-6v8.25m.503 3.498l4.875-2.437c.381-.19.622-.58.622-1.006V4.82c0-.836-.88-1.38-1.628-1.006l-3.869 1.934c-.317.159-.69.159-1.006 0L9.503 3.252a1.125 1.125 0 00-1.006 0L3.622 5.689C3.24 5.88 3 6.27 3 6.695V19.18c0 .836.88 1.38 1.628 1.006l3.869-1.934c.317-.159.69-.159 1.006 0l4.994 2.497c.317.158.69.158 1.006 0z"/></svg>
     Map
@@ -1220,7 +1341,7 @@ try{const s=localStorage.getItem('wfs_fb');if(s)FIREBASE_CONFIG=JSON.parse(s)}ca
 // ══ State ══
 let DB=null;
 let MAP=null,MAP_MARKERS=[];
-const S={jobs:{},activity:[],members:[],view:'dashboard',detail:null,detailTab:'overview',filter:'all',search:'',photoCat:'all',calMonth:new Date().getMonth(),calYear:new Date().getFullYear(),calSelected:null,calMode:localStorage.getItem('wfs_calmode')||'month',reportRange:'90',sort:localStorage.getItem('wfs_sort')||'newest',sortOpen:false,bulkMode:false,bulkSel:new Set(),invFilter:'all',invSearch:'',invSort:'date',user:localStorage.getItem('wfs_user')||'',notifReadAt:parseInt(localStorage.getItem('wfs_notif_read')||'0',10)};
+const S={jobs:{},activity:[],members:[],view:'dashboard',detail:null,detailTab:'overview',filter:'all',search:'',photoCat:'all',calMonth:new Date().getMonth(),calYear:new Date().getFullYear(),calSelected:null,calMode:localStorage.getItem('wfs_calmode')||'month',reportRange:'90',sort:localStorage.getItem('wfs_sort')||'newest',sortOpen:false,bulkMode:false,bulkSel:new Set(),invFilter:'all',invSearch:'',invSort:'date',docOtherFilter:'all',user:localStorage.getItem('wfs_user')||'',notifReadAt:parseInt(localStorage.getItem('wfs_notif_read')||'0',10)};
 const UNDO={stack:[],push(op){this.stack.push(op);if(this.stack.length>20)this.stack.shift()},pop(){return this.stack.pop()}};
 
 // ── Company info for invoice letterhead (editable via Settings)
@@ -1361,16 +1482,25 @@ if(FIREBASE_CONFIG)initFB(FIREBASE_CONFIG);
 // ══ Render ══
 function render(){
   const c=$('content');
-  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.toggle('active',b.dataset.view===S.view));
+  const docsViews=new Set(['documents','invoices','contracts','otherdocs']);
+  document.querySelectorAll('.nav-btn').forEach(b=>{
+    const v=b.dataset.view;
+    const active = v===S.view || (v==='documents' && docsViews.has(S.view));
+    b.classList.toggle('active',active);
+  });
   if(S.view==='jobs'&&S.detail)c.innerHTML=renderDetail(S.detail);
   else if(S.view==='jobs')c.innerHTML=renderJobs();
   else if(S.view==='dashboard')c.innerHTML=renderDashboard();
   else if(S.view==='schedule')c.innerHTML=renderSchedule();
+  else if(S.view==='documents')c.innerHTML=renderDocumentsOverview();
   else if(S.view==='invoices')c.innerHTML=renderInvoicesView();
+  else if(S.view==='contracts')c.innerHTML=renderContractsView();
+  else if(S.view==='otherdocs')c.innerHTML=renderOtherDocsView();
   else if(S.view==='map')c.innerHTML=renderMap();
   else if(S.view==='reports')c.innerHTML=renderReports();
   else if(S.view==='activity')c.innerHTML=renderActivity();
   else if(S.view==='team')c.innerHTML=renderTeam();
+  renderDocsMenu();
   updateUserUI();
   updateBellBadge();
   attachHandlers();
@@ -1682,6 +1812,269 @@ function renderCalAgenda(byDay,today){
       </div>`).join('')}
     </div>`;
   }).join('');
+}
+
+// ══ Documents: categories, helpers, views ══
+const DOC_CAT_ORDER=['contract','permit','change-order','proposal','warranty','lien-waiver','insurance','other'];
+const DOC_CAT={
+  contract:{label:'Contract',desc:'Signed agreements between parties'},
+  permit:{label:'Permit',desc:'Building, zoning, electrical, plumbing'},
+  'change-order':{label:'Change Order',desc:'Modifications to original scope'},
+  proposal:{label:'Proposal / Estimate',desc:'Bids and project estimates'},
+  warranty:{label:'Warranty',desc:'Product and workmanship warranties'},
+  'lien-waiver':{label:'Lien Waiver',desc:'Conditional / unconditional waivers'},
+  insurance:{label:'Insurance Certificate',desc:'COI, liability, workers comp'},
+  other:{label:'Other',desc:'Miscellaneous project files'},
+};
+// "Other Documents" bucket includes everything that's not a contract
+const OTHER_DOC_CATS=['permit','change-order','proposal','warranty','lien-waiver','insurance','other'];
+
+function docCategory(d){return d&&d.category && DOC_CAT[d.category] ? d.category : 'other'}
+function getAllDocsRaw(){
+  const out=[];
+  Object.values(S.jobs).forEach(j=>{
+    (j.documents||[]).forEach((d,idx)=>{
+      out.push({doc:d,job:j,idx,category:docCategory(d)});
+    });
+  });
+  return out;
+}
+function getAllDocsByCategory(cat){
+  if(cat==='contract')return getAllDocsRaw().filter(x=>x.category==='contract');
+  if(cat==='other-bucket')return getAllDocsRaw().filter(x=>x.category!=='contract');
+  return getAllDocsRaw().filter(x=>x.category===cat);
+}
+function docCategoryCounts(){
+  const counts={};DOC_CAT_ORDER.forEach(k=>counts[k]=0);
+  getAllDocsRaw().forEach(x=>{counts[x.category]=(counts[x.category]||0)+1});
+  return counts;
+}
+function invoiceQuickStats(){
+  let total=0,outstanding=0,count=0,overdueCount=0;
+  Object.values(S.jobs).forEach(j=>{
+    (j.invoices||[]).forEach(inv=>{
+      const c=calcInvoice(inv);
+      total+=c.total;outstanding+=c.balance;count++;
+      if(invoiceStatus(inv)==='overdue')overdueCount++;
+    });
+  });
+  return {total,outstanding,count,overdueCount};
+}
+
+function fileExt(name){const m=(name||'').match(/\.([a-z0-9]+)$/i);return m?m[1].toUpperCase():''}
+const FILE_ICON=`<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/></svg>`;
+
+function renderDocsMenu(){
+  const menu=$('nav-docs-menu');if(!menu)return;
+  const inv=invoiceQuickStats();
+  const counts=docCategoryCounts();
+  const contractCount=counts.contract||0;
+  const otherCount=OTHER_DOC_CATS.reduce((s,k)=>s+(counts[k]||0),0);
+  menu.innerHTML=`
+    <div class="docs-menu-hd">Document Center</div>
+    <div class="docs-menu-grid">
+      <button class="docs-menu-item" data-docs-go="invoices" role="menuitem">
+        <div class="docs-menu-item-icon dmi-invoices">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25"/></svg>
+        </div>
+        <div class="docs-menu-item-main">
+          <div class="docs-menu-item-title">Invoices</div>
+          <div class="docs-menu-item-sub">${inv.count} total · ${money(inv.outstanding)} outstanding${inv.overdueCount?' · '+inv.overdueCount+' overdue':''}</div>
+        </div>
+        <div class="docs-menu-item-val">${inv.count}<small>files</small></div>
+      </button>
+      <button class="docs-menu-item" data-docs-go="contracts" role="menuitem">
+        <div class="docs-menu-item-icon dmi-contracts">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+        </div>
+        <div class="docs-menu-item-main">
+          <div class="docs-menu-item-title">Contracts</div>
+          <div class="docs-menu-item-sub">Signed customer agreements &amp; scope-of-work</div>
+        </div>
+        <div class="docs-menu-item-val">${contractCount}<small>file${contractCount!==1?'s':''}</small></div>
+      </button>
+      <button class="docs-menu-item" data-docs-go="otherdocs" role="menuitem">
+        <div class="docs-menu-item-icon dmi-other">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 9.776c.112-.017.227-.026.344-.026h15.812c.117 0 .232.009.344.026m-16.5 0a2.25 2.25 0 00-1.883 2.542l.857 6a2.25 2.25 0 002.227 1.932H19.05a2.25 2.25 0 002.227-1.932l.857-6a2.25 2.25 0 00-1.883-2.542m-16.5 0V6A2.25 2.25 0 016 3.75h3.879a1.5 1.5 0 011.06.44l2.122 2.12a1.5 1.5 0 001.06.44H18A2.25 2.25 0 0120.25 9v.776"/></svg>
+        </div>
+        <div class="docs-menu-item-main">
+          <div class="docs-menu-item-title">Other Documents</div>
+          <div class="docs-menu-item-sub">Permits, change orders, warranties, lien waivers, insurance, proposals</div>
+        </div>
+        <div class="docs-menu-item-val">${otherCount}<small>file${otherCount!==1?'s':''}</small></div>
+      </button>
+    </div>
+    <div class="docs-menu-foot">
+      <button class="docs-menu-foot-btn" data-docs-go="documents">Open Document Center →</button>
+    </div>
+  `;
+}
+
+function renderDocumentsOverview(){
+  const inv=invoiceQuickStats();
+  const counts=docCategoryCounts();
+  const contractCount=counts.contract||0;
+  const otherCount=OTHER_DOC_CATS.reduce((s,k)=>s+(counts[k]||0),0);
+  const totalDocs=inv.count+contractCount+otherCount;
+  const recent=getAllDocsRaw()
+    .filter(x=>x.doc.uploaded)
+    .sort((a,b)=>(b.doc.uploaded||0)-(a.doc.uploaded||0))
+    .slice(0,6);
+  const otherChips=OTHER_DOC_CATS.map(k=>`<div class="docs-subcat-chip">${esc(DOC_CAT[k].label)}<strong>${counts[k]||0}</strong></div>`).join('');
+
+  return `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+      <div>
+        <div style="font-size:11px;color:var(--text-3);text-transform:uppercase;letter-spacing:0.06em;font-weight:700">Document Center</div>
+        <div style="font-size:20px;font-weight:700;margin-top:2px">Documents</div>
+      </div>
+    </div>
+
+    <div class="kpi-grid">
+      <div class="kpi-card accent"><div class="kpi-label">Total Documents</div><div class="kpi-value">${totalDocs}</div><div class="kpi-sub">across ${Object.keys(S.jobs).length} job${Object.keys(S.jobs).length!==1?'s':''}</div></div>
+      <div class="kpi-card"><div class="kpi-label">Invoices</div><div class="kpi-value">${inv.count}</div><div class="kpi-sub">${money(inv.outstanding)} outstanding</div></div>
+      <div class="kpi-card"><div class="kpi-label">Contracts</div><div class="kpi-value">${contractCount}</div><div class="kpi-sub">signed agreements</div></div>
+      <div class="kpi-card"><div class="kpi-label">Other Docs</div><div class="kpi-value">${otherCount}</div><div class="kpi-sub">permits, COs, warranties…</div></div>
+    </div>
+
+    <div class="docs-cat-grid">
+      <div class="docs-cat-card" data-docs-go="invoices">
+        <div class="docs-cat-card-hd">
+          <div class="docs-cat-card-icon dmi-invoices">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25"/></svg>
+          </div>
+          <div>
+            <div class="docs-cat-card-title">Invoices</div>
+            <div class="docs-cat-card-desc">Billing, payments &amp; accounts receivable</div>
+          </div>
+        </div>
+        <div class="docs-cat-card-stats">
+          <div><div class="docs-cat-stat-lbl">Outstanding</div><div class="docs-cat-stat-val">${money(inv.outstanding)}</div></div>
+          <div><div class="docs-cat-stat-lbl">Overdue</div><div class="docs-cat-stat-val" style="color:${inv.overdueCount>0?'var(--red)':'var(--text)'}">${inv.overdueCount}</div></div>
+        </div>
+      </div>
+      <div class="docs-cat-card" data-docs-go="contracts">
+        <div class="docs-cat-card-hd">
+          <div class="docs-cat-card-icon dmi-contracts">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+          </div>
+          <div>
+            <div class="docs-cat-card-title">Contracts</div>
+            <div class="docs-cat-card-desc">Customer agreements, scope-of-work, T&amp;Cs</div>
+          </div>
+        </div>
+        <div class="docs-cat-card-stats">
+          <div><div class="docs-cat-stat-lbl">On File</div><div class="docs-cat-stat-val">${contractCount}</div></div>
+          <div><div class="docs-cat-stat-lbl">Jobs Covered</div><div class="docs-cat-stat-val">${new Set(getAllDocsByCategory('contract').map(x=>x.job.id)).size}</div></div>
+        </div>
+      </div>
+      <div class="docs-cat-card" data-docs-go="otherdocs">
+        <div class="docs-cat-card-hd">
+          <div class="docs-cat-card-icon dmi-other">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 9.776c.112-.017.227-.026.344-.026h15.812c.117 0 .232.009.344.026m-16.5 0a2.25 2.25 0 00-1.883 2.542l.857 6a2.25 2.25 0 002.227 1.932H19.05a2.25 2.25 0 002.227-1.932l.857-6a2.25 2.25 0 00-1.883-2.542m-16.5 0V6A2.25 2.25 0 016 3.75h3.879a1.5 1.5 0 011.06.44l2.122 2.12a1.5 1.5 0 001.06.44H18A2.25 2.25 0 0120.25 9v.776"/></svg>
+          </div>
+          <div>
+            <div class="docs-cat-card-title">Other Documents</div>
+            <div class="docs-cat-card-desc">Permits, change orders, warranties &amp; more</div>
+          </div>
+        </div>
+        <div class="docs-subcat-row">${otherChips}</div>
+      </div>
+    </div>
+
+    ${recent.length?`<div class="report-section">
+      <div class="report-hd">Recently Added</div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        ${recent.map(({doc,job,idx,category})=>`
+          <a class="doc-row" href="${doc.url||'#'}" download="${esc(doc.name||'')}" target="_blank">
+            <div class="doc-row-icon">${FILE_ICON}</div>
+            <div class="doc-row-main">
+              <div class="doc-row-name"><span class="doc-row-cat">${esc(DOC_CAT[category].label)}</span>${esc(doc.name||'(untitled)')}</div>
+              <div class="doc-row-meta">${esc(job.name||'')}${doc.uploaded?' · '+ago(doc.uploaded):''}${doc.size?' · '+esc(doc.size):''}${fileExt(doc.name)?' · '+fileExt(doc.name):''}</div>
+            </div>
+          </a>`).join('')}
+      </div>
+    </div>`:`<div class="empty" style="padding:40px 20px">
+      <div class="empty-icon">${FILE_ICON}</div>
+      <h3>No documents yet</h3>
+      <p>Upload contracts, permits, warranties and more from inside any job. Files you add will appear here organized by type.</p>
+    </div>`}
+  `;
+}
+
+function renderDocsList(items,opts){
+  if(!items.length)return `<div class="empty" style="padding:40px 20px">
+    <div class="empty-icon">${FILE_ICON}</div>
+    <h3>${esc(opts.emptyTitle||'No documents')}</h3>
+    <p>${esc(opts.emptyDesc||'')}</p>
+  </div>`;
+  return `<div style="display:flex;flex-direction:column;gap:8px">
+    ${items.map(({doc,job,idx,category})=>{
+      const opts2=DOC_CAT_ORDER.map(k=>`<option value="${k}" ${category===k?'selected':''}>${esc(DOC_CAT[k].label)}</option>`).join('');
+      return `<div class="doc-row">
+        <div class="doc-row-icon">${FILE_ICON}</div>
+        <div class="doc-row-main">
+          <a href="${doc.url||'#'}" download="${esc(doc.name||'')}" target="_blank" style="text-decoration:none;color:inherit;display:block">
+            <div class="doc-row-name"><span class="doc-row-cat">${esc(DOC_CAT[category].label)}</span>${esc(doc.name||'(untitled)')}</div>
+            <div class="doc-row-meta">${esc(job.name||'')}${job.customerName?' · '+esc(job.customerName):''}${doc.uploaded?' · '+ago(doc.uploaded):''}${doc.size?' · '+esc(doc.size):''}</div>
+          </a>
+        </div>
+        <select class="doc-cat-select" data-doc-recat="${esc(job.id)}|${idx}" aria-label="Change category">${opts2}</select>
+      </div>`;
+    }).join('')}
+  </div>`;
+}
+
+function renderContractsView(){
+  const items=getAllDocsByCategory('contract').sort((a,b)=>(b.doc.uploaded||0)-(a.doc.uploaded||0));
+  const jobsCovered=new Set(items.map(x=>x.job.id)).size;
+  return `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+      <div>
+        <div style="font-size:11px;color:var(--text-3);text-transform:uppercase;letter-spacing:0.06em;font-weight:700">Document Center</div>
+        <div style="font-size:20px;font-weight:700;margin-top:2px">Contracts</div>
+      </div>
+      <button class="btn-add" data-docs-go="documents" aria-label="Back to documents overview">← All Documents</button>
+    </div>
+    <div class="kpi-grid">
+      <div class="kpi-card accent"><div class="kpi-label">Contracts on File</div><div class="kpi-value">${items.length}</div><div class="kpi-sub">${jobsCovered} job${jobsCovered!==1?'s':''} covered</div></div>
+      <div class="kpi-card"><div class="kpi-label">Without Contract</div><div class="kpi-value" style="color:${Object.keys(S.jobs).length-jobsCovered>0?'var(--orange)':'var(--text)'}">${Math.max(0,Object.keys(S.jobs).length-jobsCovered)}</div><div class="kpi-sub">jobs missing a contract</div></div>
+      <div class="kpi-card"><div class="kpi-label">Most Recent</div><div class="kpi-value" style="font-size:15px">${items[0]?ago(items[0].doc.uploaded||0):'—'}</div><div class="kpi-sub">${items[0]?esc(items[0].job.name||''):'no contracts'}</div></div>
+    </div>
+    <div class="report-section">
+      <div class="report-hd">All Contracts</div>
+      ${renderDocsList(items,{emptyTitle:'No contracts yet',emptyDesc:'Upload a contract from inside a job and choose "Contract" as the category.'})}
+    </div>
+  `;
+}
+
+function renderOtherDocsView(){
+  const filter=S.docOtherFilter||'all';
+  let items=getAllDocsByCategory('other-bucket');
+  if(filter!=='all')items=items.filter(x=>x.category===filter);
+  items.sort((a,b)=>(b.doc.uploaded||0)-(a.doc.uploaded||0));
+  const counts=docCategoryCounts();
+  const totalOther=OTHER_DOC_CATS.reduce((s,k)=>s+(counts[k]||0),0);
+  const chips=[['all','All',totalOther],...OTHER_DOC_CATS.map(k=>[k,DOC_CAT[k].label,counts[k]||0])];
+  return `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+      <div>
+        <div style="font-size:11px;color:var(--text-3);text-transform:uppercase;letter-spacing:0.06em;font-weight:700">Document Center</div>
+        <div style="font-size:20px;font-weight:700;margin-top:2px">Other Documents</div>
+      </div>
+      <button class="btn-add" data-docs-go="documents" aria-label="Back to documents overview">← All Documents</button>
+    </div>
+    <div class="kpi-grid">
+      <div class="kpi-card accent"><div class="kpi-label">Total Files</div><div class="kpi-value">${totalOther}</div><div class="kpi-sub">across all sub-categories</div></div>
+      <div class="kpi-card"><div class="kpi-label">Permits</div><div class="kpi-value">${counts.permit||0}</div><div class="kpi-sub">building &amp; zoning</div></div>
+      <div class="kpi-card"><div class="kpi-label">Change Orders</div><div class="kpi-value">${counts['change-order']||0}</div><div class="kpi-sub">scope modifications</div></div>
+      <div class="kpi-card"><div class="kpi-label">Insurance &amp; Waivers</div><div class="kpi-value">${(counts.insurance||0)+(counts['lien-waiver']||0)}</div><div class="kpi-sub">COIs + lien waivers</div></div>
+    </div>
+    <div class="filter-row" style="margin-bottom:14px">
+      ${chips.map(([k,lbl,n])=>`<div class="filter-chip ${filter===k?'active':''}" data-docother-filter="${k}">${lbl} ${n}</div>`).join('')}
+    </div>
+    ${renderDocsList(items,{emptyTitle:'No documents in this category',emptyDesc:'Upload files from inside a job and pick a category to organize them here.'})}
+  `;
 }
 
 // ══ Invoices view (all invoices across all jobs) ══
@@ -2820,22 +3213,34 @@ function renderDetailTab(j,tab){
   if(tab==='docs'){
     const docs=j.documents||[];
     const fileIcon=`<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/></svg>`;
+    const catOpts=DOC_CAT_ORDER.map(k=>`<option value="${k}">${esc(DOC_CAT[k].label)}</option>`).join('');
     return `
       <div class="section">
         <div class="section-hd">Files & Documents <span>${docs.length}</span></div>
         <div class="doc-list">
           ${docs.length===0?'<p style="font-size:13px;color:var(--text-3);padding:4px 0">No files yet. Contracts, permits, plans, receipts — keep them all here.</p>'
-            :docs.map((d,i)=>`<a class="doc-item" href="${d.url}" download="${esc(d.name)}" target="_blank">
-              <div class="doc-icon">${fileIcon}</div>
-              <div class="doc-info"><div class="doc-name">${esc(d.name)}</div><div class="doc-meta">${esc(d.size||'')}${d.uploaded?' · '+ago(d.uploaded):''}${d.user?' · '+esc(d.user):''}</div></div>
-              <button class="doc-del" data-doc-del="${i}" onclick="event.preventDefault();event.stopPropagation()">✕</button>
-            </a>`).join('')}
+            :docs.map((d,i)=>{
+              const cat=docCategory(d);
+              const opts=DOC_CAT_ORDER.map(k=>`<option value="${k}" ${cat===k?'selected':''}>${esc(DOC_CAT[k].label)}</option>`).join('');
+              return `<div class="doc-item" style="align-items:center">
+                <div class="doc-icon">${fileIcon}</div>
+                <a class="doc-info" href="${d.url}" download="${esc(d.name)}" target="_blank" style="text-decoration:none;color:inherit">
+                  <div class="doc-name"><span class="doc-row-cat">${esc(DOC_CAT[cat].label)}</span>${esc(d.name)}</div>
+                  <div class="doc-meta">${esc(d.size||'')}${d.uploaded?' · '+ago(d.uploaded):''}${d.user?' · '+esc(d.user):''}</div>
+                </a>
+                <select class="doc-cat-select" data-doc-recat="${esc(j.id)}|${i}" aria-label="Change category">${opts}</select>
+                <button class="doc-del" data-doc-del="${i}" onclick="event.preventDefault();event.stopPropagation()">✕</button>
+              </div>`;
+            }).join('')}
         </div>
-        <label class="photo-add-btn" style="aspect-ratio:auto;padding:14px;flex-direction:row;gap:8px">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v6m3-3H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-          <span>Upload File (PDF, DOC, IMG)</span>
-          <input type="file" accept="*/*" id="doc-upload" style="display:none">
-        </label>
+        <div style="display:flex;gap:8px;align-items:stretch;margin-top:8px;flex-wrap:wrap">
+          <select class="form-select" id="doc-upload-cat" style="max-width:200px;font-size:13px;padding:10px" aria-label="Document category">${catOpts}</select>
+          <label class="photo-add-btn" style="flex:1;aspect-ratio:auto;padding:12px;flex-direction:row;gap:8px;min-width:180px">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v6m3-3H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <span>Upload File (PDF, DOC, IMG)</span>
+            <input type="file" accept="*/*" id="doc-upload" style="display:none">
+          </label>
+        </div>
       </div>`;
   }
   if(tab==='financial'){
@@ -3513,7 +3918,7 @@ let CMD={open:false,query:'',idx:0,items:[]};
 function cmdItems(){
   const out=[];
   // Views
-  [['dashboard','Home / Dashboard','home'],['jobs','Jobs','briefcase'],['schedule','Schedule','calendar'],['invoices','Invoices','invoice'],['map','Map','map'],['reports','Reports','chart'],['activity','Activity','list'],['team','Team','team']].forEach(([v,name,ico])=>{
+  [['dashboard','Home / Dashboard','home'],['jobs','Jobs','briefcase'],['schedule','Schedule','calendar'],['documents','Documents','invoice'],['invoices','Invoices','invoice'],['contracts','Contracts','invoice'],['otherdocs','Other Documents','invoice'],['map','Map','map'],['reports','Reports','chart'],['activity','Activity','list'],['team','Team','team']].forEach(([v,name,ico])=>{
     out.push({type:'view',name:'Go to '+name,sub:'View',ico,run:()=>{S.view=v;S.detail=null;render()}});
   });
   // Actions
@@ -3837,6 +4242,50 @@ function attachHandlers(){
   $('inv-search')?.addEventListener('input',e=>{S.invSearch=e.target.value;render()});
   $('inv-sort')?.addEventListener('change',e=>{S.invSort=e.target.value;render()});
   document.querySelectorAll('[data-inv-filter]').forEach(c=>c.onclick=()=>{S.invFilter=c.dataset.invFilter;render()});
+
+  // Documents hub navigation
+  document.querySelectorAll('[data-docs-go]').forEach(el=>el.onclick=e=>{
+    e.stopPropagation();
+    const v=el.dataset.docsGo;
+    S.view=v;S.detail=null;
+    const menu=$('nav-docs-menu');if(menu)menu.classList.remove('open');
+    render();
+  });
+  // Documents — other-docs filter chips
+  document.querySelectorAll('[data-docother-filter]').forEach(c=>c.onclick=()=>{
+    S.docOtherFilter=c.dataset.docotherFilter;render();
+  });
+  // Documents — recategorize selector
+  document.querySelectorAll('[data-doc-recat]').forEach(sel=>sel.onchange=async()=>{
+    const [jobId,idxStr]=sel.dataset.docRecat.split('|');
+    const idx=parseInt(idxStr,10);
+    const j=S.jobs[jobId];if(!j||!j.documents||!j.documents[idx])return;
+    j.documents[idx].category=sel.value;
+    await writeJob(j);render();toast('Category updated');
+  });
+  // Documents — mobile tap to toggle hover menu
+  const docsBtn=$('nav-docs-btn'),docsMenu=$('nav-docs-menu'),docsWrap=$('nav-docs-wrap');
+  if(docsBtn&&docsMenu&&docsWrap){
+    docsBtn.addEventListener('click',e=>{
+      // On touch devices, first tap opens the menu instead of navigating
+      const isTouch=window.matchMedia('(hover:none)').matches;
+      if(isTouch&&!docsMenu.classList.contains('open')){
+        e.preventDefault();e.stopImmediatePropagation();
+        docsMenu.classList.add('open');
+        docsBtn.setAttribute('aria-expanded','true');
+        setTimeout(()=>{
+          const off=ev=>{
+            if(!ev.target.closest('#nav-docs-wrap')){
+              docsMenu.classList.remove('open');
+              docsBtn.setAttribute('aria-expanded','false');
+              document.removeEventListener('click',off);
+            }
+          };
+          document.addEventListener('click',off);
+        },0);
+      }
+    },true);
+  }
   document.querySelectorAll('[data-open-inv]').forEach(el=>el.onclick=e=>{
     e.stopPropagation();
     const [jobId,invId]=el.dataset.openInv.split('|');
@@ -4027,7 +4476,9 @@ function attachHandlers(){
     if(file.size>5*1024*1024){toast('File too large (max 5MB)','');return}
     const r=new FileReader();
     r.onload=async e=>{
-      j.documents.push({name:file.name,url:e.target.result,size:(file.size/1024).toFixed(0)+' KB',type:file.type,uploaded:Date.now(),user:S.user});
+      const catSel=$('doc-upload-cat');
+      const category=catSel&&catSel.value&&DOC_CAT[catSel.value]?catSel.value:'other';
+      j.documents.push({name:file.name,url:e.target.result,size:(file.size/1024).toFixed(0)+' KB',type:file.type,uploaded:Date.now(),user:S.user,category});
       await writeJob(j);await logAct('uploaded '+file.name+' to',j.name);render();toast('File uploaded');
     };
     r.readAsDataURL(file);
