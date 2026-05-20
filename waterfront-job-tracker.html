@@ -323,6 +323,19 @@ body{display:flex;flex-direction:column;max-width:680px;margin:0 auto;min-height
 .rvc-lbl{font-size:10.5px;color:var(--text-3);font-weight:600;white-space:nowrap}
 .rvc-pl{font-size:10.5px;font-weight:700;white-space:nowrap;font-variant-numeric:tabular-nums}
 
+/* ── FUNNEL (pipeline stages) ── */
+.funnel{display:flex;flex-direction:column;gap:7px}
+.funnel-row{display:flex;align-items:center;gap:10px}
+.funnel-label{width:84px;flex-shrink:0;font-size:11.5px;font-weight:600;color:var(--text-2);text-align:right}
+.funnel-bar-wrap{flex:1;min-width:0}
+.funnel-bar{
+  height:30px;border-radius:6px;display:flex;align-items:center;justify-content:flex-start;
+  padding:0 10px;color:#fff;font-size:12.5px;font-weight:700;min-width:28px;
+  background:linear-gradient(90deg,var(--green-700),var(--green-400));
+  transition:width 0.3s ease;
+}
+.funnel-val{width:74px;flex-shrink:0;text-align:right;font-size:12px;font-weight:700;color:var(--text);font-variant-numeric:tabular-nums}
+
 /* ── CLIENTS ── */
 .client-list{display:flex;flex-direction:column;gap:8px}
 .client-card{
@@ -3932,7 +3945,9 @@ function renderReports(){
   const tab=S.reportTab||'overview';
   const tabs=[
     ['overview','Overview'],
-    ['profit','Profit & Margins'],
+    ['pipeline','Pipeline'],
+    ['profit','Job Costing'],
+    ['labor','Labor'],
     ['invoices','Invoices'],
     ['customers','Customers'],
     ['expenses','Expenses'],
@@ -3953,11 +3968,24 @@ function renderReports(){
   `;
   let body='';
   if(tab==='overview')body=renderReportOverview();
+  else if(tab==='pipeline')body=renderReportPipeline();
   else if(tab==='profit')body=renderReportProfit();
+  else if(tab==='labor')body=renderReportLabor();
   else if(tab==='invoices')body=renderReportInvoices();
   else if(tab==='customers')body=renderReportCustomers();
   else if(tab==='expenses')body=renderReportExpenses();
   return header+body;
+}
+
+// Sum hours of time entries whose date falls within the report range
+function laborHoursInRange(cutoff){
+  return allTime().reduce((s,t)=>{
+    if(cutoff>0){
+      if(!t.date)return s;
+      if(new Date(t.date+(t.date.length===10?'T00:00:00':'')).getTime()<cutoff)return s;
+    }
+    return s+entryHours(t);
+  },0);
 }
 
 function renderReportOverview(){
@@ -3973,10 +4001,19 @@ function renderReportOverview(){
   const winRate=decided>0?(won/decided)*100:0;
   const conversionRate=totalLeads>0?(won/totalLeads)*100:0;
 
-  const revenue=inRange.filter(j=>j.status==='complete').reduce((s,j)=>s+jobRevenue(j),0);
-  const collected=inRange.reduce((s,j)=>s+Number(j.paid||0),0);
+  const completedInRange=inRange.filter(j=>j.status==='complete');
+  const revenue=completedInRange.reduce((s,j)=>s+jobRevenue(j),0);
+  const cogs=completedInRange.reduce((s,j)=>s+jobTotalCosts(j),0);
+  const grossProfit=revenue-cogs;
+  const grossMargin=revenue>0?(grossProfit/revenue)*100:0;
   const avgDeal=won>0?revenue/won:0;
-  const pipeline=inRange.filter(j=>j.status!=='complete'&&j.status!=='hold').reduce((s,j)=>s+Number(j.value||0),0);
+
+  // Backlog = remaining contracted value on active jobs (estimate minus already invoiced)
+  const activeJobs=all.filter(j=>j.status==='active');
+  const backlog=activeJobs.reduce((s,j)=>{const it=invoiceTotals(j);const inv=it?it.total:Number(j.invoiced||0);return s+Math.max(0,Number(j.value||0)-inv)},0);
+  // Outstanding AR across everything
+  const outstandingAR=all.reduce((s,j)=>{const it=invoiceTotals(j);return s+(it?it.balance:0)},0);
+  const laborHours=laborHoursInRange(cutoff);
 
   // Monthly revenue — last 6 months (across all completed jobs, not range-filtered)
   const months=lastNMonths(6).map(m=>({...m,val:0}));
@@ -3987,16 +4024,6 @@ function renderReportOverview(){
     if(m)m.val+=jobRevenue(j);
   });
   const maxMonth=Math.max(1,...months.map(m=>m.val));
-
-  // Lead source ROI
-  const bySource={};
-  inRange.forEach(j=>{
-    const s=j.leadSource||'Unknown';
-    bySource[s]=bySource[s]||{total:0,won:0,value:0,revenue:0};
-    bySource[s].total++;bySource[s].value+=Number(j.value||0);
-    if(j.status==='complete'){bySource[s].won++;bySource[s].revenue+=jobRevenue(j)}
-  });
-  const sources=Object.entries(bySource).sort((a,b)=>b[1].revenue-a[1].revenue);
 
   // Team leaderboard
   const byMember={};
@@ -4014,9 +4041,13 @@ function renderReportOverview(){
   return `
     <div class="kpi-grid">
       <div class="kpi-card accent"><div class="kpi-label">Won Revenue</div><div class="kpi-value">${money(revenue)}</div><div class="kpi-sub">${won} job${won!==1?'s':''} completed</div></div>
-      <div class="kpi-card"><div class="kpi-label">Pipeline Value</div><div class="kpi-value">${money(pipeline)}</div><div class="kpi-sub">${open} open</div></div>
-      <div class="kpi-card"><div class="kpi-label">Avg Job Size</div><div class="kpi-value">${money(avgDeal)}</div><div class="kpi-sub">across won jobs</div></div>
-      <div class="kpi-card"><div class="kpi-label">Collected</div><div class="kpi-value">${money(collected)}</div><div class="kpi-sub">${revenue>0?((collected/revenue)*100).toFixed(0):0}% of revenue</div></div>
+      <div class="kpi-card"><div class="kpi-label">Gross Profit</div><div class="kpi-value" style="color:${grossProfit>=0?'var(--green-700)':'var(--red)'}">${money(grossProfit)}</div><div class="kpi-sub">${grossMargin.toFixed(0)}% margin</div></div>
+      <div class="kpi-card"><div class="kpi-label">Backlog</div><div class="kpi-value">${money(backlog)}</div><div class="kpi-sub">${activeJobs.length} active job${activeJobs.length!==1?'s':''}</div></div>
+      <div class="kpi-card"><div class="kpi-label">Outstanding A/R</div><div class="kpi-value" style="color:${outstandingAR>0?'var(--orange)':'var(--text)'}">${money(outstandingAR)}</div><div class="kpi-sub">to collect</div></div>
+      <div class="kpi-card"><div class="kpi-label">Avg Job Size</div><div class="kpi-value">${money(avgDeal)}</div><div class="kpi-sub">won jobs</div></div>
+      <div class="kpi-card"><div class="kpi-label">Win Rate</div><div class="kpi-value">${winRate.toFixed(0)}%</div><div class="kpi-sub">${won}/${decided} decided</div></div>
+      <div class="kpi-card"><div class="kpi-label">Labor Hours</div><div class="kpi-value">${fmtHours(laborHours)}</div><div class="kpi-sub">in range</div></div>
+      <div class="kpi-card"><div class="kpi-label">Open Jobs</div><div class="kpi-value">${open}</div><div class="kpi-sub">leads + active</div></div>
     </div>
 
     <div class="report-section">
@@ -4054,26 +4085,6 @@ function renderReportOverview(){
     </div>
 
     <div class="report-section">
-      <div class="report-hd">Lead Source ROI <span class="kpi-sub">${sources.length} source${sources.length!==1?'s':''}</span></div>
-      ${sources.length===0?'<p style="font-size:13px;color:var(--text-3);padding:4px 0">Set the Lead Source on jobs to see where your best work comes from.</p>'
-        :`<div style="display:flex;flex-direction:column;gap:8px">
-          ${sources.map(([name,s])=>{
-            const rate=s.total>0?(s.won/s.total)*100:0;
-            return `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)">
-              <div style="flex:1;min-width:0">
-                <div style="font-weight:600;font-size:13.5px">${esc(name)}</div>
-                <div style="font-size:11.5px;color:var(--text-3)">${s.total} lead${s.total!==1?'s':''} · ${s.won} won · ${rate.toFixed(0)}% conversion</div>
-              </div>
-              <div style="text-align:right">
-                <div style="font-weight:700;font-size:14px">${money(s.revenue)}</div>
-                <div style="font-size:11px;color:var(--text-3)">${money(s.value)} pipeline</div>
-              </div>
-            </div>`;
-          }).join('')}
-        </div>`}
-    </div>
-
-    <div class="report-section">
       <div class="report-hd">Team Leaderboard <span class="kpi-sub">By revenue</span></div>
       ${leaderboard.length===0?'<p style="font-size:13px;color:var(--text-3);padding:4px 0">Assign jobs to team members to see rankings.</p>'
         :`<div class="leaderboard">
@@ -4091,6 +4102,202 @@ function renderReportOverview(){
   `;
 }
 
+function renderReportPipeline(){
+  const all=jobs();
+  const range=parseInt(S.reportRange||'90',10);
+  const cutoff=range>0?Date.now()-range*86400000:0;
+  const inRange=all.filter(j=>(j.created||0)>=cutoff);
+
+  // Stage funnel — count + value at each stage
+  const stageData=STAGES.map(st=>({stage:st,count:0,value:0}));
+  all.forEach(j=>{
+    const st=jobStage(j);
+    const d=stageData.find(x=>x.stage===st);
+    if(d){d.count++;d.value+=Number(j.value||0)}
+  });
+  const maxStage=Math.max(1,...stageData.map(s=>s.count));
+
+  // Pipeline value (open, not complete/hold) and backlog (active, contracted)
+  const pipelineValue=all.filter(j=>j.status==='lead').reduce((s,j)=>s+Number(j.value||0),0);
+  const backlog=all.filter(j=>j.status==='active').reduce((s,j)=>{const it=invoiceTotals(j);const inv=it?it.total:Number(j.invoiced||0);return s+Math.max(0,Number(j.value||0)-inv)},0);
+  const totalOpenValue=all.filter(j=>j.status!=='complete'&&j.status!=='hold').reduce((s,j)=>s+Number(j.value||0),0);
+
+  // Conversion (range)
+  const won=inRange.filter(j=>j.status==='complete').length;
+  const lost=inRange.filter(j=>j.status==='hold').length;
+  const decided=won+lost;
+  const winRate=decided>0?(won/decided)*100:0;
+
+  // Avg days to close (lead created → completed)
+  const closeDurations=all.filter(j=>j.status==='complete'&&j.created&&j.completedAt).map(j=>Math.round((j.completedAt-j.created)/86400000)).filter(d=>d>=0&&d<3650);
+  const avgClose=closeDurations.length?Math.round(closeDurations.reduce((a,b)=>a+b,0)/closeDurations.length):0;
+
+  // Lead source ROI
+  const bySource={};
+  inRange.forEach(j=>{
+    const s=j.leadSource||'Unknown';
+    bySource[s]=bySource[s]||{total:0,won:0,value:0,revenue:0};
+    bySource[s].total++;bySource[s].value+=Number(j.value||0);
+    if(j.status==='complete'){bySource[s].won++;bySource[s].revenue+=jobRevenue(j)}
+  });
+  const sources=Object.entries(bySource).sort((a,b)=>b[1].revenue-a[1].revenue);
+  const maxSourceRev=Math.max(1,...sources.map(([,s])=>s.revenue));
+
+  return `
+    <div class="kpi-grid">
+      <div class="kpi-card accent"><div class="kpi-label">Open Pipeline</div><div class="kpi-value">${money(totalOpenValue)}</div><div class="kpi-sub">all open jobs</div></div>
+      <div class="kpi-card"><div class="kpi-label">New Leads</div><div class="kpi-value">${money(pipelineValue)}</div><div class="kpi-sub">${all.filter(j=>j.status==='lead').length} in lead stage</div></div>
+      <div class="kpi-card"><div class="kpi-label">Backlog</div><div class="kpi-value">${money(backlog)}</div><div class="kpi-sub">contracted, not billed</div></div>
+      <div class="kpi-card"><div class="kpi-label">Avg Days to Close</div><div class="kpi-value">${avgClose||'—'}</div><div class="kpi-sub">lead → complete</div></div>
+    </div>
+
+    <div class="report-section">
+      <div class="report-hd">Sales Funnel <span class="kpi-sub">jobs by stage</span></div>
+      <div class="funnel">
+        ${stageData.map(s=>{
+          const w=20+((s.count/maxStage)*80);
+          return `<div class="funnel-row">
+            <div class="funnel-label">${esc(s.stage)}</div>
+            <div class="funnel-bar-wrap">
+              <div class="funnel-bar" style="width:${w}%">${s.count}</div>
+            </div>
+            <div class="funnel-val">${money(s.value)}</div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>
+
+    <div class="report-section">
+      <div class="report-hd">Conversion <span class="kpi-sub">in selected range</span></div>
+      <div style="display:flex;gap:18px;flex-wrap:wrap">
+        <div><div class="docs-cat-stat-lbl">Win Rate</div><div style="font-size:22px;font-weight:700;color:var(--green-700)">${winRate.toFixed(0)}%</div><div style="font-size:11px;color:var(--text-3)">${won} won / ${decided} decided</div></div>
+        <div><div class="docs-cat-stat-lbl">Won</div><div style="font-size:22px;font-weight:700">${won}</div><div style="font-size:11px;color:var(--text-3)">completed</div></div>
+        <div><div class="docs-cat-stat-lbl">Lost / Hold</div><div style="font-size:22px;font-weight:700;color:var(--text-3)">${lost}</div><div style="font-size:11px;color:var(--text-3)">stalled</div></div>
+      </div>
+    </div>
+
+    <div class="report-section">
+      <div class="report-hd">Lead Source ROI <span class="kpi-sub">${sources.length} source${sources.length!==1?'s':''}</span></div>
+      ${sources.length===0?'<p style="font-size:13px;color:var(--text-3);padding:4px 0">Set the Lead Source on jobs to see where your best work comes from.</p>'
+        :`<div class="hbar-list">
+          ${sources.map(([name,s],i)=>{
+            const conv=s.total>0?(s.won/s.total)*100:0;
+            const color=CUSTOMER_BAR_COLORS[i%CUSTOMER_BAR_COLORS.length];
+            const pct=(s.revenue/maxSourceRev)*100;
+            return `<div class="hbar-row">
+              <div class="hbar-top">
+                <div class="hbar-name">${esc(name)}<small>${s.total} lead${s.total!==1?'s':''} · ${s.won} won</small></div>
+                <div class="hbar-val">${money(s.revenue)}</div>
+              </div>
+              <div class="hbar-track"><div class="hbar-fill" style="width:${pct.toFixed(2)}%;background:${color}"></div></div>
+              <div class="hbar-meta"><span>${conv.toFixed(0)}% conversion</span><span>${money(s.value)} pipeline</span></div>
+            </div>`;
+          }).join('')}
+        </div>`}
+    </div>
+  `;
+}
+
+function renderReportLabor(){
+  const all=jobs();
+  const range=parseInt(S.reportRange||'90',10);
+  const cutoff=range>0?Date.now()-range*86400000:0;
+  const entries=allTime().filter(t=>{
+    if(cutoff<=0)return true;
+    if(!t.date)return false;
+    return new Date(t.date+(t.date.length===10?'T00:00:00':'')).getTime()>=cutoff;
+  });
+  const totalHours=entries.reduce((s,t)=>s+entryHours(t),0);
+  const billableHours=entries.filter(t=>t.billable!==false).reduce((s,t)=>s+entryHours(t),0);
+  const daysWorked=new Set(entries.map(t=>t.date).filter(Boolean)).size;
+  const workersSet=new Set(entries.map(t=>t.worker).filter(Boolean));
+
+  // Revenue per labor hour — productivity (completed-job revenue in range / hours in range)
+  const revInRange=all.filter(j=>j.status==='complete'&&(cutoff<=0||(j.completedAt||j.created||0)>=cutoff)).reduce((s,j)=>s+jobRevenue(j),0);
+  const revPerHour=totalHours>0?revInRange/totalHours:0;
+
+  // Hours by job/client
+  const byJob={};
+  entries.forEach(t=>{
+    const j=S.jobs[t.jobId];
+    const key=t.jobId||'__none__';
+    byJob[key]=byJob[key]||{name:j?j.name:'(deleted job)',cust:j?(j.customerName||''):'',hours:0,count:0};
+    byJob[key].hours+=entryHours(t);byJob[key].count++;
+  });
+  const jobRows=Object.entries(byJob).sort((a,b)=>b[1].hours-a[1].hours).slice(0,10);
+  const maxJobHours=Math.max(1,...jobRows.map(([,v])=>v.hours));
+
+  // Hours by worker
+  const byWorker={};
+  entries.forEach(t=>{const w=t.worker||'Unassigned';byWorker[w]=byWorker[w]||{hours:0,count:0,days:new Set()};byWorker[w].hours+=entryHours(t);byWorker[w].count++;if(t.date)byWorker[w].days.add(t.date)});
+  const workerRows=Object.entries(byWorker).sort((a,b)=>b[1].hours-a[1].hours).slice(0,10);
+
+  // Monthly hours trend (last 6 months)
+  const months=lastNMonths(6).map(m=>({...m,hrs:0}));
+  allTime().forEach(t=>{
+    if(!t.date)return;
+    const m=months.find(x=>x.key===monthKey(t.date+(t.date.length===10?'T00:00:00':'')));
+    if(m)m.hrs+=entryHours(t);
+  });
+  const maxMonthHrs=Math.max(1,...months.map(m=>m.hrs));
+
+  return `
+    <div class="kpi-grid">
+      <div class="kpi-card accent"><div class="kpi-label">Total Hours</div><div class="kpi-value">${fmtHours(totalHours)}</div><div class="kpi-sub">${entries.length} entr${entries.length!==1?'ies':'y'}</div></div>
+      <div class="kpi-card"><div class="kpi-label">Billable Hours</div><div class="kpi-value">${fmtHours(billableHours)}</div><div class="kpi-sub">${totalHours>0?Math.round(billableHours/totalHours*100):0}% utilization</div></div>
+      <div class="kpi-card"><div class="kpi-label">Revenue / Labor Hr</div><div class="kpi-value">${money(revPerHour)}</div><div class="kpi-sub">productivity</div></div>
+      <div class="kpi-card"><div class="kpi-label">Crew · Days</div><div class="kpi-value">${workersSet.size} · ${daysWorked}</div><div class="kpi-sub">${daysWorked>0?fmtHours(totalHours/daysWorked)+'/day':'—'}</div></div>
+    </div>
+
+    <div class="report-section">
+      <div class="report-hd">Hours Logged <span class="kpi-sub">Last 6 months</span></div>
+      <div class="report-chart">
+        ${months.map(m=>{
+          const h=(m.hrs/maxMonthHrs)*100;
+          return `<div class="report-bar" style="height:${Math.max(2,h)}%" title="${fmtHours(m.hrs)}">
+            <div class="report-bar-val">${m.hrs>0?fmtHours(m.hrs):''}</div>
+            <div class="report-bar-label">${m.label}</div>
+          </div>`;
+        }).join('')}
+      </div>
+      <div class="report-x-pad"></div>
+    </div>
+
+    ${jobRows.length?`<div class="report-section">
+      <div class="report-hd">Hours by Job / Client <span class="kpi-sub">where labor is going</span></div>
+      <div class="hbar-list">
+        ${jobRows.map(([key,v],i)=>{
+          const color=CUSTOMER_BAR_COLORS[i%CUSTOMER_BAR_COLORS.length];
+          const pct=(v.hours/maxJobHours)*100;
+          return `<div class="hbar-row">
+            <div class="hbar-top">
+              <div class="hbar-name">${esc(v.name)}<small>${esc(v.cust)}</small></div>
+              <div class="hbar-val">${fmtHours(v.hours)}</div>
+            </div>
+            <div class="hbar-track"><div class="hbar-fill" style="width:${pct.toFixed(2)}%;background:${color}"></div></div>
+            <div class="hbar-meta"><span>${v.count} entr${v.count!==1?'ies':'y'}</span><span>${(v.hours/totalHours*100||0).toFixed(0)}% of hours</span></div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`:`<div class="report-section"><div class="report-hd">Hours by Job</div><p style="font-size:13px;color:var(--text-3)">No time logged in this range. Use the Time tab to record crew hours.</p></div>`}
+
+    ${workerRows.length?`<div class="report-section">
+      <div class="report-hd">Hours by Crew Member</div>
+      <div class="leaderboard">
+        ${workerRows.map(([name,v],i)=>{
+          const rankCls=i===0?'gold':i===1?'silver':i===2?'bronze':'';
+          return `<div class="lb-row">
+            <div class="lb-rank ${rankCls}">${i+1}</div>
+            <div class="member-ava" style="width:30px;height:30px;font-size:12px">${initials(name)}</div>
+            <div class="lb-name">${esc(name)}<div style="font-size:11px;color:var(--text-3);font-weight:500">${v.days.size} day${v.days.size!==1?'s':''} · ${v.count} entr${v.count!==1?'ies':'y'}</div></div>
+            <div class="lb-stats"><strong>${fmtHours(v.hours)}</strong><div>hours</div></div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`:''}
+  `;
+}
+
 function renderReportProfit(){
   const range=parseInt(S.reportRange||'90',10);
   const cutoff=range>0?Date.now()-range*86400000:0;
@@ -4105,14 +4312,26 @@ function renderReportProfit(){
   const totalCosts=directCosts+trackedExp;
   const profit=revenue-totalCosts;
   const margin=revenue>0?(profit/revenue)*100:0;
+  const laborHrs=completed.reduce((s,j)=>s+timeForJob(j.id).reduce((a,t)=>a+entryHours(t),0),0);
+
+  // Estimate accuracy — actual revenue vs original estimate (value), completed jobs with an estimate
+  const estJobs=completed.filter(j=>Number(j.value||0)>0);
+  const totalEst=estJobs.reduce((s,j)=>s+Number(j.value||0),0);
+  const totalActual=estJobs.reduce((s,j)=>s+jobRevenue(j),0);
+  const estAccuracy=totalEst>0?(totalActual/totalEst)*100:0;
+  const overBudget=estJobs.filter(j=>jobTotalCosts(j)>Number(j.value||0)).length;
 
   // Per-job profit table (completed only)
   const jobRows=completed.map(j=>{
     const rev=jobRevenue(j),cost=jobTotalCosts(j),p=rev-cost,m=rev>0?(p/rev)*100:0;
-    return {j,rev,cost,profit:p,margin:m};
+    const est=Number(j.value||0),hrs=timeForJob(j.id).reduce((a,t)=>a+entryHours(t),0);
+    return {j,rev,cost,profit:p,margin:m,est,hrs};
   });
   const topProfit=jobRows.slice().sort((a,b)=>b.profit-a.profit).slice(0,5);
   const worstProfit=jobRows.slice().sort((a,b)=>a.profit-b.profit).slice(0,5);
+  // Estimate accuracy detail (biggest variances)
+  const estRows=jobRows.filter(r=>r.est>0).map(r=>({...r,variance:r.rev-r.est,varPct:r.est>0?((r.rev-r.est)/r.est)*100:0}))
+    .sort((a,b)=>Math.abs(b.variance)-Math.abs(a.variance)).slice(0,6);
 
   // Monthly P&L — last 6 months (revenue vs costs as paired bars)
   const months=lastNMonths(6).map(m=>({...m,rev:0,cost:0}));
@@ -4134,6 +4353,8 @@ function renderReportProfit(){
       <div class="kpi-card"><div class="kpi-label">Total Costs</div><div class="kpi-value">${money(totalCosts)}</div><div class="kpi-sub">${money(directCosts)} direct + ${money(trackedExp)} receipts</div></div>
       <div class="kpi-card"><div class="kpi-label">Net Profit</div><div class="kpi-value" style="color:${profit>=0?'var(--green-700)':'var(--red)'}">${money(profit)}</div><div class="kpi-sub">in selected range</div></div>
       <div class="kpi-card"><div class="kpi-label">Profit Margin</div><div class="kpi-value" style="color:${margin>=20?'var(--green-700)':margin>=10?'var(--text)':'var(--orange)'}">${margin.toFixed(1)}%</div><div class="kpi-sub">${margin>=20?'healthy':margin>=10?'okay':margin>=0?'thin':'losing money'}</div></div>
+      <div class="kpi-card"><div class="kpi-label">Estimate Accuracy</div><div class="kpi-value" style="color:${estAccuracy>=95&&estAccuracy<=110?'var(--green-700)':'var(--orange)'}">${totalEst>0?estAccuracy.toFixed(0)+'%':'—'}</div><div class="kpi-sub">actual vs estimate</div></div>
+      <div class="kpi-card"><div class="kpi-label">Labor on Completed</div><div class="kpi-value">${fmtHours(laborHrs)}</div><div class="kpi-sub">${overBudget} job${overBudget!==1?'s':''} over budget</div></div>
     </div>
 
     <div class="report-section">
@@ -4157,6 +4378,22 @@ function renderReportProfit(){
         <span style="display:inline-flex;align-items:center;gap:5px"><span style="width:11px;height:11px;background:#dc2626;border-radius:3px"></span>Costs</span>
       </div>
     </div>
+
+    ${estRows.length?`<div class="report-section">
+      <div class="report-hd">Estimate vs Actual <span class="kpi-sub">biggest variances</span></div>
+      <div class="client-section-list">
+        ${estRows.map(r=>{
+          const over=r.variance>0;
+          return `<div class="client-row" data-jump-job="${esc(r.j.id)}">
+            <div class="client-row-main">
+              <div class="client-row-title">${esc(r.j.name)}</div>
+              <div class="client-row-sub">Est ${money(r.est)} → Actual ${money(r.rev)}${r.hrs>0?' · '+fmtHours(r.hrs):''}</div>
+            </div>
+            <div class="client-row-amt" style="color:${over?'var(--green-700)':'var(--orange)'}">${over?'+':''}${money(r.variance)}<div class="client-row-amt-sub">${over?'+':''}${r.varPct.toFixed(0)}%</div></div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`:''}
 
     ${jobRows.length===0?`<div class="report-section"><div class="report-hd">Per-Job Profit</div><p style="font-size:13px;color:var(--text-3)">No completed jobs in this range yet.</p></div>`:`
     <div class="report-section">
