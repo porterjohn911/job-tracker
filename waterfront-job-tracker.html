@@ -312,6 +312,17 @@ body{display:flex;flex-direction:column;max-width:680px;margin:0 auto;min-height
 .hbar-fill-ded{position:absolute;top:0;left:0;height:100%;background:rgba(22,163,74,0.35);border-radius:6px}
 .hbar-meta{font-size:10.5px;color:var(--text-3);font-weight:500;margin-top:3px;display:flex;justify-content:space-between}
 
+/* ── Paired bar chart (Revenue vs Costs / Invoiced vs Collected / etc) ── */
+.rvc-chart{display:flex;align-items:flex-end;gap:10px;height:170px;padding:0 4px;margin-bottom:8px;border-bottom:1px solid var(--border)}
+.rvc-month{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;min-width:0;height:100%}
+.rvc-bars{flex:1;display:flex;align-items:flex-end;gap:3px;width:100%;justify-content:center;cursor:default}
+.rvc-bar{width:14px;min-height:2px;border-radius:3px 3px 0 0;transition:opacity 0.15s}
+.rvc-bars:hover .rvc-bar{opacity:0.85}
+.rvc-rev{background:linear-gradient(180deg,var(--green-700),var(--green-400))}
+.rvc-cost{background:linear-gradient(180deg,#b91c1c,#ef4444)}
+.rvc-lbl{font-size:10.5px;color:var(--text-3);font-weight:600;white-space:nowrap}
+.rvc-pl{font-size:10.5px;font-weight:700;white-space:nowrap;font-variant-numeric:tabular-nums}
+
 /* ── CONTENT ── */
 .content{flex:1;overflow-y:auto;padding:16px;-webkit-overflow-scrolling:touch;display:flex;flex-direction:column;gap:0}
 
@@ -1420,7 +1431,7 @@ try{const s=localStorage.getItem('wfs_fb');if(s)FIREBASE_CONFIG=JSON.parse(s)}ca
 // ══ State ══
 let DB=null;
 let MAP=null,MAP_MARKERS=[];
-const S={jobs:{},activity:[],members:[],receipts:{},view:'dashboard',detail:null,detailTab:'overview',filter:'all',search:'',photoCat:'all',calMonth:new Date().getMonth(),calYear:new Date().getFullYear(),calSelected:null,calMode:localStorage.getItem('wfs_calmode')||'month',reportRange:'90',sort:localStorage.getItem('wfs_sort')||'newest',sortOpen:false,bulkMode:false,bulkSel:new Set(),invFilter:'all',invSearch:'',invSort:'date',docOtherFilter:'all',docOverviewFilter:'all',recCatFilter:'all',recJobFilter:'all',recRange:'ytd',recSearch:'',user:localStorage.getItem('wfs_user')||'',notifReadAt:parseInt(localStorage.getItem('wfs_notif_read')||'0',10)};
+const S={jobs:{},activity:[],members:[],receipts:{},view:'dashboard',detail:null,detailTab:'overview',filter:'all',search:'',photoCat:'all',calMonth:new Date().getMonth(),calYear:new Date().getFullYear(),calSelected:null,calMode:localStorage.getItem('wfs_calmode')||'month',reportRange:'90',reportTab:localStorage.getItem('wfs_reporttab')||'overview',sort:localStorage.getItem('wfs_sort')||'newest',sortOpen:false,bulkMode:false,bulkSel:new Set(),invFilter:'all',invSearch:'',invSort:'date',docOtherFilter:'all',docOverviewFilter:'all',recCatFilter:'all',recJobFilter:'all',recRange:'ytd',recSearch:'',user:localStorage.getItem('wfs_user')||'',notifReadAt:parseInt(localStorage.getItem('wfs_notif_read')||'0',10)};
 const UNDO={stack:[],push(op){this.stack.push(op);if(this.stack.length>20)this.stack.shift()},pop(){return this.stack.pop()}};
 
 // ── Company info for invoice letterhead (editable via Settings)
@@ -3236,73 +3247,37 @@ function showSendInvoiceModal(j,inv){
 }
 
 // ══ Reports ══
-function renderReports(){
-  const all=jobs();
-  const range=parseInt(S.reportRange||'90',10);
-  const cutoff=range>0?Date.now()-range*86400000:0;
-  const inRange=all.filter(j=>(j.created||0)>=cutoff);
-  // Win rate: complete vs (complete + lead-but-not-converted-and-not-on-hold-recently). Simpler: of jobs that left "lead" stage, how many became "complete"?
-  const totalLeads=all.filter(j=>j.created>=cutoff).length;
-  const won=all.filter(j=>j.status==='complete'&&(j.created||0)>=cutoff).length;
-  const lost=all.filter(j=>j.status==='hold'&&(j.created||0)>=cutoff).length;
-  const open=all.filter(j=>(j.status==='lead'||j.status==='active')&&(j.created||0)>=cutoff).length;
-  const decided=won+lost;
-  const winRate=decided>0?(won/decided)*100:0;
-  const conversionRate=totalLeads>0?(won/totalLeads)*100:0;
-
-  // Financial
-  const totalValue=inRange.reduce((s,j)=>s+Number(j.value||0),0);
-  const revenue=inRange.filter(j=>j.status==='complete').reduce((s,j)=>s+Number(j.invoiced||j.value||0),0);
-  const collected=inRange.reduce((s,j)=>s+Number(j.paid||0),0);
-  const avgDeal=won>0?revenue/won:0;
-  const pipeline=inRange.filter(j=>j.status!=='complete'&&j.status!=='hold').reduce((s,j)=>s+Number(j.value||0),0);
-
-  // Monthly revenue chart — last 6 months
-  const months=[];
-  const now=new Date();
-  for(let i=5;i>=0;i--){
+// ── Reports: shared helpers ──
+function jobRevenue(j){
+  // Prefer actual invoiced/paid (more accurate when invoices exist); fall back to value (estimate)
+  const inv=invoiceTotals(j);
+  if(inv&&inv.total>0)return inv.total;
+  return Number(j.invoiced||0)||Number(j.value||0);
+}
+function jobReceiptCosts(j){return receiptsForJob(j.id).reduce((s,r)=>s+Number(r.amount||0),0)}
+function jobTotalCosts(j){return Number(j.costs||0)+jobReceiptCosts(j)}
+function jobProfit(j){return jobRevenue(j)-jobTotalCosts(j)}
+function monthKey(t){const d=new Date(t);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')}
+function lastNMonths(n){
+  const out=[];const now=new Date();
+  for(let i=n-1;i>=0;i--){
     const d=new Date(now.getFullYear(),now.getMonth()-i,1);
-    months.push({label:d.toLocaleDateString(undefined,{month:'short'}),key:d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'),val:0});
+    out.push({label:d.toLocaleDateString(undefined,{month:'short'}),key:d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')});
   }
-  all.forEach(j=>{
-    if(j.status!=='complete')return;
-    const t=j.completedAt||j.created;
-    if(!t)return;
-    const d=new Date(t);
-    const k=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
-    const m=months.find(x=>x.key===k);
-    if(m)m.val+=Number(j.invoiced||j.value||0);
-  });
-  const maxMonth=Math.max(1,...months.map(m=>m.val));
+  return out;
+}
+function daysBetween(a,b){return Math.round((new Date(b)-new Date(a))/86400000)}
 
-  // Lead source ROI
-  const bySource={};
-  all.forEach(j=>{
-    if((j.created||0)<cutoff)return;
-    const s=j.leadSource||'Unknown';
-    bySource[s]=bySource[s]||{total:0,won:0,value:0,revenue:0};
-    bySource[s].total++;
-    bySource[s].value+=Number(j.value||0);
-    if(j.status==='complete'){bySource[s].won++;bySource[s].revenue+=Number(j.invoiced||j.value||0)}
-  });
-  const sources=Object.entries(bySource).sort((a,b)=>b[1].revenue-a[1].revenue);
-
-  // Team leaderboard
-  const byMember={};
-  all.forEach(j=>{
-    if((j.created||0)<cutoff)return;
-    const m=j.assigned||'Unassigned';
-    byMember[m]=byMember[m]||{name:m,jobs:0,won:0,revenue:0};
-    byMember[m].jobs++;
-    if(j.status==='complete'){byMember[m].won++;byMember[m].revenue+=Number(j.invoiced||j.value||0)}
-  });
-  const leaderboard=Object.values(byMember).sort((a,b)=>b.revenue-a.revenue).slice(0,8);
-
-  // Donut chart for win rate
-  const circumference=2*Math.PI*52;
-  const donutDash=(winRate/100)*circumference;
-
-  return `
+function renderReports(){
+  const tab=S.reportTab||'overview';
+  const tabs=[
+    ['overview','Overview'],
+    ['profit','Profit & Margins'],
+    ['invoices','Invoices'],
+    ['customers','Customers'],
+    ['expenses','Expenses'],
+  ];
+  const header=`
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
       <div>
         <div style="font-size:11px;color:var(--text-3);text-transform:uppercase;letter-spacing:0.06em;font-weight:700">Performance</div>
@@ -3312,7 +3287,71 @@ function renderReports(){
         ${[['30','30 days'],['90','90 days'],['365','1 year'],['0','All time']].map(([v,l])=>`<div class="filter-chip ${S.reportRange===v?'active':''}" data-range="${v}">${l}</div>`).join('')}
       </div>
     </div>
+    <div class="detail-tabs" role="tablist" aria-label="Report sections">
+      ${tabs.map(([k,l])=>`<button class="detail-tab ${tab===k?'active':''}" role="tab" data-report-tab="${k}">${l}</button>`).join('')}
+    </div>
+  `;
+  let body='';
+  if(tab==='overview')body=renderReportOverview();
+  else if(tab==='profit')body=renderReportProfit();
+  else if(tab==='invoices')body=renderReportInvoices();
+  else if(tab==='customers')body=renderReportCustomers();
+  else if(tab==='expenses')body=renderReportExpenses();
+  return header+body;
+}
 
+function renderReportOverview(){
+  const all=jobs();
+  const range=parseInt(S.reportRange||'90',10);
+  const cutoff=range>0?Date.now()-range*86400000:0;
+  const inRange=all.filter(j=>(j.created||0)>=cutoff);
+  const totalLeads=inRange.length;
+  const won=inRange.filter(j=>j.status==='complete').length;
+  const lost=inRange.filter(j=>j.status==='hold').length;
+  const open=inRange.filter(j=>j.status==='lead'||j.status==='active').length;
+  const decided=won+lost;
+  const winRate=decided>0?(won/decided)*100:0;
+  const conversionRate=totalLeads>0?(won/totalLeads)*100:0;
+
+  const revenue=inRange.filter(j=>j.status==='complete').reduce((s,j)=>s+jobRevenue(j),0);
+  const collected=inRange.reduce((s,j)=>s+Number(j.paid||0),0);
+  const avgDeal=won>0?revenue/won:0;
+  const pipeline=inRange.filter(j=>j.status!=='complete'&&j.status!=='hold').reduce((s,j)=>s+Number(j.value||0),0);
+
+  // Monthly revenue — last 6 months (across all completed jobs, not range-filtered)
+  const months=lastNMonths(6).map(m=>({...m,val:0}));
+  all.forEach(j=>{
+    if(j.status!=='complete')return;
+    const t=j.completedAt||j.created;if(!t)return;
+    const m=months.find(x=>x.key===monthKey(t));
+    if(m)m.val+=jobRevenue(j);
+  });
+  const maxMonth=Math.max(1,...months.map(m=>m.val));
+
+  // Lead source ROI
+  const bySource={};
+  inRange.forEach(j=>{
+    const s=j.leadSource||'Unknown';
+    bySource[s]=bySource[s]||{total:0,won:0,value:0,revenue:0};
+    bySource[s].total++;bySource[s].value+=Number(j.value||0);
+    if(j.status==='complete'){bySource[s].won++;bySource[s].revenue+=jobRevenue(j)}
+  });
+  const sources=Object.entries(bySource).sort((a,b)=>b[1].revenue-a[1].revenue);
+
+  // Team leaderboard
+  const byMember={};
+  inRange.forEach(j=>{
+    const m=j.assigned||'Unassigned';
+    byMember[m]=byMember[m]||{name:m,jobs:0,won:0,revenue:0};
+    byMember[m].jobs++;
+    if(j.status==='complete'){byMember[m].won++;byMember[m].revenue+=jobRevenue(j)}
+  });
+  const leaderboard=Object.values(byMember).sort((a,b)=>b.revenue-a.revenue).slice(0,8);
+
+  const circumference=2*Math.PI*52;
+  const donutDash=(winRate/100)*circumference;
+
+  return `
     <div class="kpi-grid">
       <div class="kpi-card accent"><div class="kpi-label">Won Revenue</div><div class="kpi-value">${money(revenue)}</div><div class="kpi-sub">${won} job${won!==1?'s':''} completed</div></div>
       <div class="kpi-card"><div class="kpi-label">Pipeline Value</div><div class="kpi-value">${money(pipeline)}</div><div class="kpi-sub">${open} open</div></div>
@@ -3388,6 +3427,441 @@ function renderReports(){
             </div>`;
           }).join('')}
         </div>`}
+    </div>
+  `;
+}
+
+function renderReportProfit(){
+  const range=parseInt(S.reportRange||'90',10);
+  const cutoff=range>0?Date.now()-range*86400000:0;
+  const all=jobs();
+  // Consider all jobs with any revenue OR costs OR receipts in range; profit makes most sense for completed jobs
+  const completed=all.filter(j=>j.status==='complete'&&(j.created||0)>=cutoff);
+  const allActive=all.filter(j=>(j.created||0)>=cutoff);
+
+  const revenue=completed.reduce((s,j)=>s+jobRevenue(j),0);
+  const directCosts=completed.reduce((s,j)=>s+Number(j.costs||0),0);
+  const trackedExp=completed.reduce((s,j)=>s+jobReceiptCosts(j),0);
+  const totalCosts=directCosts+trackedExp;
+  const profit=revenue-totalCosts;
+  const margin=revenue>0?(profit/revenue)*100:0;
+
+  // Per-job profit table (completed only)
+  const jobRows=completed.map(j=>{
+    const rev=jobRevenue(j),cost=jobTotalCosts(j),p=rev-cost,m=rev>0?(p/rev)*100:0;
+    return {j,rev,cost,profit:p,margin:m};
+  });
+  const topProfit=jobRows.slice().sort((a,b)=>b.profit-a.profit).slice(0,5);
+  const worstProfit=jobRows.slice().sort((a,b)=>a.profit-b.profit).slice(0,5);
+
+  // Monthly P&L — last 6 months (revenue vs costs as paired bars)
+  const months=lastNMonths(6).map(m=>({...m,rev:0,cost:0}));
+  all.forEach(j=>{
+    if(j.status==='complete'){
+      const t=j.completedAt||j.created;if(t){const m=months.find(x=>x.key===monthKey(t));if(m){m.rev+=jobRevenue(j);m.cost+=Number(j.costs||0)}}
+    }
+  });
+  allReceipts().forEach(r=>{
+    if(!r.date)return;
+    const m=months.find(x=>x.key===monthKey(r.date+(r.date.length===10?'T00:00:00':'')));
+    if(m)m.cost+=Number(r.amount||0);
+  });
+  const maxBar=Math.max(1,...months.map(m=>Math.max(m.rev,m.cost)));
+
+  return `
+    <div class="kpi-grid">
+      <div class="kpi-card accent"><div class="kpi-label">Revenue</div><div class="kpi-value">${money(revenue)}</div><div class="kpi-sub">${completed.length} completed job${completed.length!==1?'s':''}</div></div>
+      <div class="kpi-card"><div class="kpi-label">Total Costs</div><div class="kpi-value">${money(totalCosts)}</div><div class="kpi-sub">${money(directCosts)} direct + ${money(trackedExp)} receipts</div></div>
+      <div class="kpi-card"><div class="kpi-label">Net Profit</div><div class="kpi-value" style="color:${profit>=0?'var(--green-700)':'var(--red)'}">${money(profit)}</div><div class="kpi-sub">in selected range</div></div>
+      <div class="kpi-card"><div class="kpi-label">Profit Margin</div><div class="kpi-value" style="color:${margin>=20?'var(--green-700)':margin>=10?'var(--text)':'var(--orange)'}">${margin.toFixed(1)}%</div><div class="kpi-sub">${margin>=20?'healthy':margin>=10?'okay':margin>=0?'thin':'losing money'}</div></div>
+    </div>
+
+    <div class="report-section">
+      <div class="report-hd">Revenue vs Costs <span class="kpi-sub">Last 6 months</span></div>
+      <div class="rvc-chart">
+        ${months.map(m=>{
+          const rh=(m.rev/maxBar)*100,ch=(m.cost/maxBar)*100;
+          const mProfit=m.rev-m.cost;
+          return `<div class="rvc-month">
+            <div class="rvc-bars" title="Revenue ${money(m.rev)} · Costs ${money(m.cost)} · Profit ${money(mProfit)}">
+              <div class="rvc-bar rvc-rev" style="height:${Math.max(1,rh)}%"></div>
+              <div class="rvc-bar rvc-cost" style="height:${Math.max(1,ch)}%"></div>
+            </div>
+            <div class="rvc-lbl">${m.label}</div>
+            <div class="rvc-pl" style="color:${mProfit>=0?'var(--green-700)':'var(--red)'}">${mProfit>=0?'+':''}${money(mProfit)}</div>
+          </div>`;
+        }).join('')}
+      </div>
+      <div style="display:flex;gap:14px;font-size:11.5px;color:var(--text-2);margin-top:10px;justify-content:center">
+        <span style="display:inline-flex;align-items:center;gap:5px"><span style="width:11px;height:11px;background:var(--green-700);border-radius:3px"></span>Revenue</span>
+        <span style="display:inline-flex;align-items:center;gap:5px"><span style="width:11px;height:11px;background:#dc2626;border-radius:3px"></span>Costs</span>
+      </div>
+    </div>
+
+    ${jobRows.length===0?`<div class="report-section"><div class="report-hd">Per-Job Profit</div><p style="font-size:13px;color:var(--text-3)">No completed jobs in this range yet.</p></div>`:`
+    <div class="report-section">
+      <div class="report-hd">Most Profitable Jobs <span class="kpi-sub">top ${topProfit.length}</span></div>
+      <div class="leaderboard">
+        ${topProfit.map((row,i)=>{
+          const rankCls=i===0?'gold':i===1?'silver':i===2?'bronze':'';
+          return `<div class="lb-row" data-jump-job="${esc(row.j.id)}" style="cursor:pointer">
+            <div class="lb-rank ${rankCls}">${i+1}</div>
+            <div class="lb-name">${esc(row.j.name)}<div style="font-size:11px;color:var(--text-3);font-weight:500">${esc(row.j.customerName||'')} · ${money(row.rev)} rev · ${money(row.cost)} cost</div></div>
+            <div class="lb-stats"><strong style="color:var(--green-700)">${money(row.profit)}</strong><div>${row.margin.toFixed(0)}% margin</div></div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>
+
+    <div class="report-section">
+      <div class="report-hd">Least Profitable Jobs <span class="kpi-sub">${worstProfit.filter(r=>r.profit<topProfit[topProfit.length-1]?.profit).length||worstProfit.length} flagged</span></div>
+      <div class="leaderboard">
+        ${worstProfit.map((row,i)=>`<div class="lb-row" data-jump-job="${esc(row.j.id)}" style="cursor:pointer">
+          <div class="lb-rank" style="background:${row.profit<0?'#fee2e2':'var(--surface-3)'};color:${row.profit<0?'var(--red)':'var(--text-2)'}">${i+1}</div>
+          <div class="lb-name">${esc(row.j.name)}<div style="font-size:11px;color:var(--text-3);font-weight:500">${esc(row.j.customerName||'')} · ${money(row.rev)} rev · ${money(row.cost)} cost</div></div>
+          <div class="lb-stats"><strong style="color:${row.profit<0?'var(--red)':'var(--text)'}">${money(row.profit)}</strong><div>${row.margin.toFixed(0)}% margin</div></div>
+        </div>`).join('')}
+      </div>
+    </div>`}
+  `;
+}
+
+function renderReportInvoices(){
+  const range=parseInt(S.reportRange||'90',10);
+  const cutoff=range>0?Date.now()-range*86400000:0;
+  const all=getAllInvoices();
+  const inRange=all.filter(({inv})=>{
+    if(!inv.date)return range===0;
+    const t=new Date(inv.date+(inv.date.length===10?'T00:00:00':'')).getTime();
+    return range===0||t>=cutoff;
+  });
+
+  let totalInv=0,totalPaid=0,outstanding=0,overdueAmt=0,overdueCount=0;
+  const aging=[0,0,0,0,0];const agingCounts=[0,0,0,0,0];
+  inRange.forEach(({inv})=>{
+    const c=calcInvoice(inv);
+    totalInv+=c.total;totalPaid+=c.paid;outstanding+=c.balance;
+    if(c.balance>0.005){
+      const due=inv.dueDate||inv.date;
+      const daysOver=due?-(daysUntil(due)||0):0;
+      const b=agingBucket(daysOver);
+      aging[b]+=c.balance;agingCounts[b]++;
+      if(invoiceStatus(inv)==='overdue'){overdueAmt+=c.balance;overdueCount++}
+    }
+  });
+  const collectRate=totalInv>0?(totalPaid/totalInv)*100:0;
+
+  // Days to pay — for invoices that have payments
+  const paidDays=[];
+  inRange.forEach(({inv})=>{
+    if(!inv.date)return;
+    (inv.payments||[]).forEach(p=>{if(p.date){const d=daysBetween(inv.date,p.date);if(d>=0&&d<400)paidDays.push(d)}});
+    // Fallback: invoice marked paid (status) and has date
+    if((!inv.payments||inv.payments.length===0)&&calcInvoice(inv).balance<0.005&&inv.date&&inv.sent){
+      const d=daysBetween(inv.date,inv.sent);if(d>=0&&d<400)paidDays.push(d);
+    }
+  });
+  const avgDays=paidDays.length?(paidDays.reduce((a,b)=>a+b,0)/paidDays.length):0;
+
+  // Top late-paying customers
+  const lateByCust={};
+  inRange.forEach(({inv,job})=>{
+    if(invoiceStatus(inv)!=='overdue')return;
+    const c=calcInvoice(inv);
+    if(c.balance<0.005)return;
+    const key=job.customerName||'(no name)';
+    const due=inv.dueDate||inv.date;
+    const daysOver=due?-(daysUntil(due)||0):0;
+    lateByCust[key]=lateByCust[key]||{name:key,balance:0,count:0,maxDays:0};
+    lateByCust[key].balance+=c.balance;lateByCust[key].count++;
+    lateByCust[key].maxDays=Math.max(lateByCust[key].maxDays,daysOver);
+  });
+  const lateCustomers=Object.values(lateByCust).sort((a,b)=>b.balance-a.balance).slice(0,5);
+
+  // Monthly invoiced vs collected (last 6 months)
+  const months=lastNMonths(6).map(m=>({...m,inv:0,paid:0}));
+  all.forEach(({inv})=>{
+    const c=calcInvoice(inv);
+    if(inv.date){const m=months.find(x=>x.key===monthKey(inv.date+(inv.date.length===10?'T00:00:00':'')));if(m)m.inv+=c.total}
+    (inv.payments||[]).forEach(p=>{
+      if(p.date){const m=months.find(x=>x.key===monthKey(p.date+(p.date.length===10?'T00:00:00':'')));if(m)m.paid+=Number(p.amount||0)}
+    });
+  });
+  const maxBar=Math.max(1,...months.map(m=>Math.max(m.inv,m.paid)));
+
+  const agingLabels=['Current','1-30 days','31-60 days','61-90 days','90+ days'];
+
+  return `
+    <div class="kpi-grid">
+      <div class="kpi-card accent"><div class="kpi-label">Total Invoiced</div><div class="kpi-value">${money(totalInv)}</div><div class="kpi-sub">${inRange.length} invoice${inRange.length!==1?'s':''}</div></div>
+      <div class="kpi-card"><div class="kpi-label">Collected</div><div class="kpi-value">${money(totalPaid)}</div><div class="kpi-sub">${collectRate.toFixed(0)}% collection rate</div></div>
+      <div class="kpi-card"><div class="kpi-label">Outstanding</div><div class="kpi-value" style="color:${outstanding>0?'var(--orange)':'var(--text)'}">${money(outstanding)}</div><div class="kpi-sub">${overdueCount} overdue · ${money(overdueAmt)}</div></div>
+      <div class="kpi-card"><div class="kpi-label">Avg Days to Pay</div><div class="kpi-value">${avgDays.toFixed(0)}</div><div class="kpi-sub">${paidDays.length} payment${paidDays.length!==1?'s':''}</div></div>
+    </div>
+
+    <div class="report-section">
+      <div class="report-hd">Aging Report <span class="kpi-sub">Outstanding by age</span></div>
+      <div class="aging-grid">
+        ${agingLabels.map((lbl,i)=>`<div class="aging-cell bucket-${i}">
+          <div class="aging-lbl">${lbl}</div>
+          <div class="aging-val">${money(aging[i])}</div>
+          <div class="aging-cnt">${agingCounts[i]} invoice${agingCounts[i]!==1?'s':''}</div>
+        </div>`).join('')}
+      </div>
+    </div>
+
+    <div class="report-section">
+      <div class="report-hd">Invoiced vs Collected <span class="kpi-sub">Last 6 months</span></div>
+      <div class="rvc-chart">
+        ${months.map(m=>{
+          const ih=(m.inv/maxBar)*100,ph=(m.paid/maxBar)*100;
+          return `<div class="rvc-month">
+            <div class="rvc-bars" title="Invoiced ${money(m.inv)} · Collected ${money(m.paid)}">
+              <div class="rvc-bar" style="height:${Math.max(1,ih)}%;background:linear-gradient(180deg,#0369a1,#0ea5e9)"></div>
+              <div class="rvc-bar" style="height:${Math.max(1,ph)}%;background:linear-gradient(180deg,var(--green-700),var(--green-400))"></div>
+            </div>
+            <div class="rvc-lbl">${m.label}</div>
+            <div class="rvc-pl" style="color:var(--text-3)">${m.inv>0?Math.round(m.paid/m.inv*100)+'%':'—'}</div>
+          </div>`;
+        }).join('')}
+      </div>
+      <div style="display:flex;gap:14px;font-size:11.5px;color:var(--text-2);margin-top:10px;justify-content:center">
+        <span style="display:inline-flex;align-items:center;gap:5px"><span style="width:11px;height:11px;background:#0369a1;border-radius:3px"></span>Invoiced</span>
+        <span style="display:inline-flex;align-items:center;gap:5px"><span style="width:11px;height:11px;background:var(--green-700);border-radius:3px"></span>Collected</span>
+      </div>
+    </div>
+
+    ${lateCustomers.length?`<div class="report-section">
+      <div class="report-hd">Top Late Payers</div>
+      <div class="leaderboard">
+        ${lateCustomers.map((c,i)=>{
+          const rankCls=i===0?'gold':i===1?'silver':i===2?'bronze':'';
+          return `<div class="lb-row">
+            <div class="lb-rank ${rankCls}" style="background:#fee2e2;color:var(--red)">${i+1}</div>
+            <div class="member-ava" style="width:30px;height:30px;font-size:12px">${initials(c.name)}</div>
+            <div class="lb-name">${esc(c.name)}<div style="font-size:11px;color:var(--text-3);font-weight:500">${c.count} overdue · ${c.maxDays}d max</div></div>
+            <div class="lb-stats"><strong style="color:var(--red)">${money(c.balance)}</strong><div>overdue</div></div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`:''}
+  `;
+}
+
+function renderReportCustomers(){
+  const range=parseInt(S.reportRange||'90',10);
+  const cutoff=range>0?Date.now()-range*86400000:0;
+  const all=jobs();
+  // Group by customer name (case-insensitive). Don't filter by range for LTV — but show range-scoped numbers too.
+  const byCust={};
+  all.forEach(j=>{
+    const raw=(j.customerName||'').trim()||'(no customer)';
+    const key=raw.toLowerCase();
+    if(!byCust[key])byCust[key]={name:raw,jobs:[],revenue:0,outstanding:0,firstJob:Infinity,lastJob:0,email:j.customerEmail,phone:j.customerPhone};
+    byCust[key].jobs.push(j);
+    byCust[key].firstJob=Math.min(byCust[key].firstJob,j.created||Infinity);
+    byCust[key].lastJob=Math.max(byCust[key].lastJob,j.created||0);
+    if(j.status==='complete')byCust[key].revenue+=jobRevenue(j);
+    const inv=invoiceTotals(j);
+    if(inv)byCust[key].outstanding+=inv.balance;
+  });
+  const customers=Object.values(byCust);
+  const repeat=customers.filter(c=>c.jobs.length>=2).length;
+  const totalRev=customers.reduce((s,c)=>s+c.revenue,0);
+  const totalOutstanding=customers.reduce((s,c)=>s+c.outstanding,0);
+  const avgLTV=customers.length?totalRev/customers.length:0;
+  // New customers in range
+  const newInRange=customers.filter(c=>c.firstJob>=cutoff).length;
+
+  const topRev=customers.slice().sort((a,b)=>b.revenue-a.revenue).filter(c=>c.revenue>0).slice(0,10);
+  const topJobs=customers.slice().sort((a,b)=>b.jobs.length-a.jobs.length).slice(0,8);
+  const topOutstanding=customers.slice().sort((a,b)=>b.outstanding-a.outstanding).filter(c=>c.outstanding>0.005).slice(0,8);
+
+  // New vs repeat over last 6 months
+  const months=lastNMonths(6).map(m=>({...m,newC:0,repeatJobs:0}));
+  customers.forEach(c=>{
+    if(c.firstJob<Infinity){const m=months.find(x=>x.key===monthKey(c.firstJob));if(m)m.newC++}
+    c.jobs.forEach(j=>{if((j.created||0)!==c.firstJob){const m=months.find(x=>x.key===monthKey(j.created||0));if(m)m.repeatJobs++}});
+  });
+  const maxBar=Math.max(1,...months.map(m=>Math.max(m.newC,m.repeatJobs)));
+
+  const maxRev=topRev[0]?.revenue||1;
+
+  return `
+    <div class="kpi-grid">
+      <div class="kpi-card accent"><div class="kpi-label">Customers</div><div class="kpi-value">${customers.length}</div><div class="kpi-sub">${newInRange} new in range</div></div>
+      <div class="kpi-card"><div class="kpi-label">Repeat Customers</div><div class="kpi-value">${repeat}</div><div class="kpi-sub">${customers.length?Math.round(repeat/customers.length*100):0}% retention</div></div>
+      <div class="kpi-card"><div class="kpi-label">Avg Revenue / Customer</div><div class="kpi-value">${money(avgLTV)}</div><div class="kpi-sub">lifetime value</div></div>
+      <div class="kpi-card"><div class="kpi-label">Total Outstanding</div><div class="kpi-value" style="color:${totalOutstanding>0?'var(--orange)':'var(--text)'}">${money(totalOutstanding)}</div><div class="kpi-sub">across ${topOutstanding.length} customer${topOutstanding.length!==1?'s':''}</div></div>
+    </div>
+
+    <div class="report-section">
+      <div class="report-hd">Top Customers by Lifetime Revenue</div>
+      ${topRev.length===0?'<p style="font-size:13px;color:var(--text-3)">No completed jobs with customers yet.</p>'
+        :`<div class="hbar-list">
+          ${topRev.map((c,i)=>{
+            const color=CUSTOMER_BAR_COLORS[i%CUSTOMER_BAR_COLORS.length];
+            const pct=(c.revenue/maxRev)*100;
+            return `<div class="hbar-row">
+              <div class="hbar-top">
+                <div class="hbar-name">${esc(c.name)}<small>${c.jobs.length} job${c.jobs.length!==1?'s':''}${c.outstanding>0.005?' · '+money(c.outstanding)+' outstanding':''}</small></div>
+                <div class="hbar-val">${money(c.revenue)}</div>
+              </div>
+              <div class="hbar-track"><div class="hbar-fill" style="width:${pct.toFixed(2)}%;background:${color}"></div></div>
+              <div class="hbar-meta">
+                <span>Avg ${money(c.revenue/Math.max(1,c.jobs.filter(j=>j.status==='complete').length))} per won job</span>
+                <span>${totalRev>0?(c.revenue/totalRev*100).toFixed(1):0}% of total revenue</span>
+              </div>
+            </div>`;
+          }).join('')}
+        </div>`}
+    </div>
+
+    <div class="report-section">
+      <div class="report-hd">New vs Repeat Jobs <span class="kpi-sub">Last 6 months</span></div>
+      <div class="rvc-chart">
+        ${months.map(m=>{
+          const nh=(m.newC/maxBar)*100,rh=(m.repeatJobs/maxBar)*100;
+          return `<div class="rvc-month">
+            <div class="rvc-bars" title="${m.newC} new · ${m.repeatJobs} repeat">
+              <div class="rvc-bar" style="height:${Math.max(1,nh)}%;background:linear-gradient(180deg,#7c3aed,#a855f7)"></div>
+              <div class="rvc-bar" style="height:${Math.max(1,rh)}%;background:linear-gradient(180deg,var(--green-700),var(--green-400))"></div>
+            </div>
+            <div class="rvc-lbl">${m.label}</div>
+            <div class="rvc-pl" style="color:var(--text-3)">${m.newC+m.repeatJobs}</div>
+          </div>`;
+        }).join('')}
+      </div>
+      <div style="display:flex;gap:14px;font-size:11.5px;color:var(--text-2);margin-top:10px;justify-content:center">
+        <span style="display:inline-flex;align-items:center;gap:5px"><span style="width:11px;height:11px;background:#7c3aed;border-radius:3px"></span>New customers</span>
+        <span style="display:inline-flex;align-items:center;gap:5px"><span style="width:11px;height:11px;background:var(--green-700);border-radius:3px"></span>Repeat jobs</span>
+      </div>
+    </div>
+
+    <div class="report-section">
+      <div class="report-hd">Most Active Customers <span class="kpi-sub">By job count</span></div>
+      <div class="leaderboard">
+        ${topJobs.map((c,i)=>{
+          const rankCls=i===0?'gold':i===1?'silver':i===2?'bronze':'';
+          return `<div class="lb-row">
+            <div class="lb-rank ${rankCls}">${i+1}</div>
+            <div class="member-ava" style="width:30px;height:30px;font-size:12px">${initials(c.name)}</div>
+            <div class="lb-name">${esc(c.name)}<div style="font-size:11px;color:var(--text-3);font-weight:500">${c.jobs.filter(j=>j.status==='complete').length} won · ${money(c.revenue)} LTV</div></div>
+            <div class="lb-stats"><strong>${c.jobs.length}</strong><div>job${c.jobs.length!==1?'s':''}</div></div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>
+
+    ${topOutstanding.length?`<div class="report-section">
+      <div class="report-hd">Top Outstanding Balances</div>
+      <div class="leaderboard">
+        ${topOutstanding.map((c,i)=>`<div class="lb-row">
+          <div class="lb-rank" style="background:#fff7ed;color:var(--orange)">${i+1}</div>
+          <div class="member-ava" style="width:30px;height:30px;font-size:12px">${initials(c.name)}</div>
+          <div class="lb-name">${esc(c.name)}<div style="font-size:11px;color:var(--text-3);font-weight:500">${c.jobs.length} job${c.jobs.length!==1?'s':''}</div></div>
+          <div class="lb-stats"><strong style="color:var(--orange)">${money(c.outstanding)}</strong><div>due</div></div>
+        </div>`).join('')}
+      </div>
+    </div>`:''}
+  `;
+}
+
+function renderReportExpenses(){
+  const range=parseInt(S.reportRange||'90',10);
+  const cutoff=range>0?Date.now()-range*86400000:0;
+  const recs=allReceipts().filter(r=>{
+    if(!r.date)return range===0;
+    return range===0||new Date(r.date+(r.date.length===10?'T00:00:00':'')).getTime()>=cutoff;
+  });
+  const total=recs.reduce((s,r)=>s+Number(r.amount||0),0);
+  const ded=recs.reduce((s,r)=>s+receiptDeductible(r),0);
+  const linked=recs.filter(r=>r.jobId).length;
+  const overhead=recs.length-linked;
+  const allJobs=jobs();
+  const activeJobs=allJobs.filter(j=>j.status==='active'||j.status==='lead').length;
+  const perActive=activeJobs>0?total/activeJobs:0;
+
+  // Monthly expense vs revenue
+  const months=lastNMonths(6).map(m=>({...m,exp:0,rev:0}));
+  recs.forEach(r=>{
+    if(!r.date)return;
+    const m=months.find(x=>x.key===monthKey(r.date+(r.date.length===10?'T00:00:00':'')));
+    if(m)m.exp+=Number(r.amount||0);
+  });
+  allJobs.forEach(j=>{
+    if(j.status!=='complete')return;
+    const t=j.completedAt||j.created;if(!t)return;
+    const m=months.find(x=>x.key===monthKey(t));if(m)m.rev+=jobRevenue(j);
+  });
+  const maxBar=Math.max(1,...months.map(m=>Math.max(m.rev,m.exp)));
+
+  // Vendor leaderboard
+  const byVendor={};
+  recs.forEach(r=>{
+    const v=(r.vendor||'(unknown)').trim()||'(unknown)';
+    const k=v.toLowerCase();
+    byVendor[k]=byVendor[k]||{name:v,total:0,count:0,ded:0};
+    byVendor[k].total+=Number(r.amount||0);
+    byVendor[k].count++;
+    byVendor[k].ded+=receiptDeductible(r);
+  });
+  const topVendors=Object.values(byVendor).sort((a,b)=>b.total-a.total).slice(0,8);
+  const maxVendor=topVendors[0]?.total||1;
+
+  return `
+    <div class="kpi-grid">
+      <div class="kpi-card accent"><div class="kpi-label">Total Spent</div><div class="kpi-value">${moneyCents(total)}</div><div class="kpi-sub">${recs.length} receipt${recs.length!==1?'s':''}</div></div>
+      <div class="kpi-card"><div class="kpi-label">Tax-Deductible</div><div class="kpi-value" style="color:var(--green-700)">${moneyCents(ded)}</div><div class="kpi-sub">${total>0?Math.round(ded/total*100):0}% of total</div></div>
+      <div class="kpi-card"><div class="kpi-label">Linked to Jobs</div><div class="kpi-value">${linked}</div><div class="kpi-sub">${overhead} overhead</div></div>
+      <div class="kpi-card"><div class="kpi-label">Per Active Job</div><div class="kpi-value">${moneyCents(perActive)}</div><div class="kpi-sub">avg across ${activeJobs} job${activeJobs!==1?'s':''}</div></div>
+    </div>
+
+    <div class="report-section">
+      <div class="report-hd">Revenue vs Expenses <span class="kpi-sub">Last 6 months</span></div>
+      <div class="rvc-chart">
+        ${months.map(m=>{
+          const rh=(m.rev/maxBar)*100,eh=(m.exp/maxBar)*100;
+          const cash=m.rev-m.exp;
+          return `<div class="rvc-month">
+            <div class="rvc-bars" title="Revenue ${money(m.rev)} · Expenses ${money(m.exp)} · Cash flow ${money(cash)}">
+              <div class="rvc-bar rvc-rev" style="height:${Math.max(1,rh)}%"></div>
+              <div class="rvc-bar" style="height:${Math.max(1,eh)}%;background:linear-gradient(180deg,#7c3aed,#a855f7)"></div>
+            </div>
+            <div class="rvc-lbl">${m.label}</div>
+            <div class="rvc-pl" style="color:${cash>=0?'var(--green-700)':'var(--red)'}">${cash>=0?'+':''}${money(cash)}</div>
+          </div>`;
+        }).join('')}
+      </div>
+      <div style="display:flex;gap:14px;font-size:11.5px;color:var(--text-2);margin-top:10px;justify-content:center">
+        <span style="display:inline-flex;align-items:center;gap:5px"><span style="width:11px;height:11px;background:var(--green-700);border-radius:3px"></span>Revenue</span>
+        <span style="display:inline-flex;align-items:center;gap:5px"><span style="width:11px;height:11px;background:#7c3aed;border-radius:3px"></span>Expenses</span>
+      </div>
+    </div>
+
+    ${topVendors.length?`<div class="report-section">
+      <div class="report-hd">Top Vendors <span class="kpi-sub">Where the money's going</span></div>
+      <div class="hbar-list">
+        ${topVendors.map((v,i)=>{
+          const color=CUSTOMER_BAR_COLORS[i%CUSTOMER_BAR_COLORS.length];
+          const pct=(v.total/maxVendor)*100;
+          return `<div class="hbar-row">
+            <div class="hbar-top">
+              <div class="hbar-name">${esc(v.name)}<small>${v.count} receipt${v.count!==1?'s':''}</small></div>
+              <div class="hbar-val">${moneyCents(v.total)}</div>
+            </div>
+            <div class="hbar-track"><div class="hbar-fill" style="width:${pct.toFixed(2)}%;background:${color}"></div></div>
+            <div class="hbar-meta">
+              <span>${total>0?(v.total/total*100).toFixed(1):0}% of spend</span>
+              <span>${moneyCents(v.ded)} deductible</span>
+            </div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`:''}
+
+    <div style="text-align:center;padding:12px">
+      <button class="docs-menu-foot-btn" data-docs-go="receipts">Open full Receipts view →</button>
     </div>
   `;
 }
@@ -5062,6 +5536,8 @@ function attachHandlers(){
   });
   // Reports
   document.querySelectorAll('[data-range]').forEach(c=>c.onclick=()=>{S.reportRange=c.dataset.range;render()});
+  document.querySelectorAll('[data-report-tab]').forEach(b=>b.onclick=()=>{S.reportTab=b.dataset.reportTab;localStorage.setItem('wfs_reporttab',S.reportTab);render()});
+  document.querySelectorAll('[data-jump-job]').forEach(el=>el.onclick=()=>{S.detail=el.dataset.jumpJob;S.view='jobs';S.detailTab='financial';render()});
   // Map
   $('btn-geocode')?.addEventListener('click',geocodeAll);
   $('btn-add-job')?.addEventListener('click',()=>showJobModal('add'));
