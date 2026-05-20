@@ -115,6 +115,324 @@ body{display:flex;flex-direction:column;max-width:680px;margin:0 auto;min-height
 .nav-btn.active svg{transform:scale(1.12)}
 .nav-btn:active{opacity:0.7}
 
+/* ── DOCUMENTS HOVER MENU ── */
+.nav-docs-wrap{position:relative;flex:1 0 auto;min-width:64px;display:flex}
+.nav-docs-wrap .nav-btn{width:100%}
+.nav-docs-menu{
+  position:absolute;top:100%;left:50%;transform:translateX(-50%) translateY(6px);
+  min-width:300px;max-width:min(94vw,420px);
+  background:var(--surface);border:1px solid var(--border-md);border-radius:14px;
+  box-shadow:0 14px 40px rgba(0,0,0,0.18),0 2px 6px rgba(0,0,0,0.08);
+  padding:10px;display:none;z-index:200;
+  animation:docsMenuIn 0.16s ease;
+}
+@keyframes docsMenuIn{from{opacity:0;transform:translateX(-50%) translateY(0)}to{opacity:1;transform:translateX(-50%) translateY(6px)}}
+.nav-docs-wrap:hover .nav-docs-menu,
+.nav-docs-menu.open{display:block}
+.nav-docs-menu::before{
+  content:'';position:absolute;top:-6px;left:50%;transform:translateX(-50%) rotate(45deg);
+  width:12px;height:12px;background:var(--surface);
+  border-left:1px solid var(--border-md);border-top:1px solid var(--border-md);
+}
+.docs-menu-hd{
+  font-size:10.5px;font-weight:700;color:var(--text-3);
+  text-transform:uppercase;letter-spacing:0.08em;padding:4px 8px 8px;
+}
+.docs-menu-grid{display:grid;grid-template-columns:1fr;gap:6px}
+.docs-menu-item{
+  display:flex;align-items:center;gap:12px;
+  padding:10px 12px;border-radius:10px;cursor:pointer;
+  background:var(--surface-2);border:1px solid transparent;
+  transition:all 0.15s;text-align:left;
+}
+.docs-menu-item:hover{background:var(--green-100);border-color:var(--green-600)}
+.docs-menu-item-icon{
+  width:36px;height:36px;border-radius:9px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;color:#fff;
+}
+.docs-menu-item-icon svg{width:18px;height:18px;stroke-width:2}
+.dmi-invoices{background:linear-gradient(135deg,#1a6e55,#16a34a)}
+.dmi-contracts{background:linear-gradient(135deg,#0369a1,#0ea5e9)}
+.dmi-other{background:linear-gradient(135deg,#92400e,#d97706)}
+.docs-menu-item-main{flex:1;min-width:0}
+.docs-menu-item-title{font-size:13.5px;font-weight:700;color:var(--text)}
+.docs-menu-item-sub{font-size:11.5px;color:var(--text-3);margin-top:2px;line-height:1.35}
+.docs-menu-item-val{font-size:13px;font-weight:700;color:var(--text);font-variant-numeric:tabular-nums;text-align:right;flex-shrink:0}
+.docs-menu-item-val small{display:block;font-size:10.5px;font-weight:600;color:var(--text-3);margin-top:1px}
+.docs-menu-foot{
+  display:flex;gap:6px;margin-top:8px;padding-top:8px;
+  border-top:1px solid var(--border);
+}
+.docs-menu-foot-btn{
+  flex:1;padding:7px 10px;font-size:11.5px;font-weight:600;
+  background:none;border:1px solid var(--border-md);border-radius:8px;
+  color:var(--text-2);cursor:pointer;font-family:var(--font);
+  transition:all 0.15s;
+}
+.docs-menu-foot-btn:hover{background:var(--green-100);border-color:var(--green-600);color:var(--green-700)}
+@media(prefers-color-scheme:dark){
+  .docs-menu-item:hover{background:#0c2a20}
+  .docs-menu-foot-btn:hover{background:#0c2a20}
+}
+
+/* ── DOCUMENTS OVERVIEW ── */
+.docs-cat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;margin-bottom:16px}
+.docs-cat-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r-lg);padding:16px;cursor:pointer;
+  box-shadow:var(--shadow-sm);transition:transform 0.18s,box-shadow 0.18s;
+  display:flex;flex-direction:column;gap:10px;
+}
+.docs-cat-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-md)}
+.docs-cat-card-hd{display:flex;align-items:center;gap:10px}
+.docs-cat-card-icon{
+  width:42px;height:42px;border-radius:11px;
+  display:flex;align-items:center;justify-content:center;color:#fff;flex-shrink:0;
+}
+.docs-cat-card-icon svg{width:22px;height:22px;stroke-width:2}
+.docs-cat-card-title{font-size:15px;font-weight:700}
+.docs-cat-card-desc{font-size:11.5px;color:var(--text-3);margin-top:2px;line-height:1.3}
+.docs-cat-card-stats{
+  display:grid;grid-template-columns:1fr 1fr;gap:8px;
+  padding-top:8px;border-top:1px solid var(--border);
+}
+.docs-cat-stat-lbl{font-size:10.5px;color:var(--text-3);text-transform:uppercase;letter-spacing:0.06em;font-weight:700}
+.docs-cat-stat-val{font-size:15px;font-weight:700;margin-top:2px;font-variant-numeric:tabular-nums}
+.docs-subcat-row{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
+.docs-subcat-chip{
+  font-size:11px;font-weight:600;padding:3px 9px;border-radius:14px;
+  background:var(--surface-3);color:var(--text-2);
+}
+.docs-subcat-chip strong{color:var(--text);margin-left:3px}
+
+/* ── DOC LIST ROWS (Contracts / Other) ── */
+.doc-row{
+  display:flex;align-items:center;gap:12px;
+  padding:12px 14px;background:var(--surface);
+  border:1px solid var(--border);border-left:3px solid var(--green-600);
+  border-radius:10px;transition:border-color 0.15s;
+}
+.doc-row:hover{border-color:var(--green-600)}
+.doc-row-icon{
+  width:38px;height:38px;border-radius:9px;flex-shrink:0;
+  background:var(--surface-3);color:var(--text-2);
+  display:flex;align-items:center;justify-content:center;
+}
+.doc-row-icon svg{width:18px;height:18px;stroke-width:1.8}
+.doc-row-main{flex:1;min-width:0}
+.doc-row-name{font-size:13.5px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.doc-row-meta{font-size:11.5px;color:var(--text-3);margin-top:2px}
+.doc-row-cat{
+  font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:12px;
+  background:var(--green-100);color:var(--green-700);text-transform:uppercase;letter-spacing:0.04em;
+  margin-right:6px;
+}
+.doc-cat-select{
+  font-size:12px;padding:5px 8px;border-radius:7px;
+  border:1px solid var(--border-md);background:var(--surface);color:var(--text);
+  font-family:var(--font);
+}
+
+/* ── RECEIPTS ── */
+.dmi-receipts{background:linear-gradient(135deg,#7c3aed,#a855f7)}
+.rec-row{
+  display:flex;align-items:center;gap:12px;
+  padding:11px 13px;background:var(--surface);
+  border:1px solid var(--border);border-left:3px solid #a855f7;
+  border-radius:10px;transition:border-color 0.15s;
+}
+.rec-row:hover{border-color:#7c3aed}
+.rec-row.nondeductible{border-left-color:#94a3b8;opacity:0.92}
+.rec-row-thumb{
+  width:44px;height:44px;border-radius:8px;flex-shrink:0;
+  background:var(--surface-3);overflow:hidden;
+  display:flex;align-items:center;justify-content:center;color:var(--text-3);
+}
+.rec-row-thumb img{width:100%;height:100%;object-fit:cover}
+.rec-row-thumb svg{width:20px;height:20px;stroke-width:1.8}
+.rec-row-main{flex:1;min-width:0;cursor:pointer}
+.rec-row-vendor{font-size:13.5px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rec-row-meta{font-size:11.5px;color:var(--text-3);margin-top:2px;line-height:1.35}
+.rec-row-amt{text-align:right;flex-shrink:0;font-variant-numeric:tabular-nums}
+.rec-row-amt-val{font-size:14.5px;font-weight:700;color:var(--text)}
+.rec-row-amt-ded{font-size:11px;color:var(--green-700);font-weight:600;margin-top:1px}
+.rec-row-amt-ded.no{color:var(--text-3)}
+.rec-cat-pill{
+  font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:12px;
+  background:#f3e8ff;color:#6b21a8;text-transform:uppercase;letter-spacing:0.04em;
+  margin-right:6px;
+}
+@media(prefers-color-scheme:dark){.rec-cat-pill{background:#2a1740;color:#d8b4fe}}
+.rec-del{background:none;border:none;color:var(--text-3);cursor:pointer;padding:6px;flex-shrink:0;font-size:18px}
+.rec-del:hover{color:var(--red)}
+.rec-cat-grid{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));
+  gap:8px;margin-bottom:14px;
+}
+.rec-cat-tile{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:10px;padding:10px 12px;cursor:pointer;
+  transition:all 0.15s;
+}
+.rec-cat-tile:hover{border-color:#7c3aed;transform:translateY(-1px)}
+.rec-cat-tile.active{background:#f3e8ff;border-color:#7c3aed}
+@media(prefers-color-scheme:dark){.rec-cat-tile.active{background:#1f102f}}
+.rec-cat-tile-lbl{font-size:11px;font-weight:700;color:var(--text-2);text-transform:uppercase;letter-spacing:0.04em}
+.rec-cat-tile-val{font-size:16px;font-weight:700;margin-top:3px;font-variant-numeric:tabular-nums}
+.rec-cat-tile-sub{font-size:11px;color:var(--text-3);margin-top:1px}
+
+/* ── RECEIPT CHARTS ── */
+.rec-chart-grid{display:grid;grid-template-columns:minmax(220px,1fr) 2fr;gap:18px;align-items:start}
+@media(max-width:640px){.rec-chart-grid{grid-template-columns:1fr}}
+.rec-donut-wrap{display:flex;flex-direction:column;align-items:center;gap:12px}
+.rec-donut{position:relative;width:180px;height:180px;flex-shrink:0}
+.rec-donut svg{transform:rotate(-90deg);width:100%;height:100%}
+.rec-donut svg circle{transition:stroke-width 0.18s,opacity 0.18s}
+.rec-donut svg circle:hover{stroke-width:30;opacity:0.85}
+.rec-donut-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;pointer-events:none}
+.rec-donut-amt{font-size:18px;font-weight:700;line-height:1.1;font-variant-numeric:tabular-nums}
+.rec-donut-lbl{font-size:10.5px;color:var(--text-3);font-weight:700;text-transform:uppercase;letter-spacing:0.05em;margin-top:3px}
+.rec-legend{display:flex;flex-direction:column;gap:5px;font-size:12.5px;width:100%;max-width:340px}
+.rec-legend-row{display:flex;align-items:center;gap:8px;padding:5px 8px;border-radius:7px;cursor:pointer;transition:background 0.15s}
+.rec-legend-row:hover{background:var(--surface-2)}
+.rec-legend-row.active{background:var(--surface-3)}
+.rec-legend-dot{width:11px;height:11px;border-radius:3px;flex-shrink:0}
+.rec-legend-name{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600;color:var(--text-2)}
+.rec-legend-val{font-variant-numeric:tabular-nums;font-weight:700;color:var(--text);font-size:12.5px}
+.rec-legend-pct{font-size:10.5px;color:var(--text-3);font-weight:600;margin-left:6px;min-width:34px;text-align:right}
+
+.hbar-list{display:flex;flex-direction:column;gap:10px}
+.hbar-row{font-size:12.5px}
+.hbar-top{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:4px}
+.hbar-name{font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;flex:1}
+.hbar-name small{color:var(--text-3);font-weight:500;margin-left:6px}
+.hbar-val{font-variant-numeric:tabular-nums;font-weight:700;color:var(--text);flex-shrink:0}
+.hbar-track{height:10px;background:var(--surface-3);border-radius:6px;overflow:hidden;position:relative}
+.hbar-fill{height:100%;border-radius:6px;transition:width 0.3s ease}
+.hbar-fill-ded{position:absolute;top:0;left:0;height:100%;background:rgba(22,163,74,0.35);border-radius:6px}
+.hbar-meta{font-size:10.5px;color:var(--text-3);font-weight:500;margin-top:3px;display:flex;justify-content:space-between}
+
+/* ── Paired bar chart (Revenue vs Costs / Invoiced vs Collected / etc) ── */
+.rvc-chart{display:flex;align-items:flex-end;gap:10px;height:170px;padding:0 4px;margin-bottom:8px;border-bottom:1px solid var(--border)}
+.rvc-month{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;min-width:0;height:100%}
+.rvc-bars{flex:1;display:flex;align-items:flex-end;gap:3px;width:100%;justify-content:center;cursor:default}
+.rvc-bar{width:14px;min-height:2px;border-radius:3px 3px 0 0;transition:opacity 0.15s}
+.rvc-bars:hover .rvc-bar{opacity:0.85}
+.rvc-rev{background:linear-gradient(180deg,var(--green-700),var(--green-400))}
+.rvc-cost{background:linear-gradient(180deg,#b91c1c,#ef4444)}
+.rvc-lbl{font-size:10.5px;color:var(--text-3);font-weight:600;white-space:nowrap}
+.rvc-pl{font-size:10.5px;font-weight:700;white-space:nowrap;font-variant-numeric:tabular-nums}
+
+/* ── FUNNEL (pipeline stages) ── */
+.funnel{display:flex;flex-direction:column;gap:7px}
+.funnel-row{display:flex;align-items:center;gap:10px}
+.funnel-label{width:84px;flex-shrink:0;font-size:11.5px;font-weight:600;color:var(--text-2);text-align:right}
+.funnel-bar-wrap{flex:1;min-width:0}
+.funnel-bar{
+  height:30px;border-radius:6px;display:flex;align-items:center;justify-content:flex-start;
+  padding:0 10px;color:#fff;font-size:12.5px;font-weight:700;min-width:28px;
+  background:linear-gradient(90deg,var(--green-700),var(--green-400));
+  transition:width 0.3s ease;
+}
+.funnel-val{width:74px;flex-shrink:0;text-align:right;font-size:12px;font-weight:700;color:var(--text);font-variant-numeric:tabular-nums}
+
+/* ── CLIENTS ── */
+.client-list{display:flex;flex-direction:column;gap:8px}
+.client-card{
+  display:flex;align-items:center;gap:12px;padding:12px 14px;
+  background:var(--surface);border:1px solid var(--border);border-radius:12px;
+  cursor:pointer;transition:transform 0.15s,box-shadow 0.15s,border-color 0.15s;
+}
+.client-card:hover{transform:translateY(-1px);box-shadow:var(--shadow-md);border-color:var(--green-600)}
+.client-ava{
+  width:42px;height:42px;border-radius:50%;flex-shrink:0;
+  background:linear-gradient(135deg,var(--green-700),var(--green-600));
+  color:#fff;font-weight:700;font-size:16px;
+  display:flex;align-items:center;justify-content:center;
+}
+.client-main{flex:1;min-width:0}
+.client-name{font-size:14.5px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.client-sub{font-size:12px;color:var(--text-3);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.client-stats{text-align:right;flex-shrink:0}
+.client-rev{font-size:15px;font-weight:700;font-variant-numeric:tabular-nums}
+.client-rev-lbl{font-size:11px;color:var(--text-3);margin-top:1px}
+.client-chev{width:18px;height:18px;color:var(--text-3);flex-shrink:0;stroke-width:2.5}
+
+.client-hd{display:flex;align-items:center;gap:14px;margin-bottom:16px}
+.client-hd-ava{
+  width:56px;height:56px;border-radius:50%;flex-shrink:0;
+  background:linear-gradient(135deg,var(--green-700),var(--green-600));
+  color:#fff;font-weight:700;font-size:22px;
+  display:flex;align-items:center;justify-content:center;
+}
+.client-hd-name{font-size:20px;font-weight:700;line-height:1.2}
+.client-hd-sub{font-size:12.5px;color:var(--text-3);margin-top:3px}
+.client-hd-act{
+  width:38px;height:38px;border-radius:10px;flex-shrink:0;
+  background:var(--green-100);color:var(--green-700);
+  display:flex;align-items:center;justify-content:center;
+  border:1px solid var(--green-600);transition:all 0.15s;
+}
+.client-hd-act:hover{background:var(--green-600);color:#fff}
+.client-hd-act svg{width:18px;height:18px;stroke-width:2}
+
+.client-contact-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
+.client-contact{
+  display:flex;align-items:center;gap:11px;padding:10px 12px;
+  background:var(--surface-2);border:1px solid var(--border);border-radius:10px;
+  text-decoration:none;color:inherit;transition:border-color 0.15s;
+}
+.client-contact:hover{border-color:var(--green-600)}
+.cc-ico{width:34px;height:34px;border-radius:9px;flex-shrink:0;background:var(--surface-3);color:var(--text-2);display:flex;align-items:center;justify-content:center}
+.cc-ico svg{width:17px;height:17px;stroke-width:1.8}
+.cc-lbl{font-size:10.5px;color:var(--text-3);text-transform:uppercase;letter-spacing:0.04em;font-weight:700}
+.cc-val{font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.client-mix-chip{
+  display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--text-2);
+  padding:6px 12px;background:var(--surface-2);border:1px solid var(--border);border-radius:20px;
+}
+.client-mix-chip strong{color:var(--text)}
+
+.client-section-list{display:flex;flex-direction:column;gap:6px}
+.client-row{
+  display:flex;align-items:center;gap:12px;padding:11px 13px;
+  background:var(--surface);border:1px solid var(--border);border-radius:10px;
+  cursor:pointer;transition:border-color 0.15s;
+}
+.client-row:hover{border-color:var(--green-600)}
+.client-row-main{flex:1;min-width:0}
+.client-row-title{font-size:13.5px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.client-row-sub{font-size:11.5px;color:var(--text-3);margin-top:2px}
+.client-row-amt{text-align:right;flex-shrink:0;font-weight:700;font-size:14px;font-variant-numeric:tabular-nums}
+.client-row-amt-sub{font-size:11px;color:var(--text-3);font-weight:500;margin-top:1px}
+
+/* ── TIME TRACKING ── */
+.time-day{margin-bottom:14px}
+.time-day-hd{
+  display:flex;justify-content:space-between;align-items:center;
+  font-size:12.5px;font-weight:700;color:var(--text-2);
+  padding:4px 2px 8px;position:sticky;top:0;
+}
+.time-multi{
+  font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:12px;
+  background:var(--gold-light);color:#92600a;margin-left:6px;
+}
+@media(prefers-color-scheme:dark){.time-multi{background:#3d2800;color:#fbbf24}}
+.time-day-total{font-size:13px;font-weight:700;color:var(--text);font-variant-numeric:tabular-nums}
+.time-entry{
+  display:flex;align-items:stretch;gap:0;margin-bottom:6px;
+  background:var(--surface);border:1px solid var(--border);border-radius:10px;
+  overflow:hidden;cursor:pointer;transition:border-color 0.15s;
+}
+.time-entry:hover{border-color:var(--green-600)}
+.time-entry-bar{width:4px;flex-shrink:0;background:var(--green-600)}
+.time-entry-main{flex:1;min-width:0;padding:11px 12px}
+.time-entry-job{font-size:13.5px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.time-entry-cust{font-size:11px;font-weight:600;color:var(--green-700);background:var(--green-100);padding:1px 7px;border-radius:10px}
+.time-entry-meta{font-size:11.5px;color:var(--text-3);margin-top:3px}
+.time-entry-amt{text-align:right;flex-shrink:0;padding:11px 13px 11px 8px}
+.time-entry-hrs{font-size:14.5px;font-weight:700;font-variant-numeric:tabular-nums}
+
 /* ── CONTENT ── */
 .content{flex:1;overflow-y:auto;padding:16px;-webkit-overflow-scrolling:touch;display:flex;flex-direction:column;gap:0}
 
@@ -1177,14 +1495,25 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25"/></svg>
     Jobs
   </button>
+  <button class="nav-btn" data-view="clients">
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z"/></svg>
+    Clients
+  </button>
   <button class="nav-btn" data-view="schedule">
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5"/></svg>
     Schedule
   </button>
-  <button class="nav-btn" data-view="invoices">
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25zM6.75 12h.008v.008H6.75V12zm0 3h.008v.008H6.75V15zm0 3h.008v.008H6.75V18z"/></svg>
-    Invoices
+  <button class="nav-btn" data-view="time">
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+    Time
   </button>
+  <div class="nav-docs-wrap" id="nav-docs-wrap">
+    <button class="nav-btn" data-view="documents" id="nav-docs-btn" aria-haspopup="true" aria-expanded="false">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/></svg>
+      Documents
+    </button>
+    <div class="nav-docs-menu" id="nav-docs-menu" role="menu" aria-label="Document categories"></div>
+  </div>
   <button class="nav-btn" data-view="map">
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 6.75V15m6-6v8.25m.503 3.498l4.875-2.437c.381-.19.622-.58.622-1.006V4.82c0-.836-.88-1.38-1.628-1.006l-3.869 1.934c-.317.159-.69.159-1.006 0L9.503 3.252a1.125 1.125 0 00-1.006 0L3.622 5.689C3.24 5.88 3 6.27 3 6.695V19.18c0 .836.88 1.38 1.628 1.006l3.869-1.934c.317-.159.69-.159 1.006 0l4.994 2.497c.317.158.69.158 1.006 0z"/></svg>
     Map
@@ -1220,7 +1549,7 @@ try{const s=localStorage.getItem('wfs_fb');if(s)FIREBASE_CONFIG=JSON.parse(s)}ca
 // ══ State ══
 let DB=null;
 let MAP=null,MAP_MARKERS=[];
-const S={jobs:{},activity:[],members:[],view:'dashboard',detail:null,detailTab:'overview',filter:'all',search:'',photoCat:'all',calMonth:new Date().getMonth(),calYear:new Date().getFullYear(),calSelected:null,calMode:localStorage.getItem('wfs_calmode')||'month',reportRange:'90',sort:localStorage.getItem('wfs_sort')||'newest',sortOpen:false,bulkMode:false,bulkSel:new Set(),invFilter:'all',invSearch:'',invSort:'date',user:localStorage.getItem('wfs_user')||'',notifReadAt:parseInt(localStorage.getItem('wfs_notif_read')||'0',10)};
+const S={jobs:{},activity:[],members:[],receipts:{},time:{},view:'dashboard',detail:null,detailTab:'overview',filter:'all',search:'',photoCat:'all',calMonth:new Date().getMonth(),calYear:new Date().getFullYear(),calSelected:null,calMode:localStorage.getItem('wfs_calmode')||'month',reportRange:'90',reportTab:localStorage.getItem('wfs_reporttab')||'overview',sort:localStorage.getItem('wfs_sort')||'newest',sortOpen:false,bulkMode:false,bulkSel:new Set(),invFilter:'all',invSearch:'',invSort:'date',docOtherFilter:'all',docOverviewFilter:'all',recCatFilter:'all',recJobFilter:'all',recRange:'ytd',recSearch:'',clientSearch:'',clientSort:'revenue',clientDetail:null,clientTab:'overview',timeRange:'week',timeJobFilter:'all',timeWorkerFilter:'all',user:localStorage.getItem('wfs_user')||'',notifReadAt:parseInt(localStorage.getItem('wfs_notif_read')||'0',10)};
 const UNDO={stack:[],push(op){this.stack.push(op);if(this.stack.length>20)this.stack.shift()},pop(){return this.stack.pop()}};
 
 // ── Company info for invoice letterhead (editable via Settings)
@@ -1332,10 +1661,12 @@ function undoLast(){const op=UNDO.pop();if(!op){toast('Nothing to undo','');retu
 
 // ══ DB layer ══
 const LOCAL={
-  load(){try{S.jobs=JSON.parse(localStorage.getItem('wfs_jobs')||'{}')}catch(e){S.jobs={}}try{S.activity=JSON.parse(localStorage.getItem('wfs_activity')||'[]')}catch(e){S.activity=[]}try{S.members=JSON.parse(localStorage.getItem('wfs_members')||'[]')}catch(e){S.members=[]}},
+  load(){try{S.jobs=JSON.parse(localStorage.getItem('wfs_jobs')||'{}')}catch(e){S.jobs={}}try{S.activity=JSON.parse(localStorage.getItem('wfs_activity')||'[]')}catch(e){S.activity=[]}try{S.members=JSON.parse(localStorage.getItem('wfs_members')||'[]')}catch(e){S.members=[]}try{S.receipts=JSON.parse(localStorage.getItem('wfs_receipts')||'{}')}catch(e){S.receipts={}}try{S.time=JSON.parse(localStorage.getItem('wfs_time')||'{}')}catch(e){S.time={}}},
   saveJobs(){try{localStorage.setItem('wfs_jobs',JSON.stringify(S.jobs))}catch(e){}},
   saveActivity(){try{localStorage.setItem('wfs_activity',JSON.stringify(S.activity.slice(0,300)))}catch(e){}},
-  saveMembers(){try{localStorage.setItem('wfs_members',JSON.stringify(S.members))}catch(e){}}
+  saveMembers(){try{localStorage.setItem('wfs_members',JSON.stringify(S.members))}catch(e){}},
+  saveReceipts(){try{localStorage.setItem('wfs_receipts',JSON.stringify(S.receipts))}catch(e){}},
+  saveTime(){try{localStorage.setItem('wfs_time',JSON.stringify(S.time))}catch(e){}}
 };
 function syncStatus(state,msg){const d=$('sync-dot'),t=$('sync-text');d.className='sync-dot '+state;t.textContent=msg}
 function initFB(cfg){
@@ -1346,6 +1677,8 @@ function initFB(cfg){
     DB.child('jobs').on('value',s=>{S.jobs=s.val()||{};LOCAL.saveJobs();syncStatus('ok','Team sync live');render()});
     DB.child('activity').on('value',s=>{const r=s.val();S.activity=r?Object.values(r).sort((a,b)=>b.time-a.time):[];LOCAL.saveActivity()});
     DB.child('members').on('value',s=>{S.members=s.val()||[];LOCAL.saveMembers();render()});
+    DB.child('receipts').on('value',s=>{S.receipts=s.val()||{};LOCAL.saveReceipts();render()});
+    DB.child('time').on('value',s=>{S.time=s.val()||{};LOCAL.saveTime();render()});
     DB.child('.info/connected').on('value',s=>{if(!s.val())syncStatus('err','Reconnecting…')});
     return true;
   }catch(e){syncStatus('err','Firebase error');return false}
@@ -1354,6 +1687,10 @@ async function writeJob(j){S.jobs[j.id]=j;LOCAL.saveJobs();if(DB)await DB.child(
 async function deleteJobDB(id){delete S.jobs[id];LOCAL.saveJobs();if(DB)await DB.child('jobs/'+id).remove().catch(()=>{})}
 async function logAct(action,job){const e={user:S.user||'Someone',action,job:job||'',time:Date.now()};S.activity.unshift(e);LOCAL.saveActivity();if(DB)await DB.child('activity').push(e).catch(()=>{})}
 async function saveMembers(){LOCAL.saveMembers();if(DB)await DB.child('members').set(S.members).catch(()=>{})}
+async function writeReceipt(r){S.receipts[r.id]=r;LOCAL.saveReceipts();if(DB)await DB.child('receipts/'+r.id).set(r).catch(()=>{})}
+async function deleteReceiptDB(id){delete S.receipts[id];LOCAL.saveReceipts();if(DB)await DB.child('receipts/'+id).remove().catch(()=>{})}
+async function writeTime(t){S.time[t.id]=t;LOCAL.saveTime();if(DB)await DB.child('time/'+t.id).set(t).catch(()=>{})}
+async function deleteTimeDB(id){delete S.time[id];LOCAL.saveTime();if(DB)await DB.child('time/'+id).remove().catch(()=>{})}
 
 LOCAL.load();
 if(FIREBASE_CONFIG)initFB(FIREBASE_CONFIG);
@@ -1361,16 +1698,29 @@ if(FIREBASE_CONFIG)initFB(FIREBASE_CONFIG);
 // ══ Render ══
 function render(){
   const c=$('content');
-  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.toggle('active',b.dataset.view===S.view));
+  const docsViews=new Set(['documents','invoices','contracts','receipts','otherdocs']);
+  document.querySelectorAll('.nav-btn').forEach(b=>{
+    const v=b.dataset.view;
+    const active = v===S.view || (v==='documents' && docsViews.has(S.view));
+    b.classList.toggle('active',active);
+  });
   if(S.view==='jobs'&&S.detail)c.innerHTML=renderDetail(S.detail);
   else if(S.view==='jobs')c.innerHTML=renderJobs();
   else if(S.view==='dashboard')c.innerHTML=renderDashboard();
+  else if(S.view==='clients'&&S.clientDetail)c.innerHTML=renderClientDetail(S.clientDetail);
+  else if(S.view==='clients')c.innerHTML=renderClients();
   else if(S.view==='schedule')c.innerHTML=renderSchedule();
+  else if(S.view==='time')c.innerHTML=renderTimeView();
+  else if(S.view==='documents')c.innerHTML=renderDocumentsOverview();
   else if(S.view==='invoices')c.innerHTML=renderInvoicesView();
+  else if(S.view==='contracts')c.innerHTML=renderContractsView();
+  else if(S.view==='receipts')c.innerHTML=renderReceiptsView();
+  else if(S.view==='otherdocs')c.innerHTML=renderOtherDocsView();
   else if(S.view==='map')c.innerHTML=renderMap();
   else if(S.view==='reports')c.innerHTML=renderReports();
   else if(S.view==='activity')c.innerHTML=renderActivity();
   else if(S.view==='team')c.innerHTML=renderTeam();
+  renderDocsMenu();
   updateUserUI();
   updateBellBadge();
   attachHandlers();
@@ -1684,6 +2034,777 @@ function renderCalAgenda(byDay,today){
   }).join('');
 }
 
+// ══ Documents: categories, helpers, views ══
+const DOC_CAT_ORDER=['contract','permit','change-order','proposal','warranty','lien-waiver','insurance','other'];
+const DOC_CAT={
+  contract:{label:'Contract',desc:'Signed agreements between parties'},
+  permit:{label:'Permit',desc:'Building, zoning, electrical, plumbing'},
+  'change-order':{label:'Change Order',desc:'Modifications to original scope'},
+  proposal:{label:'Proposal / Estimate',desc:'Bids and project estimates'},
+  warranty:{label:'Warranty',desc:'Product and workmanship warranties'},
+  'lien-waiver':{label:'Lien Waiver',desc:'Conditional / unconditional waivers'},
+  insurance:{label:'Insurance Certificate',desc:'COI, liability, workers comp'},
+  other:{label:'Other',desc:'Miscellaneous project files'},
+};
+// "Other Documents" bucket includes everything that's not a contract
+const OTHER_DOC_CATS=['permit','change-order','proposal','warranty','lien-waiver','insurance','other'];
+
+function docCategory(d){return d&&d.category && DOC_CAT[d.category] ? d.category : 'other'}
+function getAllDocsRaw(){
+  const out=[];
+  Object.values(S.jobs).forEach(j=>{
+    (j.documents||[]).forEach((d,idx)=>{
+      out.push({doc:d,job:j,idx,category:docCategory(d)});
+    });
+  });
+  return out;
+}
+function getAllDocsByCategory(cat){
+  if(cat==='contract')return getAllDocsRaw().filter(x=>x.category==='contract');
+  if(cat==='other-bucket')return getAllDocsRaw().filter(x=>x.category!=='contract');
+  return getAllDocsRaw().filter(x=>x.category===cat);
+}
+function docCategoryCounts(){
+  const counts={};DOC_CAT_ORDER.forEach(k=>counts[k]=0);
+  getAllDocsRaw().forEach(x=>{counts[x.category]=(counts[x.category]||0)+1});
+  return counts;
+}
+function invoiceQuickStats(){
+  let total=0,outstanding=0,count=0,overdueCount=0;
+  Object.values(S.jobs).forEach(j=>{
+    (j.invoices||[]).forEach(inv=>{
+      const c=calcInvoice(inv);
+      total+=c.total;outstanding+=c.balance;count++;
+      if(invoiceStatus(inv)==='overdue')overdueCount++;
+    });
+  });
+  return {total,outstanding,count,overdueCount};
+}
+
+function fileExt(name){const m=(name||'').match(/\.([a-z0-9]+)$/i);return m?m[1].toUpperCase():''}
+const FILE_ICON=`<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/></svg>`;
+
+function receiptsQuickStats(){
+  const list=allReceipts().filter(r=>{
+    if(!r.date)return true;
+    const d=new Date(r.date+(r.date.length===10?'T00:00:00':''));
+    return d.getFullYear()===new Date().getFullYear();
+  });
+  const total=list.reduce((s,r)=>s+Number(r.amount||0),0);
+  const ded=list.reduce((s,r)=>s+receiptDeductible(r),0);
+  return {count:list.length,total,ded,totalAll:allReceipts().length};
+}
+
+function renderDocsMenu(){
+  const menu=$('nav-docs-menu');if(!menu)return;
+  const inv=invoiceQuickStats();
+  const counts=docCategoryCounts();
+  const contractCount=counts.contract||0;
+  const otherCount=OTHER_DOC_CATS.reduce((s,k)=>s+(counts[k]||0),0);
+  const rec=receiptsQuickStats();
+  menu.innerHTML=`
+    <div class="docs-menu-hd">Document Center</div>
+    <div class="docs-menu-grid">
+      <button class="docs-menu-item" data-docs-go="invoices" role="menuitem">
+        <div class="docs-menu-item-icon dmi-invoices">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25"/></svg>
+        </div>
+        <div class="docs-menu-item-main">
+          <div class="docs-menu-item-title">Invoices</div>
+          <div class="docs-menu-item-sub">${inv.count} total · ${money(inv.outstanding)} outstanding${inv.overdueCount?' · '+inv.overdueCount+' overdue':''}</div>
+        </div>
+        <div class="docs-menu-item-val">${inv.count}<small>files</small></div>
+      </button>
+      <button class="docs-menu-item" data-docs-go="contracts" role="menuitem">
+        <div class="docs-menu-item-icon dmi-contracts">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+        </div>
+        <div class="docs-menu-item-main">
+          <div class="docs-menu-item-title">Contracts</div>
+          <div class="docs-menu-item-sub">Signed customer agreements &amp; scope-of-work</div>
+        </div>
+        <div class="docs-menu-item-val">${contractCount}<small>file${contractCount!==1?'s':''}</small></div>
+      </button>
+      <button class="docs-menu-item" data-docs-go="receipts" role="menuitem">
+        <div class="docs-menu-item-icon dmi-receipts">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 17h6m-6 0a3 3 0 11-6 0V7a2 2 0 012-2h11a2 2 0 012 2v10a3 3 0 11-6 0M9 7h6M9 11h6"/></svg>
+        </div>
+        <div class="docs-menu-item-main">
+          <div class="docs-menu-item-title">Receipts &amp; Expenses</div>
+          <div class="docs-menu-item-sub">Track spending, write-offs, and job costs</div>
+        </div>
+        <div class="docs-menu-item-val">${moneyCents(rec.total)}<small>${rec.count} YTD</small></div>
+      </button>
+      <button class="docs-menu-item" data-docs-go="otherdocs" role="menuitem">
+        <div class="docs-menu-item-icon dmi-other">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 9.776c.112-.017.227-.026.344-.026h15.812c.117 0 .232.009.344.026m-16.5 0a2.25 2.25 0 00-1.883 2.542l.857 6a2.25 2.25 0 002.227 1.932H19.05a2.25 2.25 0 002.227-1.932l.857-6a2.25 2.25 0 00-1.883-2.542m-16.5 0V6A2.25 2.25 0 016 3.75h3.879a1.5 1.5 0 011.06.44l2.122 2.12a1.5 1.5 0 001.06.44H18A2.25 2.25 0 0120.25 9v.776"/></svg>
+        </div>
+        <div class="docs-menu-item-main">
+          <div class="docs-menu-item-title">Other Documents</div>
+          <div class="docs-menu-item-sub">Permits, change orders, warranties, lien waivers, insurance, proposals</div>
+        </div>
+        <div class="docs-menu-item-val">${otherCount}<small>file${otherCount!==1?'s':''}</small></div>
+      </button>
+    </div>
+    <div class="docs-menu-foot">
+      <button class="docs-menu-foot-btn" id="docs-menu-upload">+ Upload Doc</button>
+      <button class="docs-menu-foot-btn" id="docs-menu-receipt">+ Add Receipt</button>
+    </div>
+  `;
+}
+
+function renderDocumentsOverview(){
+  const inv=invoiceQuickStats();
+  const counts=docCategoryCounts();
+  const contractCount=counts.contract||0;
+  const otherCount=OTHER_DOC_CATS.reduce((s,k)=>s+(counts[k]||0),0);
+  const rec=receiptsQuickStats();
+  const totalDocs=inv.count+contractCount+otherCount+rec.totalAll;
+  const recent=getAllDocsRaw()
+    .filter(x=>x.doc.uploaded)
+    .sort((a,b)=>(b.doc.uploaded||0)-(a.doc.uploaded||0))
+    .slice(0,6);
+  const otherChips=OTHER_DOC_CATS.map(k=>`<div class="docs-subcat-chip">${esc(DOC_CAT[k].label)}<strong>${counts[k]||0}</strong></div>`).join('');
+
+  return `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+      <div>
+        <div style="font-size:11px;color:var(--text-3);text-transform:uppercase;letter-spacing:0.06em;font-weight:700">Document Center</div>
+        <div style="font-size:20px;font-weight:700;margin-top:2px">Documents</div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn-add" id="btn-new-doc-global" aria-label="Upload new document">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+          Upload Document
+        </button>
+        <button class="btn-add" id="btn-new-inv-from-docs" style="background:var(--green-900)" aria-label="Create new invoice">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+          New Invoice
+        </button>
+      </div>
+    </div>
+
+    <div class="kpi-grid">
+      <div class="kpi-card accent"><div class="kpi-label">Total Documents</div><div class="kpi-value">${totalDocs}</div><div class="kpi-sub">across ${Object.keys(S.jobs).length} job${Object.keys(S.jobs).length!==1?'s':''}</div></div>
+      <div class="kpi-card"><div class="kpi-label">Invoices</div><div class="kpi-value">${inv.count}</div><div class="kpi-sub">${money(inv.outstanding)} outstanding</div></div>
+      <div class="kpi-card"><div class="kpi-label">Contracts</div><div class="kpi-value">${contractCount}</div><div class="kpi-sub">signed agreements</div></div>
+      <div class="kpi-card"><div class="kpi-label">Other Docs</div><div class="kpi-value">${otherCount}</div><div class="kpi-sub">permits, COs, warranties…</div></div>
+      <div class="kpi-card"><div class="kpi-label">Receipts (YTD)</div><div class="kpi-value">${moneyCents(rec.total)}</div><div class="kpi-sub">${rec.count} · ${moneyCents(rec.ded)} deductible</div></div>
+    </div>
+
+    <div class="docs-cat-grid">
+      <div class="docs-cat-card" data-docs-go="invoices">
+        <div class="docs-cat-card-hd">
+          <div class="docs-cat-card-icon dmi-invoices">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25"/></svg>
+          </div>
+          <div>
+            <div class="docs-cat-card-title">Invoices</div>
+            <div class="docs-cat-card-desc">Billing, payments &amp; accounts receivable</div>
+          </div>
+        </div>
+        <div class="docs-cat-card-stats">
+          <div><div class="docs-cat-stat-lbl">Outstanding</div><div class="docs-cat-stat-val">${money(inv.outstanding)}</div></div>
+          <div><div class="docs-cat-stat-lbl">Overdue</div><div class="docs-cat-stat-val" style="color:${inv.overdueCount>0?'var(--red)':'var(--text)'}">${inv.overdueCount}</div></div>
+        </div>
+      </div>
+      <div class="docs-cat-card" data-docs-go="contracts">
+        <div class="docs-cat-card-hd">
+          <div class="docs-cat-card-icon dmi-contracts">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+          </div>
+          <div>
+            <div class="docs-cat-card-title">Contracts</div>
+            <div class="docs-cat-card-desc">Customer agreements, scope-of-work, T&amp;Cs</div>
+          </div>
+        </div>
+        <div class="docs-cat-card-stats">
+          <div><div class="docs-cat-stat-lbl">On File</div><div class="docs-cat-stat-val">${contractCount}</div></div>
+          <div><div class="docs-cat-stat-lbl">Jobs Covered</div><div class="docs-cat-stat-val">${new Set(getAllDocsByCategory('contract').map(x=>x.job.id)).size}</div></div>
+        </div>
+      </div>
+      <div class="docs-cat-card" data-docs-go="receipts">
+        <div class="docs-cat-card-hd">
+          <div class="docs-cat-card-icon dmi-receipts">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 17h6m-6 0a3 3 0 11-6 0V7a2 2 0 012-2h11a2 2 0 012 2v10a3 3 0 11-6 0M9 7h6M9 11h6"/></svg>
+          </div>
+          <div>
+            <div class="docs-cat-card-title">Receipts &amp; Expenses</div>
+            <div class="docs-cat-card-desc">Track spending, tax write-offs &amp; job costs</div>
+          </div>
+        </div>
+        <div class="docs-cat-card-stats">
+          <div><div class="docs-cat-stat-lbl">Spent YTD</div><div class="docs-cat-stat-val">${moneyCents(rec.total)}</div></div>
+          <div><div class="docs-cat-stat-lbl">Deductible</div><div class="docs-cat-stat-val" style="color:var(--green-700)">${moneyCents(rec.ded)}</div></div>
+        </div>
+      </div>
+      <div class="docs-cat-card" data-docs-go="otherdocs">
+        <div class="docs-cat-card-hd">
+          <div class="docs-cat-card-icon dmi-other">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 9.776c.112-.017.227-.026.344-.026h15.812c.117 0 .232.009.344.026m-16.5 0a2.25 2.25 0 00-1.883 2.542l.857 6a2.25 2.25 0 002.227 1.932H19.05a2.25 2.25 0 002.227-1.932l.857-6a2.25 2.25 0 00-1.883-2.542m-16.5 0V6A2.25 2.25 0 016 3.75h3.879a1.5 1.5 0 011.06.44l2.122 2.12a1.5 1.5 0 001.06.44H18A2.25 2.25 0 0120.25 9v.776"/></svg>
+          </div>
+          <div>
+            <div class="docs-cat-card-title">Other Documents</div>
+            <div class="docs-cat-card-desc">Permits, change orders, warranties &amp; more</div>
+          </div>
+        </div>
+        <div class="docs-subcat-row">${otherChips}</div>
+      </div>
+    </div>
+
+    ${(()=>{
+      const allDocs=getAllDocsRaw().sort((a,b)=>(b.doc.uploaded||0)-(a.doc.uploaded||0));
+      const invAll=getAllInvoices().sort((a,b)=>(b.inv.date||'').localeCompare(a.inv.date||''));
+      const filter=S.docOverviewFilter||'all';
+      const filterCounts={all:allDocs.length+invAll.length,invoices:invAll.length,contracts:counts.contract||0,other:otherCount};
+      const filterChips=[['all','All'],['invoices','Invoices'],['contracts','Contracts'],['other','Other']];
+      let showInvoices=filter==='all'||filter==='invoices';
+      let showContracts=filter==='all'||filter==='contracts';
+      let showOther=filter==='all'||filter==='other';
+      const visibleDocs=allDocs.filter(x=>(showContracts&&x.category==='contract')||(showOther&&x.category!=='contract'));
+      const visibleInv=showInvoices?invAll:[];
+      const total=visibleDocs.length+visibleInv.length;
+      if(allDocs.length===0&&invAll.length===0)return `<div class="empty" style="padding:40px 20px">
+        <div class="empty-icon">${FILE_ICON}</div>
+        <h3>No documents yet</h3>
+        <p>Click "Upload Document" above to add contracts, permits, warranties and more. Or use "New Invoice" to bill a job.</p>
+      </div>`;
+      return `<div class="report-section">
+        <div class="report-hd">All Documents <span class="kpi-sub">${total} item${total!==1?'s':''}</span></div>
+        <div class="filter-row" style="margin-bottom:12px">
+          ${filterChips.map(([k,lbl])=>`<div class="filter-chip ${filter===k?'active':''}" data-docov-filter="${k}">${lbl} ${filterCounts[k]||0}</div>`).join('')}
+        </div>
+        ${total===0?`<p style="font-size:13px;color:var(--text-3);padding:10px 4px">Nothing in this category yet.</p>`:`
+        <div style="display:flex;flex-direction:column;gap:8px">
+          ${visibleInv.map(({inv,job})=>{
+            const c=calcInvoice(inv);const st=invoiceStatus(inv);
+            return `<div class="doc-row" data-open-inv="${esc(job.id)}|${esc(inv.id)}" style="cursor:pointer">
+              <div class="doc-row-icon" style="background:linear-gradient(135deg,#1a6e55,#16a34a);color:#fff">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25"/></svg>
+              </div>
+              <div class="doc-row-main">
+                <div class="doc-row-name"><span class="doc-row-cat">Invoice</span>${esc(inv.number||'(no #)')} <span class="invoice-status ${st}" style="margin-left:4px">${st}</span></div>
+                <div class="doc-row-meta">${esc(job.name||'')}${job.customerName?' · '+esc(job.customerName):''}${inv.date?' · '+fmtDate(inv.date):''} · ${money(c.total)}${c.balance>0.005?' · '+money(c.balance)+' due':' · paid'}</div>
+              </div>
+            </div>`;
+          }).join('')}
+          ${visibleDocs.map(({doc,job,idx,category})=>{
+            const opts=DOC_CAT_ORDER.map(k=>`<option value="${k}" ${category===k?'selected':''}>${esc(DOC_CAT[k].label)}</option>`).join('');
+            return `<div class="doc-row">
+              <div class="doc-row-icon">${FILE_ICON}</div>
+              <div class="doc-row-main">
+                <a href="${doc.url||'#'}" download="${esc(doc.name||'')}" target="_blank" style="text-decoration:none;color:inherit;display:block">
+                  <div class="doc-row-name"><span class="doc-row-cat">${esc(DOC_CAT[category].label)}</span>${esc(doc.name||'(untitled)')}</div>
+                  <div class="doc-row-meta">${esc(job.name||'')}${job.customerName?' · '+esc(job.customerName):''}${doc.uploaded?' · '+ago(doc.uploaded):''}${doc.size?' · '+esc(doc.size):''}</div>
+                </a>
+              </div>
+              <select class="doc-cat-select" data-doc-recat="${esc(job.id)}|${idx}" aria-label="Change category">${opts}</select>
+            </div>`;
+          }).join('')}
+        </div>`}
+      </div>`;
+    })()}
+  `;
+}
+
+function renderDocsList(items,opts){
+  if(!items.length)return `<div class="empty" style="padding:40px 20px">
+    <div class="empty-icon">${FILE_ICON}</div>
+    <h3>${esc(opts.emptyTitle||'No documents')}</h3>
+    <p>${esc(opts.emptyDesc||'')}</p>
+  </div>`;
+  return `<div style="display:flex;flex-direction:column;gap:8px">
+    ${items.map(({doc,job,idx,category})=>{
+      const opts2=DOC_CAT_ORDER.map(k=>`<option value="${k}" ${category===k?'selected':''}>${esc(DOC_CAT[k].label)}</option>`).join('');
+      return `<div class="doc-row">
+        <div class="doc-row-icon">${FILE_ICON}</div>
+        <div class="doc-row-main">
+          <a href="${doc.url||'#'}" download="${esc(doc.name||'')}" target="_blank" style="text-decoration:none;color:inherit;display:block">
+            <div class="doc-row-name"><span class="doc-row-cat">${esc(DOC_CAT[category].label)}</span>${esc(doc.name||'(untitled)')}</div>
+            <div class="doc-row-meta">${esc(job.name||'')}${job.customerName?' · '+esc(job.customerName):''}${doc.uploaded?' · '+ago(doc.uploaded):''}${doc.size?' · '+esc(doc.size):''}</div>
+          </a>
+        </div>
+        <select class="doc-cat-select" data-doc-recat="${esc(job.id)}|${idx}" aria-label="Change category">${opts2}</select>
+      </div>`;
+    }).join('')}
+  </div>`;
+}
+
+function renderContractsView(){
+  const items=getAllDocsByCategory('contract').sort((a,b)=>(b.doc.uploaded||0)-(a.doc.uploaded||0));
+  const jobsCovered=new Set(items.map(x=>x.job.id)).size;
+  return `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+      <div>
+        <div style="font-size:11px;color:var(--text-3);text-transform:uppercase;letter-spacing:0.06em;font-weight:700">Document Center</div>
+        <div style="font-size:20px;font-weight:700;margin-top:2px">Contracts</div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="docs-menu-foot-btn" data-docs-go="documents" aria-label="Back to documents overview">← All Documents</button>
+        <button class="btn-add" id="btn-new-contract" aria-label="Upload new contract">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+          Upload Contract
+        </button>
+      </div>
+    </div>
+    <div class="kpi-grid">
+      <div class="kpi-card accent"><div class="kpi-label">Contracts on File</div><div class="kpi-value">${items.length}</div><div class="kpi-sub">${jobsCovered} job${jobsCovered!==1?'s':''} covered</div></div>
+      <div class="kpi-card"><div class="kpi-label">Without Contract</div><div class="kpi-value" style="color:${Object.keys(S.jobs).length-jobsCovered>0?'var(--orange)':'var(--text)'}">${Math.max(0,Object.keys(S.jobs).length-jobsCovered)}</div><div class="kpi-sub">jobs missing a contract</div></div>
+      <div class="kpi-card"><div class="kpi-label">Most Recent</div><div class="kpi-value" style="font-size:15px">${items[0]?ago(items[0].doc.uploaded||0):'—'}</div><div class="kpi-sub">${items[0]?esc(items[0].job.name||''):'no contracts'}</div></div>
+    </div>
+    <div class="report-section">
+      <div class="report-hd">All Contracts</div>
+      ${renderDocsList(items,{emptyTitle:'No contracts yet',emptyDesc:'Upload a contract from inside a job and choose "Contract" as the category.'})}
+    </div>
+  `;
+}
+
+function renderOtherDocsView(){
+  const filter=S.docOtherFilter||'all';
+  let items=getAllDocsByCategory('other-bucket');
+  if(filter!=='all')items=items.filter(x=>x.category===filter);
+  items.sort((a,b)=>(b.doc.uploaded||0)-(a.doc.uploaded||0));
+  const counts=docCategoryCounts();
+  const totalOther=OTHER_DOC_CATS.reduce((s,k)=>s+(counts[k]||0),0);
+  const chips=[['all','All',totalOther],...OTHER_DOC_CATS.map(k=>[k,DOC_CAT[k].label,counts[k]||0])];
+  return `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+      <div>
+        <div style="font-size:11px;color:var(--text-3);text-transform:uppercase;letter-spacing:0.06em;font-weight:700">Document Center</div>
+        <div style="font-size:20px;font-weight:700;margin-top:2px">Other Documents</div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="docs-menu-foot-btn" data-docs-go="documents" aria-label="Back to documents overview">← All Documents</button>
+        <button class="btn-add" id="btn-new-otherdoc" aria-label="Upload new document">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+          Upload Document
+        </button>
+      </div>
+    </div>
+    <div class="kpi-grid">
+      <div class="kpi-card accent"><div class="kpi-label">Total Files</div><div class="kpi-value">${totalOther}</div><div class="kpi-sub">across all sub-categories</div></div>
+      <div class="kpi-card"><div class="kpi-label">Permits</div><div class="kpi-value">${counts.permit||0}</div><div class="kpi-sub">building &amp; zoning</div></div>
+      <div class="kpi-card"><div class="kpi-label">Change Orders</div><div class="kpi-value">${counts['change-order']||0}</div><div class="kpi-sub">scope modifications</div></div>
+      <div class="kpi-card"><div class="kpi-label">Insurance &amp; Waivers</div><div class="kpi-value">${(counts.insurance||0)+(counts['lien-waiver']||0)}</div><div class="kpi-sub">COIs + lien waivers</div></div>
+    </div>
+    <div class="filter-row" style="margin-bottom:14px">
+      ${chips.map(([k,lbl,n])=>`<div class="filter-chip ${filter===k?'active':''}" data-docother-filter="${k}">${lbl} ${n}</div>`).join('')}
+    </div>
+    ${renderDocsList(items,{emptyTitle:'No documents in this category',emptyDesc:'Upload files from inside a job and pick a category to organize them here.'})}
+  `;
+}
+
+// ══ Receipts: categories, helpers, view, modal ══
+// pct = % deductible per IRS guidance (Schedule C / Form 1120). meals=50%, others=100%.
+const RECEIPT_CAT_ORDER=['materials','tools','rental','fuel','vehicle','subcontractor','meals','travel','office','insurance','permits','utilities','safety','training','advertising','professional','other'];
+const RECEIPT_CAT={
+  materials:{label:'Materials & Supplies',deductible:true,pct:100},
+  tools:{label:'Tools (under $2,500)',deductible:true,pct:100},
+  rental:{label:'Equipment Rental',deductible:true,pct:100},
+  fuel:{label:'Vehicle Fuel',deductible:true,pct:100},
+  vehicle:{label:'Vehicle Repair / Maint.',deductible:true,pct:100},
+  subcontractor:{label:'Subcontractor',deductible:true,pct:100},
+  meals:{label:'Meals (50% deductible)',deductible:true,pct:50},
+  travel:{label:'Travel & Lodging',deductible:true,pct:100},
+  office:{label:'Office Supplies',deductible:true,pct:100},
+  insurance:{label:'Insurance',deductible:true,pct:100},
+  permits:{label:'Licenses & Permits',deductible:true,pct:100},
+  utilities:{label:'Utilities',deductible:true,pct:100},
+  safety:{label:'Safety Equipment / PPE',deductible:true,pct:100},
+  training:{label:'Training / Education',deductible:true,pct:100},
+  advertising:{label:'Advertising',deductible:true,pct:100},
+  professional:{label:'Professional Services',deductible:true,pct:100},
+  other:{label:'Other / Personal',deductible:false,pct:0},
+};
+// Distinct, accessible colors for each receipt category (used in charts & legend)
+const RECEIPT_CAT_COLORS={
+  materials:'#1a6e55',
+  tools:'#0369a1',
+  rental:'#d97706',
+  fuel:'#dc2626',
+  vehicle:'#7c3aed',
+  subcontractor:'#0891b2',
+  meals:'#f59e0b',
+  travel:'#ec4899',
+  office:'#6366f1',
+  insurance:'#14b8a6',
+  permits:'#65a30d',
+  utilities:'#f97316',
+  safety:'#eab308',
+  training:'#a855f7',
+  advertising:'#06b6d4',
+  professional:'#8b5cf6',
+  other:'#64748b',
+};
+// Cycle of customer bar colors
+const CUSTOMER_BAR_COLORS=['#1a6e55','#0369a1','#d97706','#7c3aed','#dc2626','#0891b2','#ec4899','#14b8a6'];
+
+function recCat(r){return r&&r.category&&RECEIPT_CAT[r.category]?r.category:'other'}
+function moneyCents(n){const v=Number(n||0);return '$'+v.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}
+function allReceipts(){return Object.values(S.receipts||{})}
+function inRange(dateStr,range){
+  if(!dateStr)return range==='all';
+  if(range==='all')return true;
+  const d=new Date(dateStr+(dateStr.length===10?'T00:00:00':''));
+  const now=new Date();
+  if(range==='month')return d.getFullYear()===now.getFullYear()&&d.getMonth()===now.getMonth();
+  if(range==='qtr'){const q=Math.floor(now.getMonth()/3);return d.getFullYear()===now.getFullYear()&&Math.floor(d.getMonth()/3)===q}
+  if(range==='ytd')return d.getFullYear()===now.getFullYear();
+  if(range==='lastyear')return d.getFullYear()===now.getFullYear()-1;
+  return true;
+}
+function receiptDeductible(r){const cat=RECEIPT_CAT[recCat(r)];if(!cat||!cat.deductible||r.deductible===false)return 0;return Number(r.amount||0)*(cat.pct/100)}
+function receiptsForJob(jobId){return allReceipts().filter(r=>r.jobId===jobId)}
+
+function renderReceiptCharts(list,total){
+  if(!list.length)return '';
+
+  // ── Category totals (descending, only non-zero) ──
+  const catTotals={};
+  list.forEach(r=>{const k=recCat(r);catTotals[k]=(catTotals[k]||0)+Number(r.amount||0)});
+  const catRows=Object.entries(catTotals)
+    .filter(([,v])=>v>0)
+    .sort((a,b)=>b[1]-a[1])
+    .map(([k,v])=>({key:k,label:RECEIPT_CAT[k].label,color:RECEIPT_CAT_COLORS[k]||'#64748b',value:v,pct:total>0?v/total*100:0}));
+
+  // ── Donut SVG ──
+  const r=65,cx=80,cy=80,sw=22;
+  const circ=2*Math.PI*r;
+  let acc=0;
+  const arcs=catRows.map(seg=>{
+    const dash=(seg.pct/100)*circ;
+    const arc=`<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${seg.color}" stroke-width="${sw}"
+      stroke-dasharray="${dash.toFixed(2)} ${(circ-dash).toFixed(2)}"
+      stroke-dashoffset="${(-acc).toFixed(2)}">
+      <title>${esc(seg.label)} — ${moneyCents(seg.value)} (${seg.pct.toFixed(1)}%)</title>
+    </circle>`;
+    acc+=dash;
+    return arc;
+  }).join('');
+
+  const legend=catRows.map(seg=>`
+    <div class="rec-legend-row ${S.recCatFilter===seg.key?'active':''}" data-rec-catfilter="${seg.key}" title="Click to filter list">
+      <div class="rec-legend-dot" style="background:${seg.color}"></div>
+      <div class="rec-legend-name">${esc(seg.label)}</div>
+      <div class="rec-legend-val">${moneyCents(seg.value)}</div>
+      <div class="rec-legend-pct">${seg.pct.toFixed(0)}%</div>
+    </div>
+  `).join('');
+
+  // ── Customer totals (group by job.customerName) ──
+  const byCust={};
+  list.forEach(rec=>{
+    let key,name;
+    if(rec.jobId&&S.jobs[rec.jobId]){
+      const j=S.jobs[rec.jobId];
+      name=(j.customerName||'').trim()||'(no customer)';
+      key='c:'+name.toLowerCase();
+    }else{
+      key='__overhead__';name='Overhead / Unassigned';
+    }
+    if(!byCust[key])byCust[key]={key,name,total:0,ded:0,count:0,jobIds:new Set()};
+    byCust[key].total+=Number(rec.amount||0);
+    byCust[key].ded+=receiptDeductible(rec);
+    byCust[key].count++;
+    if(rec.jobId)byCust[key].jobIds.add(rec.jobId);
+  });
+  const custRows=Object.values(byCust).sort((a,b)=>b.total-a.total);
+  const maxCust=custRows.reduce((m,c)=>Math.max(m,c.total),0);
+  const topCust=custRows.slice(0,8);
+
+  const custBars=topCust.map((c,i)=>{
+    const color=c.key==='__overhead__'?'#94a3b8':CUSTOMER_BAR_COLORS[i%CUSTOMER_BAR_COLORS.length];
+    const pct=maxCust>0?(c.total/maxCust)*100:0;
+    const dedPct=c.total>0?(c.ded/c.total)*100:0;
+    return `<div class="hbar-row">
+      <div class="hbar-top">
+        <div class="hbar-name">${esc(c.name)}<small>${c.count} receipt${c.count!==1?'s':''}${c.jobIds.size?' · '+c.jobIds.size+' job'+(c.jobIds.size!==1?'s':''):''}</small></div>
+        <div class="hbar-val">${moneyCents(c.total)}</div>
+      </div>
+      <div class="hbar-track" title="${moneyCents(c.ded)} deductible">
+        <div class="hbar-fill" style="width:${pct.toFixed(2)}%;background:${color}"></div>
+        <div class="hbar-fill-ded" style="width:${(pct*dedPct/100).toFixed(2)}%"></div>
+      </div>
+      <div class="hbar-meta">
+        <span>${total>0?(c.total/total*100).toFixed(1):0}% of total spend</span>
+        <span>${moneyCents(c.ded)} deductible</span>
+      </div>
+    </div>`;
+  }).join('');
+
+  return `
+    <div class="report-section">
+      <div class="report-hd">Spending by Category <span class="kpi-sub">${catRows.length} categor${catRows.length===1?'y':'ies'} · click a slice or legend row to filter</span></div>
+      <div class="rec-chart-grid">
+        <div class="rec-donut-wrap">
+          <div class="rec-donut">
+            <svg viewBox="0 0 160 160" role="img" aria-label="Receipt spending by category">
+              <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="var(--surface-3)" stroke-width="${sw}"/>
+              ${arcs}
+            </svg>
+            <div class="rec-donut-center">
+              <div class="rec-donut-amt">${moneyCents(total)}</div>
+              <div class="rec-donut-lbl">Total</div>
+            </div>
+          </div>
+        </div>
+        <div class="rec-legend">${legend}</div>
+      </div>
+    </div>
+
+    <div class="report-section">
+      <div class="report-hd">Spending by Customer <span class="kpi-sub">${custRows.length} customer${custRows.length===1?'':'s'}${custRows.length>topCust.length?' · top '+topCust.length+' shown':''}</span></div>
+      <div class="hbar-list">${custBars}</div>
+      <div style="font-size:11px;color:var(--text-3);margin-top:10px;display:flex;align-items:center;gap:6px">
+        <span style="display:inline-block;width:11px;height:6px;border-radius:2px;background:rgba(22,163,74,0.55)"></span>
+        Darker green overlay shows the tax-deductible portion of each customer's spend.
+      </div>
+    </div>
+  `;
+}
+
+function renderReceiptsView(){
+  const all=allReceipts();
+  const range=S.recRange||'ytd';
+  const inRangeList=all.filter(r=>inRange(r.date,range));
+  // Stats over range
+  const total=inRangeList.reduce((s,r)=>s+Number(r.amount||0),0);
+  const ded=inRangeList.reduce((s,r)=>s+receiptDeductible(r),0);
+  const linked=inRangeList.filter(r=>r.jobId).length;
+  const unlinked=inRangeList.length-linked;
+  // Category breakdown
+  const byCat={};RECEIPT_CAT_ORDER.forEach(k=>byCat[k]={total:0,count:0,ded:0});
+  inRangeList.forEach(r=>{const k=recCat(r);byCat[k].total+=Number(r.amount||0);byCat[k].count++;byCat[k].ded+=receiptDeductible(r)});
+  // Job breakdown
+  const byJob={};
+  inRangeList.forEach(r=>{
+    const key=r.jobId||'__none__';
+    byJob[key]=byJob[key]||{total:0,count:0,name:r.jobId&&S.jobs[r.jobId]?S.jobs[r.jobId].name:'Overhead / Unassigned'};
+    byJob[key].total+=Number(r.amount||0);byJob[key].count++;
+  });
+  const topJobs=Object.entries(byJob).sort((a,b)=>b[1].total-a[1].total).slice(0,5);
+
+  // Apply secondary filters
+  let shown=inRangeList.slice();
+  if(S.recCatFilter!=='all')shown=shown.filter(r=>recCat(r)===S.recCatFilter);
+  if(S.recJobFilter!=='all'){
+    if(S.recJobFilter==='__none__')shown=shown.filter(r=>!r.jobId);
+    else shown=shown.filter(r=>r.jobId===S.recJobFilter);
+  }
+  if(S.recSearch){const q=S.recSearch.toLowerCase();shown=shown.filter(r=>((r.vendor||'')+' '+(r.notes||'')+' '+(RECEIPT_CAT[recCat(r)]?.label||'')).toLowerCase().includes(q))}
+  shown.sort((a,b)=>(b.date||'').localeCompare(a.date||'')||((b.created||0)-(a.created||0)));
+
+  const ranges=[['month','This Month'],['qtr','This Quarter'],['ytd','Year to Date'],['lastyear','Last Year'],['all','All Time']];
+  const jobOpts=Object.values(S.jobs).map(j=>`<option value="${esc(j.id)}" ${S.recJobFilter===j.id?'selected':''}>${esc(j.name)}</option>`).join('');
+
+  return `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+      <div>
+        <div style="font-size:11px;color:var(--text-3);text-transform:uppercase;letter-spacing:0.06em;font-weight:700">Document Center</div>
+        <div style="font-size:20px;font-weight:700;margin-top:2px">Receipts &amp; Expenses</div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="docs-menu-foot-btn" data-docs-go="documents" aria-label="Back to documents overview">← All Documents</button>
+        <button class="btn-add" id="btn-new-receipt" aria-label="Add new receipt" style="background:#7c3aed;box-shadow:0 2px 8px rgba(124,58,237,0.35)">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+          Add Receipt
+        </button>
+      </div>
+    </div>
+
+    <div class="filter-row" style="margin-bottom:12px">
+      ${ranges.map(([k,lbl])=>`<div class="filter-chip ${range===k?'active':''}" data-rec-range="${k}">${lbl}</div>`).join('')}
+    </div>
+
+    <div class="kpi-grid">
+      <div class="kpi-card accent"><div class="kpi-label">Total Spent</div><div class="kpi-value">${moneyCents(total)}</div><div class="kpi-sub">${inRangeList.length} receipt${inRangeList.length!==1?'s':''}</div></div>
+      <div class="kpi-card"><div class="kpi-label">Tax-Deductible</div><div class="kpi-value" style="color:var(--green-700)">${moneyCents(ded)}</div><div class="kpi-sub">${total>0?Math.round(ded/total*100):0}% of total</div></div>
+      <div class="kpi-card"><div class="kpi-label">Linked to Jobs</div><div class="kpi-value">${linked}</div><div class="kpi-sub">${unlinked} overhead / unassigned</div></div>
+      <div class="kpi-card"><div class="kpi-label">Avg Receipt</div><div class="kpi-value">${moneyCents(inRangeList.length?total/inRangeList.length:0)}</div><div class="kpi-sub">in selected range</div></div>
+    </div>
+
+    ${renderReceiptCharts(inRangeList,total)}
+
+    <div class="report-section">
+      <div class="report-hd">By Category <span class="kpi-sub">click a tile to filter</span></div>
+      <div class="rec-cat-grid">
+        <div class="rec-cat-tile ${S.recCatFilter==='all'?'active':''}" data-rec-catfilter="all">
+          <div class="rec-cat-tile-lbl">All Categories</div>
+          <div class="rec-cat-tile-val">${moneyCents(total)}</div>
+          <div class="rec-cat-tile-sub">${inRangeList.length} receipt${inRangeList.length!==1?'s':''}</div>
+        </div>
+        ${RECEIPT_CAT_ORDER.filter(k=>byCat[k].count>0).map(k=>`
+          <div class="rec-cat-tile ${S.recCatFilter===k?'active':''}" data-rec-catfilter="${k}">
+            <div class="rec-cat-tile-lbl">${esc(RECEIPT_CAT[k].label)}</div>
+            <div class="rec-cat-tile-val">${moneyCents(byCat[k].total)}</div>
+            <div class="rec-cat-tile-sub">${byCat[k].count} · ${moneyCents(byCat[k].ded)} ded.</div>
+          </div>`).join('')}
+      </div>
+    </div>
+
+    ${topJobs.length?`<div class="report-section">
+      <div class="report-hd">Top Spend by Job</div>
+      <div class="leaderboard">
+        ${topJobs.map(([key,info],i)=>{
+          const rankCls=i===0?'gold':i===1?'silver':i===2?'bronze':'';
+          return `<div class="lb-row">
+            <div class="lb-rank ${rankCls}">${i+1}</div>
+            <div class="lb-name">${esc(info.name)}<div style="font-size:11px;color:var(--text-3);font-weight:500">${info.count} receipt${info.count!==1?'s':''}</div></div>
+            <div class="lb-stats"><strong>${moneyCents(info.total)}</strong><div>total</div></div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`:''}
+
+    <div class="toolbar" style="margin-top:8px">
+      <div class="search-wrap">
+        <div class="search-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 15.803a7.5 7.5 0 0010.607 0z"/></svg></div>
+        <input class="search" id="rec-search" placeholder="Search vendor, notes…" value="${esc(S.recSearch||'')}" aria-label="Search receipts">
+      </div>
+      <select class="form-select" id="rec-jobfilter" style="max-width:200px;font-size:13px;padding:8px 10px" aria-label="Filter by job">
+        <option value="all" ${S.recJobFilter==='all'?'selected':''}>All jobs</option>
+        <option value="__none__" ${S.recJobFilter==='__none__'?'selected':''}>Overhead / Unassigned</option>
+        ${jobOpts}
+      </select>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:6px;margin-top:6px">
+      ${shown.length===0?`<div class="empty" style="padding:40px 20px">
+        <div class="empty-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 17h6m-6 0a3 3 0 11-6 0V7a2 2 0 012-2h11a2 2 0 012 2v10a3 3 0 11-6 0M9 7h6M9 11h6"/></svg></div>
+        <h3>${all.length===0?'No receipts yet':'No matches'}</h3>
+        <p>${all.length===0?'Start tracking expenses by adding your first receipt. Snap a photo, set the category, and link it to a job.':'Try a different filter or date range.'}</p>
+      </div>`
+        :shown.map(r=>{
+          const cat=recCat(r);
+          const catInfo=RECEIPT_CAT[cat];
+          const job=r.jobId?S.jobs[r.jobId]:null;
+          const ded=receiptDeductible(r);
+          const isDed=ded>0;
+          return `<div class="rec-row ${isDed?'':'nondeductible'}">
+            <div class="rec-row-thumb">${r.photoUrl?`<img src="${r.photoUrl}" alt="">`:`<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 17h6m-6 0a3 3 0 11-6 0V7a2 2 0 012-2h11a2 2 0 012 2v10a3 3 0 11-6 0M9 7h6M9 11h6"/></svg>`}</div>
+            <div class="rec-row-main" data-rec-open="${esc(r.id)}">
+              <div class="rec-row-vendor"><span class="rec-cat-pill">${esc(catInfo.label.split(' ')[0])}</span>${esc(r.vendor||'(no vendor)')}</div>
+              <div class="rec-row-meta">${fmtDate(r.date)}${job?' · <strong>'+esc(job.name)+'</strong>':' · Overhead'}${r.notes?' · '+esc(r.notes.slice(0,50))+(r.notes.length>50?'…':''):''}</div>
+            </div>
+            <div class="rec-row-amt">
+              <div class="rec-row-amt-val">${moneyCents(r.amount)}</div>
+              <div class="rec-row-amt-ded ${isDed?'':'no'}">${isDed?(catInfo.pct<100?catInfo.pct+'% ded · ':'')+moneyCents(ded):'not deductible'}</div>
+            </div>
+            <button class="rec-del" data-rec-del="${esc(r.id)}" title="Delete receipt" aria-label="Delete receipt">✕</button>
+          </div>`;
+        }).join('')}
+    </div>
+  `;
+}
+
+function showReceiptModal(receiptId,presetJobId){
+  const editing=receiptId&&S.receipts[receiptId];
+  const r=editing?JSON.parse(JSON.stringify(S.receipts[receiptId])):{id:'r_'+Date.now()+'_'+Math.random().toString(36).slice(2,6),date:dateKey(new Date()),vendor:'',amount:'',category:'materials',jobId:presetJobId||'',deductible:true,notes:'',photoUrl:'',created:Date.now(),user:S.user};
+  const jobOpts=`<option value="">— Overhead / Unassigned —</option>`+Object.values(S.jobs).map(j=>`<option value="${esc(j.id)}" ${r.jobId===j.id?'selected':''}>${esc(j.name)}${j.customerName?' — '+esc(j.customerName):''}</option>`).join('');
+  const catOpts=RECEIPT_CAT_ORDER.map(k=>`<option value="${k}" ${r.category===k?'selected':''}>${esc(RECEIPT_CAT[k].label)}</option>`).join('');
+  $('modal-root').innerHTML=`<div class="modal-bd" id="mbd" role="dialog" aria-modal="true" aria-label="${editing?'Edit':'Add'} receipt"><div class="modal"><div class="modal-handle"></div>
+    <div class="modal-head"><div class="modal-title">${editing?'Edit Receipt':'Add Receipt'}</div><button class="modal-close" id="mc" aria-label="Close"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button></div>
+    <div class="modal-body">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div class="form-group"><label class="form-label" for="rec-date">Date</label>
+          <input type="date" class="form-input" id="rec-date" value="${esc(r.date||'')}">
+        </div>
+        <div class="form-group"><label class="form-label" for="rec-amount">Amount</label>
+          <input type="number" step="0.01" min="0" class="form-input" id="rec-amount" value="${esc(r.amount||'')}" placeholder="0.00" inputmode="decimal">
+        </div>
+      </div>
+      <div class="form-group"><label class="form-label" for="rec-vendor">Vendor / Payee</label>
+        <input type="text" class="form-input" id="rec-vendor" value="${esc(r.vendor||'')}" placeholder="Home Depot, Lowe's, Shell…">
+      </div>
+      <div class="form-group"><label class="form-label" for="rec-category">Tax Category</label>
+        <select class="form-select" id="rec-category">${catOpts}</select>
+        <div id="rec-cat-note" style="font-size:11.5px;color:var(--text-3);margin-top:6px"></div>
+      </div>
+      <div class="form-group"><label class="form-label" for="rec-job">Job <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text-3)">(track where the money went)</span></label>
+        <select class="form-select" id="rec-job">${jobOpts}</select>
+      </div>
+      <div class="form-group">
+        <label style="display:flex;align-items:center;gap:8px;font-size:13.5px;cursor:pointer">
+          <input type="checkbox" id="rec-ded" ${r.deductible!==false?'checked':''} style="width:18px;height:18px;cursor:pointer">
+          <span><strong>Tax deductible</strong> — uncheck if this is personal or non-business</span>
+        </label>
+      </div>
+      <div class="form-group"><label class="form-label" for="rec-notes">Notes</label>
+        <textarea class="form-textarea" id="rec-notes" rows="2" placeholder="Optional details">${esc(r.notes||'')}</textarea>
+      </div>
+      <div class="form-group"><label class="form-label">Receipt Photo <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text-3)">(optional — max 5MB)</span></label>
+        ${r.photoUrl?`<div style="margin-bottom:8px"><img src="${r.photoUrl}" alt="Receipt" style="max-width:180px;max-height:180px;border-radius:8px;border:1px solid var(--border)"></div>`:''}
+        <input type="file" id="rec-photo" class="form-input" accept="image/*">
+      </div>
+      <div style="display:flex;gap:8px;justify-content:space-between;margin-top:8px;flex-wrap:wrap">
+        ${editing?`<button class="docs-menu-foot-btn" id="rec-delete" style="color:var(--red);border-color:var(--red)">Delete</button>`:'<div></div>'}
+        <div style="display:flex;gap:8px">
+          <button class="docs-menu-foot-btn" id="rec-cancel">Cancel</button>
+          <button class="btn-add" id="rec-save" style="background:#7c3aed">${editing?'Save Changes':'Add Receipt'}</button>
+        </div>
+      </div>
+    </div>
+  </div></div>`;
+  const noteEl=$('rec-cat-note');
+  const updateNote=()=>{
+    const c=RECEIPT_CAT[$('rec-category').value];
+    if(!c){noteEl.textContent='';return}
+    if(!c.deductible)noteEl.innerHTML='⚠️ This category is not tax-deductible by default.';
+    else if(c.pct<100)noteEl.innerHTML=`Only <strong>${c.pct}%</strong> of this expense is deductible per IRS rules.`;
+    else noteEl.innerHTML='Fully deductible business expense.';
+  };
+  updateNote();
+  $('rec-category').onchange=()=>{
+    const c=RECEIPT_CAT[$('rec-category').value];
+    if(c)$('rec-ded').checked=c.deductible;
+    updateNote();
+  };
+  $('mc').onclick=$('rec-cancel').onclick=closeModal;
+  $('mbd').onclick=e=>{if(e.target===e.currentTarget)closeModal()};
+  if(editing){
+    $('rec-delete').onclick=async()=>{
+      if(!confirm('Delete this receipt? This can be undone right after.'))return;
+      const backup=JSON.parse(JSON.stringify(S.receipts[receiptId]));
+      await deleteReceiptDB(receiptId);
+      await logAct('deleted receipt from '+(backup.vendor||'vendor'),backup.jobId&&S.jobs[backup.jobId]?S.jobs[backup.jobId].name:'');
+      closeModal();render();
+      UNDO.push(async()=>{await writeReceipt(backup);render();toast('Receipt restored')});
+      toast('Receipt deleted','undo',()=>{UNDO.pop()()});
+    };
+  }
+  const doSave=async(photoUrl)=>{
+    const rec={
+      id:r.id,
+      date:$('rec-date').value||dateKey(new Date()),
+      vendor:$('rec-vendor').value.trim(),
+      amount:parseFloat($('rec-amount').value)||0,
+      category:$('rec-category').value,
+      jobId:$('rec-job').value||'',
+      deductible:$('rec-ded').checked,
+      notes:$('rec-notes').value.trim(),
+      photoUrl:photoUrl!==undefined?photoUrl:(r.photoUrl||''),
+      created:r.created||Date.now(),
+      updated:Date.now(),
+      user:S.user||r.user||'',
+    };
+    if(rec.amount<=0){toast('Enter an amount','');return}
+    if(!rec.vendor){toast('Enter a vendor','');return}
+    await writeReceipt(rec);
+    const jobName=rec.jobId&&S.jobs[rec.jobId]?S.jobs[rec.jobId].name:'overhead';
+    await logAct((editing?'updated':'added')+' receipt from '+rec.vendor+' ('+moneyCents(rec.amount)+')',jobName==='overhead'?'':jobName);
+    closeModal();render();toast(editing?'Receipt updated':'Receipt added');
+  };
+  $('rec-save').onclick=()=>{
+    const file=$('rec-photo').files[0];
+    if(file){
+      if(file.size>5*1024*1024){toast('Photo too large (max 5MB)','');return}
+      const reader=new FileReader();
+      reader.onload=e=>doSave(e.target.result);
+      reader.readAsDataURL(file);
+    }else doSave();
+  };
+}
+
 // ══ Invoices view (all invoices across all jobs) ══
 function getAllInvoices(){
   const out=[];
@@ -1868,6 +2989,61 @@ function renderInvoicesView(){
 }
 
 // Pick a job, then open invoice editor for it
+// Upload a new document (pick job + category + file) from any docs view
+function showDocumentUploadModal(presetCategory){
+  const all=jobs();
+  if(all.length===0){toast('Add a job first','');return}
+  const presetJob=S.detail&&S.jobs[S.detail]?S.detail:'';
+  const cat=presetCategory&&DOC_CAT[presetCategory]?presetCategory:'other';
+  const jobOpts=all.map(j=>`<option value="${esc(j.id)}" ${j.id===presetJob?'selected':''}>${esc(j.name)}${j.customerName?' — '+esc(j.customerName):''}</option>`).join('');
+  const catOpts=DOC_CAT_ORDER.map(k=>`<option value="${k}" ${cat===k?'selected':''}>${esc(DOC_CAT[k].label)}</option>`).join('');
+  $('modal-root').innerHTML=`<div class="modal-bd" id="mbd" role="dialog" aria-modal="true" aria-label="Upload document"><div class="modal"><div class="modal-handle"></div>
+    <div class="modal-head"><div class="modal-title">Upload Document</div><button class="modal-close" id="mc" aria-label="Close"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button></div>
+    <div class="modal-body">
+      <p style="font-size:12.5px;color:var(--text-2);margin-bottom:10px">Documents are attached to a job so they stay organized with the rest of the project.</p>
+      <div class="form-group"><label class="form-label" for="docu-job">Job</label>
+        <select class="form-select" id="docu-job">${jobOpts}</select>
+      </div>
+      <div class="form-group"><label class="form-label" for="docu-cat">Category</label>
+        <select class="form-select" id="docu-cat">${catOpts}</select>
+        <div id="docu-cat-desc" style="font-size:11.5px;color:var(--text-3);margin-top:6px"></div>
+      </div>
+      <div class="form-group"><label class="form-label" for="docu-file">File <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text-3)">(PDF, DOC, IMG — max 5MB)</span></label>
+        <input type="file" id="docu-file" class="form-input" accept="*/*">
+      </div>
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px">
+        <button class="docs-menu-foot-btn" id="docu-cancel">Cancel</button>
+        <button class="btn-add" id="docu-save">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v6m3-3H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          Upload
+        </button>
+      </div>
+    </div>
+  </div></div>`;
+  const updateDesc=()=>{const k=$('docu-cat').value;$('docu-cat-desc').textContent=DOC_CAT[k]?.desc||''};
+  updateDesc();
+  $('docu-cat').onchange=updateDesc;
+  $('mc').onclick=$('docu-cancel').onclick=closeModal;
+  $('mbd').onclick=e=>{if(e.target===e.currentTarget)closeModal()};
+  $('docu-save').onclick=()=>{
+    const jobId=$('docu-job').value;
+    const category=$('docu-cat').value;
+    const file=$('docu-file').files[0];
+    if(!jobId){toast('Pick a job','');return}
+    if(!file){toast('Choose a file','');return}
+    if(file.size>5*1024*1024){toast('File too large (max 5MB)','');return}
+    const j=S.jobs[jobId];if(!j)return;
+    const r=new FileReader();
+    r.onload=async e=>{
+      j.documents=j.documents||[];
+      j.documents.push({name:file.name,url:e.target.result,size:(file.size/1024).toFixed(0)+' KB',type:file.type,uploaded:Date.now(),user:S.user,category});
+      await writeJob(j);await logAct('uploaded '+file.name+' ('+DOC_CAT[category].label+') to',j.name);
+      closeModal();render();toast(DOC_CAT[category].label+' uploaded');
+    };
+    r.readAsDataURL(file);
+  };
+}
+
 function showJobPickerModal(onPick){
   const all=jobs();
   if(all.length===0){toast('Add a job first','');return}
@@ -2195,74 +3371,588 @@ function showSendInvoiceModal(j,inv){
   $('em-print').onclick=()=>printInvoice(j,inv);
 }
 
-// ══ Reports ══
-function renderReports(){
-  const all=jobs();
-  const range=parseInt(S.reportRange||'90',10);
-  const cutoff=range>0?Date.now()-range*86400000:0;
-  const inRange=all.filter(j=>(j.created||0)>=cutoff);
-  // Win rate: complete vs (complete + lead-but-not-converted-and-not-on-hold-recently). Simpler: of jobs that left "lead" stage, how many became "complete"?
-  const totalLeads=all.filter(j=>j.created>=cutoff).length;
-  const won=all.filter(j=>j.status==='complete'&&(j.created||0)>=cutoff).length;
-  const lost=all.filter(j=>j.status==='hold'&&(j.created||0)>=cutoff).length;
-  const open=all.filter(j=>(j.status==='lead'||j.status==='active')&&(j.created||0)>=cutoff).length;
-  const decided=won+lost;
-  const winRate=decided>0?(won/decided)*100:0;
-  const conversionRate=totalLeads>0?(won/totalLeads)*100:0;
-
-  // Financial
-  const totalValue=inRange.reduce((s,j)=>s+Number(j.value||0),0);
-  const revenue=inRange.filter(j=>j.status==='complete').reduce((s,j)=>s+Number(j.invoiced||j.value||0),0);
-  const collected=inRange.reduce((s,j)=>s+Number(j.paid||0),0);
-  const avgDeal=won>0?revenue/won:0;
-  const pipeline=inRange.filter(j=>j.status!=='complete'&&j.status!=='hold').reduce((s,j)=>s+Number(j.value||0),0);
-
-  // Monthly revenue chart — last 6 months
-  const months=[];
+// ══ Time Tracking ══
+// Each entry links to a job (→ client) and a date. Multiple entries per day across
+// different jobs are fully supported — that's how a crew at 2+ sites in one day is logged.
+function allTime(){return Object.values(S.time||{})}
+function timeForJob(jobId){return allTime().filter(t=>t.jobId===jobId)}
+function parseHHMM(s){if(!s||!/^\d{1,2}:\d{2}$/.test(s))return null;const[h,m]=s.split(':').map(Number);return h*60+m}
+function entryHours(t){
+  const a=parseHHMM(t.start),b=parseHHMM(t.end);
+  if(a!=null&&b!=null){let diff=b-a;if(diff<0)diff+=24*60;/*overnight*/return Math.round((diff/60)*100)/100}
+  return Math.round((Number(t.hours||0))*100)/100;
+}
+function fmtHours(h){const v=Math.round(h*100)/100;return v.toLocaleString(undefined,{maximumFractionDigits:2})+'h'}
+function fmt12(hhmm){const m=parseHHMM(hhmm);if(m==null)return'';let h=Math.floor(m/60),min=m%60;const ap=h>=12?'PM':'AM';h=h%12;if(h===0)h=12;return h+(min?':'+String(min).padStart(2,'0'):'')+ap}
+function weekStart(d){const x=new Date(d);x.setHours(0,0,0,0);x.setDate(x.getDate()-x.getDay());return x} // Sunday start
+function timeInRange(dateStr,range){
+  if(!dateStr)return range==='all';
+  if(range==='all')return true;
+  const d=new Date(dateStr+(dateStr.length===10?'T00:00:00':''));
   const now=new Date();
-  for(let i=5;i>=0;i--){
-    const d=new Date(now.getFullYear(),now.getMonth()-i,1);
-    months.push({label:d.toLocaleDateString(undefined,{month:'short'}),key:d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'),val:0});
-  }
-  all.forEach(j=>{
-    if(j.status!=='complete')return;
-    const t=j.completedAt||j.created;
-    if(!t)return;
-    const d=new Date(t);
-    const k=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
-    const m=months.find(x=>x.key===k);
-    if(m)m.val+=Number(j.invoiced||j.value||0);
-  });
-  const maxMonth=Math.max(1,...months.map(m=>m.val));
+  if(range==='week'){const ws=weekStart(now);const we=new Date(ws);we.setDate(we.getDate()+7);return d>=ws&&d<we}
+  if(range==='month')return d.getFullYear()===now.getFullYear()&&d.getMonth()===now.getMonth();
+  if(range==='ytd')return d.getFullYear()===now.getFullYear();
+  return true;
+}
 
-  // Lead source ROI
-  const bySource={};
-  all.forEach(j=>{
-    if((j.created||0)<cutoff)return;
-    const s=j.leadSource||'Unknown';
-    bySource[s]=bySource[s]||{total:0,won:0,value:0,revenue:0};
-    bySource[s].total++;
-    bySource[s].value+=Number(j.value||0);
-    if(j.status==='complete'){bySource[s].won++;bySource[s].revenue+=Number(j.invoiced||j.value||0)}
-  });
-  const sources=Object.entries(bySource).sort((a,b)=>b[1].revenue-a[1].revenue);
+function renderTimeView(){
+  const range=S.timeRange||'week';
+  const all=allTime();
+  let inRangeList=all.filter(t=>timeInRange(t.date,range));
+  // Stats over range
+  const totalHours=inRangeList.reduce((s,t)=>s+entryHours(t),0);
+  const billableHours=inRangeList.filter(t=>t.billable!==false).reduce((s,t)=>s+entryHours(t),0);
+  const workers=new Set(inRangeList.map(t=>t.worker).filter(Boolean));
+  const daysWorked=new Set(inRangeList.map(t=>t.date).filter(Boolean)).size;
 
-  // Team leaderboard
-  const byMember={};
-  all.forEach(j=>{
-    if((j.created||0)<cutoff)return;
-    const m=j.assigned||'Unassigned';
-    byMember[m]=byMember[m]||{name:m,jobs:0,won:0,revenue:0};
-    byMember[m].jobs++;
-    if(j.status==='complete'){byMember[m].won++;byMember[m].revenue+=Number(j.invoiced||j.value||0)}
+  // By client/job
+  const byJob={};
+  inRangeList.forEach(t=>{
+    const j=S.jobs[t.jobId];
+    const key=t.jobId||'__none__';
+    const cust=j?(j.customerName||'(no customer)'):'(deleted job)';
+    byJob[key]=byJob[key]||{name:j?j.name:'(deleted job)',cust,hours:0,count:0};
+    byJob[key].hours+=entryHours(t);byJob[key].count++;
   });
-  const leaderboard=Object.values(byMember).sort((a,b)=>b.revenue-a.revenue).slice(0,8);
+  const jobRows=Object.entries(byJob).sort((a,b)=>b[1].hours-a[1].hours);
+  const maxJobHours=jobRows.reduce((m,[,v])=>Math.max(m,v.hours),0)||1;
 
-  // Donut chart for win rate
-  const circumference=2*Math.PI*52;
-  const donutDash=(winRate/100)*circumference;
+  // By worker
+  const byWorker={};
+  inRangeList.forEach(t=>{
+    const w=t.worker||'Unassigned';
+    byWorker[w]=byWorker[w]||{hours:0,count:0};
+    byWorker[w].hours+=entryHours(t);byWorker[w].count++;
+  });
+  const workerRows=Object.entries(byWorker).sort((a,b)=>b[1].hours-a[1].hours);
+
+  // Apply secondary filters to the list
+  let shown=inRangeList.slice();
+  if(S.timeJobFilter!=='all')shown=shown.filter(t=>t.jobId===S.timeJobFilter);
+  if(S.timeWorkerFilter!=='all')shown=shown.filter(t=>(t.worker||'Unassigned')===S.timeWorkerFilter);
+  // Group by date desc, entries within a day by start time
+  shown.sort((a,b)=>(b.date||'').localeCompare(a.date||'')||((parseHHMM(a.start)??0)-(parseHHMM(b.start)??0)));
+  const byDate={};
+  shown.forEach(t=>{(byDate[t.date]=byDate[t.date]||[]).push(t)});
+  const dateKeys=Object.keys(byDate).sort((a,b)=>b.localeCompare(a));
+
+  const ranges=[['week','This Week'],['month','This Month'],['ytd','Year to Date'],['all','All Time']];
+  const jobOpts=Object.values(S.jobs).map(j=>`<option value="${esc(j.id)}" ${S.timeJobFilter===j.id?'selected':''}>${esc(j.name)}${j.customerName?' — '+esc(j.customerName):''}</option>`).join('');
+  const workerOpts=Array.from(new Set(all.map(t=>t.worker).filter(Boolean))).sort().map(w=>`<option value="${esc(w)}" ${S.timeWorkerFilter===w?'selected':''}>${esc(w)}</option>`).join('');
 
   return `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+      <div>
+        <div style="font-size:11px;color:var(--text-3);text-transform:uppercase;letter-spacing:0.06em;font-weight:700">Labor</div>
+        <div style="font-size:20px;font-weight:700;margin-top:2px">Time Tracking</div>
+      </div>
+      <button class="btn-add" id="btn-new-time" aria-label="Log time">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+        Log Time
+      </button>
+    </div>
+
+    <div class="filter-row" style="margin-bottom:12px">
+      ${ranges.map(([k,lbl])=>`<div class="filter-chip ${range===k?'active':''}" data-time-range="${k}">${lbl}</div>`).join('')}
+    </div>
+
+    <div class="kpi-grid">
+      <div class="kpi-card accent"><div class="kpi-label">Total Hours</div><div class="kpi-value">${fmtHours(totalHours)}</div><div class="kpi-sub">${inRangeList.length} entr${inRangeList.length!==1?'ies':'y'}</div></div>
+      <div class="kpi-card"><div class="kpi-label">Billable Hours</div><div class="kpi-value">${fmtHours(billableHours)}</div><div class="kpi-sub">${totalHours>0?Math.round(billableHours/totalHours*100):0}% of total</div></div>
+      <div class="kpi-card"><div class="kpi-label">Days Worked</div><div class="kpi-value">${daysWorked}</div><div class="kpi-sub">${daysWorked>0?fmtHours(totalHours/daysWorked)+' avg/day':'—'}</div></div>
+      <div class="kpi-card"><div class="kpi-label">Crew Members</div><div class="kpi-value">${workers.size}</div><div class="kpi-sub">logged this range</div></div>
+    </div>
+
+    ${jobRows.length?`<div class="report-section">
+      <div class="report-hd">Hours by Job / Client <span class="kpi-sub">where labor is going</span></div>
+      <div class="hbar-list">
+        ${jobRows.slice(0,10).map(([key,v],i)=>{
+          const color=CUSTOMER_BAR_COLORS[i%CUSTOMER_BAR_COLORS.length];
+          const pct=(v.hours/maxJobHours)*100;
+          return `<div class="hbar-row">
+            <div class="hbar-top">
+              <div class="hbar-name">${esc(v.name)}<small>${esc(v.cust)}</small></div>
+              <div class="hbar-val">${fmtHours(v.hours)}</div>
+            </div>
+            <div class="hbar-track"><div class="hbar-fill" style="width:${pct.toFixed(2)}%;background:${color}"></div></div>
+            <div class="hbar-meta"><span>${v.count} entr${v.count!==1?'ies':'y'}</span><span>${(v.hours/totalHours*100||0).toFixed(0)}% of hours</span></div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`:''}
+
+    ${workerRows.length?`<div class="report-section">
+      <div class="report-hd">Hours by Crew Member</div>
+      <div class="leaderboard">
+        ${workerRows.slice(0,8).map(([name,v],i)=>{
+          const rankCls=i===0?'gold':i===1?'silver':i===2?'bronze':'';
+          return `<div class="lb-row">
+            <div class="lb-rank ${rankCls}">${i+1}</div>
+            <div class="member-ava" style="width:30px;height:30px;font-size:12px">${initials(name)}</div>
+            <div class="lb-name">${esc(name)}<div style="font-size:11px;color:var(--text-3);font-weight:500">${v.count} entr${v.count!==1?'ies':'y'}</div></div>
+            <div class="lb-stats"><strong>${fmtHours(v.hours)}</strong><div>hours</div></div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`:''}
+
+    <div class="toolbar" style="margin-top:8px">
+      <select class="form-select" id="time-jobfilter" style="flex:1;min-width:140px;font-size:13px;padding:8px 10px" aria-label="Filter by job">
+        <option value="all" ${S.timeJobFilter==='all'?'selected':''}>All jobs</option>
+        ${jobOpts}
+      </select>
+      <select class="form-select" id="time-workerfilter" style="max-width:170px;font-size:13px;padding:8px 10px" aria-label="Filter by crew member">
+        <option value="all" ${S.timeWorkerFilter==='all'?'selected':''}>All crew</option>
+        ${workerOpts}
+      </select>
+    </div>
+
+    ${dateKeys.length===0?`<div class="empty" style="padding:44px 20px">
+      <div class="empty-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div>
+      <h3>${all.length===0?'No time logged yet':'No entries in range'}</h3>
+      <p>${all.length===0?'Tap "Log Time" to record crew hours against a job. You can add multiple entries per day for different jobs.':'Try a different range or filter.'}</p>
+    </div>`
+      :dateKeys.map(dk=>{
+        const entries=byDate[dk];
+        const dayHours=entries.reduce((s,t)=>s+entryHours(t),0);
+        const jobsThatDay=new Set(entries.map(e=>e.jobId)).size;
+        return `<div class="time-day">
+          <div class="time-day-hd">
+            <div>${fmtDate(dk)}${jobsThatDay>1?` <span class="time-multi">${jobsThatDay} jobs</span>`:''}</div>
+            <div class="time-day-total">${fmtHours(dayHours)}</div>
+          </div>
+          ${entries.map(t=>{
+            const j=S.jobs[t.jobId];
+            const rangeTxt=(t.start&&t.end)?fmt12(t.start)+' – '+fmt12(t.end):'';
+            return `<div class="time-entry" data-time-open="${esc(t.id)}">
+              <div class="time-entry-bar"></div>
+              <div class="time-entry-main">
+                <div class="time-entry-job">${j?esc(j.name):'(deleted job)'}${j&&j.customerName?` <span class="time-entry-cust">${esc(j.customerName)}</span>`:''}</div>
+                <div class="time-entry-meta">${rangeTxt?rangeTxt+' · ':''}${t.worker?esc(t.worker):'Unassigned'}${t.billable===false?' · <span style="color:var(--text-3)">non-billable</span>':''}${t.notes?' · '+esc(t.notes.slice(0,40))+(t.notes.length>40?'…':''):''}</div>
+              </div>
+              <div class="time-entry-amt">
+                <div class="time-entry-hrs">${fmtHours(entryHours(t))}</div>
+              </div>
+            </div>`;
+          }).join('')}
+        </div>`;
+      }).join('')}
+  `;
+}
+
+function showTimeModal(timeId,presetJobId,presetDate){
+  const editing=timeId&&S.time[timeId];
+  const t=editing?JSON.parse(JSON.stringify(S.time[timeId])):{id:'t_'+Date.now()+'_'+Math.random().toString(36).slice(2,6),jobId:presetJobId||'',date:presetDate||dateKey(new Date()),start:'',end:'',hours:'',worker:S.user||'',billable:true,notes:'',created:Date.now(),user:S.user};
+  if(Object.keys(S.jobs).length===0){toast('Add a job first','');return}
+  const jobOpts=`<option value="">— Select a job —</option>`+Object.values(S.jobs).map(j=>`<option value="${esc(j.id)}" ${t.jobId===j.id?'selected':''}>${esc(j.name)}${j.customerName?' — '+esc(j.customerName):''}</option>`).join('');
+  const memberSet=Array.from(new Set([...(S.members||[]),...(S.user?[S.user]:[]),...allTime().map(x=>x.worker).filter(Boolean)]));
+  const workerOpts=`<option value="">— Crew member —</option>`+memberSet.sort().map(w=>`<option value="${esc(w)}" ${t.worker===w?'selected':''}>${esc(w)}</option>`).join('');
+  $('modal-root').innerHTML=`<div class="modal-bd" id="mbd" role="dialog" aria-modal="true" aria-label="${editing?'Edit':'Log'} time"><div class="modal"><div class="modal-handle"></div>
+    <div class="modal-head"><div class="modal-title">${editing?'Edit Time Entry':'Log Time'}</div><button class="modal-close" id="mc" aria-label="Close"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button></div>
+    <div class="modal-body">
+      <div class="form-group"><label class="form-label" for="tm-job">Job / Client</label>
+        <select class="form-select" id="tm-job">${jobOpts}</select>
+      </div>
+      <div class="form-group"><label class="form-label" for="tm-date">Date</label>
+        <input type="date" class="form-input" id="tm-date" value="${esc(t.date||'')}">
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div class="form-group"><label class="form-label" for="tm-start">Start</label>
+          <input type="time" class="form-input" id="tm-start" value="${esc(t.start||'')}">
+        </div>
+        <div class="form-group"><label class="form-label" for="tm-end">End</label>
+          <input type="time" class="form-input" id="tm-end" value="${esc(t.end||'')}">
+        </div>
+      </div>
+      <div class="form-group"><label class="form-label" for="tm-hours">Hours <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text-3)">(auto from start/end, or enter manually)</span></label>
+        <input type="number" step="0.25" min="0" class="form-input" id="tm-hours" value="${esc(t.hours||'')}" placeholder="0.0" inputmode="decimal">
+        <div id="tm-calc" style="font-size:11.5px;color:var(--green-700);margin-top:6px;font-weight:600"></div>
+      </div>
+      <div class="form-group"><label class="form-label" for="tm-worker">Crew Member</label>
+        <input list="tm-worker-list" class="form-input" id="tm-worker" value="${esc(t.worker||'')}" placeholder="Name">
+        <datalist id="tm-worker-list">${memberSet.map(w=>`<option value="${esc(w)}">`).join('')}</datalist>
+      </div>
+      <div class="form-group">
+        <label style="display:flex;align-items:center;gap:8px;font-size:13.5px;cursor:pointer">
+          <input type="checkbox" id="tm-billable" ${t.billable!==false?'checked':''} style="width:18px;height:18px;cursor:pointer">
+          <span><strong>Billable</strong> — counts toward billable labor</span>
+        </label>
+      </div>
+      <div class="form-group"><label class="form-label" for="tm-notes">Notes</label>
+        <textarea class="form-textarea" id="tm-notes" rows="2" placeholder="What was done">${esc(t.notes||'')}</textarea>
+      </div>
+      <div style="display:flex;gap:8px;justify-content:space-between;margin-top:8px;flex-wrap:wrap">
+        ${editing?`<button class="docs-menu-foot-btn" id="tm-delete" style="color:var(--red);border-color:var(--red)">Delete</button>`:'<div></div>'}
+        <div style="display:flex;gap:8px">
+          ${!editing?`<button class="docs-menu-foot-btn" id="tm-save-another" title="Save and log another entry for the same day — handy for a second job">Save + Add Another</button>`:''}
+          <button class="docs-menu-foot-btn" id="tm-cancel">Cancel</button>
+          <button class="btn-add" id="tm-save">${editing?'Save':'Log Time'}</button>
+        </div>
+      </div>
+    </div>
+  </div></div>`;
+  const calc=()=>{
+    const a=parseHHMM($('tm-start').value),b=parseHHMM($('tm-end').value);
+    if(a!=null&&b!=null){let d=b-a;if(d<0)d+=1440;const h=Math.round(d/60*100)/100;$('tm-hours').value=h;$('tm-calc').textContent='= '+fmtHours(h)+(parseHHMM($('tm-end').value)<parseHHMM($('tm-start').value)?' (overnight)':'')}
+    else $('tm-calc').textContent='';
+  };
+  $('tm-start').onchange=calc;$('tm-end').onchange=calc;calc();
+  $('mc').onclick=$('tm-cancel').onclick=closeModal;
+  $('mbd').onclick=e=>{if(e.target===e.currentTarget)closeModal()};
+  if(editing){
+    $('tm-delete').onclick=async()=>{
+      if(!confirm('Delete this time entry? This can be undone right after.'))return;
+      const backup=JSON.parse(JSON.stringify(S.time[timeId]));
+      await deleteTimeDB(timeId);
+      const jn=S.jobs[backup.jobId]?S.jobs[backup.jobId].name:'';
+      await logAct('deleted a time entry'+(jn?' from':''),jn);
+      closeModal();render();
+      UNDO.push(async()=>{await writeTime(backup);render();toast('Time entry restored')});
+      toast('Time entry deleted','undo',()=>{UNDO.pop()()});
+    };
+  }
+  const collect=()=>{
+    const jobId=$('tm-job').value;
+    const start=$('tm-start').value,end=$('tm-end').value;
+    let hours=parseFloat($('tm-hours').value)||0;
+    if((!hours||hours<=0)&&parseHHMM(start)!=null&&parseHHMM(end)!=null){let d=parseHHMM(end)-parseHHMM(start);if(d<0)d+=1440;hours=Math.round(d/60*100)/100}
+    return {
+      id:t.id,jobId,date:$('tm-date').value||dateKey(new Date()),
+      start,end,hours,
+      worker:$('tm-worker').value.trim(),
+      billable:$('tm-billable').checked,
+      notes:$('tm-notes').value.trim(),
+      created:t.created||Date.now(),updated:Date.now(),user:S.user||t.user||'',
+    };
+  };
+  const save=async(addAnother)=>{
+    const rec=collect();
+    if(!rec.jobId){toast('Pick a job','');return}
+    if(entryHours(rec)<=0){toast('Enter hours or a start/end time','');return}
+    await writeTime(rec);
+    const j=S.jobs[rec.jobId];
+    await logAct((editing?'edited':'logged')+' '+fmtHours(entryHours(rec))+(j?' on':''),j?j.name:'');
+    if(addAnother){
+      // Keep same date, clear job/time so the next site can be entered fast
+      toast('Saved — add the next job');
+      showTimeModal(null,'',rec.date);
+    }else{closeModal();render();toast(editing?'Time updated':'Time logged')}
+  };
+  $('tm-save').onclick=()=>save(false);
+  if(!editing)$('tm-save-another').onclick=()=>save(true);
+}
+
+// ══ Clients ══
+// Clients are derived by grouping jobs on customer name (case-insensitive).
+function getAllClients(){
+  const map={};
+  Object.values(S.jobs).forEach(j=>{
+    const raw=(j.customerName||'').trim();
+    if(!raw)return; // skip jobs with no customer
+    const key=raw.toLowerCase();
+    if(!map[key]){
+      map[key]={key,name:raw,jobs:[],phone:'',email:'',address:'',
+        revenue:0,pipeline:0,invoiced:0,paid:0,outstanding:0,
+        firstJob:Infinity,lastJob:0,statuses:{lead:0,active:0,complete:0,hold:0},
+        invoiceCount:0,receiptTotal:0,leadSource:''};
+    }
+    const c=map[key];
+    c.jobs.push(j);
+    if(!c.phone&&j.customerPhone)c.phone=j.customerPhone;
+    if(!c.email&&j.customerEmail)c.email=j.customerEmail;
+    if(!c.address&&j.address)c.address=j.address;
+    if(!c.leadSource&&j.leadSource)c.leadSource=j.leadSource;
+    c.firstJob=Math.min(c.firstJob,j.created||Infinity);
+    c.lastJob=Math.max(c.lastJob,j.created||0);
+    c.statuses[j.status]=(c.statuses[j.status]||0)+1;
+    c.pipeline+=(j.status!=='complete'&&j.status!=='hold')?Number(j.value||0):0;
+    if(j.status==='complete')c.revenue+=jobRevenue(j);
+    const inv=invoiceTotals(j);
+    if(inv){c.invoiced+=inv.total;c.paid+=inv.paid;c.outstanding+=inv.balance}
+    c.invoiceCount+=(j.invoices||[]).length;
+    c.receiptTotal+=jobReceiptCosts(j);
+  });
+  return Object.values(map);
+}
+
+function renderClients(){
+  const clients=getAllClients();
+  const q=(S.clientSearch||'').toLowerCase();
+  let shown=clients.filter(c=>!q||((c.name+' '+c.phone+' '+c.email+' '+c.address).toLowerCase().includes(q)));
+  const sortFn={
+    revenue:(a,b)=>b.revenue-a.revenue,
+    recent:(a,b)=>b.lastJob-a.lastJob,
+    name:(a,b)=>a.name.localeCompare(b.name),
+    jobs:(a,b)=>b.jobs.length-a.jobs.length,
+    outstanding:(a,b)=>b.outstanding-a.outstanding,
+  }[S.clientSort]||((a,b)=>b.revenue-a.revenue);
+  shown.sort(sortFn);
+
+  const totalRev=clients.reduce((s,c)=>s+c.revenue,0);
+  const totalOut=clients.reduce((s,c)=>s+c.outstanding,0);
+  const repeat=clients.filter(c=>c.jobs.length>=2).length;
+
+  return `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+      <div>
+        <div style="font-size:11px;color:var(--text-3);text-transform:uppercase;letter-spacing:0.06em;font-weight:700">Relationships</div>
+        <div style="font-size:20px;font-weight:700;margin-top:2px">Clients</div>
+      </div>
+      <button class="btn-add" id="btn-new-client" aria-label="Add new client">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+        New Client
+      </button>
+    </div>
+
+    <div class="kpi-grid">
+      <div class="kpi-card accent"><div class="kpi-label">Total Clients</div><div class="kpi-value">${clients.length}</div><div class="kpi-sub">${repeat} repeat</div></div>
+      <div class="kpi-card"><div class="kpi-label">Lifetime Revenue</div><div class="kpi-value">${money(totalRev)}</div><div class="kpi-sub">all clients</div></div>
+      <div class="kpi-card"><div class="kpi-label">Outstanding</div><div class="kpi-value" style="color:${totalOut>0?'var(--orange)':'var(--text)'}">${money(totalOut)}</div><div class="kpi-sub">across clients</div></div>
+      <div class="kpi-card"><div class="kpi-label">Avg Revenue</div><div class="kpi-value">${money(clients.length?totalRev/clients.length:0)}</div><div class="kpi-sub">per client</div></div>
+    </div>
+
+    <div class="toolbar">
+      <div class="search-wrap">
+        <div class="search-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 15.803a7.5 7.5 0 0010.607 0z"/></svg></div>
+        <input class="search" id="client-search" placeholder="Search clients, phone, email…" value="${esc(S.clientSearch||'')}" aria-label="Search clients">
+      </div>
+      <select class="form-select" id="client-sort" style="max-width:170px;font-size:13px;padding:8px 10px" aria-label="Sort clients">
+        <option value="revenue" ${S.clientSort==='revenue'?'selected':''}>Top revenue</option>
+        <option value="recent" ${S.clientSort==='recent'?'selected':''}>Most recent</option>
+        <option value="jobs" ${S.clientSort==='jobs'?'selected':''}>Most jobs</option>
+        <option value="outstanding" ${S.clientSort==='outstanding'?'selected':''}>Outstanding</option>
+        <option value="name" ${S.clientSort==='name'?'selected':''}>Name (A–Z)</option>
+      </select>
+    </div>
+
+    ${shown.length===0?`<div class="empty" style="padding:48px 20px">
+      <div class="empty-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z"/></svg></div>
+      <h3>${clients.length===0?'No clients yet':'No matches'}</h3>
+      <p>${clients.length===0?'Clients appear automatically when you add a job with a customer name. Add your first job to get started.':'Try a different search.'}</p>
+    </div>`
+      :`<div class="client-list">
+        ${shown.map(c=>{
+          const activeCnt=c.statuses.active||0;
+          return `<div class="client-card" data-client="${esc(c.key)}">
+            <div class="client-ava">${initials(c.name)}</div>
+            <div class="client-main">
+              <div class="client-name">${esc(c.name)}</div>
+              <div class="client-sub">${c.jobs.length} job${c.jobs.length!==1?'s':''}${activeCnt?' · '+activeCnt+' active':''}${c.phone?' · '+esc(c.phone):c.email?' · '+esc(c.email):''}</div>
+            </div>
+            <div class="client-stats">
+              <div class="client-rev">${money(c.revenue)}</div>
+              <div class="client-rev-lbl">${c.outstanding>0.005?'<span style="color:var(--orange)">'+money(c.outstanding)+' due</span>':'lifetime'}</div>
+            </div>
+            <svg class="client-chev" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5"/></svg>
+          </div>`;
+        }).join('')}
+      </div>`}
+  `;
+}
+
+function renderClientDetail(key){
+  const client=getAllClients().find(c=>c.key===key);
+  const back=`<button class="detail-back" id="btn-client-back"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"/></svg>All Clients</button>`;
+  if(!client)return back+`<p style="color:var(--text-2)">Client not found.</p>`;
+  const c=client;
+  const jobsSorted=c.jobs.slice().sort((a,b)=>(b.created||0)-(a.created||0));
+  const avgJob=c.statuses.complete?c.revenue/c.statuses.complete:0;
+  const tenure=c.firstJob<Infinity?Math.max(1,Math.round((Date.now()-c.firstJob)/86400000)):0;
+
+  // Invoices across this client's jobs
+  const invoices=[];
+  c.jobs.forEach(j=>(j.invoices||[]).forEach(inv=>invoices.push({inv,job:j})));
+  invoices.sort((a,b)=>(b.inv.date||'').localeCompare(a.inv.date||''));
+  // Receipts across this client's jobs
+  const recs=[];
+  c.jobs.forEach(j=>receiptsForJob(j.id).forEach(r=>recs.push({r,job:j})));
+  recs.sort((a,b)=>(b.r.date||'').localeCompare(a.r.date||''));
+  const recTotal=recs.reduce((s,x)=>s+Number(x.r.amount||0),0);
+  // Communications across this client's jobs
+  const comms=[];
+  c.jobs.forEach(j=>(j.comms||[]).forEach(m=>comms.push({m,job:j})));
+  comms.sort((a,b)=>(b.m.time||0)-(a.m.time||0));
+  // Time entries across this client's jobs
+  const timeEntries=[];
+  c.jobs.forEach(j=>timeForJob(j.id).forEach(t=>timeEntries.push({t,job:j})));
+  timeEntries.sort((a,b)=>(b.t.date||'').localeCompare(a.t.date||''));
+  const clientHours=timeEntries.reduce((s,x)=>s+entryHours(x.t),0);
+
+  const tab=S.clientTab||'overview';
+  const tabs=[
+    ['overview','Overview'],
+    ['jobs','Jobs',c.jobs.length],
+    ['invoices','Invoices',invoices.length],
+    ['receipts','Receipts',recs.length],
+    ['time','Time',timeEntries.length],
+    ['comms','Comms',comms.length],
+  ];
+
+  const statusChip=(j)=>`<span class="status-pill ${spClass(j.status)}">${spLabel(j.status)}</span>`;
+
+  let body='';
+  if(tab==='overview'){
+    body=`
+      <div class="report-section">
+        <div class="report-hd">Contact</div>
+        <div class="client-contact-grid">
+          ${c.phone?`<a class="client-contact" href="tel:${esc(c.phone)}"><div class="cc-ico"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 01-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z"/></svg></div><div><div class="cc-lbl">Phone</div><div class="cc-val">${esc(c.phone)}</div></div></a>`:''}
+          ${c.email?`<a class="client-contact" href="mailto:${esc(c.email)}"><div class="cc-ico"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"/></svg></div><div><div class="cc-lbl">Email</div><div class="cc-val">${esc(c.email)}</div></div></a>`:''}
+          ${c.address?`<a class="client-contact" href="https://maps.google.com/?q=${encodeURIComponent(c.address)}" target="_blank"><div class="cc-ico"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z"/></svg></div><div><div class="cc-lbl">Address</div><div class="cc-val">${esc(c.address)}</div></div></a>`:''}
+          ${c.leadSource?`<div class="client-contact" style="cursor:default"><div class="cc-ico"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5"/></svg></div><div><div class="cc-lbl">Lead Source</div><div class="cc-val">${esc(c.leadSource)}</div></div></div>`:''}
+        </div>
+        ${!c.phone&&!c.email&&!c.address?'<p style="font-size:12.5px;color:var(--text-3)">No contact info on file. Add it on any of this client\'s jobs.</p>':''}
+      </div>
+
+      <div class="report-section">
+        <div class="report-hd">Job Mix</div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px">
+          ${[['lead','Leads'],['active','Active'],['complete','Completed'],['hold','On Hold']].map(([k,l])=>`
+            <div class="client-mix-chip"><span class="status-dot ${sdClass(k)}" style="position:static;border:none;width:8px;height:8px"></span>${l} <strong>${c.statuses[k]||0}</strong></div>
+          `).join('')}
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:18px;margin-top:14px;font-size:12.5px;color:var(--text-2)">
+          <div><div style="color:var(--text-3);font-size:11px">First job</div><strong>${c.firstJob<Infinity?fmtDate(new Date(c.firstJob).toISOString().slice(0,10)):'—'}</strong></div>
+          <div><div style="color:var(--text-3);font-size:11px">Last job</div><strong>${c.lastJob?fmtDate(new Date(c.lastJob).toISOString().slice(0,10)):'—'}</strong></div>
+          <div><div style="color:var(--text-3);font-size:11px">Client for</div><strong>${tenure>=365?(tenure/365).toFixed(1)+' yr':tenure+' days'}</strong></div>
+          <div><div style="color:var(--text-3);font-size:11px">Tracked expenses</div><strong>${money(c.receiptTotal)}</strong></div>
+          <div><div style="color:var(--text-3);font-size:11px">Labor logged</div><strong>${fmtHours(clientHours)}</strong></div>
+        </div>
+      </div>
+    `;
+  } else if(tab==='jobs'){
+    body=`<div class="client-section-list">
+      ${jobsSorted.map(j=>{
+        const bal=jobBalance(j);
+        return `<div class="client-row" data-jump-job="${esc(j.id)}">
+          <div class="client-row-main">
+            <div class="client-row-title">${esc(j.name)} ${statusChip(j)}</div>
+            <div class="client-row-sub">${esc(j.address||'No address')}${j.created?' · added '+fmtDate(new Date(j.created).toISOString().slice(0,10)):''}</div>
+          </div>
+          <div class="client-row-amt">${money(jobRevenue(j))}<div class="client-row-amt-sub">${bal>0.005?money(bal)+' due':'—'}</div></div>
+        </div>`;
+      }).join('')}
+    </div>`;
+  } else if(tab==='invoices'){
+    body=invoices.length===0?'<p style="font-size:13px;color:var(--text-3);padding:10px 2px">No invoices for this client yet.</p>'
+      :`<div class="client-section-list">
+        ${invoices.map(({inv,job})=>{
+          const ci=calcInvoice(inv);const st=invoiceStatus(inv);
+          return `<div class="client-row" data-open-inv="${esc(job.id)}|${esc(inv.id)}">
+            <div class="client-row-main">
+              <div class="client-row-title">${esc(inv.number||'(no #)')} <span class="invoice-status ${st}">${st}</span></div>
+              <div class="client-row-sub">${esc(job.name||'')}${inv.date?' · '+fmtDate(inv.date):''}</div>
+            </div>
+            <div class="client-row-amt">${money(ci.total)}<div class="client-row-amt-sub" style="color:${ci.balance>0.005?'var(--orange)':'var(--green-700)'}">${ci.balance>0.005?money(ci.balance)+' due':'paid'}</div></div>
+          </div>`;
+        }).join('')}
+      </div>`;
+  } else if(tab==='receipts'){
+    body=recs.length===0?'<p style="font-size:13px;color:var(--text-3);padding:10px 2px">No receipts linked to this client\'s jobs.</p>'
+      :`<div style="font-size:12.5px;color:var(--text-2);margin-bottom:10px">Total tracked: <strong>${moneyCents(recTotal)}</strong> across ${recs.length} receipt${recs.length!==1?'s':''}</div>
+        <div class="client-section-list">
+        ${recs.map(({r,job})=>{
+          const cat=RECEIPT_CAT[recCat(r)];
+          return `<div class="client-row" data-rec-open="${esc(r.id)}">
+            <div class="client-row-main">
+              <div class="client-row-title"><span class="rec-cat-pill">${esc(cat.label.split(' ')[0])}</span>${esc(r.vendor||'(no vendor)')}</div>
+              <div class="client-row-sub">${esc(job.name||'')}${r.date?' · '+fmtDate(r.date):''}</div>
+            </div>
+            <div class="client-row-amt">${moneyCents(r.amount)}</div>
+          </div>`;
+        }).join('')}
+      </div>`;
+  } else if(tab==='time'){
+    body=timeEntries.length===0?'<p style="font-size:13px;color:var(--text-3);padding:10px 2px">No time logged for this client\'s jobs yet.</p>'
+      :`<div style="font-size:12.5px;color:var(--text-2);margin-bottom:10px">Total labor: <strong>${fmtHours(clientHours)}</strong> across ${timeEntries.length} entr${timeEntries.length!==1?'ies':'y'}</div>
+        <div class="client-section-list">
+        ${timeEntries.map(({t,job})=>{
+          const rangeTxt=(t.start&&t.end)?fmt12(t.start)+' – '+fmt12(t.end):'';
+          return `<div class="client-row" data-time-open="${esc(t.id)}">
+            <div class="client-row-main">
+              <div class="client-row-title">${esc(job.name||'')}</div>
+              <div class="client-row-sub">${fmtDate(t.date)}${rangeTxt?' · '+rangeTxt:''}${t.worker?' · '+esc(t.worker):''}</div>
+            </div>
+            <div class="client-row-amt">${fmtHours(entryHours(t))}</div>
+          </div>`;
+        }).join('')}
+      </div>`;
+  } else if(tab==='comms'){
+    body=comms.length===0?'<p style="font-size:13px;color:var(--text-3);padding:10px 2px">No communications logged for this client.</p>'
+      :`<div class="client-section-list">
+        ${comms.map(({m,job})=>`<div class="client-row" data-jump-job="${esc(job.id)}">
+          <div class="client-row-main">
+            <div class="client-row-title" style="text-transform:capitalize">${esc(m.type||'note')}</div>
+            <div class="client-row-sub">${esc(m.text||'')}</div>
+            <div class="client-row-sub" style="color:var(--text-3)">${esc(job.name||'')}${m.time?' · '+ago(m.time):''}${m.user?' · '+esc(m.user):''}</div>
+          </div>
+        </div>`).join('')}
+      </div>`;
+  }
+
+  return `
+    ${back}
+    <div class="client-hd">
+      <div class="client-hd-ava">${initials(c.name)}</div>
+      <div style="flex:1;min-width:0">
+        <div class="client-hd-name">${esc(c.name)}</div>
+        <div class="client-hd-sub">${c.jobs.length} job${c.jobs.length!==1?'s':''} · client for ${tenure>=365?(tenure/365).toFixed(1)+' yr':tenure+' days'}</div>
+      </div>
+      <div style="display:flex;gap:6px">
+        ${c.phone?`<a class="client-hd-act" href="tel:${esc(c.phone)}" title="Call" aria-label="Call client"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 01-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z"/></svg></a>`:''}
+        ${c.email?`<a class="client-hd-act" href="mailto:${esc(c.email)}" title="Email" aria-label="Email client"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"/></svg></a>`:''}
+      </div>
+    </div>
+
+    <div class="kpi-grid">
+      <div class="kpi-card accent"><div class="kpi-label">Lifetime Revenue</div><div class="kpi-value">${money(c.revenue)}</div><div class="kpi-sub">${c.statuses.complete||0} completed</div></div>
+      <div class="kpi-card"><div class="kpi-label">Avg Job Size</div><div class="kpi-value">${money(avgJob)}</div><div class="kpi-sub">per won job</div></div>
+      <div class="kpi-card"><div class="kpi-label">Outstanding</div><div class="kpi-value" style="color:${c.outstanding>0.005?'var(--orange)':'var(--text)'}">${money(c.outstanding)}</div><div class="kpi-sub">${c.invoiceCount} invoice${c.invoiceCount!==1?'s':''}</div></div>
+      <div class="kpi-card"><div class="kpi-label">Open Pipeline</div><div class="kpi-value">${money(c.pipeline)}</div><div class="kpi-sub">${(c.statuses.lead||0)+(c.statuses.active||0)} open</div></div>
+    </div>
+
+    <div class="detail-tabs" role="tablist" aria-label="Client sections">
+      ${tabs.map(([k,l,n])=>`<button class="detail-tab ${tab===k?'active':''}" role="tab" data-client-tab="${k}">${l}${n!==undefined?' <span style="opacity:0.6">'+n+'</span>':''}</button>`).join('')}
+    </div>
+    ${body}
+  `;
+}
+
+// ══ Reports ══
+// ── Reports: shared helpers ──
+function jobRevenue(j){
+  // Prefer actual invoiced/paid (more accurate when invoices exist); fall back to value (estimate)
+  const inv=invoiceTotals(j);
+  if(inv&&inv.total>0)return inv.total;
+  return Number(j.invoiced||0)||Number(j.value||0);
+}
+function jobReceiptCosts(j){return receiptsForJob(j.id).reduce((s,r)=>s+Number(r.amount||0),0)}
+function jobTotalCosts(j){return Number(j.costs||0)+jobReceiptCosts(j)}
+function jobProfit(j){return jobRevenue(j)-jobTotalCosts(j)}
+function monthKey(t){const d=new Date(t);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')}
+function lastNMonths(n){
+  const out=[];const now=new Date();
+  for(let i=n-1;i>=0;i--){
+    const d=new Date(now.getFullYear(),now.getMonth()-i,1);
+    out.push({label:d.toLocaleDateString(undefined,{month:'short'}),key:d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')});
+  }
+  return out;
+}
+function daysBetween(a,b){return Math.round((new Date(b)-new Date(a))/86400000)}
+
+function renderReports(){
+  const tab=S.reportTab||'overview';
+  const tabs=[
+    ['overview','Overview'],
+    ['pipeline','Pipeline'],
+    ['profit','Job Costing'],
+    ['labor','Labor'],
+    ['invoices','Invoices'],
+    ['customers','Customers'],
+    ['expenses','Expenses'],
+  ];
+  const header=`
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
       <div>
         <div style="font-size:11px;color:var(--text-3);text-transform:uppercase;letter-spacing:0.06em;font-weight:700">Performance</div>
@@ -2272,12 +3962,92 @@ function renderReports(){
         ${[['30','30 days'],['90','90 days'],['365','1 year'],['0','All time']].map(([v,l])=>`<div class="filter-chip ${S.reportRange===v?'active':''}" data-range="${v}">${l}</div>`).join('')}
       </div>
     </div>
+    <div class="detail-tabs" role="tablist" aria-label="Report sections">
+      ${tabs.map(([k,l])=>`<button class="detail-tab ${tab===k?'active':''}" role="tab" data-report-tab="${k}">${l}</button>`).join('')}
+    </div>
+  `;
+  let body='';
+  if(tab==='overview')body=renderReportOverview();
+  else if(tab==='pipeline')body=renderReportPipeline();
+  else if(tab==='profit')body=renderReportProfit();
+  else if(tab==='labor')body=renderReportLabor();
+  else if(tab==='invoices')body=renderReportInvoices();
+  else if(tab==='customers')body=renderReportCustomers();
+  else if(tab==='expenses')body=renderReportExpenses();
+  return header+body;
+}
 
+// Sum hours of time entries whose date falls within the report range
+function laborHoursInRange(cutoff){
+  return allTime().reduce((s,t)=>{
+    if(cutoff>0){
+      if(!t.date)return s;
+      if(new Date(t.date+(t.date.length===10?'T00:00:00':'')).getTime()<cutoff)return s;
+    }
+    return s+entryHours(t);
+  },0);
+}
+
+function renderReportOverview(){
+  const all=jobs();
+  const range=parseInt(S.reportRange||'90',10);
+  const cutoff=range>0?Date.now()-range*86400000:0;
+  const inRange=all.filter(j=>(j.created||0)>=cutoff);
+  const totalLeads=inRange.length;
+  const won=inRange.filter(j=>j.status==='complete').length;
+  const lost=inRange.filter(j=>j.status==='hold').length;
+  const open=inRange.filter(j=>j.status==='lead'||j.status==='active').length;
+  const decided=won+lost;
+  const winRate=decided>0?(won/decided)*100:0;
+  const conversionRate=totalLeads>0?(won/totalLeads)*100:0;
+
+  const completedInRange=inRange.filter(j=>j.status==='complete');
+  const revenue=completedInRange.reduce((s,j)=>s+jobRevenue(j),0);
+  const cogs=completedInRange.reduce((s,j)=>s+jobTotalCosts(j),0);
+  const grossProfit=revenue-cogs;
+  const grossMargin=revenue>0?(grossProfit/revenue)*100:0;
+  const avgDeal=won>0?revenue/won:0;
+
+  // Backlog = remaining contracted value on active jobs (estimate minus already invoiced)
+  const activeJobs=all.filter(j=>j.status==='active');
+  const backlog=activeJobs.reduce((s,j)=>{const it=invoiceTotals(j);const inv=it?it.total:Number(j.invoiced||0);return s+Math.max(0,Number(j.value||0)-inv)},0);
+  // Outstanding AR across everything
+  const outstandingAR=all.reduce((s,j)=>{const it=invoiceTotals(j);return s+(it?it.balance:0)},0);
+  const laborHours=laborHoursInRange(cutoff);
+
+  // Monthly revenue — last 6 months (across all completed jobs, not range-filtered)
+  const months=lastNMonths(6).map(m=>({...m,val:0}));
+  all.forEach(j=>{
+    if(j.status!=='complete')return;
+    const t=j.completedAt||j.created;if(!t)return;
+    const m=months.find(x=>x.key===monthKey(t));
+    if(m)m.val+=jobRevenue(j);
+  });
+  const maxMonth=Math.max(1,...months.map(m=>m.val));
+
+  // Team leaderboard
+  const byMember={};
+  inRange.forEach(j=>{
+    const m=j.assigned||'Unassigned';
+    byMember[m]=byMember[m]||{name:m,jobs:0,won:0,revenue:0};
+    byMember[m].jobs++;
+    if(j.status==='complete'){byMember[m].won++;byMember[m].revenue+=jobRevenue(j)}
+  });
+  const leaderboard=Object.values(byMember).sort((a,b)=>b.revenue-a.revenue).slice(0,8);
+
+  const circumference=2*Math.PI*52;
+  const donutDash=(winRate/100)*circumference;
+
+  return `
     <div class="kpi-grid">
       <div class="kpi-card accent"><div class="kpi-label">Won Revenue</div><div class="kpi-value">${money(revenue)}</div><div class="kpi-sub">${won} job${won!==1?'s':''} completed</div></div>
-      <div class="kpi-card"><div class="kpi-label">Pipeline Value</div><div class="kpi-value">${money(pipeline)}</div><div class="kpi-sub">${open} open</div></div>
-      <div class="kpi-card"><div class="kpi-label">Avg Job Size</div><div class="kpi-value">${money(avgDeal)}</div><div class="kpi-sub">across won jobs</div></div>
-      <div class="kpi-card"><div class="kpi-label">Collected</div><div class="kpi-value">${money(collected)}</div><div class="kpi-sub">${revenue>0?((collected/revenue)*100).toFixed(0):0}% of revenue</div></div>
+      <div class="kpi-card"><div class="kpi-label">Gross Profit</div><div class="kpi-value" style="color:${grossProfit>=0?'var(--green-700)':'var(--red)'}">${money(grossProfit)}</div><div class="kpi-sub">${grossMargin.toFixed(0)}% margin</div></div>
+      <div class="kpi-card"><div class="kpi-label">Backlog</div><div class="kpi-value">${money(backlog)}</div><div class="kpi-sub">${activeJobs.length} active job${activeJobs.length!==1?'s':''}</div></div>
+      <div class="kpi-card"><div class="kpi-label">Outstanding A/R</div><div class="kpi-value" style="color:${outstandingAR>0?'var(--orange)':'var(--text)'}">${money(outstandingAR)}</div><div class="kpi-sub">to collect</div></div>
+      <div class="kpi-card"><div class="kpi-label">Avg Job Size</div><div class="kpi-value">${money(avgDeal)}</div><div class="kpi-sub">won jobs</div></div>
+      <div class="kpi-card"><div class="kpi-label">Win Rate</div><div class="kpi-value">${winRate.toFixed(0)}%</div><div class="kpi-sub">${won}/${decided} decided</div></div>
+      <div class="kpi-card"><div class="kpi-label">Labor Hours</div><div class="kpi-value">${fmtHours(laborHours)}</div><div class="kpi-sub">in range</div></div>
+      <div class="kpi-card"><div class="kpi-label">Open Jobs</div><div class="kpi-value">${open}</div><div class="kpi-sub">leads + active</div></div>
     </div>
 
     <div class="report-section">
@@ -2315,26 +4085,6 @@ function renderReports(){
     </div>
 
     <div class="report-section">
-      <div class="report-hd">Lead Source ROI <span class="kpi-sub">${sources.length} source${sources.length!==1?'s':''}</span></div>
-      ${sources.length===0?'<p style="font-size:13px;color:var(--text-3);padding:4px 0">Set the Lead Source on jobs to see where your best work comes from.</p>'
-        :`<div style="display:flex;flex-direction:column;gap:8px">
-          ${sources.map(([name,s])=>{
-            const rate=s.total>0?(s.won/s.total)*100:0;
-            return `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)">
-              <div style="flex:1;min-width:0">
-                <div style="font-weight:600;font-size:13.5px">${esc(name)}</div>
-                <div style="font-size:11.5px;color:var(--text-3)">${s.total} lead${s.total!==1?'s':''} · ${s.won} won · ${rate.toFixed(0)}% conversion</div>
-              </div>
-              <div style="text-align:right">
-                <div style="font-weight:700;font-size:14px">${money(s.revenue)}</div>
-                <div style="font-size:11px;color:var(--text-3)">${money(s.value)} pipeline</div>
-              </div>
-            </div>`;
-          }).join('')}
-        </div>`}
-    </div>
-
-    <div class="report-section">
       <div class="report-hd">Team Leaderboard <span class="kpi-sub">By revenue</span></div>
       ${leaderboard.length===0?'<p style="font-size:13px;color:var(--text-3);padding:4px 0">Assign jobs to team members to see rankings.</p>'
         :`<div class="leaderboard">
@@ -2348,6 +4098,667 @@ function renderReports(){
             </div>`;
           }).join('')}
         </div>`}
+    </div>
+  `;
+}
+
+function renderReportPipeline(){
+  const all=jobs();
+  const range=parseInt(S.reportRange||'90',10);
+  const cutoff=range>0?Date.now()-range*86400000:0;
+  const inRange=all.filter(j=>(j.created||0)>=cutoff);
+
+  // Stage funnel — count + value at each stage
+  const stageData=STAGES.map(st=>({stage:st,count:0,value:0}));
+  all.forEach(j=>{
+    const st=jobStage(j);
+    const d=stageData.find(x=>x.stage===st);
+    if(d){d.count++;d.value+=Number(j.value||0)}
+  });
+  const maxStage=Math.max(1,...stageData.map(s=>s.count));
+
+  // Pipeline value (open, not complete/hold) and backlog (active, contracted)
+  const pipelineValue=all.filter(j=>j.status==='lead').reduce((s,j)=>s+Number(j.value||0),0);
+  const backlog=all.filter(j=>j.status==='active').reduce((s,j)=>{const it=invoiceTotals(j);const inv=it?it.total:Number(j.invoiced||0);return s+Math.max(0,Number(j.value||0)-inv)},0);
+  const totalOpenValue=all.filter(j=>j.status!=='complete'&&j.status!=='hold').reduce((s,j)=>s+Number(j.value||0),0);
+
+  // Conversion (range)
+  const won=inRange.filter(j=>j.status==='complete').length;
+  const lost=inRange.filter(j=>j.status==='hold').length;
+  const decided=won+lost;
+  const winRate=decided>0?(won/decided)*100:0;
+
+  // Avg days to close (lead created → completed)
+  const closeDurations=all.filter(j=>j.status==='complete'&&j.created&&j.completedAt).map(j=>Math.round((j.completedAt-j.created)/86400000)).filter(d=>d>=0&&d<3650);
+  const avgClose=closeDurations.length?Math.round(closeDurations.reduce((a,b)=>a+b,0)/closeDurations.length):0;
+
+  // Lead source ROI
+  const bySource={};
+  inRange.forEach(j=>{
+    const s=j.leadSource||'Unknown';
+    bySource[s]=bySource[s]||{total:0,won:0,value:0,revenue:0};
+    bySource[s].total++;bySource[s].value+=Number(j.value||0);
+    if(j.status==='complete'){bySource[s].won++;bySource[s].revenue+=jobRevenue(j)}
+  });
+  const sources=Object.entries(bySource).sort((a,b)=>b[1].revenue-a[1].revenue);
+  const maxSourceRev=Math.max(1,...sources.map(([,s])=>s.revenue));
+
+  return `
+    <div class="kpi-grid">
+      <div class="kpi-card accent"><div class="kpi-label">Open Pipeline</div><div class="kpi-value">${money(totalOpenValue)}</div><div class="kpi-sub">all open jobs</div></div>
+      <div class="kpi-card"><div class="kpi-label">New Leads</div><div class="kpi-value">${money(pipelineValue)}</div><div class="kpi-sub">${all.filter(j=>j.status==='lead').length} in lead stage</div></div>
+      <div class="kpi-card"><div class="kpi-label">Backlog</div><div class="kpi-value">${money(backlog)}</div><div class="kpi-sub">contracted, not billed</div></div>
+      <div class="kpi-card"><div class="kpi-label">Avg Days to Close</div><div class="kpi-value">${avgClose||'—'}</div><div class="kpi-sub">lead → complete</div></div>
+    </div>
+
+    <div class="report-section">
+      <div class="report-hd">Sales Funnel <span class="kpi-sub">jobs by stage</span></div>
+      <div class="funnel">
+        ${stageData.map(s=>{
+          const w=20+((s.count/maxStage)*80);
+          return `<div class="funnel-row">
+            <div class="funnel-label">${esc(s.stage)}</div>
+            <div class="funnel-bar-wrap">
+              <div class="funnel-bar" style="width:${w}%">${s.count}</div>
+            </div>
+            <div class="funnel-val">${money(s.value)}</div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>
+
+    <div class="report-section">
+      <div class="report-hd">Conversion <span class="kpi-sub">in selected range</span></div>
+      <div style="display:flex;gap:18px;flex-wrap:wrap">
+        <div><div class="docs-cat-stat-lbl">Win Rate</div><div style="font-size:22px;font-weight:700;color:var(--green-700)">${winRate.toFixed(0)}%</div><div style="font-size:11px;color:var(--text-3)">${won} won / ${decided} decided</div></div>
+        <div><div class="docs-cat-stat-lbl">Won</div><div style="font-size:22px;font-weight:700">${won}</div><div style="font-size:11px;color:var(--text-3)">completed</div></div>
+        <div><div class="docs-cat-stat-lbl">Lost / Hold</div><div style="font-size:22px;font-weight:700;color:var(--text-3)">${lost}</div><div style="font-size:11px;color:var(--text-3)">stalled</div></div>
+      </div>
+    </div>
+
+    <div class="report-section">
+      <div class="report-hd">Lead Source ROI <span class="kpi-sub">${sources.length} source${sources.length!==1?'s':''}</span></div>
+      ${sources.length===0?'<p style="font-size:13px;color:var(--text-3);padding:4px 0">Set the Lead Source on jobs to see where your best work comes from.</p>'
+        :`<div class="hbar-list">
+          ${sources.map(([name,s],i)=>{
+            const conv=s.total>0?(s.won/s.total)*100:0;
+            const color=CUSTOMER_BAR_COLORS[i%CUSTOMER_BAR_COLORS.length];
+            const pct=(s.revenue/maxSourceRev)*100;
+            return `<div class="hbar-row">
+              <div class="hbar-top">
+                <div class="hbar-name">${esc(name)}<small>${s.total} lead${s.total!==1?'s':''} · ${s.won} won</small></div>
+                <div class="hbar-val">${money(s.revenue)}</div>
+              </div>
+              <div class="hbar-track"><div class="hbar-fill" style="width:${pct.toFixed(2)}%;background:${color}"></div></div>
+              <div class="hbar-meta"><span>${conv.toFixed(0)}% conversion</span><span>${money(s.value)} pipeline</span></div>
+            </div>`;
+          }).join('')}
+        </div>`}
+    </div>
+  `;
+}
+
+function renderReportLabor(){
+  const all=jobs();
+  const range=parseInt(S.reportRange||'90',10);
+  const cutoff=range>0?Date.now()-range*86400000:0;
+  const entries=allTime().filter(t=>{
+    if(cutoff<=0)return true;
+    if(!t.date)return false;
+    return new Date(t.date+(t.date.length===10?'T00:00:00':'')).getTime()>=cutoff;
+  });
+  const totalHours=entries.reduce((s,t)=>s+entryHours(t),0);
+  const billableHours=entries.filter(t=>t.billable!==false).reduce((s,t)=>s+entryHours(t),0);
+  const daysWorked=new Set(entries.map(t=>t.date).filter(Boolean)).size;
+  const workersSet=new Set(entries.map(t=>t.worker).filter(Boolean));
+
+  // Revenue per labor hour — productivity (completed-job revenue in range / hours in range)
+  const revInRange=all.filter(j=>j.status==='complete'&&(cutoff<=0||(j.completedAt||j.created||0)>=cutoff)).reduce((s,j)=>s+jobRevenue(j),0);
+  const revPerHour=totalHours>0?revInRange/totalHours:0;
+
+  // Hours by job/client
+  const byJob={};
+  entries.forEach(t=>{
+    const j=S.jobs[t.jobId];
+    const key=t.jobId||'__none__';
+    byJob[key]=byJob[key]||{name:j?j.name:'(deleted job)',cust:j?(j.customerName||''):'',hours:0,count:0};
+    byJob[key].hours+=entryHours(t);byJob[key].count++;
+  });
+  const jobRows=Object.entries(byJob).sort((a,b)=>b[1].hours-a[1].hours).slice(0,10);
+  const maxJobHours=Math.max(1,...jobRows.map(([,v])=>v.hours));
+
+  // Hours by worker
+  const byWorker={};
+  entries.forEach(t=>{const w=t.worker||'Unassigned';byWorker[w]=byWorker[w]||{hours:0,count:0,days:new Set()};byWorker[w].hours+=entryHours(t);byWorker[w].count++;if(t.date)byWorker[w].days.add(t.date)});
+  const workerRows=Object.entries(byWorker).sort((a,b)=>b[1].hours-a[1].hours).slice(0,10);
+
+  // Monthly hours trend (last 6 months)
+  const months=lastNMonths(6).map(m=>({...m,hrs:0}));
+  allTime().forEach(t=>{
+    if(!t.date)return;
+    const m=months.find(x=>x.key===monthKey(t.date+(t.date.length===10?'T00:00:00':'')));
+    if(m)m.hrs+=entryHours(t);
+  });
+  const maxMonthHrs=Math.max(1,...months.map(m=>m.hrs));
+
+  return `
+    <div class="kpi-grid">
+      <div class="kpi-card accent"><div class="kpi-label">Total Hours</div><div class="kpi-value">${fmtHours(totalHours)}</div><div class="kpi-sub">${entries.length} entr${entries.length!==1?'ies':'y'}</div></div>
+      <div class="kpi-card"><div class="kpi-label">Billable Hours</div><div class="kpi-value">${fmtHours(billableHours)}</div><div class="kpi-sub">${totalHours>0?Math.round(billableHours/totalHours*100):0}% utilization</div></div>
+      <div class="kpi-card"><div class="kpi-label">Revenue / Labor Hr</div><div class="kpi-value">${money(revPerHour)}</div><div class="kpi-sub">productivity</div></div>
+      <div class="kpi-card"><div class="kpi-label">Crew · Days</div><div class="kpi-value">${workersSet.size} · ${daysWorked}</div><div class="kpi-sub">${daysWorked>0?fmtHours(totalHours/daysWorked)+'/day':'—'}</div></div>
+    </div>
+
+    <div class="report-section">
+      <div class="report-hd">Hours Logged <span class="kpi-sub">Last 6 months</span></div>
+      <div class="report-chart">
+        ${months.map(m=>{
+          const h=(m.hrs/maxMonthHrs)*100;
+          return `<div class="report-bar" style="height:${Math.max(2,h)}%" title="${fmtHours(m.hrs)}">
+            <div class="report-bar-val">${m.hrs>0?fmtHours(m.hrs):''}</div>
+            <div class="report-bar-label">${m.label}</div>
+          </div>`;
+        }).join('')}
+      </div>
+      <div class="report-x-pad"></div>
+    </div>
+
+    ${jobRows.length?`<div class="report-section">
+      <div class="report-hd">Hours by Job / Client <span class="kpi-sub">where labor is going</span></div>
+      <div class="hbar-list">
+        ${jobRows.map(([key,v],i)=>{
+          const color=CUSTOMER_BAR_COLORS[i%CUSTOMER_BAR_COLORS.length];
+          const pct=(v.hours/maxJobHours)*100;
+          return `<div class="hbar-row">
+            <div class="hbar-top">
+              <div class="hbar-name">${esc(v.name)}<small>${esc(v.cust)}</small></div>
+              <div class="hbar-val">${fmtHours(v.hours)}</div>
+            </div>
+            <div class="hbar-track"><div class="hbar-fill" style="width:${pct.toFixed(2)}%;background:${color}"></div></div>
+            <div class="hbar-meta"><span>${v.count} entr${v.count!==1?'ies':'y'}</span><span>${(v.hours/totalHours*100||0).toFixed(0)}% of hours</span></div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`:`<div class="report-section"><div class="report-hd">Hours by Job</div><p style="font-size:13px;color:var(--text-3)">No time logged in this range. Use the Time tab to record crew hours.</p></div>`}
+
+    ${workerRows.length?`<div class="report-section">
+      <div class="report-hd">Hours by Crew Member</div>
+      <div class="leaderboard">
+        ${workerRows.map(([name,v],i)=>{
+          const rankCls=i===0?'gold':i===1?'silver':i===2?'bronze':'';
+          return `<div class="lb-row">
+            <div class="lb-rank ${rankCls}">${i+1}</div>
+            <div class="member-ava" style="width:30px;height:30px;font-size:12px">${initials(name)}</div>
+            <div class="lb-name">${esc(name)}<div style="font-size:11px;color:var(--text-3);font-weight:500">${v.days.size} day${v.days.size!==1?'s':''} · ${v.count} entr${v.count!==1?'ies':'y'}</div></div>
+            <div class="lb-stats"><strong>${fmtHours(v.hours)}</strong><div>hours</div></div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`:''}
+  `;
+}
+
+function renderReportProfit(){
+  const range=parseInt(S.reportRange||'90',10);
+  const cutoff=range>0?Date.now()-range*86400000:0;
+  const all=jobs();
+  // Consider all jobs with any revenue OR costs OR receipts in range; profit makes most sense for completed jobs
+  const completed=all.filter(j=>j.status==='complete'&&(j.created||0)>=cutoff);
+  const allActive=all.filter(j=>(j.created||0)>=cutoff);
+
+  const revenue=completed.reduce((s,j)=>s+jobRevenue(j),0);
+  const directCosts=completed.reduce((s,j)=>s+Number(j.costs||0),0);
+  const trackedExp=completed.reduce((s,j)=>s+jobReceiptCosts(j),0);
+  const totalCosts=directCosts+trackedExp;
+  const profit=revenue-totalCosts;
+  const margin=revenue>0?(profit/revenue)*100:0;
+  const laborHrs=completed.reduce((s,j)=>s+timeForJob(j.id).reduce((a,t)=>a+entryHours(t),0),0);
+
+  // Estimate accuracy — actual revenue vs original estimate (value), completed jobs with an estimate
+  const estJobs=completed.filter(j=>Number(j.value||0)>0);
+  const totalEst=estJobs.reduce((s,j)=>s+Number(j.value||0),0);
+  const totalActual=estJobs.reduce((s,j)=>s+jobRevenue(j),0);
+  const estAccuracy=totalEst>0?(totalActual/totalEst)*100:0;
+  const overBudget=estJobs.filter(j=>jobTotalCosts(j)>Number(j.value||0)).length;
+
+  // Per-job profit table (completed only)
+  const jobRows=completed.map(j=>{
+    const rev=jobRevenue(j),cost=jobTotalCosts(j),p=rev-cost,m=rev>0?(p/rev)*100:0;
+    const est=Number(j.value||0),hrs=timeForJob(j.id).reduce((a,t)=>a+entryHours(t),0);
+    return {j,rev,cost,profit:p,margin:m,est,hrs};
+  });
+  const topProfit=jobRows.slice().sort((a,b)=>b.profit-a.profit).slice(0,5);
+  const worstProfit=jobRows.slice().sort((a,b)=>a.profit-b.profit).slice(0,5);
+  // Estimate accuracy detail (biggest variances)
+  const estRows=jobRows.filter(r=>r.est>0).map(r=>({...r,variance:r.rev-r.est,varPct:r.est>0?((r.rev-r.est)/r.est)*100:0}))
+    .sort((a,b)=>Math.abs(b.variance)-Math.abs(a.variance)).slice(0,6);
+
+  // Monthly P&L — last 6 months (revenue vs costs as paired bars)
+  const months=lastNMonths(6).map(m=>({...m,rev:0,cost:0}));
+  all.forEach(j=>{
+    if(j.status==='complete'){
+      const t=j.completedAt||j.created;if(t){const m=months.find(x=>x.key===monthKey(t));if(m){m.rev+=jobRevenue(j);m.cost+=Number(j.costs||0)}}
+    }
+  });
+  allReceipts().forEach(r=>{
+    if(!r.date)return;
+    const m=months.find(x=>x.key===monthKey(r.date+(r.date.length===10?'T00:00:00':'')));
+    if(m)m.cost+=Number(r.amount||0);
+  });
+  const maxBar=Math.max(1,...months.map(m=>Math.max(m.rev,m.cost)));
+
+  return `
+    <div class="kpi-grid">
+      <div class="kpi-card accent"><div class="kpi-label">Revenue</div><div class="kpi-value">${money(revenue)}</div><div class="kpi-sub">${completed.length} completed job${completed.length!==1?'s':''}</div></div>
+      <div class="kpi-card"><div class="kpi-label">Total Costs</div><div class="kpi-value">${money(totalCosts)}</div><div class="kpi-sub">${money(directCosts)} direct + ${money(trackedExp)} receipts</div></div>
+      <div class="kpi-card"><div class="kpi-label">Net Profit</div><div class="kpi-value" style="color:${profit>=0?'var(--green-700)':'var(--red)'}">${money(profit)}</div><div class="kpi-sub">in selected range</div></div>
+      <div class="kpi-card"><div class="kpi-label">Profit Margin</div><div class="kpi-value" style="color:${margin>=20?'var(--green-700)':margin>=10?'var(--text)':'var(--orange)'}">${margin.toFixed(1)}%</div><div class="kpi-sub">${margin>=20?'healthy':margin>=10?'okay':margin>=0?'thin':'losing money'}</div></div>
+      <div class="kpi-card"><div class="kpi-label">Estimate Accuracy</div><div class="kpi-value" style="color:${estAccuracy>=95&&estAccuracy<=110?'var(--green-700)':'var(--orange)'}">${totalEst>0?estAccuracy.toFixed(0)+'%':'—'}</div><div class="kpi-sub">actual vs estimate</div></div>
+      <div class="kpi-card"><div class="kpi-label">Labor on Completed</div><div class="kpi-value">${fmtHours(laborHrs)}</div><div class="kpi-sub">${overBudget} job${overBudget!==1?'s':''} over budget</div></div>
+    </div>
+
+    <div class="report-section">
+      <div class="report-hd">Revenue vs Costs <span class="kpi-sub">Last 6 months</span></div>
+      <div class="rvc-chart">
+        ${months.map(m=>{
+          const rh=(m.rev/maxBar)*100,ch=(m.cost/maxBar)*100;
+          const mProfit=m.rev-m.cost;
+          return `<div class="rvc-month">
+            <div class="rvc-bars" title="Revenue ${money(m.rev)} · Costs ${money(m.cost)} · Profit ${money(mProfit)}">
+              <div class="rvc-bar rvc-rev" style="height:${Math.max(1,rh)}%"></div>
+              <div class="rvc-bar rvc-cost" style="height:${Math.max(1,ch)}%"></div>
+            </div>
+            <div class="rvc-lbl">${m.label}</div>
+            <div class="rvc-pl" style="color:${mProfit>=0?'var(--green-700)':'var(--red)'}">${mProfit>=0?'+':''}${money(mProfit)}</div>
+          </div>`;
+        }).join('')}
+      </div>
+      <div style="display:flex;gap:14px;font-size:11.5px;color:var(--text-2);margin-top:10px;justify-content:center">
+        <span style="display:inline-flex;align-items:center;gap:5px"><span style="width:11px;height:11px;background:var(--green-700);border-radius:3px"></span>Revenue</span>
+        <span style="display:inline-flex;align-items:center;gap:5px"><span style="width:11px;height:11px;background:#dc2626;border-radius:3px"></span>Costs</span>
+      </div>
+    </div>
+
+    ${estRows.length?`<div class="report-section">
+      <div class="report-hd">Estimate vs Actual <span class="kpi-sub">biggest variances</span></div>
+      <div class="client-section-list">
+        ${estRows.map(r=>{
+          const over=r.variance>0;
+          return `<div class="client-row" data-jump-job="${esc(r.j.id)}">
+            <div class="client-row-main">
+              <div class="client-row-title">${esc(r.j.name)}</div>
+              <div class="client-row-sub">Est ${money(r.est)} → Actual ${money(r.rev)}${r.hrs>0?' · '+fmtHours(r.hrs):''}</div>
+            </div>
+            <div class="client-row-amt" style="color:${over?'var(--green-700)':'var(--orange)'}">${over?'+':''}${money(r.variance)}<div class="client-row-amt-sub">${over?'+':''}${r.varPct.toFixed(0)}%</div></div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`:''}
+
+    ${jobRows.length===0?`<div class="report-section"><div class="report-hd">Per-Job Profit</div><p style="font-size:13px;color:var(--text-3)">No completed jobs in this range yet.</p></div>`:`
+    <div class="report-section">
+      <div class="report-hd">Most Profitable Jobs <span class="kpi-sub">top ${topProfit.length}</span></div>
+      <div class="leaderboard">
+        ${topProfit.map((row,i)=>{
+          const rankCls=i===0?'gold':i===1?'silver':i===2?'bronze':'';
+          return `<div class="lb-row" data-jump-job="${esc(row.j.id)}" style="cursor:pointer">
+            <div class="lb-rank ${rankCls}">${i+1}</div>
+            <div class="lb-name">${esc(row.j.name)}<div style="font-size:11px;color:var(--text-3);font-weight:500">${esc(row.j.customerName||'')} · ${money(row.rev)} rev · ${money(row.cost)} cost</div></div>
+            <div class="lb-stats"><strong style="color:var(--green-700)">${money(row.profit)}</strong><div>${row.margin.toFixed(0)}% margin</div></div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>
+
+    <div class="report-section">
+      <div class="report-hd">Least Profitable Jobs <span class="kpi-sub">${worstProfit.filter(r=>r.profit<topProfit[topProfit.length-1]?.profit).length||worstProfit.length} flagged</span></div>
+      <div class="leaderboard">
+        ${worstProfit.map((row,i)=>`<div class="lb-row" data-jump-job="${esc(row.j.id)}" style="cursor:pointer">
+          <div class="lb-rank" style="background:${row.profit<0?'#fee2e2':'var(--surface-3)'};color:${row.profit<0?'var(--red)':'var(--text-2)'}">${i+1}</div>
+          <div class="lb-name">${esc(row.j.name)}<div style="font-size:11px;color:var(--text-3);font-weight:500">${esc(row.j.customerName||'')} · ${money(row.rev)} rev · ${money(row.cost)} cost</div></div>
+          <div class="lb-stats"><strong style="color:${row.profit<0?'var(--red)':'var(--text)'}">${money(row.profit)}</strong><div>${row.margin.toFixed(0)}% margin</div></div>
+        </div>`).join('')}
+      </div>
+    </div>`}
+  `;
+}
+
+function renderReportInvoices(){
+  const range=parseInt(S.reportRange||'90',10);
+  const cutoff=range>0?Date.now()-range*86400000:0;
+  const all=getAllInvoices();
+  const inRange=all.filter(({inv})=>{
+    if(!inv.date)return range===0;
+    const t=new Date(inv.date+(inv.date.length===10?'T00:00:00':'')).getTime();
+    return range===0||t>=cutoff;
+  });
+
+  let totalInv=0,totalPaid=0,outstanding=0,overdueAmt=0,overdueCount=0;
+  const aging=[0,0,0,0,0];const agingCounts=[0,0,0,0,0];
+  inRange.forEach(({inv})=>{
+    const c=calcInvoice(inv);
+    totalInv+=c.total;totalPaid+=c.paid;outstanding+=c.balance;
+    if(c.balance>0.005){
+      const due=inv.dueDate||inv.date;
+      const daysOver=due?-(daysUntil(due)||0):0;
+      const b=agingBucket(daysOver);
+      aging[b]+=c.balance;agingCounts[b]++;
+      if(invoiceStatus(inv)==='overdue'){overdueAmt+=c.balance;overdueCount++}
+    }
+  });
+  const collectRate=totalInv>0?(totalPaid/totalInv)*100:0;
+
+  // Days to pay — for invoices that have payments
+  const paidDays=[];
+  inRange.forEach(({inv})=>{
+    if(!inv.date)return;
+    (inv.payments||[]).forEach(p=>{if(p.date){const d=daysBetween(inv.date,p.date);if(d>=0&&d<400)paidDays.push(d)}});
+    // Fallback: invoice marked paid (status) and has date
+    if((!inv.payments||inv.payments.length===0)&&calcInvoice(inv).balance<0.005&&inv.date&&inv.sent){
+      const d=daysBetween(inv.date,inv.sent);if(d>=0&&d<400)paidDays.push(d);
+    }
+  });
+  const avgDays=paidDays.length?(paidDays.reduce((a,b)=>a+b,0)/paidDays.length):0;
+
+  // Top late-paying customers
+  const lateByCust={};
+  inRange.forEach(({inv,job})=>{
+    if(invoiceStatus(inv)!=='overdue')return;
+    const c=calcInvoice(inv);
+    if(c.balance<0.005)return;
+    const key=job.customerName||'(no name)';
+    const due=inv.dueDate||inv.date;
+    const daysOver=due?-(daysUntil(due)||0):0;
+    lateByCust[key]=lateByCust[key]||{name:key,balance:0,count:0,maxDays:0};
+    lateByCust[key].balance+=c.balance;lateByCust[key].count++;
+    lateByCust[key].maxDays=Math.max(lateByCust[key].maxDays,daysOver);
+  });
+  const lateCustomers=Object.values(lateByCust).sort((a,b)=>b.balance-a.balance).slice(0,5);
+
+  // Monthly invoiced vs collected (last 6 months)
+  const months=lastNMonths(6).map(m=>({...m,inv:0,paid:0}));
+  all.forEach(({inv})=>{
+    const c=calcInvoice(inv);
+    if(inv.date){const m=months.find(x=>x.key===monthKey(inv.date+(inv.date.length===10?'T00:00:00':'')));if(m)m.inv+=c.total}
+    (inv.payments||[]).forEach(p=>{
+      if(p.date){const m=months.find(x=>x.key===monthKey(p.date+(p.date.length===10?'T00:00:00':'')));if(m)m.paid+=Number(p.amount||0)}
+    });
+  });
+  const maxBar=Math.max(1,...months.map(m=>Math.max(m.inv,m.paid)));
+
+  const agingLabels=['Current','1-30 days','31-60 days','61-90 days','90+ days'];
+
+  return `
+    <div class="kpi-grid">
+      <div class="kpi-card accent"><div class="kpi-label">Total Invoiced</div><div class="kpi-value">${money(totalInv)}</div><div class="kpi-sub">${inRange.length} invoice${inRange.length!==1?'s':''}</div></div>
+      <div class="kpi-card"><div class="kpi-label">Collected</div><div class="kpi-value">${money(totalPaid)}</div><div class="kpi-sub">${collectRate.toFixed(0)}% collection rate</div></div>
+      <div class="kpi-card"><div class="kpi-label">Outstanding</div><div class="kpi-value" style="color:${outstanding>0?'var(--orange)':'var(--text)'}">${money(outstanding)}</div><div class="kpi-sub">${overdueCount} overdue · ${money(overdueAmt)}</div></div>
+      <div class="kpi-card"><div class="kpi-label">Avg Days to Pay</div><div class="kpi-value">${avgDays.toFixed(0)}</div><div class="kpi-sub">${paidDays.length} payment${paidDays.length!==1?'s':''}</div></div>
+    </div>
+
+    <div class="report-section">
+      <div class="report-hd">Aging Report <span class="kpi-sub">Outstanding by age</span></div>
+      <div class="aging-grid">
+        ${agingLabels.map((lbl,i)=>`<div class="aging-cell bucket-${i}">
+          <div class="aging-lbl">${lbl}</div>
+          <div class="aging-val">${money(aging[i])}</div>
+          <div class="aging-cnt">${agingCounts[i]} invoice${agingCounts[i]!==1?'s':''}</div>
+        </div>`).join('')}
+      </div>
+    </div>
+
+    <div class="report-section">
+      <div class="report-hd">Invoiced vs Collected <span class="kpi-sub">Last 6 months</span></div>
+      <div class="rvc-chart">
+        ${months.map(m=>{
+          const ih=(m.inv/maxBar)*100,ph=(m.paid/maxBar)*100;
+          return `<div class="rvc-month">
+            <div class="rvc-bars" title="Invoiced ${money(m.inv)} · Collected ${money(m.paid)}">
+              <div class="rvc-bar" style="height:${Math.max(1,ih)}%;background:linear-gradient(180deg,#0369a1,#0ea5e9)"></div>
+              <div class="rvc-bar" style="height:${Math.max(1,ph)}%;background:linear-gradient(180deg,var(--green-700),var(--green-400))"></div>
+            </div>
+            <div class="rvc-lbl">${m.label}</div>
+            <div class="rvc-pl" style="color:var(--text-3)">${m.inv>0?Math.round(m.paid/m.inv*100)+'%':'—'}</div>
+          </div>`;
+        }).join('')}
+      </div>
+      <div style="display:flex;gap:14px;font-size:11.5px;color:var(--text-2);margin-top:10px;justify-content:center">
+        <span style="display:inline-flex;align-items:center;gap:5px"><span style="width:11px;height:11px;background:#0369a1;border-radius:3px"></span>Invoiced</span>
+        <span style="display:inline-flex;align-items:center;gap:5px"><span style="width:11px;height:11px;background:var(--green-700);border-radius:3px"></span>Collected</span>
+      </div>
+    </div>
+
+    ${lateCustomers.length?`<div class="report-section">
+      <div class="report-hd">Top Late Payers</div>
+      <div class="leaderboard">
+        ${lateCustomers.map((c,i)=>{
+          const rankCls=i===0?'gold':i===1?'silver':i===2?'bronze':'';
+          return `<div class="lb-row">
+            <div class="lb-rank ${rankCls}" style="background:#fee2e2;color:var(--red)">${i+1}</div>
+            <div class="member-ava" style="width:30px;height:30px;font-size:12px">${initials(c.name)}</div>
+            <div class="lb-name">${esc(c.name)}<div style="font-size:11px;color:var(--text-3);font-weight:500">${c.count} overdue · ${c.maxDays}d max</div></div>
+            <div class="lb-stats"><strong style="color:var(--red)">${money(c.balance)}</strong><div>overdue</div></div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`:''}
+  `;
+}
+
+function renderReportCustomers(){
+  const range=parseInt(S.reportRange||'90',10);
+  const cutoff=range>0?Date.now()-range*86400000:0;
+  const all=jobs();
+  // Group by customer name (case-insensitive). Don't filter by range for LTV — but show range-scoped numbers too.
+  const byCust={};
+  all.forEach(j=>{
+    const raw=(j.customerName||'').trim()||'(no customer)';
+    const key=raw.toLowerCase();
+    if(!byCust[key])byCust[key]={name:raw,jobs:[],revenue:0,outstanding:0,firstJob:Infinity,lastJob:0,email:j.customerEmail,phone:j.customerPhone};
+    byCust[key].jobs.push(j);
+    byCust[key].firstJob=Math.min(byCust[key].firstJob,j.created||Infinity);
+    byCust[key].lastJob=Math.max(byCust[key].lastJob,j.created||0);
+    if(j.status==='complete')byCust[key].revenue+=jobRevenue(j);
+    const inv=invoiceTotals(j);
+    if(inv)byCust[key].outstanding+=inv.balance;
+  });
+  const customers=Object.values(byCust);
+  const repeat=customers.filter(c=>c.jobs.length>=2).length;
+  const totalRev=customers.reduce((s,c)=>s+c.revenue,0);
+  const totalOutstanding=customers.reduce((s,c)=>s+c.outstanding,0);
+  const avgLTV=customers.length?totalRev/customers.length:0;
+  // New customers in range
+  const newInRange=customers.filter(c=>c.firstJob>=cutoff).length;
+
+  const topRev=customers.slice().sort((a,b)=>b.revenue-a.revenue).filter(c=>c.revenue>0).slice(0,10);
+  const topJobs=customers.slice().sort((a,b)=>b.jobs.length-a.jobs.length).slice(0,8);
+  const topOutstanding=customers.slice().sort((a,b)=>b.outstanding-a.outstanding).filter(c=>c.outstanding>0.005).slice(0,8);
+
+  // New vs repeat over last 6 months
+  const months=lastNMonths(6).map(m=>({...m,newC:0,repeatJobs:0}));
+  customers.forEach(c=>{
+    if(c.firstJob<Infinity){const m=months.find(x=>x.key===monthKey(c.firstJob));if(m)m.newC++}
+    c.jobs.forEach(j=>{if((j.created||0)!==c.firstJob){const m=months.find(x=>x.key===monthKey(j.created||0));if(m)m.repeatJobs++}});
+  });
+  const maxBar=Math.max(1,...months.map(m=>Math.max(m.newC,m.repeatJobs)));
+
+  const maxRev=topRev[0]?.revenue||1;
+
+  return `
+    <div class="kpi-grid">
+      <div class="kpi-card accent"><div class="kpi-label">Customers</div><div class="kpi-value">${customers.length}</div><div class="kpi-sub">${newInRange} new in range</div></div>
+      <div class="kpi-card"><div class="kpi-label">Repeat Customers</div><div class="kpi-value">${repeat}</div><div class="kpi-sub">${customers.length?Math.round(repeat/customers.length*100):0}% retention</div></div>
+      <div class="kpi-card"><div class="kpi-label">Avg Revenue / Customer</div><div class="kpi-value">${money(avgLTV)}</div><div class="kpi-sub">lifetime value</div></div>
+      <div class="kpi-card"><div class="kpi-label">Total Outstanding</div><div class="kpi-value" style="color:${totalOutstanding>0?'var(--orange)':'var(--text)'}">${money(totalOutstanding)}</div><div class="kpi-sub">across ${topOutstanding.length} customer${topOutstanding.length!==1?'s':''}</div></div>
+    </div>
+
+    <div class="report-section">
+      <div class="report-hd">Top Customers by Lifetime Revenue</div>
+      ${topRev.length===0?'<p style="font-size:13px;color:var(--text-3)">No completed jobs with customers yet.</p>'
+        :`<div class="hbar-list">
+          ${topRev.map((c,i)=>{
+            const color=CUSTOMER_BAR_COLORS[i%CUSTOMER_BAR_COLORS.length];
+            const pct=(c.revenue/maxRev)*100;
+            return `<div class="hbar-row">
+              <div class="hbar-top">
+                <div class="hbar-name">${esc(c.name)}<small>${c.jobs.length} job${c.jobs.length!==1?'s':''}${c.outstanding>0.005?' · '+money(c.outstanding)+' outstanding':''}</small></div>
+                <div class="hbar-val">${money(c.revenue)}</div>
+              </div>
+              <div class="hbar-track"><div class="hbar-fill" style="width:${pct.toFixed(2)}%;background:${color}"></div></div>
+              <div class="hbar-meta">
+                <span>Avg ${money(c.revenue/Math.max(1,c.jobs.filter(j=>j.status==='complete').length))} per won job</span>
+                <span>${totalRev>0?(c.revenue/totalRev*100).toFixed(1):0}% of total revenue</span>
+              </div>
+            </div>`;
+          }).join('')}
+        </div>`}
+    </div>
+
+    <div class="report-section">
+      <div class="report-hd">New vs Repeat Jobs <span class="kpi-sub">Last 6 months</span></div>
+      <div class="rvc-chart">
+        ${months.map(m=>{
+          const nh=(m.newC/maxBar)*100,rh=(m.repeatJobs/maxBar)*100;
+          return `<div class="rvc-month">
+            <div class="rvc-bars" title="${m.newC} new · ${m.repeatJobs} repeat">
+              <div class="rvc-bar" style="height:${Math.max(1,nh)}%;background:linear-gradient(180deg,#7c3aed,#a855f7)"></div>
+              <div class="rvc-bar" style="height:${Math.max(1,rh)}%;background:linear-gradient(180deg,var(--green-700),var(--green-400))"></div>
+            </div>
+            <div class="rvc-lbl">${m.label}</div>
+            <div class="rvc-pl" style="color:var(--text-3)">${m.newC+m.repeatJobs}</div>
+          </div>`;
+        }).join('')}
+      </div>
+      <div style="display:flex;gap:14px;font-size:11.5px;color:var(--text-2);margin-top:10px;justify-content:center">
+        <span style="display:inline-flex;align-items:center;gap:5px"><span style="width:11px;height:11px;background:#7c3aed;border-radius:3px"></span>New customers</span>
+        <span style="display:inline-flex;align-items:center;gap:5px"><span style="width:11px;height:11px;background:var(--green-700);border-radius:3px"></span>Repeat jobs</span>
+      </div>
+    </div>
+
+    <div class="report-section">
+      <div class="report-hd">Most Active Customers <span class="kpi-sub">By job count</span></div>
+      <div class="leaderboard">
+        ${topJobs.map((c,i)=>{
+          const rankCls=i===0?'gold':i===1?'silver':i===2?'bronze':'';
+          return `<div class="lb-row">
+            <div class="lb-rank ${rankCls}">${i+1}</div>
+            <div class="member-ava" style="width:30px;height:30px;font-size:12px">${initials(c.name)}</div>
+            <div class="lb-name">${esc(c.name)}<div style="font-size:11px;color:var(--text-3);font-weight:500">${c.jobs.filter(j=>j.status==='complete').length} won · ${money(c.revenue)} LTV</div></div>
+            <div class="lb-stats"><strong>${c.jobs.length}</strong><div>job${c.jobs.length!==1?'s':''}</div></div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>
+
+    ${topOutstanding.length?`<div class="report-section">
+      <div class="report-hd">Top Outstanding Balances</div>
+      <div class="leaderboard">
+        ${topOutstanding.map((c,i)=>`<div class="lb-row">
+          <div class="lb-rank" style="background:#fff7ed;color:var(--orange)">${i+1}</div>
+          <div class="member-ava" style="width:30px;height:30px;font-size:12px">${initials(c.name)}</div>
+          <div class="lb-name">${esc(c.name)}<div style="font-size:11px;color:var(--text-3);font-weight:500">${c.jobs.length} job${c.jobs.length!==1?'s':''}</div></div>
+          <div class="lb-stats"><strong style="color:var(--orange)">${money(c.outstanding)}</strong><div>due</div></div>
+        </div>`).join('')}
+      </div>
+    </div>`:''}
+  `;
+}
+
+function renderReportExpenses(){
+  const range=parseInt(S.reportRange||'90',10);
+  const cutoff=range>0?Date.now()-range*86400000:0;
+  const recs=allReceipts().filter(r=>{
+    if(!r.date)return range===0;
+    return range===0||new Date(r.date+(r.date.length===10?'T00:00:00':'')).getTime()>=cutoff;
+  });
+  const total=recs.reduce((s,r)=>s+Number(r.amount||0),0);
+  const ded=recs.reduce((s,r)=>s+receiptDeductible(r),0);
+  const linked=recs.filter(r=>r.jobId).length;
+  const overhead=recs.length-linked;
+  const allJobs=jobs();
+  const activeJobs=allJobs.filter(j=>j.status==='active'||j.status==='lead').length;
+  const perActive=activeJobs>0?total/activeJobs:0;
+
+  // Monthly expense vs revenue
+  const months=lastNMonths(6).map(m=>({...m,exp:0,rev:0}));
+  recs.forEach(r=>{
+    if(!r.date)return;
+    const m=months.find(x=>x.key===monthKey(r.date+(r.date.length===10?'T00:00:00':'')));
+    if(m)m.exp+=Number(r.amount||0);
+  });
+  allJobs.forEach(j=>{
+    if(j.status!=='complete')return;
+    const t=j.completedAt||j.created;if(!t)return;
+    const m=months.find(x=>x.key===monthKey(t));if(m)m.rev+=jobRevenue(j);
+  });
+  const maxBar=Math.max(1,...months.map(m=>Math.max(m.rev,m.exp)));
+
+  // Vendor leaderboard
+  const byVendor={};
+  recs.forEach(r=>{
+    const v=(r.vendor||'(unknown)').trim()||'(unknown)';
+    const k=v.toLowerCase();
+    byVendor[k]=byVendor[k]||{name:v,total:0,count:0,ded:0};
+    byVendor[k].total+=Number(r.amount||0);
+    byVendor[k].count++;
+    byVendor[k].ded+=receiptDeductible(r);
+  });
+  const topVendors=Object.values(byVendor).sort((a,b)=>b.total-a.total).slice(0,8);
+  const maxVendor=topVendors[0]?.total||1;
+
+  return `
+    <div class="kpi-grid">
+      <div class="kpi-card accent"><div class="kpi-label">Total Spent</div><div class="kpi-value">${moneyCents(total)}</div><div class="kpi-sub">${recs.length} receipt${recs.length!==1?'s':''}</div></div>
+      <div class="kpi-card"><div class="kpi-label">Tax-Deductible</div><div class="kpi-value" style="color:var(--green-700)">${moneyCents(ded)}</div><div class="kpi-sub">${total>0?Math.round(ded/total*100):0}% of total</div></div>
+      <div class="kpi-card"><div class="kpi-label">Linked to Jobs</div><div class="kpi-value">${linked}</div><div class="kpi-sub">${overhead} overhead</div></div>
+      <div class="kpi-card"><div class="kpi-label">Per Active Job</div><div class="kpi-value">${moneyCents(perActive)}</div><div class="kpi-sub">avg across ${activeJobs} job${activeJobs!==1?'s':''}</div></div>
+    </div>
+
+    <div class="report-section">
+      <div class="report-hd">Revenue vs Expenses <span class="kpi-sub">Last 6 months</span></div>
+      <div class="rvc-chart">
+        ${months.map(m=>{
+          const rh=(m.rev/maxBar)*100,eh=(m.exp/maxBar)*100;
+          const cash=m.rev-m.exp;
+          return `<div class="rvc-month">
+            <div class="rvc-bars" title="Revenue ${money(m.rev)} · Expenses ${money(m.exp)} · Cash flow ${money(cash)}">
+              <div class="rvc-bar rvc-rev" style="height:${Math.max(1,rh)}%"></div>
+              <div class="rvc-bar" style="height:${Math.max(1,eh)}%;background:linear-gradient(180deg,#7c3aed,#a855f7)"></div>
+            </div>
+            <div class="rvc-lbl">${m.label}</div>
+            <div class="rvc-pl" style="color:${cash>=0?'var(--green-700)':'var(--red)'}">${cash>=0?'+':''}${money(cash)}</div>
+          </div>`;
+        }).join('')}
+      </div>
+      <div style="display:flex;gap:14px;font-size:11.5px;color:var(--text-2);margin-top:10px;justify-content:center">
+        <span style="display:inline-flex;align-items:center;gap:5px"><span style="width:11px;height:11px;background:var(--green-700);border-radius:3px"></span>Revenue</span>
+        <span style="display:inline-flex;align-items:center;gap:5px"><span style="width:11px;height:11px;background:#7c3aed;border-radius:3px"></span>Expenses</span>
+      </div>
+    </div>
+
+    ${topVendors.length?`<div class="report-section">
+      <div class="report-hd">Top Vendors <span class="kpi-sub">Where the money's going</span></div>
+      <div class="hbar-list">
+        ${topVendors.map((v,i)=>{
+          const color=CUSTOMER_BAR_COLORS[i%CUSTOMER_BAR_COLORS.length];
+          const pct=(v.total/maxVendor)*100;
+          return `<div class="hbar-row">
+            <div class="hbar-top">
+              <div class="hbar-name">${esc(v.name)}<small>${v.count} receipt${v.count!==1?'s':''}</small></div>
+              <div class="hbar-val">${moneyCents(v.total)}</div>
+            </div>
+            <div class="hbar-track"><div class="hbar-fill" style="width:${pct.toFixed(2)}%;background:${color}"></div></div>
+            <div class="hbar-meta">
+              <span>${total>0?(v.total/total*100).toFixed(1):0}% of spend</span>
+              <span>${moneyCents(v.ded)} deductible</span>
+            </div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`:''}
+
+    <div style="text-align:center;padding:12px">
+      <button class="docs-menu-foot-btn" data-docs-go="receipts">Open full Receipts view →</button>
     </div>
   `;
 }
@@ -2626,6 +5037,8 @@ function renderDetail(id){
     {id:'photos',label:'Photos',count:photos.length},
     {id:'docs',label:'Files',count:(j.documents||[]).length},
     {id:'invoices',label:'Invoices',count:(j.invoices||[]).length},
+    {id:'receipts',label:'Receipts',count:receiptsForJob(j.id).length},
+    {id:'time',label:'Time',count:timeForJob(j.id).length},
     {id:'financial',label:'Financials'},
     {id:'comms',label:'Comms',count:(j.comms||[]).length},
     {id:'notes',label:'Notes',count:(j.notes||[]).length},
@@ -2820,22 +5233,104 @@ function renderDetailTab(j,tab){
   if(tab==='docs'){
     const docs=j.documents||[];
     const fileIcon=`<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/></svg>`;
+    const catOpts=DOC_CAT_ORDER.map(k=>`<option value="${k}">${esc(DOC_CAT[k].label)}</option>`).join('');
     return `
       <div class="section">
         <div class="section-hd">Files & Documents <span>${docs.length}</span></div>
         <div class="doc-list">
           ${docs.length===0?'<p style="font-size:13px;color:var(--text-3);padding:4px 0">No files yet. Contracts, permits, plans, receipts — keep them all here.</p>'
-            :docs.map((d,i)=>`<a class="doc-item" href="${d.url}" download="${esc(d.name)}" target="_blank">
-              <div class="doc-icon">${fileIcon}</div>
-              <div class="doc-info"><div class="doc-name">${esc(d.name)}</div><div class="doc-meta">${esc(d.size||'')}${d.uploaded?' · '+ago(d.uploaded):''}${d.user?' · '+esc(d.user):''}</div></div>
-              <button class="doc-del" data-doc-del="${i}" onclick="event.preventDefault();event.stopPropagation()">✕</button>
-            </a>`).join('')}
+            :docs.map((d,i)=>{
+              const cat=docCategory(d);
+              const opts=DOC_CAT_ORDER.map(k=>`<option value="${k}" ${cat===k?'selected':''}>${esc(DOC_CAT[k].label)}</option>`).join('');
+              return `<div class="doc-item" style="align-items:center">
+                <div class="doc-icon">${fileIcon}</div>
+                <a class="doc-info" href="${d.url}" download="${esc(d.name)}" target="_blank" style="text-decoration:none;color:inherit">
+                  <div class="doc-name"><span class="doc-row-cat">${esc(DOC_CAT[cat].label)}</span>${esc(d.name)}</div>
+                  <div class="doc-meta">${esc(d.size||'')}${d.uploaded?' · '+ago(d.uploaded):''}${d.user?' · '+esc(d.user):''}</div>
+                </a>
+                <select class="doc-cat-select" data-doc-recat="${esc(j.id)}|${i}" aria-label="Change category">${opts}</select>
+                <button class="doc-del" data-doc-del="${i}" onclick="event.preventDefault();event.stopPropagation()">✕</button>
+              </div>`;
+            }).join('')}
         </div>
-        <label class="photo-add-btn" style="aspect-ratio:auto;padding:14px;flex-direction:row;gap:8px">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v6m3-3H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-          <span>Upload File (PDF, DOC, IMG)</span>
-          <input type="file" accept="*/*" id="doc-upload" style="display:none">
-        </label>
+        <div style="display:flex;gap:8px;align-items:stretch;margin-top:8px;flex-wrap:wrap">
+          <select class="form-select" id="doc-upload-cat" style="max-width:200px;font-size:13px;padding:10px" aria-label="Document category">${catOpts}</select>
+          <label class="photo-add-btn" style="flex:1;aspect-ratio:auto;padding:12px;flex-direction:row;gap:8px;min-width:180px">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v6m3-3H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <span>Upload File (PDF, DOC, IMG)</span>
+            <input type="file" accept="*/*" id="doc-upload" style="display:none">
+          </label>
+        </div>
+      </div>`;
+  }
+  if(tab==='receipts'){
+    const recs=receiptsForJob(j.id).sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+    const total=recs.reduce((s,r)=>s+Number(r.amount||0),0);
+    const ded=recs.reduce((s,r)=>s+receiptDeductible(r),0);
+    return `
+      <div class="section">
+        <div class="section-hd">Receipts for this Job <span>${recs.length}</span></div>
+        <div class="kpi-grid" style="margin-bottom:14px">
+          <div class="kpi-card accent"><div class="kpi-label">Total Tracked</div><div class="kpi-value">${moneyCents(total)}</div><div class="kpi-sub">${recs.length} receipt${recs.length!==1?'s':''}</div></div>
+          <div class="kpi-card"><div class="kpi-label">Deductible</div><div class="kpi-value" style="color:var(--green-700)">${moneyCents(ded)}</div><div class="kpi-sub">tax write-off portion</div></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px">
+          ${recs.length===0?'<p style="font-size:13px;color:var(--text-3);padding:4px 0">No receipts linked to this job yet. Add one to track materials, fuel, subcontractors, and other expenses.</p>'
+            :recs.map(r=>{
+              const cat=recCat(r);
+              const catInfo=RECEIPT_CAT[cat];
+              const d=receiptDeductible(r);
+              return `<div class="rec-row ${d>0?'':'nondeductible'}">
+                <div class="rec-row-thumb">${r.photoUrl?`<img src="${r.photoUrl}" alt="">`:`<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 17h6m-6 0a3 3 0 11-6 0V7a2 2 0 012-2h11a2 2 0 012 2v10a3 3 0 11-6 0M9 7h6M9 11h6"/></svg>`}</div>
+                <div class="rec-row-main" data-rec-open="${esc(r.id)}">
+                  <div class="rec-row-vendor"><span class="rec-cat-pill">${esc(catInfo.label.split(' ')[0])}</span>${esc(r.vendor||'(no vendor)')}</div>
+                  <div class="rec-row-meta">${fmtDate(r.date)}${r.notes?' · '+esc(r.notes.slice(0,50))+(r.notes.length>50?'…':''):''}</div>
+                </div>
+                <div class="rec-row-amt">
+                  <div class="rec-row-amt-val">${moneyCents(r.amount)}</div>
+                  <div class="rec-row-amt-ded ${d>0?'':'no'}">${d>0?moneyCents(d)+' ded':'not ded.'}</div>
+                </div>
+              </div>`;
+            }).join('')}
+        </div>
+        <button class="btn-add" id="btn-new-receipt-job" style="background:#7c3aed;box-shadow:0 2px 8px rgba(124,58,237,0.35)">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+          Add Receipt
+        </button>
+      </div>`;
+  }
+  if(tab==='time'){
+    const entries=timeForJob(j.id).sort((a,b)=>(b.date||'').localeCompare(a.date||'')||((parseHHMM(a.start)??0)-(parseHHMM(b.start)??0)));
+    const totalHours=entries.reduce((s,t)=>s+entryHours(t),0);
+    const byWorker={};
+    entries.forEach(t=>{const w=t.worker||'Unassigned';byWorker[w]=(byWorker[w]||0)+entryHours(t)});
+    return `
+      <div class="section">
+        <div class="section-hd">Time on this Job <span>${entries.length}</span></div>
+        <div class="kpi-grid" style="margin-bottom:14px">
+          <div class="kpi-card accent"><div class="kpi-label">Total Hours</div><div class="kpi-value">${fmtHours(totalHours)}</div><div class="kpi-sub">${entries.length} entr${entries.length!==1?'ies':'y'}</div></div>
+          <div class="kpi-card"><div class="kpi-label">Crew Members</div><div class="kpi-value">${Object.keys(byWorker).length}</div><div class="kpi-sub">logged on this job</div></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px">
+          ${entries.length===0?'<p style="font-size:13px;color:var(--text-3);padding:4px 0">No time logged on this job yet. Track crew hours to see where labor is going.</p>'
+            :entries.map(t=>{
+              const rangeTxt=(t.start&&t.end)?fmt12(t.start)+' – '+fmt12(t.end):'';
+              return `<div class="time-entry" data-time-open="${esc(t.id)}">
+                <div class="time-entry-bar"></div>
+                <div class="time-entry-main">
+                  <div class="time-entry-job">${fmtDate(t.date)}</div>
+                  <div class="time-entry-meta">${rangeTxt?rangeTxt+' · ':''}${t.worker?esc(t.worker):'Unassigned'}${t.billable===false?' · non-billable':''}${t.notes?' · '+esc(t.notes.slice(0,40))+(t.notes.length>40?'…':''):''}</div>
+                </div>
+                <div class="time-entry-amt">
+                  <div class="time-entry-hrs">${fmtHours(entryHours(t))}</div>
+                </div>
+              </div>`;
+            }).join('')}
+        </div>
+        <button class="btn-add" id="btn-new-time-job">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+          Log Time
+        </button>
       </div>`;
   }
   if(tab==='financial'){
@@ -2847,9 +5342,15 @@ function renderDetailTab(j,tab){
     const pctPaid=inv>0?(paid/inv)*100:0;
     const margin=est-Number(j.costs||0);
     const lockedByInv=!!invTot;
+    const jobRecs=receiptsForJob(j.id);
+    const recTotal=jobRecs.reduce((s,r)=>s+Number(r.amount||0),0);
     return `
       <div class="section">
         <div class="section-hd">Financial Summary${lockedByInv?' <span style="font-weight:400;text-transform:none;letter-spacing:0">From '+((j.invoices||[]).length)+' invoice'+((j.invoices||[]).length===1?'':'s')+'</span>':''}</div>
+        ${jobRecs.length?`<div style="background:#f3e8ff;border:1px solid #d8b4fe;border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:12.5px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap" id="fin-rec-hint">
+          <span><strong>${moneyCents(recTotal)}</strong> tracked across <strong>${jobRecs.length}</strong> receipt${jobRecs.length!==1?'s':''} for this job.</span>
+          <button class="docs-menu-foot-btn" data-fin-go-receipts="1" style="margin:0">View Receipts →</button>
+        </div>`:''}
         <div class="fin-grid">
           <div class="fin-cell"><div class="fin-label">Estimate</div><div class="fin-value">${money(est)}</div></div>
           <div class="fin-cell"><div class="fin-label">Costs / Materials</div><div class="fin-value">${money(j.costs||0)}</div></div>
@@ -3513,12 +6014,16 @@ let CMD={open:false,query:'',idx:0,items:[]};
 function cmdItems(){
   const out=[];
   // Views
-  [['dashboard','Home / Dashboard','home'],['jobs','Jobs','briefcase'],['schedule','Schedule','calendar'],['invoices','Invoices','invoice'],['map','Map','map'],['reports','Reports','chart'],['activity','Activity','list'],['team','Team','team']].forEach(([v,name,ico])=>{
-    out.push({type:'view',name:'Go to '+name,sub:'View',ico,run:()=>{S.view=v;S.detail=null;render()}});
+  [['dashboard','Home / Dashboard','home'],['jobs','Jobs','briefcase'],['clients','Clients','team'],['schedule','Schedule','calendar'],['time','Time Tracking','calendar'],['documents','Documents','invoice'],['invoices','Invoices','invoice'],['contracts','Contracts','invoice'],['receipts','Receipts & Expenses','invoice'],['otherdocs','Other Documents','invoice'],['map','Map','map'],['reports','Reports','chart'],['activity','Activity','list'],['team','Team','team']].forEach(([v,name,ico])=>{
+    out.push({type:'view',name:'Go to '+name,sub:'View',ico,run:()=>{S.view=v;S.detail=null;S.clientDetail=null;render()}});
   });
   // Actions
   out.push({type:'action',name:'New Job',sub:'Create a job',ico:'plus',run:()=>showJobModal('add')});
   out.push({type:'action',name:'New Invoice',sub:'Pick a job, then create invoice',ico:'invoice',run:()=>showJobPickerModal(jobId=>showInvoiceModal(jobId))});
+  out.push({type:'action',name:'Upload Document',sub:'Contract, permit, warranty, change order…',ico:'invoice',run:()=>showDocumentUploadModal()});
+  out.push({type:'action',name:'Upload Contract',sub:'Add a signed contract to a job',ico:'invoice',run:()=>showDocumentUploadModal('contract')});
+  out.push({type:'action',name:'Add Receipt',sub:'Track an expense for tax write-off / job costing',ico:'invoice',run:()=>showReceiptModal()});
+  out.push({type:'action',name:'Log Time',sub:'Record crew hours against a job',ico:'calendar',run:()=>showTimeModal()});
   out.push({type:'action',name:'Settings & Company Info',sub:'Edit name, logo, invoice defaults',ico:'kbd',run:showSettingsModal});
   out.push({type:'action',name:'Export to CSV',sub:'Download all jobs',ico:'download',run:exportCSV});
   out.push({type:'action',name:'Notifications',sub:'See your inbox',ico:'bell',run:showNotificationsModal});
@@ -3734,9 +6239,9 @@ function onKey(e){
   // g + (d/j/s/m/r) go-to
   if(k==='g'||k==='G'){KBD_BUFFER='g';clearTimeout(KBD_BUFFER_T);KBD_BUFFER_T=setTimeout(()=>KBD_BUFFER='',1200);return}
   if(KBD_BUFFER==='g'){
-    const map={d:'dashboard',j:'jobs',s:'schedule',i:'invoices',m:'map',r:'reports',a:'activity',t:'team'};
+    const map={d:'dashboard',j:'jobs',c:'clients',s:'schedule',h:'time',i:'invoices',m:'map',r:'reports',a:'activity',t:'team'};
     const target=map[k.toLowerCase()];
-    if(target){KBD_BUFFER='';clearTimeout(KBD_BUFFER_T);S.view=target;S.detail=null;render();e.preventDefault()}
+    if(target){KBD_BUFFER='';clearTimeout(KBD_BUFFER_T);S.view=target;S.detail=null;S.clientDetail=null;render();e.preventDefault()}
   }
 }
 function isTyping(e){
@@ -3756,7 +6261,7 @@ function countCmdVisible(){
 // ══ Handlers ══
 function attachHandlers(){
   document.querySelectorAll('.nav-btn').forEach(b=>{
-    b.onclick=()=>{S.view=b.dataset.view;S.detail=null;render()}
+    b.onclick=()=>{S.view=b.dataset.view;S.detail=null;S.clientDetail=null;render()}
   });
   $('user-btn').onclick=showSettingsModal;
   $('setup-link').onclick=showSetupModal;
@@ -3837,6 +6342,90 @@ function attachHandlers(){
   $('inv-search')?.addEventListener('input',e=>{S.invSearch=e.target.value;render()});
   $('inv-sort')?.addEventListener('change',e=>{S.invSort=e.target.value;render()});
   document.querySelectorAll('[data-inv-filter]').forEach(c=>c.onclick=()=>{S.invFilter=c.dataset.invFilter;render()});
+
+  // Documents — upload buttons in each view
+  $('docs-menu-upload')?.addEventListener('click',e=>{
+    e.stopPropagation();
+    const menu=$('nav-docs-menu');if(menu)menu.classList.remove('open');
+    showDocumentUploadModal();
+  });
+  $('docs-menu-receipt')?.addEventListener('click',e=>{
+    e.stopPropagation();
+    const menu=$('nav-docs-menu');if(menu)menu.classList.remove('open');
+    showReceiptModal();
+  });
+  // Receipts handlers
+  $('btn-new-receipt')?.addEventListener('click',()=>showReceiptModal());
+  $('btn-new-receipt-job')?.addEventListener('click',()=>{const id=S.detail;if(id)showReceiptModal(null,id)});
+  $('rec-search')?.addEventListener('input',e=>{S.recSearch=e.target.value;render()});
+  $('rec-jobfilter')?.addEventListener('change',e=>{S.recJobFilter=e.target.value;render()});
+  document.querySelectorAll('[data-rec-range]').forEach(c=>c.onclick=()=>{S.recRange=c.dataset.recRange;render()});
+  document.querySelectorAll('[data-rec-catfilter]').forEach(c=>c.onclick=()=>{S.recCatFilter=c.dataset.recCatfilter;render()});
+  document.querySelectorAll('[data-rec-open]').forEach(el=>el.onclick=()=>showReceiptModal(el.dataset.recOpen));
+  document.querySelectorAll('[data-rec-del]').forEach(b=>b.onclick=async e=>{
+    e.stopPropagation();
+    const id=b.dataset.recDel;const backup=S.receipts[id];if(!backup)return;
+    if(!confirm('Delete this receipt? This can be undone right after.'))return;
+    const copy=JSON.parse(JSON.stringify(backup));
+    await deleteReceiptDB(id);
+    await logAct('deleted receipt from '+(copy.vendor||'vendor'),copy.jobId&&S.jobs[copy.jobId]?S.jobs[copy.jobId].name:'');
+    render();
+    UNDO.push(async()=>{await writeReceipt(copy);render();toast('Receipt restored')});
+    toast('Receipt deleted','undo',()=>{UNDO.pop()()});
+  });
+  $('fin-rec-hint')?.querySelector('[data-fin-go-receipts]')?.addEventListener('click',()=>{S.detailTab='receipts';render()});
+  $('btn-new-doc-global')?.addEventListener('click',()=>showDocumentUploadModal());
+  $('btn-new-contract')?.addEventListener('click',()=>showDocumentUploadModal('contract'));
+  $('btn-new-otherdoc')?.addEventListener('click',()=>showDocumentUploadModal(S.docOtherFilter&&S.docOtherFilter!=='all'?S.docOtherFilter:'other'));
+  $('btn-new-inv-from-docs')?.addEventListener('click',()=>showJobPickerModal(jobId=>showInvoiceModal(jobId)));
+  // Documents — overview filter chips
+  document.querySelectorAll('[data-docov-filter]').forEach(c=>c.onclick=()=>{
+    S.docOverviewFilter=c.dataset.docovFilter;render();
+  });
+
+  // Documents hub navigation
+  document.querySelectorAll('[data-docs-go]').forEach(el=>el.onclick=e=>{
+    e.stopPropagation();
+    const v=el.dataset.docsGo;
+    S.view=v;S.detail=null;
+    const menu=$('nav-docs-menu');if(menu)menu.classList.remove('open');
+    render();
+  });
+  // Documents — other-docs filter chips
+  document.querySelectorAll('[data-docother-filter]').forEach(c=>c.onclick=()=>{
+    S.docOtherFilter=c.dataset.docotherFilter;render();
+  });
+  // Documents — recategorize selector
+  document.querySelectorAll('[data-doc-recat]').forEach(sel=>sel.onchange=async()=>{
+    const [jobId,idxStr]=sel.dataset.docRecat.split('|');
+    const idx=parseInt(idxStr,10);
+    const j=S.jobs[jobId];if(!j||!j.documents||!j.documents[idx])return;
+    j.documents[idx].category=sel.value;
+    await writeJob(j);render();toast('Category updated');
+  });
+  // Documents — mobile tap to toggle hover menu
+  const docsBtn=$('nav-docs-btn'),docsMenu=$('nav-docs-menu'),docsWrap=$('nav-docs-wrap');
+  if(docsBtn&&docsMenu&&docsWrap){
+    docsBtn.addEventListener('click',e=>{
+      // On touch devices, first tap opens the menu instead of navigating
+      const isTouch=window.matchMedia('(hover:none)').matches;
+      if(isTouch&&!docsMenu.classList.contains('open')){
+        e.preventDefault();e.stopImmediatePropagation();
+        docsMenu.classList.add('open');
+        docsBtn.setAttribute('aria-expanded','true');
+        setTimeout(()=>{
+          const off=ev=>{
+            if(!ev.target.closest('#nav-docs-wrap')){
+              docsMenu.classList.remove('open');
+              docsBtn.setAttribute('aria-expanded','false');
+              document.removeEventListener('click',off);
+            }
+          };
+          document.addEventListener('click',off);
+        },0);
+      }
+    },true);
+  }
   document.querySelectorAll('[data-open-inv]').forEach(el=>el.onclick=e=>{
     e.stopPropagation();
     const [jobId,invId]=el.dataset.openInv.split('|');
@@ -3880,6 +6469,24 @@ function attachHandlers(){
   });
   // Reports
   document.querySelectorAll('[data-range]').forEach(c=>c.onclick=()=>{S.reportRange=c.dataset.range;render()});
+  document.querySelectorAll('[data-report-tab]').forEach(b=>b.onclick=()=>{S.reportTab=b.dataset.reportTab;localStorage.setItem('wfs_reporttab',S.reportTab);render()});
+  document.querySelectorAll('[data-jump-job]').forEach(el=>el.onclick=()=>{S.detail=el.dataset.jumpJob;S.view='jobs';S.detailTab='financial';render()});
+
+  // Clients
+  $('client-search')?.addEventListener('input',e=>{S.clientSearch=e.target.value;render()});
+  $('client-sort')?.addEventListener('change',e=>{S.clientSort=e.target.value;render()});
+  $('btn-new-client')?.addEventListener('click',()=>showJobModal('add'));
+  document.querySelectorAll('[data-client]').forEach(el=>el.onclick=()=>{S.clientDetail=el.dataset.client;S.clientTab='overview';render();window.scrollTo(0,0)});
+  $('btn-client-back')?.addEventListener('click',()=>{S.clientDetail=null;render()});
+  document.querySelectorAll('[data-client-tab]').forEach(b=>b.onclick=()=>{S.clientTab=b.dataset.clientTab;render()});
+
+  // Time tracking
+  $('btn-new-time')?.addEventListener('click',()=>showTimeModal());
+  $('btn-new-time-job')?.addEventListener('click',()=>{const id=S.detail;if(id)showTimeModal(null,id)});
+  document.querySelectorAll('[data-time-range]').forEach(c=>c.onclick=()=>{S.timeRange=c.dataset.timeRange;render()});
+  $('time-jobfilter')?.addEventListener('change',e=>{S.timeJobFilter=e.target.value;render()});
+  $('time-workerfilter')?.addEventListener('change',e=>{S.timeWorkerFilter=e.target.value;render()});
+  document.querySelectorAll('[data-time-open]').forEach(el=>el.onclick=()=>showTimeModal(el.dataset.timeOpen));
   // Map
   $('btn-geocode')?.addEventListener('click',geocodeAll);
   $('btn-add-job')?.addEventListener('click',()=>showJobModal('add'));
@@ -4027,7 +6634,9 @@ function attachHandlers(){
     if(file.size>5*1024*1024){toast('File too large (max 5MB)','');return}
     const r=new FileReader();
     r.onload=async e=>{
-      j.documents.push({name:file.name,url:e.target.result,size:(file.size/1024).toFixed(0)+' KB',type:file.type,uploaded:Date.now(),user:S.user});
+      const catSel=$('doc-upload-cat');
+      const category=catSel&&catSel.value&&DOC_CAT[catSel.value]?catSel.value:'other';
+      j.documents.push({name:file.name,url:e.target.result,size:(file.size/1024).toFixed(0)+' KB',type:file.type,uploaded:Date.now(),user:S.user,category});
       await writeJob(j);await logAct('uploaded '+file.name+' to',j.name);render();toast('File uploaded');
     };
     r.readAsDataURL(file);
