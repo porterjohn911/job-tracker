@@ -266,6 +266,11 @@ body{display:flex;flex-direction:column;max-width:680px;margin:0 auto;min-height
 /* ── INFO GRID ── */
 .info-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .info-cell{background:var(--surface-3);border-radius:var(--r-sm);padding:11px 13px}
+.info-cell.stat-link{cursor:pointer;transition:background 0.15s,box-shadow 0.15s;position:relative}
+.info-cell.stat-link:hover{background:var(--green-50);box-shadow:inset 0 0 0 1.5px var(--green-600)}
+.info-cell.stat-link:active{transform:scale(0.985)}
+.info-cell.stat-link .info-label::after{content:'›';position:absolute;top:9px;right:11px;font-size:16px;font-weight:700;color:var(--text-3);line-height:1}
+.info-cell.stat-link:hover .info-label::after{color:var(--green-700)}
 .info-label{font-size:10.5px;color:var(--text-3);font-weight:600;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px}
 .info-value{font-size:14px;font-weight:600;color:var(--text)}
 
@@ -563,7 +568,15 @@ input[type=range]{width:100%;accent-color:var(--green-700);height:4px;cursor:poi
   .cal-chip.cs-lead{background:#3d2800;color:#fbbf24}
   .cal-chip.cs-complete{background:#082f49;color:#7dd3fc}
   .cal-chip.cs-hold{background:#1e2e28;color:var(--text-2)}
+  .cal-chip.cs-warranty{background:#3d1f4d;color:#e9d5ff}
+  .cal-chip.cs-reminder{background:#3d2800;color:#fbbf24}
+  .cal-chip.cs-note{background:#082f49;color:#7dd3fc}
 }
+.cal-chip.cs-warranty{border-left-color:#9333ea;background:#f3e8ff;color:#6b21a8}
+.cal-chip.cs-reminder{border-left-color:#d97706;background:#fef3c7;color:#92400e}
+.cal-chip.cs-note{border-left-color:#0ea5e9;background:#e0f2fe;color:#075985}
+.cal-chip.cs-note.done{opacity:0.6;text-decoration:line-through}
+.cal-job-row.daynote-done .cal-job-row-meta,.cal-job-row.daynote-done div{opacity:0.65}
 .cal-day-more{font-size:9.5px;color:var(--text-3);font-weight:600;padding:1px 5px;cursor:pointer}
 .cal-day-more:hover{color:var(--green-700)}
 
@@ -576,6 +589,28 @@ input[type=range]{width:100%;accent-color:var(--green-700);height:4px;cursor:poi
 .cal-job-row-bar{width:3px;align-self:stretch;border-radius:2px;flex-shrink:0;min-height:32px}
 .cal-job-row-meta{font-size:11px;color:var(--text-3);margin-top:1px}
 .cal-job-row-day{font-size:10px;color:var(--text-3);font-weight:600;background:var(--surface-3);padding:2px 6px;border-radius:4px;text-transform:uppercase;letter-spacing:0.03em}
+
+/* Day notes & to-dos */
+.day-notes{margin-top:6px;padding-top:6px;border-top:1px solid var(--border)}
+.day-note-list{display:flex;flex-direction:column;gap:2px;margin-bottom:8px}
+.day-note-item{display:flex;align-items:center;gap:9px;padding:6px 0;font-size:13.5px}
+.day-note-check{
+  width:21px;height:21px;border-radius:6px;border:1.8px solid var(--border-md);
+  background:var(--surface);cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;padding:0;
+}
+.day-note-check svg{width:13px;height:13px;stroke-width:3;color:#fff}
+.day-note-item.done .day-note-check{background:var(--green-600);border-color:var(--green-600)}
+.day-note-text{flex:1;min-width:0;line-height:1.4;word-break:break-word}
+.day-note-item.done .day-note-text{text-decoration:line-through;color:var(--text-3)}
+.day-note-del{background:none;border:none;color:var(--text-3);cursor:pointer;padding:4px;flex-shrink:0;font-size:13px;line-height:1}
+.day-note-del:hover{color:var(--red)}
+.day-note-add{display:flex;gap:6px;align-items:center}
+.day-note-add input{
+  flex:1;min-width:0;padding:9px 12px;font-size:13.5px;font-family:var(--font);
+  border:1.5px solid var(--border-md);border-radius:var(--r-sm);background:var(--surface);color:var(--text);outline:none;
+}
+.day-note-add input:focus{border-color:var(--green-600)}
+.day-note-add .btn-post{flex-shrink:0}
 
 /* Agenda list view */
 .agenda-day{margin-bottom:18px}
@@ -671,6 +706,54 @@ input[type=range]{width:100%;accent-color:var(--green-700);height:4px;cursor:poi
 .doc-meta{font-size:11px;color:var(--text-3);margin-top:1px}
 .doc-del{background:none;border:none;color:var(--text-3);cursor:pointer;padding:6px;flex-shrink:0}
 .doc-del:hover{color:var(--red)}
+
+/* ── WARRANTIES ── */
+.warr-list{display:flex;flex-direction:column;gap:8px;margin-bottom:10px}
+.warr-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-left:3px solid #9333ea;border-radius:var(--r-md);padding:12px 14px;
+}
+.warr-card.expired{border-left-color:var(--red)}
+.warr-card.soon{border-left-color:var(--orange)}
+.warr-card.warn{border-left-color:var(--gold)}
+.warr-card.active{border-left-color:#16a34a}
+.warr-card.none{border-left-color:#94a3b8}
+.warr-top{display:flex;align-items:flex-start;gap:8px}
+.warr-name{font-size:14px;font-weight:700;color:var(--text);flex:1;min-width:0}
+.warr-sub{font-size:11.5px;color:var(--text-3);margin-top:2px}
+.warr-badge{
+  display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;
+  letter-spacing:0.03em;text-transform:uppercase;white-space:nowrap;flex-shrink:0;
+  background:var(--surface-3);color:var(--text-2);
+}
+.warr-badge.active{background:#dcfce7;color:#166534}
+.warr-badge.warn{background:var(--gold-light);color:#92600a}
+.warr-badge.soon{background:#ffedd5;color:#9a3412}
+.warr-badge.expired{background:var(--red-light);color:var(--red)}
+.warr-meta{font-size:12px;color:var(--text-2);margin-top:8px;display:flex;flex-wrap:wrap;gap:4px 14px}
+.warr-meta b{color:var(--text);font-weight:600}
+.warr-actions{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
+.warr-doc-link{
+  display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;
+  color:var(--green-700);background:var(--green-50);border:1px solid var(--border);
+  padding:4px 10px;border-radius:20px;text-decoration:none;
+}
+.warr-doc-link svg{width:13px;height:13px;stroke-width:2}
+.warr-doc-link:hover{background:var(--green-100);border-color:var(--green-600)}
+.warr-rem{margin-top:8px;display:flex;flex-direction:column;gap:4px}
+.warr-rem-item{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-2)}
+.warr-rem-item b{color:var(--text);font-weight:600}
+.w-rem-row{display:grid;grid-template-columns:1fr 150px 30px;gap:6px;align-items:center;margin-bottom:6px}
+.w-rem-row input{margin:0}
+.w-rem-del{background:var(--surface-3);border:none;border-radius:50%;width:30px;height:30px;font-size:13px;cursor:pointer;color:var(--text-3);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.w-rem-del:hover{background:var(--red-light);color:var(--red)}
+@media(max-width:480px){.w-rem-row{grid-template-columns:1fr 124px 28px}}
+@media(prefers-color-scheme:dark){
+  .warr-badge.active{background:#052e16;color:#86efac}
+  .warr-badge.warn{background:#3d2800;color:#fbbf24}
+  .warr-badge.soon{background:#3d2410;color:#fdba74}
+  .warr-badge.expired{background:#2d1515;color:#fca5a5}
+}
 
 /* ── FINANCIALS ── */
 .fin-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
@@ -1028,6 +1111,63 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
   .invoice-status.overdue{background:#2d1515;color:#fca5a5}
 }
 
+/* ── REFERRALS ── */
+.ref-status{
+  display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;
+  border-radius:20px;letter-spacing:0.04em;text-transform:uppercase;
+  background:var(--surface-3);color:var(--text-2);
+}
+.ref-status.new{background:#e0f2fe;color:#075985}
+.ref-status.contacted{background:var(--gold-light);color:#92600a}
+.ref-status.won{background:#dcfce7;color:#166534}
+.ref-status.lost{background:var(--red-light);color:var(--red)}
+.invoice-row.ref-new{border-left-color:var(--sky)}
+.invoice-row.ref-contacted{border-left-color:var(--gold)}
+.invoice-row.ref-won{border-left-color:#16a34a}
+.invoice-row.ref-lost{border-left-color:#94a3b8}
+.ref-job-link{
+  display:inline-flex;align-items:center;gap:4px;margin-top:5px;
+  font-size:11.5px;font-weight:600;color:var(--green-700);
+  background:var(--green-50);border:1px solid var(--border);
+  padding:3px 9px;border-radius:20px;cursor:pointer;
+}
+.ref-job-link svg{width:12px;height:12px;stroke-width:2.2}
+.ref-job-link:hover{background:var(--green-100);border-color:var(--green-600)}
+.ref-arrow{color:var(--text-3);font-weight:500;margin:0 5px}
+@media(prefers-color-scheme:dark){
+  .ref-status.new{background:#082f49;color:#38bdf8}
+  .ref-status.contacted{background:#3d2800;color:#fbbf24}
+  .ref-status.won{background:#052e16;color:#86efac}
+  .ref-status.lost{background:#1d2e27;color:#9ca3af}
+}
+
+/* ── CONTACTS (subs & vendors) ── */
+.ct-status{
+  display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;
+  letter-spacing:0.03em;text-transform:uppercase;white-space:nowrap;flex-shrink:0;
+  background:var(--surface-3);color:var(--text-2);
+}
+.ct-status.sub{background:#e0f2fe;color:#075985}
+.ct-status.vendor{background:var(--gold-light);color:#92600a}
+.ct-status.other{background:var(--surface-3);color:var(--text-2)}
+.invoice-row.ct-sub{border-left-color:#0284c7}
+.invoice-row.ct-vendor{border-left-color:var(--gold)}
+.invoice-row.ct-other{border-left-color:#94a3b8}
+.ct-trade{font-size:12px;color:var(--text-2);margin-top:3px}
+.ct-trade b{color:var(--text);font-weight:600}
+.ct-links{display:flex;gap:6px;flex-wrap:wrap;margin-top:7px}
+.ct-link{
+  display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;
+  color:var(--green-700);background:var(--green-50);border:1px solid var(--border);
+  padding:4px 10px;border-radius:20px;text-decoration:none;
+}
+.ct-link svg{width:13px;height:13px;stroke-width:2}
+.ct-link:hover{background:var(--green-100);border-color:var(--green-600)}
+@media(prefers-color-scheme:dark){
+  .ct-status.sub{background:#082f49;color:#38bdf8}
+  .ct-status.vendor{background:#3d2800;color:#fbbf24}
+}
+
 /* Line items table in editor */
 .line-items{display:flex;flex-direction:column;gap:6px;margin-bottom:12px}
 .li-row{
@@ -1177,6 +1317,10 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25"/></svg>
     Jobs
   </button>
+  <button class="nav-btn" data-view="clients">
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M17.982 18.725A7.488 7.488 0 0012 15.75a7.488 7.488 0 00-5.982 2.975m11.963 0a9 9 0 10-11.963 0m11.963 0A8.966 8.966 0 0112 21a8.966 8.966 0 01-5.982-2.275M15 9.75a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+    Clients
+  </button>
   <button class="nav-btn" data-view="schedule">
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5"/></svg>
     Schedule
@@ -1192,6 +1336,14 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
   <button class="nav-btn" data-view="reports">
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z"/></svg>
     Reports
+  </button>
+  <button class="nav-btn" data-view="referrals">
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z"/></svg>
+    Referrals
+  </button>
+  <button class="nav-btn" data-view="contacts">
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"/></svg>
+    Contacts
   </button>
   <button class="nav-btn" data-view="activity">
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5M5.625 4.5h12.75a1.875 1.875 0 010 3.75H5.625a1.875 1.875 0 010-3.75z"/></svg>
@@ -1220,7 +1372,7 @@ try{const s=localStorage.getItem('wfs_fb');if(s)FIREBASE_CONFIG=JSON.parse(s)}ca
 // ══ State ══
 let DB=null;
 let MAP=null,MAP_MARKERS=[];
-const S={jobs:{},activity:[],members:[],view:'dashboard',detail:null,detailTab:'overview',filter:'all',search:'',photoCat:'all',calMonth:new Date().getMonth(),calYear:new Date().getFullYear(),calSelected:null,calMode:localStorage.getItem('wfs_calmode')||'month',reportRange:'90',sort:localStorage.getItem('wfs_sort')||'newest',sortOpen:false,bulkMode:false,bulkSel:new Set(),invFilter:'all',invSearch:'',invSort:'date',user:localStorage.getItem('wfs_user')||'',notifReadAt:parseInt(localStorage.getItem('wfs_notif_read')||'0',10)};
+const S={jobs:{},referrals:{},contacts:{},dayNotes:{},activity:[],members:[],view:'dashboard',detail:null,detailTab:'overview',filter:'all',search:'',photoCat:'all',calMonth:new Date().getMonth(),calYear:new Date().getFullYear(),calSelected:null,calMode:localStorage.getItem('wfs_calmode')||'month',reportRange:'90',sort:localStorage.getItem('wfs_sort')||'newest',sortOpen:false,bulkMode:false,bulkSel:new Set(),invFilter:'all',invSearch:'',invSort:'date',refFilter:'all',refSearch:'',contactFilter:'all',contactSearch:'',clientDetail:null,clientSearch:'',user:localStorage.getItem('wfs_user')||'',notifReadAt:parseInt(localStorage.getItem('wfs_notif_read')||'0',10)};
 const UNDO={stack:[],push(op){this.stack.push(op);if(this.stack.length>20)this.stack.shift()},pop(){return this.stack.pop()}};
 
 // ── Company info for invoice letterhead (editable via Settings)
@@ -1243,12 +1395,17 @@ const STAGES=['Lead','Estimate','Approved','Scheduled','In Progress','Punch List
 const STAGE_TO_STATUS={'Lead':'lead','Estimate':'lead','Approved':'active','Scheduled':'active','In Progress':'active','Punch List':'active','Complete':'complete'};
 const PHOTO_CATS=['all','before','during','after','damage','docs'];
 const LEAD_SOURCES=['Referral','Repeat Customer','Google Search','Facebook / Social','Yard Sign','Drive-By','Website','Phone Call','Walk-In','Other'];
+const REFERRAL_STATUSES=['New','Contacted','Won','Lost'];
+const CONTACT_TYPES=['Subcontractor','Vendor/Supplier','Other'];
+const CONTACT_TRADES=['Electrician','Plumber','HVAC','Concrete','Framing','Roofing','Excavation','Crane / Rigging','Welding / Steel','Painting','Drywall','Flooring','Landscaping','Dock / Marine','Lumber supplier','Concrete supplier','Hardware / Materials','Equipment rental','Surveyor','Engineer','Inspector','Permitting','Hauling / Trucking','Other'];
 
 // ══ Helpers ══
 const $=id=>document.getElementById(id);
 const esc=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 function ago(ts){const s=Math.floor((Date.now()-ts)/1000);if(s<60)return'just now';if(s<3600)return Math.floor(s/60)+'m ago';if(s<86400)return Math.floor(s/3600)+'h ago';return new Date(ts).toLocaleDateString()}
 function uid(){return'j_'+Date.now()+'_'+Math.random().toString(36).slice(2,6)}
+function rid(){return'r_'+Date.now()+'_'+Math.random().toString(36).slice(2,6)}
+function cid(){return'c_'+Date.now()+'_'+Math.random().toString(36).slice(2,6)}
 function jobs(){
   const all=Object.values(S.jobs);
   const cmp={
@@ -1332,8 +1489,11 @@ function undoLast(){const op=UNDO.pop();if(!op){toast('Nothing to undo','');retu
 
 // ══ DB layer ══
 const LOCAL={
-  load(){try{S.jobs=JSON.parse(localStorage.getItem('wfs_jobs')||'{}')}catch(e){S.jobs={}}try{S.activity=JSON.parse(localStorage.getItem('wfs_activity')||'[]')}catch(e){S.activity=[]}try{S.members=JSON.parse(localStorage.getItem('wfs_members')||'[]')}catch(e){S.members=[]}},
+  load(){try{S.jobs=JSON.parse(localStorage.getItem('wfs_jobs')||'{}')}catch(e){S.jobs={}}try{S.referrals=JSON.parse(localStorage.getItem('wfs_referrals')||'{}')}catch(e){S.referrals={}}try{S.contacts=JSON.parse(localStorage.getItem('wfs_contacts')||'{}')}catch(e){S.contacts={}}try{S.dayNotes=JSON.parse(localStorage.getItem('wfs_daynotes')||'{}')}catch(e){S.dayNotes={}}try{S.activity=JSON.parse(localStorage.getItem('wfs_activity')||'[]')}catch(e){S.activity=[]}try{S.members=JSON.parse(localStorage.getItem('wfs_members')||'[]')}catch(e){S.members=[]}},
   saveJobs(){try{localStorage.setItem('wfs_jobs',JSON.stringify(S.jobs))}catch(e){}},
+  saveReferrals(){try{localStorage.setItem('wfs_referrals',JSON.stringify(S.referrals))}catch(e){}},
+  saveContacts(){try{localStorage.setItem('wfs_contacts',JSON.stringify(S.contacts))}catch(e){}},
+  saveDayNotes(){try{localStorage.setItem('wfs_daynotes',JSON.stringify(S.dayNotes))}catch(e){}},
   saveActivity(){try{localStorage.setItem('wfs_activity',JSON.stringify(S.activity.slice(0,300)))}catch(e){}},
   saveMembers(){try{localStorage.setItem('wfs_members',JSON.stringify(S.members))}catch(e){}}
 };
@@ -1344,6 +1504,9 @@ function initFB(cfg){
     DB=firebase.database().ref('wfs');
     syncStatus('pulse','Connecting…');
     DB.child('jobs').on('value',s=>{S.jobs=s.val()||{};LOCAL.saveJobs();syncStatus('ok','Team sync live');render()});
+    DB.child('referrals').on('value',s=>{S.referrals=s.val()||{};LOCAL.saveReferrals();render()});
+    DB.child('contacts').on('value',s=>{S.contacts=s.val()||{};LOCAL.saveContacts();render()});
+    DB.child('dayNotes').on('value',s=>{S.dayNotes=s.val()||{};LOCAL.saveDayNotes();render()});
     DB.child('activity').on('value',s=>{const r=s.val();S.activity=r?Object.values(r).sort((a,b)=>b.time-a.time):[];LOCAL.saveActivity()});
     DB.child('members').on('value',s=>{S.members=s.val()||[];LOCAL.saveMembers();render()});
     DB.child('.info/connected').on('value',s=>{if(!s.val())syncStatus('err','Reconnecting…')});
@@ -1352,6 +1515,15 @@ function initFB(cfg){
 }
 async function writeJob(j){S.jobs[j.id]=j;LOCAL.saveJobs();if(DB)await DB.child('jobs/'+j.id).set(j).catch(()=>{})}
 async function deleteJobDB(id){delete S.jobs[id];LOCAL.saveJobs();if(DB)await DB.child('jobs/'+id).remove().catch(()=>{})}
+async function writeReferral(r){S.referrals[r.id]=r;LOCAL.saveReferrals();if(DB)await DB.child('referrals/'+r.id).set(r).catch(()=>{})}
+async function deleteReferralDB(id){delete S.referrals[id];LOCAL.saveReferrals();if(DB)await DB.child('referrals/'+id).remove().catch(()=>{})}
+async function writeContact(c){S.contacts[c.id]=c;LOCAL.saveContacts();if(DB)await DB.child('contacts/'+c.id).set(c).catch(()=>{})}
+async function deleteContactDB(id){delete S.contacts[id];LOCAL.saveContacts();if(DB)await DB.child('contacts/'+id).remove().catch(()=>{})}
+async function saveDayNotes(dayKey){
+  if(S.dayNotes[dayKey]&&!S.dayNotes[dayKey].length)delete S.dayNotes[dayKey];
+  LOCAL.saveDayNotes();
+  if(DB){const v=S.dayNotes[dayKey];if(v&&v.length)await DB.child('dayNotes/'+dayKey).set(v).catch(()=>{});else await DB.child('dayNotes/'+dayKey).remove().catch(()=>{})}
+}
 async function logAct(action,job){const e={user:S.user||'Someone',action,job:job||'',time:Date.now()};S.activity.unshift(e);LOCAL.saveActivity();if(DB)await DB.child('activity').push(e).catch(()=>{})}
 async function saveMembers(){LOCAL.saveMembers();if(DB)await DB.child('members').set(S.members).catch(()=>{})}
 
@@ -1369,6 +1541,10 @@ function render(){
   else if(S.view==='invoices')c.innerHTML=renderInvoicesView();
   else if(S.view==='map')c.innerHTML=renderMap();
   else if(S.view==='reports')c.innerHTML=renderReports();
+  else if(S.view==='referrals')c.innerHTML=renderReferrals();
+  else if(S.view==='contacts')c.innerHTML=renderContacts();
+  else if(S.view==='clients'&&S.clientDetail)c.innerHTML=renderClientDetail(S.clientDetail);
+  else if(S.view==='clients')c.innerHTML=renderClients();
   else if(S.view==='activity')c.innerHTML=renderActivity();
   else if(S.view==='team')c.innerHTML=renderTeam();
   updateUserUI();
@@ -1522,6 +1698,68 @@ function jobDateRange(j){
 
 function chipClass(status){return{lead:'cs-lead',active:'cs-active',complete:'cs-complete',hold:'cs-hold'}[status]||'cs-active'}
 function chipBarColor(status){return{lead:'#d97706',active:'#16a34a',complete:'#0284c7',hold:'#64748b'}[status]||'#16a34a'}
+function calTier(e){return e.isDayNote?2:((e.isWarranty||e.isReminder)?1:0)}
+function dnid(){return'dn_'+Date.now()+'_'+Math.random().toString(36).slice(2,6)}
+
+// ══ Warranties ══
+function wid(){return'w_'+Date.now()+'_'+Math.random().toString(36).slice(2,6)}
+const WARRANTY_TYPES=['Workmanship','Manufacturer','Material','Labor','Structural','Other'];
+const WARRANTY_TERMS=[['12','1 year'],['24','2 years'],['36','3 years'],['60','5 years'],['120','10 years'],['lifetime','Lifetime'],['custom','Custom…']];
+// Days-before-expiry that trigger a reminder (descending)
+const WARRANTY_REMINDERS=[90,60,30,14,7,1];
+function addMonths(dateStr,months){
+  if(!dateStr)return'';
+  const s=dateStr.slice(0,10);
+  const d=new Date(s+'T00:00:00');
+  if(isNaN(d))return'';
+  const day=d.getDate();
+  const res=new Date(d.getFullYear(),d.getMonth()+Number(months||0),day);
+  if(res.getDate()!==day)res.setDate(0); // clamp month overflow (e.g. Jan 31 +1mo)
+  return dateKey(res);
+}
+function warrantyExpiry(w){
+  if(!w||w.lifetime)return null;
+  if(w.expiryDate)return w.expiryDate.slice(0,10);
+  if(w.startDate&&w.termMonths)return addMonths(w.startDate,w.termMonths);
+  return null;
+}
+function jobWarranties(j){return (j&&Array.isArray(j.warranties))?j.warranties:[]}
+function allWarranties(){
+  const out=[];
+  jobs().forEach(j=>jobWarranties(j).forEach(w=>out.push({job:j,w})));
+  return out;
+}
+function warrantyStatus(w){
+  if(w.lifetime)return{label:'Lifetime coverage',cls:'active',d:null};
+  const exp=warrantyExpiry(w);
+  if(!exp)return{label:'No expiry set',cls:'none',d:null};
+  const d=daysUntil(exp);
+  if(d===null)return{label:'No expiry set',cls:'none',d:null};
+  if(d<0)return{label:'Expired '+Math.abs(d)+'d ago',cls:'expired',d};
+  if(d===0)return{label:'Expires today',cls:'soon',d};
+  if(d<=30)return{label:'Expires in '+d+' days',cls:'soon',d};
+  if(d<=90)return{label:'Expires in '+d+' days',cls:'warn',d};
+  return{label:'Active until '+fmtShort(exp),cls:'active',d};
+}
+function warrantyReminderNotifs(j,w){
+  const out=[];
+  const exp=warrantyExpiry(w);
+  if(!exp)return out;
+  const d=daysUntil(exp);
+  if(d===null)return out;
+  const expTs=new Date(exp+'T00:00:00').getTime();
+  if(d<0){
+    if(d>=-120)out.push({type:'warranty',time:expTs,text:`Warranty expired: <strong>${esc(w.name||'Warranty')}</strong>`,sub:esc(j.name)+' · '+Math.abs(d)+'d ago',jobId:j.id});
+    return out;
+  }
+  let active=null;
+  WARRANTY_REMINDERS.forEach(T=>{if(d<=T)active=T});
+  if(active!==null){
+    const msTs=expTs-active*86400000;
+    out.push({type:'warranty',time:msTs,text:`Warranty expiring: <strong>${esc(w.name||'Warranty')}</strong>`,sub:esc(j.name)+' · '+(d===0?'today':'in '+d+' day'+(d===1?'':'s')),jobId:j.id});
+  }
+  return out;
+}
 
 function renderSchedule(){
   const y=S.calYear,m=S.calMonth;
@@ -1537,11 +1775,26 @@ function renderSchedule(){
     range.forEach((k,i)=>{
       (byDay[k]=byDay[k]||[]).push({job:j,dayIdx:i,totalDays:range.length,firstDay:range[0],lastDay:range[range.length-1]});
     });
+    // Warranty expiry dates land on the calendar automatically
+    jobWarranties(j).forEach(w=>{
+      const exp=warrantyExpiry(w);
+      if(exp)(byDay[exp]=byDay[exp]||[]).push({job:j,warranty:w,isWarranty:true});
+      // Custom warranty reminders the user scheduled
+      (w.reminders||[]).forEach(rem=>{
+        if(rem&&rem.date)(byDay[rem.date]=byDay[rem.date]||[]).push({job:j,warranty:w,reminder:rem,isReminder:true});
+      });
+    });
   });
-  // Sort each day's chips so multi-day jobs come first and stay in stable order
+  // Day notes & to-dos the user pinned to a date
+  Object.entries(S.dayNotes||{}).forEach(([k,items])=>{
+    (items||[]).forEach(it=>{(byDay[k]=byDay[k]||[]).push({dayNote:it,dateKey:k,isDayNote:true})});
+  });
+  // Sort each day's chips: jobs first (longest span first), then warranty/reminder, then notes
   Object.values(byDay).forEach(arr=>arr.sort((a,b)=>{
-    if(b.totalDays!==a.totalDays)return b.totalDays-a.totalDays;
-    return a.job.name.localeCompare(b.job.name);
+    const ta=calTier(a),tb=calTier(b);
+    if(ta!==tb)return ta-tb;
+    if(ta===0){const at=a.totalDays||0,bt=b.totalDays||0;if(bt!==at)return bt-at;return (a.job.name||'').localeCompare(b.job.name||'')}
+    return 0;
   }));
 
   const sel=S.calSelected||today;
@@ -1565,6 +1818,9 @@ function renderSchedule(){
       <div class="cal-legend-item"><div class="cal-legend-sw" style="background:var(--gold-light);border-left:3px solid #d97706"></div>Lead</div>
       <div class="cal-legend-item"><div class="cal-legend-sw" style="background:#e0f2fe;border-left:3px solid #0284c7"></div>Complete</div>
       <div class="cal-legend-item"><div class="cal-legend-sw" style="background:var(--surface-3);border-left:3px solid #64748b"></div>On Hold</div>
+      <div class="cal-legend-item"><div class="cal-legend-sw" style="background:#f3e8ff;border-left:3px solid #9333ea"></div>Warranty</div>
+      <div class="cal-legend-item"><div class="cal-legend-sw" style="background:#fef3c7;border-left:3px solid #d97706"></div>Reminder</div>
+      <div class="cal-legend-item"><div class="cal-legend-sw" style="background:#e0f2fe;border-left:3px solid #0ea5e9"></div>Note / to-do</div>
     </div>
     ${isMonth?renderCalMonth(y,m,daysInMonth,startDow,byDay,today,sel):renderCalAgenda(byDay,today)}
     ${isMonth?renderSelectedDay(byDay,sel,today):''}
@@ -1609,7 +1865,20 @@ function renderCalCell(k,dayNum,byDay,today,sel,otherMonth,maxChips){
   const cls='cal-day'+(isToday?' today':'')+(isSel?' selected':'')+(otherMonth?' other-month':'');
   const visible=list.slice(0,maxChips);
   const overflow=list.length-visible.length;
-  const chips=visible.map(({job,dayIdx,totalDays})=>{
+  const chips=visible.map(entry=>{
+    if(entry.isDayNote){
+      const it=entry.dayNote;
+      return `<div class="cal-chip cs-note${it.done?' done':''}" title="${it.done?'Done: ':''}${esc(it.text)}">${it.done?'✓':'📝'} ${esc(it.text)}</div>`;
+    }
+    if(entry.isReminder){
+      const rem=entry.reminder;
+      return `<div class="cal-chip cs-reminder" data-open-warranty="${entry.job.id}" title="Warranty reminder: ${esc(rem.label||'Reminder')} · ${esc(entry.warranty.name||'Warranty')} · ${esc(entry.job.name)}">🔔 ${esc(rem.label||'Reminder')}</div>`;
+    }
+    if(entry.isWarranty){
+      const w=entry.warranty;
+      return `<div class="cal-chip cs-warranty" data-open-warranty="${entry.job.id}" title="Warranty expires: ${esc(w.name||'Warranty')} · ${esc(entry.job.name)}">🛡 ${esc(w.name||'Warranty')}</div>`;
+    }
+    const {job,dayIdx,totalDays}=entry;
     const contLeft=dayIdx>0;
     const contRight=dayIdx<totalDays-1;
     const isWeekStart=new Date(k+'T00:00:00').getDay()===0;
@@ -1627,24 +1896,66 @@ function renderCalCell(k,dayNum,byDay,today,sel,otherMonth,maxChips){
 }
 
 function renderSelectedDay(byDay,sel,today){
-  const selList=(byDay[sel]||[]).slice();
-  // Sort: leads first? Or by status priority. Use status order: lead, active, complete, hold
   const order={lead:0,active:1,complete:2,hold:3};
-  selList.sort((a,b)=>(order[a.job.status]??9)-(order[b.job.status]??9));
+  const selList=(byDay[sel]||[]).filter(e=>!e.isDayNote).slice();
+  selList.sort((a,b)=>{
+    const aw=(a.isWarranty||a.isReminder)?1:0,bw=(b.isWarranty||b.isReminder)?1:0;
+    if(aw!==bw)return aw-bw;
+    return (order[a.job?a.job.status:'']??9)-(order[b.job?b.job.status:'']??9);
+  });
+  const notes=(S.dayNotes[sel]||[]);
   const dt=new Date(sel+'T00:00:00');
   const lbl=dt.toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'});
   const isToday=sel===today;
+  const notesHtml=`<div class="day-notes">
+    <div class="cal-day-list-hd" style="margin-top:14px"><span>Notes &amp; To-dos</span><span class="kpi-sub">${notes.length?notes.filter(n=>!n.done).length+' open':''}</span></div>
+    ${notes.length?`<div class="day-note-list">${notes.map(n=>`<div class="day-note-item${n.done?' done':''}">
+        <button class="day-note-check" data-daynote-toggle="${sel}|${esc(n.id)}" aria-label="Toggle done">${n.done?'<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>':''}</button>
+        <span class="day-note-text">${esc(n.text)}</span>
+        <button class="day-note-del" data-daynote-del="${sel}|${esc(n.id)}" aria-label="Delete">✕</button>
+      </div>`).join('')}</div>`:'<p style="font-size:12.5px;color:var(--text-3);padding:2px 0 6px">No notes or to-dos for this day yet.</p>'}
+    <div class="day-note-add">
+      <input id="daynote-in" data-daynote-day="${sel}" placeholder="Add a note or to-do…" aria-label="Add note or to-do">
+      <button class="btn-post" id="daynote-add">Add</button>
+    </div>
+  </div>`;
   return `<div class="cal-day-list">
     <div class="cal-day-list-hd"><span>${esc(lbl)}${isToday?' <span class="kpi-sub" style="color:var(--green-700);font-weight:700;margin-left:6px">Today</span>':''}</span><span class="kpi-sub">${selList.length} job${selList.length!==1?'s':''}</span></div>
-    ${selList.length===0?'<p style="font-size:12.5px;color:var(--text-3);padding:4px 0">Nothing scheduled. Tap a date above with jobs to see what\'s on the books.</p>'
-      :selList.map(({job,dayIdx,totalDays})=>`<div class="cal-job-row" data-open="${job.id}">
+    ${selList.length===0?'<p style="font-size:12.5px;color:var(--text-3);padding:4px 0">Nothing scheduled for this day.</p>'
+      :selList.map(entry=>{
+        const {job,dayIdx,totalDays}=entry;
+        if(entry.isReminder){
+          const rem=entry.reminder;
+          return `<div class="cal-job-row" data-open-warranty="${job.id}">
+            <div class="cal-job-row-bar" style="background:#d97706"></div>
+            <div style="flex:1;min-width:0">
+              <div style="font-weight:600">🔔 ${esc(rem.label||'Reminder')}</div>
+              <div class="cal-job-row-meta">${esc(entry.warranty.name||'Warranty')} · ${esc(job.name)}${job.customerName?' · '+esc(job.customerName):''}</div>
+            </div>
+            <span class="warr-badge warn">Reminder</span>
+          </div>`;
+        }
+        if(entry.isWarranty){
+          const w=entry.warranty;const st=warrantyStatus(w);
+          return `<div class="cal-job-row" data-open-warranty="${job.id}">
+            <div class="cal-job-row-bar" style="background:#9333ea"></div>
+            <div style="flex:1;min-width:0">
+              <div style="font-weight:600">🛡 ${esc(w.name||'Warranty')} expires</div>
+              <div class="cal-job-row-meta">${esc(job.name)}${job.customerName?' · '+esc(job.customerName):''}</div>
+            </div>
+            <span class="warr-badge ${st.cls}">${esc(st.label)}</span>
+          </div>`;
+        }
+        return `<div class="cal-job-row" data-open="${job.id}">
         <div class="cal-job-row-bar" style="background:${chipBarColor(job.status)}"></div>
         <div style="flex:1;min-width:0">
           <div style="font-weight:600">${esc(job.name)}${totalDays>1?` <span class="cal-job-row-day">Day ${dayIdx+1}/${totalDays}</span>`:''}</div>
           <div class="cal-job-row-meta">${esc(job.address||'No address')}${job.assigned?' · '+esc(job.assigned):''}${job.customerName?' · '+esc(job.customerName):''}</div>
         </div>
         <span class="status-pill ${spClass(job.status)}">${spLabel(job.status)}</span>
-      </div>`).join('')}
+      </div>`;
+      }).join('')}
+    ${notesHtml}
   </div>`;
 }
 
@@ -1669,17 +1980,57 @@ function renderCalAgenda(byDay,today){
     const isToday=k===today;
     const lbl=date.toLocaleDateString(undefined,{weekday:'long',month:'short',day:'numeric'});
     const order={lead:0,active:1,complete:2,hold:3};
-    const sorted=list.slice().sort((a,b)=>(order[a.job.status]??9)-(order[b.job.status]??9));
+    const sorted=list.slice().sort((a,b)=>{
+      const ta=calTier(a),tb=calTier(b);
+      if(ta!==tb)return ta-tb;
+      if(ta===0)return (order[a.job?a.job.status:'']??9)-(order[b.job?b.job.status:'']??9);
+      return 0;
+    });
     return `<div class="agenda-day">
-      <div class="agenda-day-hd">${esc(lbl)} ${isToday?'<span class="today-pill">TODAY</span>':''}<span style="margin-left:auto;color:var(--text-3);font-weight:600">${sorted.length} job${sorted.length!==1?'s':''}</span></div>
-      ${sorted.map(({job,dayIdx,totalDays})=>`<div class="cal-job-row" data-open="${job.id}">
+      <div class="agenda-day-hd">${esc(lbl)} ${isToday?'<span class="today-pill">TODAY</span>':''}<span style="margin-left:auto;color:var(--text-3);font-weight:600">${sorted.length} item${sorted.length!==1?'s':''}</span></div>
+      ${sorted.map(entry=>{
+        const {job,dayIdx,totalDays}=entry;
+        if(entry.isDayNote){
+          const it=entry.dayNote;
+          return `<div class="cal-job-row${it.done?' daynote-done':''}">
+            <div class="cal-job-row-bar" style="background:#0ea5e9"></div>
+            <div style="flex:1;min-width:0">
+              <div style="font-weight:600">${it.done?'✓':'📝'} ${esc(it.text)}</div>
+              <div class="cal-job-row-meta">Note / to-do</div>
+            </div>
+          </div>`;
+        }
+        if(entry.isReminder){
+          const rem=entry.reminder;
+          return `<div class="cal-job-row" data-open-warranty="${job.id}">
+            <div class="cal-job-row-bar" style="background:#d97706"></div>
+            <div style="flex:1;min-width:0">
+              <div style="font-weight:600">🔔 ${esc(rem.label||'Reminder')}</div>
+              <div class="cal-job-row-meta">${esc(entry.warranty.name||'Warranty')} · ${esc(job.name)}</div>
+            </div>
+            <span class="warr-badge warn">Reminder</span>
+          </div>`;
+        }
+        if(entry.isWarranty){
+          const w=entry.warranty;const st=warrantyStatus(w);
+          return `<div class="cal-job-row" data-open-warranty="${job.id}">
+            <div class="cal-job-row-bar" style="background:#9333ea"></div>
+            <div style="flex:1;min-width:0">
+              <div style="font-weight:600">🛡 ${esc(w.name||'Warranty')} expires</div>
+              <div class="cal-job-row-meta">${esc(job.name)}${job.customerName?' · '+esc(job.customerName):''}</div>
+            </div>
+            <span class="warr-badge ${st.cls}">${esc(st.label)}</span>
+          </div>`;
+        }
+        return `<div class="cal-job-row" data-open="${job.id}">
         <div class="cal-job-row-bar" style="background:${chipBarColor(job.status)}"></div>
         <div style="flex:1;min-width:0">
           <div style="font-weight:600">${esc(job.name)}${totalDays>1?` <span class="cal-job-row-day">Day ${dayIdx+1}/${totalDays}</span>`:''}</div>
           <div class="cal-job-row-meta">${esc(job.address||'No address')}${job.assigned?' · '+esc(job.assigned):''}</div>
         </div>
         <span class="status-pill ${spClass(job.status)}">${spLabel(job.status)}</span>
-      </div>`).join('')}
+      </div>`;
+      }).join('')}
     </div>`;
   }).join('');
 }
@@ -2452,6 +2803,20 @@ function buildNotifications(){
       else if(d<=2)out.push({type:'task',time:new Date(t.due+'T00:00:00').getTime(),text:`Task due ${d===0?'today':d===1?'tomorrow':'in '+d+' days'}: <strong>${esc(t.text)}</strong>`,sub:esc(j.name),jobId:j.id});
     });
   });
+  // Warranty milestone reminders at key dates before expiry (and after lapse)
+  all.forEach(j=>{
+    jobWarranties(j).forEach(w=>{
+      warrantyReminderNotifs(j,w).forEach(n=>out.push({...n,tab:'warranty'}));
+      // User-scheduled warranty reminders
+      (w.reminders||[]).forEach(rem=>{
+        if(!rem||!rem.date)return;
+        const d=daysUntil(rem.date);
+        if(d===null||d>7||d<-30)return;
+        const when=d<0?Math.abs(d)+'d ago':(d===0?'today':d===1?'tomorrow':'in '+d+' days');
+        out.push({type:'warranty',time:new Date(rem.date+'T00:00:00').getTime(),text:`Warranty reminder: <strong>${esc(rem.label||'Reminder')}</strong>`,sub:esc(w.name||'Warranty')+' · '+esc(j.name)+' · '+when,jobId:j.id,tab:'warranty'});
+      });
+    });
+  });
   // Recent activity on jobs assigned to me
   S.activity.slice(0,40).forEach(a=>{
     const job=Object.values(S.jobs).find(j=>j.name===a.job);
@@ -2484,10 +2849,10 @@ function updateBellBadge(){
 }
 function showNotificationsModal(){
   const notifs=buildNotifications();
-  const ICONS={overdue:'!',task:'○',activity:'•',mention:'@'};
+  const ICONS={overdue:'!',task:'○',activity:'•',mention:'@',warranty:'🛡'};
   const body=notifs.length===0
     ? `<div class="notif-empty">🔕<br><br>You're all caught up.<br><span style="font-size:12px">Tasks assigned to you, mentions, and activity on your jobs will appear here.</span></div>`
-    : '<div class="notif-list">'+notifs.map(n=>`<div class="notif-item ${n.time>S.notifReadAt?'unread':''}" data-open="${n.jobId}">
+    : '<div class="notif-list">'+notifs.map(n=>`<div class="notif-item ${n.time>S.notifReadAt?'unread':''}" data-open="${n.jobId}" data-tab="${n.tab||'overview'}">
         <div class="notif-icon ${n.type}">${ICONS[n.type]||'•'}</div>
         <div class="notif-body"><div class="notif-text">${n.text}</div><div class="notif-meta">${n.sub} · ${ago(n.time)}</div></div>
         ${n.time>S.notifReadAt?'<div class="notif-dot"></div>':''}
@@ -2508,8 +2873,736 @@ function showNotificationsModal(){
   document.querySelectorAll('.notif-item[data-open]').forEach(el=>el.onclick=()=>{
     S.notifReadAt=Math.max(S.notifReadAt,Date.now());
     localStorage.setItem('wfs_notif_read',String(S.notifReadAt));
-    S.detail=el.dataset.open;S.view='jobs';S.detailTab='overview';closeModal();render();
+    S.detail=el.dataset.open;S.view='jobs';S.detailTab=el.dataset.tab||'overview';closeModal();render();
   });
+}
+
+// ══ Referrals ══
+function referrals(){
+  return Object.values(S.referrals).sort((a,b)=>{
+    const ad=a.date||'',bd=b.date||'';
+    if(ad!==bd)return bd.localeCompare(ad);
+    return (b.created||0)-(a.created||0);
+  });
+}
+function refStatusClass(s){return (s||'New').toLowerCase()}
+function linkedJob(r){return r&&r.jobId?S.jobs[r.jobId]:null}
+
+function renderReferrals(){
+  const all=referrals();
+  const total=all.length;
+  const won=all.filter(r=>r.status==='Won').length;
+  const lost=all.filter(r=>r.status==='Lost').length;
+  const open=all.filter(r=>r.status!=='Won'&&r.status!=='Lost').length;
+  const decided=won+lost;
+  const convRate=decided>0?(won/decided)*100:0;
+
+  // Top referrers — who sends the most business
+  const byRef={};
+  all.forEach(r=>{
+    const k=(r.from||'').trim()||'Unknown';
+    byRef[k]=byRef[k]||{name:k,count:0,won:0,revenue:0};
+    byRef[k].count++;
+    if(r.status==='Won')byRef[k].won++;
+    const j=linkedJob(r);
+    if(j&&j.status==='complete')byRef[k].revenue+=Number(j.invoiced||j.value||0);
+  });
+  const topReferrers=Object.values(byRef).sort((a,b)=>b.count-a.count||b.won-a.won||b.revenue-a.revenue).slice(0,5);
+  const topName=topReferrers.length?topReferrers[0].name:'—';
+
+  // Filter + search
+  const q=(S.refSearch||'').toLowerCase();
+  const shown=all.filter(r=>{
+    if(S.refFilter!=='all'&&(r.status||'New')!==S.refFilter)return false;
+    if(!q)return true;
+    const j=linkedJob(r);
+    const hay=[r.from,r.forName,r.notes,r.reward,j&&j.name,j&&j.customerName].filter(Boolean).join(' ').toLowerCase();
+    return hay.includes(q);
+  });
+
+  const statusChips=[
+    ['all','All',total],
+    ['New','New',all.filter(r=>(r.status||'New')==='New').length],
+    ['Contacted','Contacted',all.filter(r=>r.status==='Contacted').length],
+    ['Won','Won',won],
+    ['Lost','Lost',lost],
+  ];
+
+  return `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+      <div>
+        <div style="font-size:11px;color:var(--text-3);text-transform:uppercase;letter-spacing:0.06em;font-weight:700">Word of Mouth</div>
+        <div style="font-size:20px;font-weight:700;margin-top:2px">Referrals</div>
+      </div>
+      <button class="btn-add" id="btn-new-ref" aria-label="Add referral">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+        New Referral
+      </button>
+    </div>
+
+    <div class="kpi-grid">
+      <div class="kpi-card accent"><div class="kpi-label">Total Referrals</div><div class="kpi-value">${total}</div><div class="kpi-sub">${open} in progress</div></div>
+      <div class="kpi-card"><div class="kpi-label">Won</div><div class="kpi-value">${won}</div><div class="kpi-sub">${lost} lost</div></div>
+      <div class="kpi-card"><div class="kpi-label">Conversion</div><div class="kpi-value">${convRate.toFixed(0)}%</div><div class="kpi-sub">of decided referrals</div></div>
+      <div class="kpi-card"><div class="kpi-label">Top Referrer</div><div class="kpi-value" style="font-size:16px;line-height:1.2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(topName)}</div><div class="kpi-sub">${topReferrers.length?topReferrers[0].count+' referral'+(topReferrers[0].count!==1?'s':''):'—'}</div></div>
+    </div>
+
+    ${topReferrers.length?`<div class="report-section">
+      <div class="report-hd">Top Referrers <span class="kpi-sub">Who sends you business</span></div>
+      <div class="leaderboard top-customers">
+        ${topReferrers.map((c,i)=>{
+          const rankCls=i===0?'gold':i===1?'silver':i===2?'bronze':'';
+          return `<div class="lb-row">
+            <div class="lb-rank ${rankCls}">${i+1}</div>
+            <div class="member-ava" style="width:30px;height:30px;font-size:12px">${initials(c.name)}</div>
+            <div class="lb-name">${esc(c.name)}<div style="font-size:11px;color:var(--text-3);font-weight:500">${c.won} won${c.revenue>0?' · '+money(c.revenue)+' earned':''}</div></div>
+            <div class="lb-stats"><strong>${c.count}</strong><div>referral${c.count!==1?'s':''}</div></div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`:''}
+
+    <div class="toolbar" style="margin-top:8px">
+      <div class="search-wrap">
+        <div class="search-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 15.803a7.5 7.5 0 0010.607 0z"/></svg></div>
+        <input class="search" id="ref-search" placeholder="Search referrer, customer, job…" value="${esc(S.refSearch)}" aria-label="Search referrals">
+      </div>
+    </div>
+
+    <div class="filter-row" style="margin-bottom:14px">
+      ${statusChips.map(([k,lbl,n])=>`<div class="filter-chip ${S.refFilter===k?'active':''}" data-ref-filter="${k}">${lbl} ${n}</div>`).join('')}
+    </div>
+
+    <div class="invoice-list" style="display:flex;flex-direction:column;gap:8px">
+      ${shown.length===0?`<div class="empty" style="padding:40px 20px">
+        <div class="empty-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0z"/></svg></div>
+        <h3>${total===0?'No referrals yet':'No matches'}</h3>
+        <p>${total===0?'Track who sends you business. Log who referred a customer, then link it straight to the job it became.':'Try a different search or filter.'}</p>
+      </div>`
+        :shown.map(r=>{
+          const cls=refStatusClass(r.status);
+          const status=r.status||'New';
+          const j=linkedJob(r);
+          const contactBits=[r.forPhone,r.forEmail].filter(Boolean).join(' · ');
+          const meta=[r.date?fmtDate(r.date):'',contactBits].filter(Boolean).join(' · ');
+          const jobLine=r.jobId
+            ? (j?`<div class="ref-job-link" data-ref-job="${esc(j.id)}"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244"/></svg>${esc(j.name)} · ${spLabel(j.status)}</div>`
+                 :`<div style="font-size:11.5px;color:var(--text-3);margin-top:5px">Linked job was removed</div>`)
+            : `<div style="font-size:11.5px;color:var(--text-3);margin-top:5px">No job linked yet</div>`;
+          return `<div class="invoice-row ref-${cls}">
+            <div class="invoice-row-main" data-open-ref="${esc(r.id)}" style="cursor:pointer">
+              <div class="invoice-num">${esc(r.from||'Unknown')}<span class="ref-arrow">→</span>${esc(r.forName||'(unnamed)')} <span class="ref-status ${cls}">${esc(status)}</span></div>
+              ${meta?`<div class="invoice-meta">${esc(meta)}</div>`:''}
+              ${r.reward?`<div class="invoice-meta">🎁 ${esc(r.reward)}</div>`:''}
+              ${jobLine}
+            </div>
+            <div class="inv-quick-actions">
+              <button class="inv-quick-btn" data-open-ref="${esc(r.id)}" title="Edit referral" aria-label="Edit referral">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125"/></svg>
+              </button>
+            </div>
+          </div>`;
+        }).join('')}
+    </div>
+  `;
+}
+
+function showReferralModal(mode,ref){
+  const r={id:rid(),status:'New',date:dateKey(new Date()),...(ref||{})};
+  const linked=linkedJob(r);
+  const jobBlock=r.jobId
+    ? (linked?`<div class="invoice-row ${''}" style="cursor:default;border-left-color:var(--green-700)">
+          <div class="invoice-row-main"><div class="invoice-num">${esc(linked.name)}</div><div class="invoice-meta">${esc(linked.customerName||'')} · ${spLabel(linked.status)}</div></div>
+          <button class="btn-sm" id="rf-unlink" type="button" style="flex-shrink:0">Unlink</button>
+        </div>`
+       :`<div style="font-size:12.5px;color:var(--text-3);margin-bottom:8px">Linked job was removed. <button class="btn-sm" id="rf-unlink" type="button" style="padding:4px 9px;font-size:11px">Clear</button></div>`)
+    : `<div style="display:flex;gap:8px;flex-wrap:wrap">
+         <button class="li-add-btn" id="rf-link-job" type="button" style="flex:1;min-width:130px">🔗 Link existing job</button>
+         <button class="li-add-btn" id="rf-create-job" type="button" style="flex:1;min-width:130px">＋ Create job from referral</button>
+       </div>`;
+
+  $('modal-root').innerHTML=`<div class="modal-bd" id="mbd" role="dialog" aria-modal="true" aria-label="${mode==='add'?'New referral':'Edit referral'}"><div class="modal"><div class="modal-handle"></div>
+    <div class="modal-head"><div class="modal-title">${mode==='add'?'New Referral':'Edit Referral'}</div><button class="modal-close" id="mc" aria-label="Close"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button></div>
+    <div class="modal-body">
+      <div class="form-group"><label class="form-label">Referred by *</label><input class="form-input" id="rf-from" value="${esc(r.from||'')}" placeholder="Who sent this referral?"></div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Referrer phone</label><input class="form-input" type="tel" id="rf-fphone" value="${esc(r.fromPhone||'')}" placeholder="(555) 123-4567"></div>
+        <div class="form-group"><label class="form-label">Referrer email</label><input class="form-input" type="email" id="rf-femail" value="${esc(r.fromEmail||'')}" placeholder="optional"></div>
+      </div>
+
+      <div style="margin:18px 0 10px;padding-top:14px;border-top:1px solid var(--border)">
+        <div class="form-label" style="font-size:12px;margin-bottom:10px">Referred Customer</div>
+      </div>
+      <div class="form-group"><label class="form-label">Referral is for *</label><input class="form-input" id="rf-for" value="${esc(r.forName||'')}" placeholder="New customer / prospect name"></div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Phone</label><input class="form-input" type="tel" id="rf-pphone" value="${esc(r.forPhone||'')}" placeholder="(555) 123-4567"></div>
+        <div class="form-group"><label class="form-label">Email</label><input class="form-input" type="email" id="rf-pemail" value="${esc(r.forEmail||'')}" placeholder="optional"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Date received</label><input class="form-input" type="date" id="rf-date" value="${esc(r.date||'')}"></div>
+        <div class="form-group"><label class="form-label">Status</label><select class="form-select" id="rf-status">${REFERRAL_STATUSES.map(s=>`<option value="${esc(s)}" ${(r.status||'New')===s?'selected':''}>${esc(s)}</option>`).join('')}</select></div>
+      </div>
+      <div class="form-group"><label class="form-label">Thank-you / reward</label><input class="form-input" id="rf-reward" value="${esc(r.reward||'')}" placeholder="e.g. $100 gift card sent"></div>
+      <div class="form-group"><label class="form-label">Notes</label><textarea class="form-textarea" id="rf-notes" placeholder="Context about the referral…">${esc(r.notes||'')}</textarea></div>
+
+      <div style="margin:18px 0 10px;padding-top:14px;border-top:1px solid var(--border)">
+        <div class="form-label" style="font-size:12px;margin-bottom:10px">Linked Job</div>
+      </div>
+      ${jobBlock}
+    </div>
+    <div class="modal-foot">
+      ${mode==='edit'?`<button class="btn-delete" id="rf-del">Delete</button>`:''}
+      <button class="btn-cancel" id="btn-cx">Cancel</button>
+      <button class="btn-save" id="rf-save">${mode==='add'?'Add Referral':'Save'}</button>
+    </div>
+  </div></div>`;
+
+  $('mc').onclick=$('btn-cx').onclick=closeModal;
+  $('mbd').onclick=e=>{if(e.target===e.currentTarget)closeModal()};
+
+  const collect=()=>({
+    id:r.id,jobId:r.jobId||'',created:r.created,
+    from:$('rf-from').value.trim(),
+    fromPhone:$('rf-fphone').value.trim(),
+    fromEmail:$('rf-femail').value.trim(),
+    forName:$('rf-for').value.trim(),
+    forPhone:$('rf-pphone').value.trim(),
+    forEmail:$('rf-pemail').value.trim(),
+    date:$('rf-date').value,
+    status:$('rf-status').value,
+    reward:$('rf-reward').value.trim(),
+    notes:$('rf-notes').value.trim(),
+  });
+
+  $('rf-link-job')?.addEventListener('click',()=>{
+    const draft=collect();
+    showJobPickerModal(jobId=>{draft.jobId=jobId;showReferralModal(mode,draft)});
+  });
+  $('rf-unlink')?.addEventListener('click',()=>{
+    const draft=collect();draft.jobId='';showReferralModal(mode,draft);
+  });
+  $('rf-create-job')?.addEventListener('click',async()=>{
+    const draft=collect();
+    if(!draft.forName){toast('Add who the referral is for first','');return}
+    const nj={id:uid(),name:draft.forName+' — Referral',customerName:draft.forName,customerPhone:draft.forPhone,customerEmail:draft.forEmail,leadSource:'Referral',referredBy:draft.from,referralId:draft.id,status:'lead',stage:'Lead',progress:0,notes:[],photos:[],tasks:[],dailyLogs:[],documents:[],comms:[],created:Date.now()};
+    await writeJob(nj);await logAct('created job from referral',nj.name);
+    draft.jobId=nj.id;draft.created=draft.created||Date.now();
+    await writeReferral(draft);
+    toast('Job created & linked');
+    showReferralModal('edit',draft);
+  });
+
+  $('rf-save').onclick=async()=>{
+    const data=collect();
+    if(!data.from){toast('Enter who referred this','');return}
+    if(!data.forName){toast('Enter who the referral is for','');return}
+    const existing=mode==='edit';
+    data.created=data.created||Date.now();
+    await writeReferral(data);
+    // Keep the linked job's reverse reference in sync
+    if(data.jobId&&S.jobs[data.jobId]){
+      const j=S.jobs[data.jobId];
+      const changed=j.referralId!==data.id||j.referredBy!==data.from||j.leadSource!=='Referral';
+      if(changed){j.referralId=data.id;j.referredBy=data.from;j.leadSource=j.leadSource||'Referral';await writeJob(j)}
+    }
+    await logAct(existing?'updated referral from':'logged referral from',data.from);
+    closeModal();render();toast(existing?'Referral saved':'Referral added');
+  };
+
+  if(mode==='edit')$('rf-del').onclick=async()=>{
+    const backup=JSON.parse(JSON.stringify(r));
+    await deleteReferralDB(r.id);await logAct('deleted referral from',r.from||'');
+    closeModal();render();
+    const restore=async()=>{await writeReferral(backup);render();toast('Referral restored')};
+    UNDO.push(restore);
+    toast('Referral deleted','undo',restore);
+  };
+}
+
+// ══ Contacts (subcontractors & vendors/suppliers) ══
+function contacts(){
+  return Object.values(S.contacts).sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+}
+function contactTypeClass(t){return t==='Subcontractor'?'sub':t==='Vendor/Supplier'?'vendor':'other'}
+
+function renderContacts(){
+  const all=contacts();
+  const total=all.length;
+  const subs=all.filter(c=>c.type==='Subcontractor').length;
+  const vendors=all.filter(c=>c.type==='Vendor/Supplier').length;
+
+  const q=(S.contactSearch||'').toLowerCase();
+  const shown=all.filter(c=>{
+    if(S.contactFilter!=='all'&&(c.type||'Other')!==S.contactFilter)return false;
+    if(!q)return true;
+    const hay=[c.name,c.trade,c.contactName,c.phone,c.email,c.notes,c.address].filter(Boolean).join(' ').toLowerCase();
+    return hay.includes(q);
+  });
+
+  const chips=[
+    ['all','All',total],
+    ['Subcontractor','Subcontractors',subs],
+    ['Vendor/Supplier','Vendors / Suppliers',vendors],
+    ['Other','Other',all.filter(c=>(c.type||'Other')==='Other').length],
+  ];
+
+  return `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+      <div>
+        <div style="font-size:11px;color:var(--text-3);text-transform:uppercase;letter-spacing:0.06em;font-weight:700">Who We Work With</div>
+        <div style="font-size:20px;font-weight:700;margin-top:2px">Contacts</div>
+      </div>
+      <button class="btn-add" id="btn-new-contact" aria-label="Add contact">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+        New Contact
+      </button>
+    </div>
+
+    <div class="kpi-grid">
+      <div class="kpi-card accent"><div class="kpi-label">Total Contacts</div><div class="kpi-value">${total}</div><div class="kpi-sub">subs &amp; vendors</div></div>
+      <div class="kpi-card"><div class="kpi-label">Subcontractors</div><div class="kpi-value">${subs}</div><div class="kpi-sub">crews &amp; trades</div></div>
+      <div class="kpi-card"><div class="kpi-label">Vendors / Suppliers</div><div class="kpi-value">${vendors}</div><div class="kpi-sub">materials &amp; rentals</div></div>
+      <div class="kpi-card"><div class="kpi-label">Other</div><div class="kpi-value">${all.filter(c=>(c.type||'Other')==='Other').length}</div><div class="kpi-sub">misc partners</div></div>
+    </div>
+
+    <div class="toolbar" style="margin-top:8px">
+      <div class="search-wrap">
+        <div class="search-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 15.803a7.5 7.5 0 0010.607 0z"/></svg></div>
+        <input class="search" id="contact-search" placeholder="Search name, trade, phone…" value="${esc(S.contactSearch)}" aria-label="Search contacts">
+      </div>
+    </div>
+
+    <div class="filter-row" style="margin-bottom:14px">
+      ${chips.map(([k,lbl,n])=>`<div class="filter-chip ${S.contactFilter===k?'active':''}" data-contact-filter="${esc(k)}">${lbl} ${n}</div>`).join('')}
+    </div>
+
+    <div class="invoice-list" style="display:flex;flex-direction:column;gap:8px">
+      ${shown.length===0?`<div class="empty" style="padding:40px 20px">
+        <div class="empty-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"/></svg></div>
+        <h3>${total===0?'No contacts yet':'No matches'}</h3>
+        <p>${total===0?'Build your directory of subcontractors and vendors/suppliers — names, contact info, and what they do — so the whole team can reach them fast.':'Try a different search or filter.'}</p>
+      </div>`
+        :shown.map(c=>{
+          const cls=contactTypeClass(c.type);
+          const type=c.type||'Other';
+          const links=[];
+          if(c.phone)links.push(`<a class="ct-link" href="tel:${encodeURIComponent(c.phone)}" onclick="event.stopPropagation()"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 01-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z"/></svg>${esc(c.phone)}</a>`);
+          if(c.email)links.push(`<a class="ct-link" href="mailto:${encodeURIComponent(c.email)}" onclick="event.stopPropagation()"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"/></svg>Email</a>`);
+          if(c.website){const url=/^https?:\/\//.test(c.website)?c.website:'https://'+c.website;links.push(`<a class="ct-link" href="${esc(url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21a9 9 0 100-18 9 9 0 000 18zm0 0a8.949 8.949 0 004.951-1.488A3.987 3.987 0 0013 16h-2a3.987 3.987 0 00-3.951 3.512A8.949 8.949 0 0012 21zm3-11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>Website</a>`)}
+          return `<div class="invoice-row ct-${cls}">
+            <div class="invoice-row-main" data-open-contact="${esc(c.id)}" style="cursor:pointer">
+              <div class="invoice-num">${esc(c.name||'Unnamed')} <span class="ct-status ${cls}">${esc(type)}</span></div>
+              ${c.trade?`<div class="ct-trade"><b>${esc(c.trade)}</b>${c.contactName?' · '+esc(c.contactName):''}</div>`:(c.contactName?`<div class="ct-trade">${esc(c.contactName)}</div>`:'')}
+              ${links.length?`<div class="ct-links">${links.join('')}</div>`:''}
+              ${c.notes?`<div class="invoice-meta" style="margin-top:6px">${esc(c.notes)}</div>`:''}
+            </div>
+            <div class="inv-quick-actions">
+              <button class="inv-quick-btn" data-open-contact="${esc(c.id)}" title="Edit contact" aria-label="Edit contact">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125"/></svg>
+              </button>
+            </div>
+          </div>`;
+        }).join('')}
+    </div>
+  `;
+}
+
+function showContactModal(mode,contact){
+  const c={id:cid(),type:'Subcontractor',...(contact||{})};
+  $('modal-root').innerHTML=`<div class="modal-bd" id="mbd" role="dialog" aria-modal="true" aria-label="${mode==='add'?'New contact':'Edit contact'}"><div class="modal"><div class="modal-handle"></div>
+    <div class="modal-head"><div class="modal-title">${mode==='add'?'New Contact':'Edit Contact'}</div><button class="modal-close" id="mc" aria-label="Close"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button></div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Type</label><select class="form-select" id="ct-type">${CONTACT_TYPES.map(t=>`<option value="${esc(t)}" ${(c.type||'Subcontractor')===t?'selected':''}>${esc(t)}</option>`).join('')}</select></div>
+        <div class="form-group"><label class="form-label">What they do</label><input class="form-input" id="ct-trade" list="ct-trade-list" value="${esc(c.trade||'')}" placeholder="e.g. Electrician, Lumber supplier"><datalist id="ct-trade-list">${CONTACT_TRADES.map(t=>`<option value="${esc(t)}">`).join('')}</datalist></div>
+      </div>
+      <div class="form-group"><label class="form-label">Company / Name *</label><input class="form-input" id="ct-name" value="${esc(c.name||'')}" placeholder="e.g. Smith Electric LLC"></div>
+      <div class="form-group"><label class="form-label">Contact person</label><input class="form-input" id="ct-person" value="${esc(c.contactName||'')}" placeholder="Who to ask for"></div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Phone</label><input class="form-input" type="tel" id="ct-phone" value="${esc(c.phone||'')}" placeholder="(555) 123-4567"></div>
+        <div class="form-group"><label class="form-label">Email</label><input class="form-input" type="email" id="ct-email" value="${esc(c.email||'')}" placeholder="name@company.com"></div>
+      </div>
+      <div class="form-group"><label class="form-label">Website</label><input class="form-input" id="ct-website" value="${esc(c.website||'')}" placeholder="company.com"></div>
+      <div class="form-group"><label class="form-label">Address</label><input class="form-input" id="ct-address" value="${esc(c.address||'')}" placeholder="Optional"></div>
+      <div class="form-group"><label class="form-label">Notes</label><textarea class="form-textarea" id="ct-notes" placeholder="Rates, license #, lead time, what jobs you've used them on…">${esc(c.notes||'')}</textarea></div>
+    </div>
+    <div class="modal-foot">
+      ${mode==='edit'?`<button class="btn-delete" id="ct-del">Delete</button>`:''}
+      <button class="btn-cancel" id="btn-cx">Cancel</button>
+      <button class="btn-save" id="ct-save">${mode==='add'?'Add Contact':'Save'}</button>
+    </div>
+  </div></div>`;
+
+  $('mc').onclick=$('btn-cx').onclick=closeModal;
+  $('mbd').onclick=e=>{if(e.target===e.currentTarget)closeModal()};
+
+  $('ct-save').onclick=async()=>{
+    const name=$('ct-name').value.trim();
+    if(!name){toast('Enter a company or name','');return}
+    const data={
+      id:c.id,
+      type:$('ct-type').value,
+      trade:$('ct-trade').value.trim(),
+      name,
+      contactName:$('ct-person').value.trim(),
+      phone:$('ct-phone').value.trim(),
+      email:$('ct-email').value.trim(),
+      website:$('ct-website').value.trim(),
+      address:$('ct-address').value.trim(),
+      notes:$('ct-notes').value.trim(),
+      created:c.created||Date.now(),
+    };
+    await writeContact(data);
+    await logAct(mode==='edit'?'updated contact':'added contact',name);
+    closeModal();render();toast(mode==='edit'?'Contact saved':'Contact added');
+  };
+
+  if(mode==='edit')$('ct-del').onclick=async()=>{
+    const backup=JSON.parse(JSON.stringify(c));
+    await deleteContactDB(c.id);await logAct('deleted contact',c.name||'');
+    closeModal();render();
+    const restore=async()=>{await writeContact(backup);render();toast('Contact restored')};
+    UNDO.push(restore);
+    toast('Contact deleted','undo',restore);
+  };
+}
+
+// ══ Clients (aggregated from jobs by customer) ══
+function buildClients(){
+  const map={};
+  Object.values(S.jobs).forEach(j=>{
+    const name=(j.customerName||'').trim();
+    const key=name?name.toLowerCase():'__noname__';
+    let c=map[key];
+    if(!c)c=map[key]={key,name:name||'(No name on file)',phone:'',email:'',jobAddress:'',billingAddress:'',leadSource:'',referredBy:'',jobs:[]};
+    c.jobs.push(j);
+  });
+  Object.values(map).forEach(c=>{
+    c.jobs.sort((a,b)=>(b.created||0)-(a.created||0));
+    const pick=f=>{for(const j of c.jobs){const v=j[f]&&String(j[f]).trim();if(v)return v}return ''};
+    c.phone=pick('customerPhone');
+    c.email=pick('customerEmail');
+    c.jobAddress=pick('address');
+    c.billingAddress=pick('billingAddress')||c.jobAddress;
+    c.leadSource=pick('leadSource');
+    c.referredBy=pick('referredBy');
+    let totalValue=0,invoiced=0,paid=0,active=0,complete=0,warr=0;
+    c.jobs.forEach(j=>{
+      totalValue+=Number(j.value||0);
+      const it=invoiceTotals(j);
+      invoiced+=it?it.total:Number(j.invoiced||0);
+      paid+=it?it.paid:Number(j.paid||0);
+      if(j.status==='complete')complete++;else if(j.status!=='hold')active++;
+      warr+=jobWarranties(j).length;
+    });
+    c.totalValue=totalValue;c.invoiced=invoiced;c.paid=paid;c.balance=invoiced-paid;
+    c.activeCount=active;c.completeCount=complete;c.warrantyCount=warr;
+    c.lastActivity=c.jobs[0]?c.jobs[0].created||0:0;
+  });
+  return map;
+}
+function clientsList(){return Object.values(buildClients()).sort((a,b)=>(a.name||'').localeCompare(b.name||''))}
+
+function renderClients(){
+  const all=clientsList();
+  const total=all.length;
+  const repeat=all.filter(c=>c.jobs.length>1).length;
+  const lifetime=all.reduce((s,c)=>s+c.totalValue,0);
+  const outstanding=all.reduce((s,c)=>s+(c.balance>0?c.balance:0),0);
+
+  const q=(S.clientSearch||'').toLowerCase();
+  const shown=all.filter(c=>{
+    if(!q)return true;
+    const hay=[c.name,c.phone,c.email,c.jobAddress,c.billingAddress].filter(Boolean).join(' ').toLowerCase();
+    return hay.includes(q)||c.jobs.some(j=>(j.name||'').toLowerCase().includes(q));
+  });
+
+  return `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+      <div>
+        <div style="font-size:11px;color:var(--text-3);text-transform:uppercase;letter-spacing:0.06em;font-weight:700">Customer Directory</div>
+        <div style="font-size:20px;font-weight:700;margin-top:2px">Clients</div>
+      </div>
+    </div>
+
+    <div class="kpi-grid">
+      <div class="kpi-card accent"><div class="kpi-label">Total Clients</div><div class="kpi-value">${total}</div><div class="kpi-sub">${repeat} repeat</div></div>
+      <div class="kpi-card"><div class="kpi-label">Lifetime Value</div><div class="kpi-value">${money(lifetime)}</div><div class="kpi-sub">estimated</div></div>
+      <div class="kpi-card"><div class="kpi-label">Outstanding</div><div class="kpi-value" style="color:${outstanding>0?'var(--orange)':'var(--green-700)'}">${money(outstanding)}</div><div class="kpi-sub">across clients</div></div>
+      <div class="kpi-card"><div class="kpi-label">Repeat Clients</div><div class="kpi-value">${repeat}</div><div class="kpi-sub">more than 1 job</div></div>
+    </div>
+
+    <div class="toolbar" style="margin-top:8px">
+      <div class="search-wrap">
+        <div class="search-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 15.803a7.5 7.5 0 0010.607 0z"/></svg></div>
+        <input class="search" id="client-search" placeholder="Search clients, phone, job…" value="${esc(S.clientSearch)}" aria-label="Search clients">
+      </div>
+    </div>
+
+    <div class="invoice-list" style="display:flex;flex-direction:column;gap:8px">
+      ${shown.length===0?`<div class="empty" style="padding:40px 20px">
+        <div class="empty-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z"/></svg></div>
+        <h3>${total===0?'No clients yet':'No matches'}</h3>
+        <p>${total===0?'Clients appear here automatically as you add jobs with customer info.':'Try a different search.'}</p>
+      </div>`
+        :shown.map(c=>{
+          const contact=[c.phone,c.email].filter(Boolean).join(' · ');
+          return `<div class="invoice-row" data-open-client="${esc(c.key)}" style="cursor:pointer">
+            <div class="member-ava" style="width:38px;height:38px;font-size:14px;flex-shrink:0">${initials(c.name)}</div>
+            <div class="invoice-row-main">
+              <div class="invoice-num">${esc(c.name)}</div>
+              ${contact?`<div class="invoice-meta">${esc(contact)}</div>`:''}
+              <div class="invoice-meta">${c.jobs.length} job${c.jobs.length!==1?'s':''}${c.jobAddress?' · '+esc(c.jobAddress):''}</div>
+            </div>
+            <div class="invoice-row-amt" style="margin-right:8px">
+              <div class="invoice-row-total">${money(c.totalValue)}</div>
+              <div class="invoice-row-bal" style="color:${c.balance>0.005?'var(--orange)':'var(--green-700)'};font-weight:600">${c.balance>0.005?money(c.balance)+' due':'Paid up'}</div>
+            </div>
+          </div>`;
+        }).join('')}
+    </div>
+  `;
+}
+
+function renderClientDetail(key){
+  const c=buildClients()[key];
+  if(!c)return`<button class="detail-back" id="client-back"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"/></svg>All Clients</button><p style="color:var(--text-2)">Client not found.</p>`;
+  const mapUrl=c.jobAddress?`https://maps.google.com/?q=${encodeURIComponent(c.jobAddress)}`:'';
+  const warrItems=[];
+  c.jobs.forEach(j=>jobWarranties(j).forEach(w=>warrItems.push({j,w})));
+
+  return `
+    <button class="detail-back" id="client-back"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"/></svg>All Clients</button>
+    <div style="display:flex;align-items:center;gap:13px;margin:4px 0 16px">
+      <div class="member-ava" style="width:52px;height:52px;font-size:20px;flex-shrink:0">${initials(c.name)}</div>
+      <div style="min-width:0">
+        <div class="detail-name" style="margin:0">${esc(c.name)}</div>
+        <div style="font-size:12.5px;color:var(--text-3)">${c.jobs.length} job${c.jobs.length!==1?'s':''} · ${c.completeCount} completed${c.referredBy?' · referred by '+esc(c.referredBy):''}</div>
+      </div>
+    </div>
+
+    <div class="quick-actions">
+      <a class="qa-btn ${c.phone?'':'disabled'}" ${c.phone?`href="tel:${encodeURIComponent(c.phone)}"`:''}>
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 01-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z"/></svg>Call
+      </a>
+      <a class="qa-btn ${c.phone?'':'disabled'}" ${c.phone?`href="sms:${encodeURIComponent(c.phone)}"`:''}>
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12.76c0 1.6 1.123 2.994 2.707 3.227 1.068.157 2.148.279 3.238.364.466.037.893.281 1.153.671L12 21l2.652-3.978c.26-.39.687-.634 1.153-.67 1.09-.086 2.17-.208 3.238-.365 1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z"/></svg>Text
+      </a>
+      <a class="qa-btn ${c.email?'':'disabled'}" ${c.email?`href="mailto:${encodeURIComponent(c.email)}"`:''}>
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"/></svg>Email
+      </a>
+      <a class="qa-btn ${mapUrl?'':'disabled'}" ${mapUrl?`href="${mapUrl}" target="_blank" rel="noopener"`:''}>
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 6.75V15m6-6v8.25m.503 3.498l4.875-2.437c.381-.19.622-.58.622-1.006V4.82c0-.836-.88-1.38-1.628-1.006l-3.869 1.934c-.317.159-.69.159-1.006 0L9.503 3.252a1.125 1.125 0 00-1.006 0L3.622 5.689C3.24 5.88 3 6.27 3 6.695V19.18c0 .836.88 1.38 1.628 1.006l3.869-1.934c.317-.159.69-.159 1.006 0l4.994 2.497c.317.158.69.158 1.006 0z"/></svg>Map
+      </a>
+    </div>
+
+    <div class="section">
+      <div class="section-hd">Client Info</div>
+      <div class="info-grid">
+        <div class="info-cell"><div class="info-label">Phone</div><div class="info-value">${c.phone?`<a href="tel:${encodeURIComponent(c.phone)}" style="color:var(--green-700);text-decoration:none">${esc(c.phone)}</a>`:'—'}</div></div>
+        <div class="info-cell"><div class="info-label">Email</div><div class="info-value" style="font-size:12px;word-break:break-all">${c.email?`<a href="mailto:${encodeURIComponent(c.email)}" style="color:var(--green-700);text-decoration:none">${esc(c.email)}</a>`:'—'}</div></div>
+        <div class="info-cell" style="grid-column:1/-1"><div class="info-label">Job Site Address</div><div class="info-value" style="font-size:13px">${esc(c.jobAddress||'—')}</div></div>
+        <div class="info-cell" style="grid-column:1/-1"><div class="info-label">Billing Address</div><div class="info-value" style="font-size:13px">${esc(c.billingAddress||'—')}</div></div>
+        <div class="info-cell"><div class="info-label">Lead Source</div><div class="info-value">${esc(c.leadSource||'—')}</div></div>
+        <div class="info-cell"><div class="info-label">Warranties</div><div class="info-value">${c.warrantyCount}</div></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-hd">Financial Summary</div>
+      <div class="info-grid">
+        <div class="info-cell"><div class="info-label">Lifetime Value</div><div class="info-value">${money(c.totalValue)}</div></div>
+        <div class="info-cell"><div class="info-label">Invoiced</div><div class="info-value">${money(c.invoiced)}</div></div>
+        <div class="info-cell"><div class="info-label">Paid</div><div class="info-value">${money(c.paid)}</div></div>
+        <div class="info-cell"><div class="info-label">Balance Due</div><div class="info-value" style="color:${c.balance>0.005?'var(--orange)':'var(--green-700)'}">${money(c.balance)}</div></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-hd">Jobs <span>${c.jobs.length}</span></div>
+      <div class="invoice-list" style="display:flex;flex-direction:column;gap:8px">
+        ${c.jobs.map(j=>{
+          const it=invoiceTotals(j);
+          const bal=it?it.balance:jobBalance(j);
+          const dateline=[j.startDate?fmtShort(j.startDate):'',j.status==='complete'&&j.completedAt?'completed '+fmtShort(new Date(j.completedAt).toISOString().slice(0,10)):''].filter(Boolean).join(' · ');
+          return `<div class="invoice-row" data-open="${esc(j.id)}" style="cursor:pointer;border-left-color:${chipBarColor(j.status)}">
+            <div class="invoice-row-main">
+              <div class="invoice-num">${esc(j.name)} <span class="status-pill ${spClass(j.status)}" style="font-size:9.5px">${spLabel(j.status)}</span></div>
+              <div class="invoice-meta">${esc(jobStage(j))}${dateline?' · '+esc(dateline):''}${j.address&&j.address!==c.jobAddress?' · '+esc(j.address):''}</div>
+            </div>
+            <div class="invoice-row-amt" style="margin-right:8px">
+              <div class="invoice-row-total">${j.value?money(j.value):'—'}</div>
+              <div class="invoice-row-bal" style="color:${bal>0.005?'var(--orange)':'var(--green-700)'};font-weight:600">${bal>0.005?money(bal)+' due':'Paid'}</div>
+            </div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>
+
+    ${warrItems.length?`<div class="section">
+      <div class="section-hd">Warranties <span>${warrItems.length}</span></div>
+      <div class="warr-list">
+        ${warrItems.map(({j,w})=>{const st=warrantyStatus(w);const exp=warrantyExpiry(w);return `<div class="warr-card ${st.cls}" data-open="${esc(j.id)}" style="cursor:pointer"><div class="warr-top"><div style="flex:1;min-width:0"><div class="warr-name">${esc(w.name||'Warranty')}</div><div class="warr-sub">${esc(j.name)}${w.lifetime?' · Lifetime':(exp?' · expires '+fmtShort(exp):'')}</div></div><span class="warr-badge ${st.cls}">${esc(st.label)}</span></div></div>`}).join('')}
+      </div>
+    </div>`:''}
+  `;
+}
+
+function showWarrantyModal(jobId,warrantyId){
+  const j=S.jobs[jobId];if(!j)return;
+  const existing=warrantyId?jobWarranties(j).find(w=>w.id===warrantyId):null;
+  const w=existing?{...existing}:{id:wid(),type:'Workmanship',startDate:(j.completedAt?dateKey(new Date(j.completedAt)):dateKey(new Date())),termMonths:12};
+  let termSel='custom';
+  if(w.lifetime)termSel='lifetime';
+  else{const match=WARRANTY_TERMS.find(([v])=>v!=='lifetime'&&v!=='custom'&&Number(v)===Number(w.termMonths));termSel=match?match[0]:(w.termMonths?'custom':'12')}
+  const pending={docUrl:w.docUrl||'',docName:w.docName||''};
+
+  $('modal-root').innerHTML=`<div class="modal-bd" id="mbd" role="dialog" aria-modal="true" aria-label="${existing?'Edit warranty':'New warranty'}"><div class="modal"><div class="modal-handle"></div>
+    <div class="modal-head"><div class="modal-title">${existing?'Edit Warranty':'New Warranty'}</div><button class="modal-close" id="mc" aria-label="Close"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button></div>
+    <div class="modal-body">
+      <p style="font-size:12.5px;color:var(--text-2);margin-bottom:14px;line-height:1.5">For <strong>${esc(j.name)}</strong>${j.customerName?' · '+esc(j.customerName):''}. The expiry date is added to the calendar and you'll get reminders at ${WARRANTY_REMINDERS.join(', ')} days before it lapses.</p>
+      <div class="form-group"><label class="form-label">Warranty name *</label><input class="form-input" id="w-name" value="${esc(w.name||'')}" placeholder="e.g. Dock workmanship warranty"></div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Type</label><select class="form-select" id="w-type">${WARRANTY_TYPES.map(t=>`<option value="${esc(t)}" ${(w.type||'Workmanship')===t?'selected':''}>${esc(t)}</option>`).join('')}</select></div>
+        <div class="form-group"><label class="form-label">Provider / Issuer</label><input class="form-input" id="w-provider" value="${esc(w.provider||'')}" placeholder="Manufacturer or your company"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Start date</label><input class="form-input" type="date" id="w-start" value="${esc(w.startDate||'')}"></div>
+        <div class="form-group"><label class="form-label">Term</label><select class="form-select" id="w-term">${WARRANTY_TERMS.map(([v,l])=>`<option value="${esc(v)}" ${termSel===v?'selected':''}>${esc(l)}</option>`).join('')}</select></div>
+      </div>
+      <div class="form-group" id="w-months-wrap" style="display:${termSel==='custom'?'block':'none'}"><label class="form-label">Custom term (months)</label><input class="form-input" type="number" min="1" id="w-months" value="${esc(termSel==='custom'?(w.termMonths||''):'')}" placeholder="e.g. 18"></div>
+      <div style="background:var(--surface-3);border-radius:var(--r-sm);padding:10px 13px;margin-bottom:14px;font-size:13px;font-weight:600;color:var(--green-800)" id="w-preview">—</div>
+      <div class="form-group"><label class="form-label">What's covered</label><textarea class="form-textarea" id="w-coverage" placeholder="Scope of the warranty — e.g. all labor and workmanship on the dock structure">${esc(w.coverage||'')}</textarea></div>
+      <div class="form-group"><label class="form-label">Notes</label><textarea class="form-textarea" id="w-notes" placeholder="Claim instructions, terms, exclusions…">${esc(w.notes||'')}</textarea></div>
+      <div class="form-group">
+        <label class="form-label">Schedule reminders</label>
+        <p style="font-size:11.5px;color:var(--text-3);margin:-2px 0 8px;line-height:1.45">Add reminders for inspections, check-ins, or claim deadlines. Each one is automatically added to the schedule calendar and pings your notifications.</p>
+        <div id="w-reminders"></div>
+        <button class="li-add-btn" id="w-rem-add" type="button" style="margin-top:6px;width:100%">＋ Add reminder</button>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">
+          <button class="filter-chip" data-rem-preset="before:30" type="button">＋ 30d before expiry</button>
+          <button class="filter-chip" data-rem-preset="before:90" type="button">＋ 90d before expiry</button>
+          <button class="filter-chip" data-rem-preset="annual" type="button">＋ Annual check</button>
+        </div>
+      </div>
+      <div class="form-group"><label class="form-label">Attach warranty document</label>
+        <label class="photo-add-btn" style="aspect-ratio:auto;padding:12px;flex-direction:row;gap:8px;cursor:pointer">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M18.375 12.739l-7.693 7.693a4.5 4.5 0 01-6.364-6.364l10.94-10.94A3 3 0 1119.5 7.372L8.552 18.32m.009-.01l-.01.01m5.699-9.941l-7.81 7.81a1.5 1.5 0 002.112 2.13"/></svg>
+          <span id="w-doc-label">${pending.docName?esc(pending.docName):'Choose a file (PDF, DOC, IMG · max 5MB)'}</span>
+          <input type="file" accept="*/*" id="w-file" style="display:none">
+        </label>
+        ${pending.docName?`<button class="btn-sm" id="w-doc-clear" type="button" style="margin-top:6px;padding:4px 10px;font-size:11px">Remove file</button>`:''}
+      </div>
+    </div>
+    <div class="modal-foot">
+      ${existing?`<button class="btn-delete" id="w-del">Delete</button>`:''}
+      <button class="btn-cancel" id="btn-cx">Cancel</button>
+      <button class="btn-save" id="w-save">${existing?'Save':'Add Warranty'}</button>
+    </div>
+  </div></div>`;
+
+  $('mc').onclick=$('btn-cx').onclick=closeModal;
+  $('mbd').onclick=e=>{if(e.target===e.currentTarget)closeModal()};
+
+  const updatePreview=()=>{
+    const term=$('w-term').value;const startVal=$('w-start').value;
+    let txt;
+    if(term==='lifetime')txt='🛡 No expiration — lifetime coverage';
+    else{
+      const months=term==='custom'?Number($('w-months').value||0):Number(term);
+      if(!startVal)txt='Set a start date to calculate the expiry';
+      else if(!months)txt='Set a term to calculate the expiry';
+      else txt='Expires '+fmtDate(addMonths(startVal,months))+' · '+months+' month'+(months===1?'':'s');
+    }
+    $('w-preview').textContent=txt;
+  };
+  $('w-term').onchange=()=>{$('w-months-wrap').style.display=$('w-term').value==='custom'?'block':'none';updatePreview()};
+  $('w-start').onchange=updatePreview;
+  $('w-months')?.addEventListener('input',updatePreview);
+  updatePreview();
+
+  // ── Scheduled reminders ──
+  const newRemId=()=>'rem_'+Date.now()+'_'+Math.random().toString(36).slice(2,5);
+  let reminders=(Array.isArray(w.reminders)?w.reminders:[]).map(r=>({id:r.id||newRemId(),label:r.label||'',date:r.date||''}));
+  const remBox=$('w-reminders');
+  const syncRem=()=>{reminders=[...remBox.querySelectorAll('.w-rem-row')].map(row=>({id:row.dataset.remId,label:row.querySelector('.w-rem-label').value,date:row.querySelector('.w-rem-date').value}))};
+  const renderRem=()=>{
+    remBox.innerHTML=reminders.length?reminders.map(r=>`<div class="w-rem-row" data-rem-id="${esc(r.id)}">
+      <input class="form-input w-rem-label" value="${esc(r.label)}" placeholder="Reminder (e.g. 6-month inspection)">
+      <input class="form-input w-rem-date" type="date" value="${esc(r.date)}">
+      <button class="w-rem-del" type="button" data-rem-del="${esc(r.id)}" aria-label="Remove reminder">✕</button>
+    </div>`).join(''):'<p style="font-size:12px;color:var(--text-3);padding:2px 0">No reminders scheduled yet.</p>';
+    remBox.querySelectorAll('[data-rem-del]').forEach(b=>b.onclick=()=>{syncRem();reminders=reminders.filter(x=>x.id!==b.dataset.remDel);renderRem()});
+  };
+  renderRem();
+  const currentExpiry=()=>{
+    const term=$('w-term').value;const startVal=$('w-start').value;
+    if(term==='lifetime'||!startVal)return '';
+    const months=term==='custom'?Number($('w-months').value||0):Number(term);
+    return months?addMonths(startVal,months):'';
+  };
+  $('w-rem-add').onclick=()=>{syncRem();reminders.push({id:newRemId(),label:'',date:''});renderRem()};
+  document.querySelectorAll('[data-rem-preset]').forEach(b=>b.onclick=()=>{
+    syncRem();
+    const p=b.dataset.remPreset;const startVal=$('w-start').value;let date='',label='';
+    if(p.startsWith('before:')){
+      const days=Number(p.split(':')[1]);const exp=currentExpiry();
+      if(!exp){toast('Set a start date and term first','');return}
+      date=dateKey(new Date(new Date(exp+'T00:00:00').getTime()-days*86400000));label=days+'-day warranty check';
+    }else if(p==='annual'){
+      if(!startVal){toast('Set a start date first','');return}
+      date=addMonths(startVal,12);label='Annual warranty check';
+    }
+    reminders.push({id:newRemId(),label,date});renderRem();
+  });
+
+  $('w-file').onchange=function(){
+    const file=this.files[0];if(!file)return;
+    if(file.size>5*1024*1024){toast('File too large (max 5MB)','');return}
+    const rd=new FileReader();
+    rd.onload=e=>{pending.docUrl=e.target.result;pending.docName=file.name;const lbl=$('w-doc-label');if(lbl)lbl.textContent=file.name};
+    rd.readAsDataURL(file);
+  };
+  $('w-doc-clear')?.addEventListener('click',()=>{pending.docUrl='';pending.docName='';const lbl=$('w-doc-label');if(lbl)lbl.textContent='Choose a file (PDF, DOC, IMG · max 5MB)';$('w-doc-clear').style.display='none'});
+
+  $('w-save').onclick=async()=>{
+    const name=$('w-name').value.trim();
+    if(!name){toast('Name the warranty','');return}
+    const term=$('w-term').value;
+    const lifetime=term==='lifetime';
+    const months=lifetime?'':(term==='custom'?Number($('w-months').value||0):Number(term));
+    syncRem();
+    const data={
+      id:w.id,name,
+      type:$('w-type').value,
+      provider:$('w-provider').value.trim(),
+      startDate:$('w-start').value,
+      termMonths:months,
+      lifetime,
+      expiryDate:'',
+      coverage:$('w-coverage').value.trim(),
+      notes:$('w-notes').value.trim(),
+      reminders:reminders.filter(r=>r.date).map(r=>({id:r.id,label:(r.label||'').trim()||'Reminder',date:r.date})),
+      docUrl:pending.docUrl||'',
+      docName:pending.docName||'',
+      created:w.created||Date.now(),
+    };
+    j.warranties=jobWarranties(j).slice();
+    const idx=j.warranties.findIndex(x=>x.id===w.id);
+    if(idx>=0)j.warranties[idx]=data;else j.warranties.push(data);
+    await writeJob(j);await logAct(existing?'updated warranty on':'added warranty to',j.name);
+    closeModal();render();toast(existing?'Warranty saved':'Warranty added');
+  };
+
+  if(existing)$('w-del').onclick=async()=>{
+    const backup=JSON.parse(JSON.stringify(jobWarranties(j)));
+    j.warranties=jobWarranties(j).filter(x=>x.id!==w.id);
+    await writeJob(j);await logAct('removed warranty from',j.name);
+    closeModal();render();
+    const restore=async()=>{const jj=S.jobs[jobId];if(jj){jj.warranties=backup;await writeJob(jj);render();toast('Warranty restored')}};
+    UNDO.push(restore);
+    toast('Warranty deleted','undo',restore);
+  };
 }
 
 function renderJobs(){
@@ -2625,6 +3718,7 @@ function renderDetail(id){
     {id:'log',label:'Daily Log',count:(j.dailyLogs||[]).length},
     {id:'photos',label:'Photos',count:photos.length},
     {id:'docs',label:'Files',count:(j.documents||[]).length},
+    {id:'warranty',label:'Warranty',count:(j.warranties||[]).length},
     {id:'invoices',label:'Invoices',count:(j.invoices||[]).length},
     {id:'financial',label:'Financials'},
     {id:'comms',label:'Comms',count:(j.comms||[]).length},
@@ -2708,10 +3802,11 @@ function renderDetailTab(j,tab){
       <div class="section">
         <div class="section-hd">Quick Stats</div>
         <div class="info-grid">
-          <div class="info-cell"><div class="info-label">Photos</div><div class="info-value">${photos.length}</div></div>
-          <div class="info-cell"><div class="info-label">Open Tasks</div><div class="info-value">${(j.tasks||[]).filter(t=>!t.done).length}</div></div>
-          <div class="info-cell"><div class="info-label">Balance Due</div><div class="info-value" style="color:${balance>0?'var(--orange)':'var(--green-700)'}">${money(balance)}</div></div>
-          <div class="info-cell"><div class="info-label">Log Entries</div><div class="info-value">${(j.dailyLogs||[]).length}</div></div>
+          <div class="info-cell stat-link" data-go-tab="photos" role="button" tabindex="0" title="View & add photos"><div class="info-label">Photos</div><div class="info-value">${photos.length}</div></div>
+          <div class="info-cell stat-link" data-go-tab="tasks" role="button" tabindex="0" title="View & add tasks"><div class="info-label">Open Tasks</div><div class="info-value">${(j.tasks||[]).filter(t=>!t.done).length}</div></div>
+          <div class="info-cell stat-link" data-go-tab="invoices" role="button" tabindex="0" title="View & add invoices"><div class="info-label">Balance Due</div><div class="info-value" style="color:${balance>0?'var(--orange)':'var(--green-700)'}">${money(balance)}</div></div>
+          <div class="info-cell stat-link" data-go-tab="log" role="button" tabindex="0" title="View & add log entries"><div class="info-label">Log Entries</div><div class="info-value">${(j.dailyLogs||[]).length}</div></div>
+          <div class="info-cell stat-link" data-go-tab="warranty" role="button" tabindex="0" title="View & add warranties"><div class="info-label">Warranties</div><div class="info-value">${jobWarranties(j).length}</div></div>
         </div>
       </div>`;
   }
@@ -2726,8 +3821,18 @@ function renderDetailTab(j,tab){
           <div class="info-cell" style="grid-column:1/-1"><div class="info-label">Job Site Address</div><div class="info-value" style="font-size:13px">${esc(j.address||'—')}</div></div>
           <div class="info-cell" style="grid-column:1/-1"><div class="info-label">Billing Address</div><div class="info-value" style="font-size:13px">${esc(j.billingAddress||j.address||'—')}</div></div>
           <div class="info-cell" style="grid-column:1/-1"><div class="info-label">Lead Source</div><div class="info-value">${esc(j.leadSource||'—')}</div></div>
+          ${j.referredBy?`<div class="info-cell" style="grid-column:1/-1"><div class="info-label">Referred By</div><div class="info-value">${esc(j.referredBy)} ${j.referralId&&S.referrals[j.referralId]?`<button class="ref-job-link" data-open-ref-view="${esc(j.referralId)}" style="margin-top:0;margin-left:6px;vertical-align:middle"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244"/></svg>View referral</button>`:''}</div></div>`:''}
         </div>
         ${j.customerNotes?`<div style="background:var(--surface-3);border-radius:var(--r-sm);padding:11px 13px;margin-top:10px"><div class="info-label">Customer Notes</div><p style="font-size:13px;margin-top:4px;line-height:1.55">${esc(j.customerNotes)}</p></div>`:''}
+      </div>
+      <div class="section">
+        <div class="section-hd">Warranties <button class="btn-sm" data-go-tab="warranty" style="padding:5px 10px;font-size:11px">Manage</button></div>
+        ${(()=>{const warrs=jobWarranties(j);if(!warrs.length)return '<p style="font-size:13px;color:var(--text-3);padding:4px 0">No warranties on file for this customer yet. Tap <b>Manage</b> to add the warranties given.</p>';
+          return '<div class="warr-list">'+warrs.slice().sort((a,b)=>(warrantyExpiry(a)||'9999').localeCompare(warrantyExpiry(b)||'9999')).map(w=>{
+            const st=warrantyStatus(w);const exp=warrantyExpiry(w);
+            return `<div class="warr-card ${st.cls}" data-go-tab="warranty" style="cursor:pointer"><div class="warr-top"><div style="flex:1;min-width:0"><div class="warr-name">${esc(w.name||'Warranty')}</div><div class="warr-sub">${esc(w.type||'Warranty')}${w.provider?' · '+esc(w.provider):''} · ${w.lifetime?'Lifetime':(exp?'expires '+fmtShort(exp):'no expiry')}</div></div><span class="warr-badge ${st.cls}">${esc(st.label)}</span></div></div>`;
+          }).join('')+'</div>';
+        })()}
       </div>`;
   }
   if(tab==='tasks'){
@@ -2835,6 +3940,50 @@ function renderDetailTab(j,tab){
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v6m3-3H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
           <span>Upload File (PDF, DOC, IMG)</span>
           <input type="file" accept="*/*" id="doc-upload" style="display:none">
+        </label>
+      </div>`;
+  }
+  if(tab==='warranty'){
+    const warrs=jobWarranties(j).slice().sort((a,b)=>{
+      const ea=warrantyExpiry(a)||'9999',eb=warrantyExpiry(b)||'9999';
+      return ea.localeCompare(eb);
+    });
+    const fileIcon=`<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/></svg>`;
+    return `
+      <div class="section">
+        <div class="section-hd">Warranties <span>${warrs.length}</span></div>
+        <div class="warr-list">
+          ${warrs.length===0?'<p style="font-size:13px;color:var(--text-3);padding:4px 0">No warranties recorded. Add the workmanship and manufacturer warranties given to this customer — expiry dates appear on the calendar and you\'ll get reminders before they lapse.</p>'
+            :warrs.map(w=>{
+              const st=warrantyStatus(w);
+              const exp=warrantyExpiry(w);
+              const startTxt=w.startDate?fmtDate(w.startDate):'—';
+              const expTxt=w.lifetime?'No expiration (lifetime)':(exp?fmtDate(exp):'Not set');
+              return `<div class="warr-card ${st.cls}">
+                <div class="warr-top">
+                  <div style="flex:1;min-width:0">
+                    <div class="warr-name">${esc(w.name||'Warranty')}</div>
+                    <div class="warr-sub">${esc(w.type||'Warranty')}${w.provider?' · '+esc(w.provider):''}</div>
+                  </div>
+                  <span class="warr-badge ${st.cls}">${esc(st.label)}</span>
+                </div>
+                <div class="warr-meta">
+                  <span><b>Starts:</b> ${startTxt}</span>
+                  <span><b>Expires:</b> ${expTxt}</span>
+                  ${!w.lifetime&&w.termMonths?`<span><b>Term:</b> ${esc(String(w.termMonths))} mo</span>`:''}
+                </div>
+                ${w.coverage?`<div style="font-size:12.5px;color:var(--text-2);margin-top:8px;line-height:1.5">${esc(w.coverage)}</div>`:''}
+                ${(w.reminders||[]).length?`<div class="warr-rem">${w.reminders.slice().sort((a,b)=>(a.date||'').localeCompare(b.date||'')).map(rem=>{const dd=daysUntil(rem.date);const rel=dd===null?'':(dd<0?Math.abs(dd)+'d ago':dd===0?'today':'in '+dd+'d');return `<div class="warr-rem-item">🔔 <b>${esc(rem.label||'Reminder')}</b> · ${rem.date?fmtShort(rem.date):''}${rel?' ('+rel+')':''}</div>`}).join('')}</div>`:''}
+                <div class="warr-actions">
+                  ${w.docUrl?`<a class="warr-doc-link" href="${w.docUrl}" download="${esc(w.docName||'warranty')}" target="_blank">${fileIcon}${esc(w.docName||'Warranty document')}</a>`:''}
+                  <button class="btn-sm" data-warr-edit="${esc(w.id)}" style="padding:5px 11px;font-size:11.5px">Edit</button>
+                </div>
+              </div>`;
+            }).join('')}
+        </div>
+        <label class="photo-add-btn" id="btn-add-warranty" style="aspect-ratio:auto;padding:14px;flex-direction:row;gap:8px;cursor:pointer">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          <span>Add Warranty</span>
         </label>
       </div>`;
   }
@@ -3513,11 +4662,13 @@ let CMD={open:false,query:'',idx:0,items:[]};
 function cmdItems(){
   const out=[];
   // Views
-  [['dashboard','Home / Dashboard','home'],['jobs','Jobs','briefcase'],['schedule','Schedule','calendar'],['invoices','Invoices','invoice'],['map','Map','map'],['reports','Reports','chart'],['activity','Activity','list'],['team','Team','team']].forEach(([v,name,ico])=>{
-    out.push({type:'view',name:'Go to '+name,sub:'View',ico,run:()=>{S.view=v;S.detail=null;render()}});
+  [['dashboard','Home / Dashboard','home'],['jobs','Jobs','briefcase'],['clients','Clients','team'],['schedule','Schedule','calendar'],['invoices','Invoices','invoice'],['map','Map','map'],['reports','Reports','chart'],['referrals','Referrals','team'],['contacts','Contacts','team'],['activity','Activity','list'],['team','Team','team']].forEach(([v,name,ico])=>{
+    out.push({type:'view',name:'Go to '+name,sub:'View',ico,run:()=>{S.view=v;S.detail=null;S.clientDetail=null;render()}});
   });
   // Actions
   out.push({type:'action',name:'New Job',sub:'Create a job',ico:'plus',run:()=>showJobModal('add')});
+  out.push({type:'action',name:'New Referral',sub:'Log who referred a customer',ico:'team',run:()=>showReferralModal('add')});
+  out.push({type:'action',name:'New Contact',sub:'Add a subcontractor or vendor',ico:'team',run:()=>showContactModal('add')});
   out.push({type:'action',name:'New Invoice',sub:'Pick a job, then create invoice',ico:'invoice',run:()=>showJobPickerModal(jobId=>showInvoiceModal(jobId))});
   out.push({type:'action',name:'Settings & Company Info',sub:'Edit name, logo, invoice defaults',ico:'kbd',run:showSettingsModal});
   out.push({type:'action',name:'Export to CSV',sub:'Download all jobs',ico:'download',run:exportCSV});
@@ -3637,6 +4788,9 @@ function showShortcutsModal(){
     ['Go to Invoices',['G','I']],
     ['Go to Map',['G','M']],
     ['Go to Reports',['G','R']],
+    ['Go to Clients',['G','L']],
+    ['Go to Referrals',['G','F']],
+    ['Go to Contacts',['G','C']],
     ['Notifications',['B']],
     ['Undo last action',['Ctrl','Z'],['⌘','Z']],
     ['Show this help',['?']],
@@ -3734,9 +4888,9 @@ function onKey(e){
   // g + (d/j/s/m/r) go-to
   if(k==='g'||k==='G'){KBD_BUFFER='g';clearTimeout(KBD_BUFFER_T);KBD_BUFFER_T=setTimeout(()=>KBD_BUFFER='',1200);return}
   if(KBD_BUFFER==='g'){
-    const map={d:'dashboard',j:'jobs',s:'schedule',i:'invoices',m:'map',r:'reports',a:'activity',t:'team'};
+    const map={d:'dashboard',j:'jobs',l:'clients',s:'schedule',i:'invoices',m:'map',r:'reports',f:'referrals',c:'contacts',a:'activity',t:'team'};
     const target=map[k.toLowerCase()];
-    if(target){KBD_BUFFER='';clearTimeout(KBD_BUFFER_T);S.view=target;S.detail=null;render();e.preventDefault()}
+    if(target){KBD_BUFFER='';clearTimeout(KBD_BUFFER_T);S.view=target;S.detail=null;S.clientDetail=null;render();e.preventDefault()}
   }
 }
 function isTyping(e){
@@ -3756,7 +4910,7 @@ function countCmdVisible(){
 // ══ Handlers ══
 function attachHandlers(){
   document.querySelectorAll('.nav-btn').forEach(b=>{
-    b.onclick=()=>{S.view=b.dataset.view;S.detail=null;render()}
+    b.onclick=()=>{S.view=b.dataset.view;S.detail=null;S.clientDetail=null;render()}
   });
   $('user-btn').onclick=showSettingsModal;
   $('setup-link').onclick=showSetupModal;
@@ -3878,6 +5032,43 @@ function attachHandlers(){
     const inv=(j.invoices||[]).find(i=>i.id===invId);
     if(inv)emailInvoice(j,inv);
   });
+  // Referrals
+  $('btn-new-ref')?.addEventListener('click',()=>showReferralModal('add'));
+  $('ref-search')?.addEventListener('input',e=>{S.refSearch=e.target.value;render()});
+  document.querySelectorAll('[data-ref-filter]').forEach(c=>c.onclick=()=>{S.refFilter=c.dataset.refFilter;render()});
+  document.querySelectorAll('[data-open-ref]').forEach(el=>el.onclick=e=>{
+    e.stopPropagation();
+    const r=S.referrals[el.dataset.openRef];
+    if(r)showReferralModal('edit',r);
+  });
+  document.querySelectorAll('[data-ref-job]').forEach(el=>el.onclick=e=>{
+    e.stopPropagation();
+    const id=el.dataset.refJob;
+    if(S.jobs[id]){S.detail=id;S.view='jobs';S.detailTab='overview';render()}
+  });
+  document.querySelectorAll('[data-open-ref-view]').forEach(el=>el.onclick=e=>{
+    e.stopPropagation();
+    const r=S.referrals[el.dataset.openRefView];
+    if(r){S.view='referrals';S.detail=null;render();showReferralModal('edit',r)}
+  });
+  // Contacts (subs & vendors)
+  $('btn-new-contact')?.addEventListener('click',()=>showContactModal('add'));
+  $('contact-search')?.addEventListener('input',e=>{S.contactSearch=e.target.value;render()});
+  document.querySelectorAll('[data-contact-filter]').forEach(c=>c.onclick=()=>{S.contactFilter=c.dataset.contactFilter;render()});
+  document.querySelectorAll('[data-open-contact]').forEach(el=>el.onclick=e=>{
+    if(e.target.closest('a'))return;
+    e.stopPropagation();
+    const c=S.contacts[el.dataset.openContact];
+    if(c)showContactModal('edit',c);
+  });
+  // Clients
+  $('client-search')?.addEventListener('input',e=>{S.clientSearch=e.target.value;render()});
+  document.querySelectorAll('[data-open-client]').forEach(el=>el.onclick=e=>{
+    if(e.target.closest('a'))return;
+    e.stopPropagation();
+    S.clientDetail=el.dataset.openClient;render();window.scrollTo(0,0);
+  });
+  $('client-back')?.addEventListener('click',()=>{S.clientDetail=null;render()});
   // Reports
   document.querySelectorAll('[data-range]').forEach(c=>c.onclick=()=>{S.reportRange=c.dataset.range;render()});
   // Map
@@ -3915,12 +5106,40 @@ function attachHandlers(){
   document.querySelectorAll('[data-cal-mode]').forEach(b=>b.onclick=()=>{S.calMode=b.dataset.calMode;localStorage.setItem('wfs_calmode',S.calMode);render()});
   document.querySelectorAll('[data-cal-day]').forEach(d=>d.onclick=e=>{
     // Ignore clicks on chips (they have their own handler that stops propagation, but be defensive)
-    if(e.target.closest('[data-open]'))return;
+    if(e.target.closest('[data-open]')||e.target.closest('[data-open-warranty]'))return;
     // Tapping a day from outside the current month jumps to that month
     const k=d.dataset.calDay;
     const [yy,mm]=k.split('-').map(n=>parseInt(n,10));
     if(yy!==S.calYear||(mm-1)!==S.calMonth){S.calYear=yy;S.calMonth=mm-1}
     S.calSelected=k;render();
+  });
+
+  // Day notes & to-dos
+  const addDayNote=async()=>{
+    const inp=$('daynote-in');if(!inp)return;
+    const text=inp.value.trim();if(!text)return;
+    const day=inp.dataset.daynoteDay;
+    S.dayNotes[day]=S.dayNotes[day]||[];
+    S.dayNotes[day].push({id:dnid(),text,done:false,user:S.user,time:Date.now()});
+    S.calSelected=day;
+    await saveDayNotes(day);render();toast('Added to '+fmtShort(day));
+    const ni=$('daynote-in');if(ni)ni.focus();
+  };
+  $('daynote-add')?.addEventListener('click',addDayNote);
+  $('daynote-in')?.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();addDayNote()}});
+  document.querySelectorAll('[data-daynote-toggle]').forEach(b=>b.onclick=async()=>{
+    const [day,id]=b.dataset.daynoteToggle.split('|');
+    const it=(S.dayNotes[day]||[]).find(n=>n.id===id);if(!it)return;
+    it.done=!it.done;S.calSelected=day;await saveDayNotes(day);render();
+  });
+  document.querySelectorAll('[data-daynote-del]').forEach(b=>b.onclick=async()=>{
+    const [day,id]=b.dataset.daynoteDel.split('|');
+    const arr=S.dayNotes[day]||[];const idx=arr.findIndex(n=>n.id===id);if(idx<0)return;
+    const removed=arr.splice(idx,1)[0];S.calSelected=day;
+    await saveDayNotes(day);render();
+    const restore=async()=>{S.dayNotes[day]=S.dayNotes[day]||[];S.dayNotes[day].splice(idx,0,removed);S.calSelected=day;await saveDayNotes(day);render();toast('Restored')};
+    UNDO.push(restore);
+    toast('Removed','undo',restore);
   });
 
   // Detail
@@ -4041,6 +5260,24 @@ function attachHandlers(){
     const restore=async()=>{const jj=S.jobs[j.id];if(jj){jj.documents=jj.documents||[];jj.documents.splice(i,0,removed);await writeJob(jj);render();toast('File restored')}};
     UNDO.push(restore);
     toast('File removed','undo',restore);
+  });
+
+  // Warranties
+  $('btn-add-warranty')?.addEventListener('click',()=>{const id=S.detail;if(id)showWarrantyModal(id)});
+  document.querySelectorAll('[data-warr-edit]').forEach(b=>b.onclick=e=>{
+    e.stopPropagation();const id=S.detail;if(id)showWarrantyModal(id,b.dataset.warrEdit);
+  });
+  document.querySelectorAll('[data-go-tab]').forEach(el=>{
+    el.onclick=e=>{
+      if(e.target.closest('[data-warr-edit]'))return;
+      S.detailTab=el.dataset.goTab;render();
+    };
+    el.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();el.click()}};
+  });
+  document.querySelectorAll('[data-open-warranty]').forEach(el=>el.onclick=e=>{
+    e.stopPropagation();
+    const id=el.dataset.openWarranty;
+    if(S.jobs[id]){S.detail=id;S.view='jobs';S.detailTab='warranty';render()}
   });
 
   // Financials
