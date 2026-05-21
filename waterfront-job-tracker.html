@@ -748,6 +748,7 @@ input[type=range]{width:100%;accent-color:var(--green-700);height:4px;cursor:poi
 .w-rem-del{background:var(--surface-3);border:none;border-radius:50%;width:30px;height:30px;font-size:13px;cursor:pointer;color:var(--text-3);display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .w-rem-del:hover{background:var(--red-light);color:var(--red)}
 @media(max-width:480px){.w-rem-row{grid-template-columns:1fr 124px 28px}}
+.receipt-thumb{width:46px;height:46px;border-radius:8px;object-fit:cover;flex-shrink:0;cursor:pointer;border:1px solid var(--border)}
 @media(prefers-color-scheme:dark){
   .warr-badge.active{background:#052e16;color:#86efac}
   .warr-badge.warn{background:#3d2800;color:#fbbf24}
@@ -1724,6 +1725,9 @@ function warrantyExpiry(w){
   return null;
 }
 function jobWarranties(j){return (j&&Array.isArray(j.warranties))?j.warranties:[]}
+function jobReceipts(j){return (j&&Array.isArray(j.receipts))?j.receipts:[]}
+function rcid(){return'rc_'+Date.now()+'_'+Math.random().toString(36).slice(2,6)}
+const RECEIPT_CATEGORIES=['Materials','Equipment rental','Fuel','Tools','Permits / Fees','Subcontractor','Meals','Other'];
 function allWarranties(){
   const out=[];
   jobs().forEach(j=>jobWarranties(j).forEach(w=>out.push({job:j,w})));
@@ -3448,6 +3452,99 @@ function renderClientDetail(key){
   `;
 }
 
+function showReceiptModal(jobId,receiptId){
+  const j=S.jobs[jobId];if(!j)return;
+  const existing=receiptId?jobReceipts(j).find(r=>r.id===receiptId):null;
+  const r=existing?{...existing}:{id:rcid(),date:dateKey(new Date()),category:'Materials'};
+  const pending={fileUrl:r.fileUrl||'',fileName:r.fileName||'',fileType:r.fileType||''};
+
+  $('modal-root').innerHTML=`<div class="modal-bd" id="mbd" role="dialog" aria-modal="true" aria-label="${existing?'Edit receipt':'New receipt'}"><div class="modal"><div class="modal-handle"></div>
+    <div class="modal-head"><div class="modal-title">${existing?'Edit Receipt':'New Receipt'}</div><button class="modal-close" id="mc" aria-label="Close"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button></div>
+    <div class="modal-body">
+      <p style="font-size:12.5px;color:var(--text-2);margin-bottom:14px;line-height:1.5">For <strong>${esc(j.name)}</strong>. Log what you spent and attach a photo of the receipt.</p>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Vendor / Store</label><input class="form-input" id="rc-vendor" value="${esc(r.vendor||'')}" placeholder="e.g. Home Depot"></div>
+        <div class="form-group"><label class="form-label">Amount ($) *</label><input class="form-input" type="number" step="0.01" min="0" id="rc-amount" value="${esc(r.amount||'')}" placeholder="0.00"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Date</label><input class="form-input" type="date" id="rc-date" value="${esc(r.date||'')}"></div>
+        <div class="form-group"><label class="form-label">Category</label><select class="form-select" id="rc-category">${RECEIPT_CATEGORIES.map(ct=>`<option value="${esc(ct)}" ${(r.category||'Materials')===ct?'selected':''}>${esc(ct)}</option>`).join('')}</select></div>
+      </div>
+      <div class="form-group"><label class="form-label">Note</label><textarea class="form-textarea" id="rc-note" placeholder="What was purchased…">${esc(r.note||'')}</textarea></div>
+      <div class="form-group"><label class="form-label">Receipt photo / file</label>
+        <label class="photo-add-btn" style="aspect-ratio:auto;padding:12px;flex-direction:row;gap:8px;cursor:pointer">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z"/><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zM18.75 10.5h.008v.008h-.008V10.5z"/></svg>
+          <span id="rc-file-label">${pending.fileName?esc(pending.fileName):'Take a photo or choose a file (max 5MB)'}</span>
+          <input type="file" accept="image/*,application/pdf" id="rc-file" style="display:none">
+        </label>
+        ${pending.fileName?`<button class="btn-sm" id="rc-file-clear" type="button" style="margin-top:6px;padding:4px 10px;font-size:11px">Remove file</button>`:''}
+      </div>
+    </div>
+    <div class="modal-foot">
+      ${existing?`<button class="btn-delete" id="rc-del">Delete</button>`:''}
+      <button class="btn-cancel" id="btn-cx">Cancel</button>
+      <button class="btn-save" id="rc-save">${existing?'Save':'Add Receipt'}</button>
+    </div>
+  </div></div>`;
+
+  $('mc').onclick=$('btn-cx').onclick=closeModal;
+  $('mbd').onclick=e=>{if(e.target===e.currentTarget)closeModal()};
+
+  $('rc-file').onchange=function(){
+    const file=this.files[0];if(!file)return;
+    if(file.size>5*1024*1024){toast('File too large (max 5MB)','');return}
+    const isImg=file.type.startsWith('image/');
+    const finish=(url)=>{pending.fileUrl=url;pending.fileName=file.name;pending.fileType=file.type;const lbl=$('rc-file-label');if(lbl)lbl.textContent=file.name};
+    if(isImg){
+      // Downscale image to keep storage reasonable
+      const rd=new FileReader();
+      rd.onload=e=>{const img=new Image();img.onload=()=>{
+        const c=document.createElement('canvas');const MAX=1400;let w=img.width,h=img.height;
+        if(w>MAX||h>MAX){if(w>h){h=Math.round(h*MAX/w);w=MAX}else{w=Math.round(w*MAX/h);h=MAX}}
+        c.width=w;c.height=h;c.getContext('2d').drawImage(img,0,0,w,h);
+        finish(c.toDataURL('image/jpeg',0.8));
+      };img.src=e.target.result};
+      rd.readAsDataURL(file);
+    }else{
+      const rd=new FileReader();rd.onload=e=>finish(e.target.result);rd.readAsDataURL(file);
+    }
+  };
+  $('rc-file-clear')?.addEventListener('click',()=>{pending.fileUrl='';pending.fileName='';pending.fileType='';const lbl=$('rc-file-label');if(lbl)lbl.textContent='Take a photo or choose a file (max 5MB)';$('rc-file-clear').style.display='none'});
+
+  $('rc-save').onclick=async()=>{
+    const amount=Number($('rc-amount').value||0);
+    if(!amount||amount<=0){toast('Enter the receipt amount','');return}
+    const data={
+      id:r.id,
+      vendor:$('rc-vendor').value.trim(),
+      amount,
+      date:$('rc-date').value,
+      category:$('rc-category').value,
+      note:$('rc-note').value.trim(),
+      fileUrl:pending.fileUrl||'',
+      fileName:pending.fileName||'',
+      fileType:pending.fileType||'',
+      user:r.user||S.user,
+      time:r.time||Date.now(),
+    };
+    j.receipts=jobReceipts(j).slice();
+    const idx=j.receipts.findIndex(x=>x.id===r.id);
+    if(idx>=0)j.receipts[idx]=data;else j.receipts.push(data);
+    await writeJob(j);await logAct(existing?'updated receipt on':'added receipt to',j.name);
+    closeModal();render();toast(existing?'Receipt saved':'Receipt added');
+  };
+
+  if(existing)$('rc-del').onclick=async()=>{
+    const backup=JSON.parse(JSON.stringify(jobReceipts(j)));
+    j.receipts=jobReceipts(j).filter(x=>x.id!==r.id);
+    await writeJob(j);await logAct('removed receipt from',j.name);
+    closeModal();render();
+    const restore=async()=>{const jj=S.jobs[jobId];if(jj){jj.receipts=backup;await writeJob(jj);render();toast('Receipt restored')}};
+    UNDO.push(restore);
+    toast('Receipt deleted','undo',restore);
+  };
+}
+
 function showWarrantyModal(jobId,warrantyId){
   const j=S.jobs[jobId];if(!j)return;
   const existing=warrantyId?jobWarranties(j).find(w=>w.id===warrantyId):null;
@@ -3719,6 +3816,7 @@ function renderDetail(id){
     {id:'photos',label:'Photos',count:photos.length},
     {id:'docs',label:'Files',count:(j.documents||[]).length},
     {id:'warranty',label:'Warranty',count:(j.warranties||[]).length},
+    {id:'receipts',label:'Receipts',count:(j.receipts||[]).length},
     {id:'invoices',label:'Invoices',count:(j.invoices||[]).length},
     {id:'financial',label:'Financials'},
     {id:'comms',label:'Comms',count:(j.comms||[]).length},
@@ -3807,6 +3905,7 @@ function renderDetailTab(j,tab){
           <div class="info-cell stat-link" data-go-tab="invoices" role="button" tabindex="0" title="View & add invoices"><div class="info-label">Balance Due</div><div class="info-value" style="color:${balance>0?'var(--orange)':'var(--green-700)'}">${money(balance)}</div></div>
           <div class="info-cell stat-link" data-go-tab="log" role="button" tabindex="0" title="View & add log entries"><div class="info-label">Log Entries</div><div class="info-value">${(j.dailyLogs||[]).length}</div></div>
           <div class="info-cell stat-link" data-go-tab="warranty" role="button" tabindex="0" title="View & add warranties"><div class="info-label">Warranties</div><div class="info-value">${jobWarranties(j).length}</div></div>
+          <div class="info-cell stat-link" data-go-tab="receipts" role="button" tabindex="0" title="View & add receipts"><div class="info-label">Receipts</div><div class="info-value">${jobReceipts(j).length}</div></div>
         </div>
       </div>`;
   }
@@ -3940,6 +4039,40 @@ function renderDetailTab(j,tab){
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v6m3-3H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
           <span>Upload File (PDF, DOC, IMG)</span>
           <input type="file" accept="*/*" id="doc-upload" style="display:none">
+        </label>
+      </div>`;
+  }
+  if(tab==='receipts'){
+    const receipts=jobReceipts(j).slice().sort((a,b)=>(b.date||'').localeCompare(a.date||'')||(b.time||0)-(a.time||0));
+    const total=receipts.reduce((s,r)=>s+Number(r.amount||0),0);
+    return `
+      <div class="section">
+        <div class="section-hd">Receipts <span>${receipts.length}</span></div>
+        ${receipts.length?`<div class="inv-totals" style="margin-bottom:12px"><div class="inv-total-row grand"><span>Total Expenses</span><span class="v">${money(total)}</span></div></div>`:''}
+        <div class="warr-list">
+          ${receipts.length===0?'<p style="font-size:13px;color:var(--text-3);padding:4px 0">No receipts yet. Snap a photo of each receipt and log what you spent — materials, rentals, fuel, permits — to track job costs.</p>'
+            :receipts.map(r=>{
+              const isImg=(r.fileType||'').startsWith('image/')||/\.(png|jpe?g|gif|webp|heic)$/i.test(r.fileName||'');
+              return `<div class="warr-card" style="border-left-color:#0ea5e9">
+                <div class="warr-top">
+                  ${r.fileUrl&&isImg?`<img src="${r.fileUrl}" alt="" class="receipt-thumb" data-receipt-img="${esc(r.fileUrl)}">`:''}
+                  <div style="flex:1;min-width:0">
+                    <div class="warr-name">${esc(r.vendor||'Receipt')}</div>
+                    <div class="warr-sub">${r.category?esc(r.category):'Expense'}${r.date?' · '+fmtDate(r.date):''}${r.user?' · '+esc(r.user):''}</div>
+                  </div>
+                  <span class="warr-badge" style="background:#e0f2fe;color:#075985">${money(r.amount||0)}</span>
+                </div>
+                ${r.note?`<div style="font-size:12.5px;color:var(--text-2);margin-top:8px;line-height:1.5">${esc(r.note)}</div>`:''}
+                <div class="warr-actions">
+                  ${r.fileUrl?`<a class="warr-doc-link" href="${r.fileUrl}" download="${esc(r.fileName||'receipt')}" target="_blank"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>${esc(r.fileName||'View file')}</a>`:''}
+                  <button class="btn-sm" data-receipt-edit="${esc(r.id)}" style="padding:5px 11px;font-size:11.5px">Edit</button>
+                </div>
+              </div>`;
+            }).join('')}
+        </div>
+        <label class="photo-add-btn" id="btn-add-receipt" style="aspect-ratio:auto;padding:14px;flex-direction:row;gap:8px;cursor:pointer">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-3-3v6m-7.5 4.5h15a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5h-15A1.5 1.5 0 003 6v12a1.5 1.5 0 001.5 1.5z"/></svg>
+          <span>Add Receipt</span>
         </label>
       </div>`;
   }
@@ -5278,6 +5411,19 @@ function attachHandlers(){
     e.stopPropagation();
     const id=el.dataset.openWarranty;
     if(S.jobs[id]){S.detail=id;S.view='jobs';S.detailTab='warranty';render()}
+  });
+
+  // Receipts
+  $('btn-add-receipt')?.addEventListener('click',()=>{const id=S.detail;if(id)showReceiptModal(id)});
+  document.querySelectorAll('[data-receipt-edit]').forEach(b=>b.onclick=e=>{
+    e.stopPropagation();const id=S.detail;if(id)showReceiptModal(id,b.dataset.receiptEdit);
+  });
+  document.querySelectorAll('[data-receipt-img]').forEach(img=>img.onclick=e=>{
+    e.stopPropagation();
+    const url=img.dataset.receiptImg;
+    $('fs-root').innerHTML=`<div class="photo-fs" id="fs"><button class="photo-fs-close" id="fsc">×</button><img src="${url}" alt=""></div>`;
+    $('fsc').onclick=()=>$('fs-root').innerHTML='';
+    $('fs').onclick=ev=>{if(ev.target===ev.currentTarget)$('fs-root').innerHTML=''};
   });
 
   // Financials
