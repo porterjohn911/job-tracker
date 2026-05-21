@@ -1115,6 +1115,33 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
   .ref-status.lost{background:#1d2e27;color:#9ca3af}
 }
 
+/* ── CONTACTS (subs & vendors) ── */
+.ct-status{
+  display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;
+  letter-spacing:0.03em;text-transform:uppercase;white-space:nowrap;flex-shrink:0;
+  background:var(--surface-3);color:var(--text-2);
+}
+.ct-status.sub{background:#e0f2fe;color:#075985}
+.ct-status.vendor{background:var(--gold-light);color:#92600a}
+.ct-status.other{background:var(--surface-3);color:var(--text-2)}
+.invoice-row.ct-sub{border-left-color:#0284c7}
+.invoice-row.ct-vendor{border-left-color:var(--gold)}
+.invoice-row.ct-other{border-left-color:#94a3b8}
+.ct-trade{font-size:12px;color:var(--text-2);margin-top:3px}
+.ct-trade b{color:var(--text);font-weight:600}
+.ct-links{display:flex;gap:6px;flex-wrap:wrap;margin-top:7px}
+.ct-link{
+  display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;
+  color:var(--green-700);background:var(--green-50);border:1px solid var(--border);
+  padding:4px 10px;border-radius:20px;text-decoration:none;
+}
+.ct-link svg{width:13px;height:13px;stroke-width:2}
+.ct-link:hover{background:var(--green-100);border-color:var(--green-600)}
+@media(prefers-color-scheme:dark){
+  .ct-status.sub{background:#082f49;color:#38bdf8}
+  .ct-status.vendor{background:#3d2800;color:#fbbf24}
+}
+
 /* Line items table in editor */
 .line-items{display:flex;flex-direction:column;gap:6px;margin-bottom:12px}
 .li-row{
@@ -1284,6 +1311,10 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z"/></svg>
     Referrals
   </button>
+  <button class="nav-btn" data-view="contacts">
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"/></svg>
+    Contacts
+  </button>
   <button class="nav-btn" data-view="activity">
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5M5.625 4.5h12.75a1.875 1.875 0 010 3.75H5.625a1.875 1.875 0 010-3.75z"/></svg>
     Activity
@@ -1311,7 +1342,7 @@ try{const s=localStorage.getItem('wfs_fb');if(s)FIREBASE_CONFIG=JSON.parse(s)}ca
 // ══ State ══
 let DB=null;
 let MAP=null,MAP_MARKERS=[];
-const S={jobs:{},referrals:{},activity:[],members:[],view:'dashboard',detail:null,detailTab:'overview',filter:'all',search:'',photoCat:'all',calMonth:new Date().getMonth(),calYear:new Date().getFullYear(),calSelected:null,calMode:localStorage.getItem('wfs_calmode')||'month',reportRange:'90',sort:localStorage.getItem('wfs_sort')||'newest',sortOpen:false,bulkMode:false,bulkSel:new Set(),invFilter:'all',invSearch:'',invSort:'date',refFilter:'all',refSearch:'',user:localStorage.getItem('wfs_user')||'',notifReadAt:parseInt(localStorage.getItem('wfs_notif_read')||'0',10)};
+const S={jobs:{},referrals:{},contacts:{},activity:[],members:[],view:'dashboard',detail:null,detailTab:'overview',filter:'all',search:'',photoCat:'all',calMonth:new Date().getMonth(),calYear:new Date().getFullYear(),calSelected:null,calMode:localStorage.getItem('wfs_calmode')||'month',reportRange:'90',sort:localStorage.getItem('wfs_sort')||'newest',sortOpen:false,bulkMode:false,bulkSel:new Set(),invFilter:'all',invSearch:'',invSort:'date',refFilter:'all',refSearch:'',contactFilter:'all',contactSearch:'',user:localStorage.getItem('wfs_user')||'',notifReadAt:parseInt(localStorage.getItem('wfs_notif_read')||'0',10)};
 const UNDO={stack:[],push(op){this.stack.push(op);if(this.stack.length>20)this.stack.shift()},pop(){return this.stack.pop()}};
 
 // ── Company info for invoice letterhead (editable via Settings)
@@ -1335,6 +1366,8 @@ const STAGE_TO_STATUS={'Lead':'lead','Estimate':'lead','Approved':'active','Sche
 const PHOTO_CATS=['all','before','during','after','damage','docs'];
 const LEAD_SOURCES=['Referral','Repeat Customer','Google Search','Facebook / Social','Yard Sign','Drive-By','Website','Phone Call','Walk-In','Other'];
 const REFERRAL_STATUSES=['New','Contacted','Won','Lost'];
+const CONTACT_TYPES=['Subcontractor','Vendor/Supplier','Other'];
+const CONTACT_TRADES=['Electrician','Plumber','HVAC','Concrete','Framing','Roofing','Excavation','Crane / Rigging','Welding / Steel','Painting','Drywall','Flooring','Landscaping','Dock / Marine','Lumber supplier','Concrete supplier','Hardware / Materials','Equipment rental','Surveyor','Engineer','Inspector','Permitting','Hauling / Trucking','Other'];
 
 // ══ Helpers ══
 const $=id=>document.getElementById(id);
@@ -1342,6 +1375,7 @@ const esc=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>
 function ago(ts){const s=Math.floor((Date.now()-ts)/1000);if(s<60)return'just now';if(s<3600)return Math.floor(s/60)+'m ago';if(s<86400)return Math.floor(s/3600)+'h ago';return new Date(ts).toLocaleDateString()}
 function uid(){return'j_'+Date.now()+'_'+Math.random().toString(36).slice(2,6)}
 function rid(){return'r_'+Date.now()+'_'+Math.random().toString(36).slice(2,6)}
+function cid(){return'c_'+Date.now()+'_'+Math.random().toString(36).slice(2,6)}
 function jobs(){
   const all=Object.values(S.jobs);
   const cmp={
@@ -1425,9 +1459,10 @@ function undoLast(){const op=UNDO.pop();if(!op){toast('Nothing to undo','');retu
 
 // ══ DB layer ══
 const LOCAL={
-  load(){try{S.jobs=JSON.parse(localStorage.getItem('wfs_jobs')||'{}')}catch(e){S.jobs={}}try{S.referrals=JSON.parse(localStorage.getItem('wfs_referrals')||'{}')}catch(e){S.referrals={}}try{S.activity=JSON.parse(localStorage.getItem('wfs_activity')||'[]')}catch(e){S.activity=[]}try{S.members=JSON.parse(localStorage.getItem('wfs_members')||'[]')}catch(e){S.members=[]}},
+  load(){try{S.jobs=JSON.parse(localStorage.getItem('wfs_jobs')||'{}')}catch(e){S.jobs={}}try{S.referrals=JSON.parse(localStorage.getItem('wfs_referrals')||'{}')}catch(e){S.referrals={}}try{S.contacts=JSON.parse(localStorage.getItem('wfs_contacts')||'{}')}catch(e){S.contacts={}}try{S.activity=JSON.parse(localStorage.getItem('wfs_activity')||'[]')}catch(e){S.activity=[]}try{S.members=JSON.parse(localStorage.getItem('wfs_members')||'[]')}catch(e){S.members=[]}},
   saveJobs(){try{localStorage.setItem('wfs_jobs',JSON.stringify(S.jobs))}catch(e){}},
   saveReferrals(){try{localStorage.setItem('wfs_referrals',JSON.stringify(S.referrals))}catch(e){}},
+  saveContacts(){try{localStorage.setItem('wfs_contacts',JSON.stringify(S.contacts))}catch(e){}},
   saveActivity(){try{localStorage.setItem('wfs_activity',JSON.stringify(S.activity.slice(0,300)))}catch(e){}},
   saveMembers(){try{localStorage.setItem('wfs_members',JSON.stringify(S.members))}catch(e){}}
 };
@@ -1439,6 +1474,7 @@ function initFB(cfg){
     syncStatus('pulse','Connecting…');
     DB.child('jobs').on('value',s=>{S.jobs=s.val()||{};LOCAL.saveJobs();syncStatus('ok','Team sync live');render()});
     DB.child('referrals').on('value',s=>{S.referrals=s.val()||{};LOCAL.saveReferrals();render()});
+    DB.child('contacts').on('value',s=>{S.contacts=s.val()||{};LOCAL.saveContacts();render()});
     DB.child('activity').on('value',s=>{const r=s.val();S.activity=r?Object.values(r).sort((a,b)=>b.time-a.time):[];LOCAL.saveActivity()});
     DB.child('members').on('value',s=>{S.members=s.val()||[];LOCAL.saveMembers();render()});
     DB.child('.info/connected').on('value',s=>{if(!s.val())syncStatus('err','Reconnecting…')});
@@ -1449,6 +1485,8 @@ async function writeJob(j){S.jobs[j.id]=j;LOCAL.saveJobs();if(DB)await DB.child(
 async function deleteJobDB(id){delete S.jobs[id];LOCAL.saveJobs();if(DB)await DB.child('jobs/'+id).remove().catch(()=>{})}
 async function writeReferral(r){S.referrals[r.id]=r;LOCAL.saveReferrals();if(DB)await DB.child('referrals/'+r.id).set(r).catch(()=>{})}
 async function deleteReferralDB(id){delete S.referrals[id];LOCAL.saveReferrals();if(DB)await DB.child('referrals/'+id).remove().catch(()=>{})}
+async function writeContact(c){S.contacts[c.id]=c;LOCAL.saveContacts();if(DB)await DB.child('contacts/'+c.id).set(c).catch(()=>{})}
+async function deleteContactDB(id){delete S.contacts[id];LOCAL.saveContacts();if(DB)await DB.child('contacts/'+id).remove().catch(()=>{})}
 async function logAct(action,job){const e={user:S.user||'Someone',action,job:job||'',time:Date.now()};S.activity.unshift(e);LOCAL.saveActivity();if(DB)await DB.child('activity').push(e).catch(()=>{})}
 async function saveMembers(){LOCAL.saveMembers();if(DB)await DB.child('members').set(S.members).catch(()=>{})}
 
@@ -1467,6 +1505,7 @@ function render(){
   else if(S.view==='map')c.innerHTML=renderMap();
   else if(S.view==='reports')c.innerHTML=renderReports();
   else if(S.view==='referrals')c.innerHTML=renderReferrals();
+  else if(S.view==='contacts')c.innerHTML=renderContacts();
   else if(S.view==='activity')c.innerHTML=renderActivity();
   else if(S.view==='team')c.innerHTML=renderTeam();
   updateUserUI();
@@ -3007,6 +3046,154 @@ function showReferralModal(mode,ref){
   };
 }
 
+// ══ Contacts (subcontractors & vendors/suppliers) ══
+function contacts(){
+  return Object.values(S.contacts).sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+}
+function contactTypeClass(t){return t==='Subcontractor'?'sub':t==='Vendor/Supplier'?'vendor':'other'}
+
+function renderContacts(){
+  const all=contacts();
+  const total=all.length;
+  const subs=all.filter(c=>c.type==='Subcontractor').length;
+  const vendors=all.filter(c=>c.type==='Vendor/Supplier').length;
+
+  const q=(S.contactSearch||'').toLowerCase();
+  const shown=all.filter(c=>{
+    if(S.contactFilter!=='all'&&(c.type||'Other')!==S.contactFilter)return false;
+    if(!q)return true;
+    const hay=[c.name,c.trade,c.contactName,c.phone,c.email,c.notes,c.address].filter(Boolean).join(' ').toLowerCase();
+    return hay.includes(q);
+  });
+
+  const chips=[
+    ['all','All',total],
+    ['Subcontractor','Subcontractors',subs],
+    ['Vendor/Supplier','Vendors / Suppliers',vendors],
+    ['Other','Other',all.filter(c=>(c.type||'Other')==='Other').length],
+  ];
+
+  return `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+      <div>
+        <div style="font-size:11px;color:var(--text-3);text-transform:uppercase;letter-spacing:0.06em;font-weight:700">Who We Work With</div>
+        <div style="font-size:20px;font-weight:700;margin-top:2px">Contacts</div>
+      </div>
+      <button class="btn-add" id="btn-new-contact" aria-label="Add contact">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+        New Contact
+      </button>
+    </div>
+
+    <div class="kpi-grid">
+      <div class="kpi-card accent"><div class="kpi-label">Total Contacts</div><div class="kpi-value">${total}</div><div class="kpi-sub">subs &amp; vendors</div></div>
+      <div class="kpi-card"><div class="kpi-label">Subcontractors</div><div class="kpi-value">${subs}</div><div class="kpi-sub">crews &amp; trades</div></div>
+      <div class="kpi-card"><div class="kpi-label">Vendors / Suppliers</div><div class="kpi-value">${vendors}</div><div class="kpi-sub">materials &amp; rentals</div></div>
+      <div class="kpi-card"><div class="kpi-label">Other</div><div class="kpi-value">${all.filter(c=>(c.type||'Other')==='Other').length}</div><div class="kpi-sub">misc partners</div></div>
+    </div>
+
+    <div class="toolbar" style="margin-top:8px">
+      <div class="search-wrap">
+        <div class="search-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 15.803a7.5 7.5 0 0010.607 0z"/></svg></div>
+        <input class="search" id="contact-search" placeholder="Search name, trade, phone…" value="${esc(S.contactSearch)}" aria-label="Search contacts">
+      </div>
+    </div>
+
+    <div class="filter-row" style="margin-bottom:14px">
+      ${chips.map(([k,lbl,n])=>`<div class="filter-chip ${S.contactFilter===k?'active':''}" data-contact-filter="${esc(k)}">${lbl} ${n}</div>`).join('')}
+    </div>
+
+    <div class="invoice-list" style="display:flex;flex-direction:column;gap:8px">
+      ${shown.length===0?`<div class="empty" style="padding:40px 20px">
+        <div class="empty-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"/></svg></div>
+        <h3>${total===0?'No contacts yet':'No matches'}</h3>
+        <p>${total===0?'Build your directory of subcontractors and vendors/suppliers — names, contact info, and what they do — so the whole team can reach them fast.':'Try a different search or filter.'}</p>
+      </div>`
+        :shown.map(c=>{
+          const cls=contactTypeClass(c.type);
+          const type=c.type||'Other';
+          const links=[];
+          if(c.phone)links.push(`<a class="ct-link" href="tel:${encodeURIComponent(c.phone)}" onclick="event.stopPropagation()"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 01-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z"/></svg>${esc(c.phone)}</a>`);
+          if(c.email)links.push(`<a class="ct-link" href="mailto:${encodeURIComponent(c.email)}" onclick="event.stopPropagation()"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"/></svg>Email</a>`);
+          if(c.website){const url=/^https?:\/\//.test(c.website)?c.website:'https://'+c.website;links.push(`<a class="ct-link" href="${esc(url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21a9 9 0 100-18 9 9 0 000 18zm0 0a8.949 8.949 0 004.951-1.488A3.987 3.987 0 0013 16h-2a3.987 3.987 0 00-3.951 3.512A8.949 8.949 0 0012 21zm3-11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>Website</a>`)}
+          return `<div class="invoice-row ct-${cls}">
+            <div class="invoice-row-main" data-open-contact="${esc(c.id)}" style="cursor:pointer">
+              <div class="invoice-num">${esc(c.name||'Unnamed')} <span class="ct-status ${cls}">${esc(type)}</span></div>
+              ${c.trade?`<div class="ct-trade"><b>${esc(c.trade)}</b>${c.contactName?' · '+esc(c.contactName):''}</div>`:(c.contactName?`<div class="ct-trade">${esc(c.contactName)}</div>`:'')}
+              ${links.length?`<div class="ct-links">${links.join('')}</div>`:''}
+              ${c.notes?`<div class="invoice-meta" style="margin-top:6px">${esc(c.notes)}</div>`:''}
+            </div>
+            <div class="inv-quick-actions">
+              <button class="inv-quick-btn" data-open-contact="${esc(c.id)}" title="Edit contact" aria-label="Edit contact">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125"/></svg>
+              </button>
+            </div>
+          </div>`;
+        }).join('')}
+    </div>
+  `;
+}
+
+function showContactModal(mode,contact){
+  const c={id:cid(),type:'Subcontractor',...(contact||{})};
+  $('modal-root').innerHTML=`<div class="modal-bd" id="mbd" role="dialog" aria-modal="true" aria-label="${mode==='add'?'New contact':'Edit contact'}"><div class="modal"><div class="modal-handle"></div>
+    <div class="modal-head"><div class="modal-title">${mode==='add'?'New Contact':'Edit Contact'}</div><button class="modal-close" id="mc" aria-label="Close"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button></div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Type</label><select class="form-select" id="ct-type">${CONTACT_TYPES.map(t=>`<option value="${esc(t)}" ${(c.type||'Subcontractor')===t?'selected':''}>${esc(t)}</option>`).join('')}</select></div>
+        <div class="form-group"><label class="form-label">What they do</label><input class="form-input" id="ct-trade" list="ct-trade-list" value="${esc(c.trade||'')}" placeholder="e.g. Electrician, Lumber supplier"><datalist id="ct-trade-list">${CONTACT_TRADES.map(t=>`<option value="${esc(t)}">`).join('')}</datalist></div>
+      </div>
+      <div class="form-group"><label class="form-label">Company / Name *</label><input class="form-input" id="ct-name" value="${esc(c.name||'')}" placeholder="e.g. Smith Electric LLC"></div>
+      <div class="form-group"><label class="form-label">Contact person</label><input class="form-input" id="ct-person" value="${esc(c.contactName||'')}" placeholder="Who to ask for"></div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Phone</label><input class="form-input" type="tel" id="ct-phone" value="${esc(c.phone||'')}" placeholder="(555) 123-4567"></div>
+        <div class="form-group"><label class="form-label">Email</label><input class="form-input" type="email" id="ct-email" value="${esc(c.email||'')}" placeholder="name@company.com"></div>
+      </div>
+      <div class="form-group"><label class="form-label">Website</label><input class="form-input" id="ct-website" value="${esc(c.website||'')}" placeholder="company.com"></div>
+      <div class="form-group"><label class="form-label">Address</label><input class="form-input" id="ct-address" value="${esc(c.address||'')}" placeholder="Optional"></div>
+      <div class="form-group"><label class="form-label">Notes</label><textarea class="form-textarea" id="ct-notes" placeholder="Rates, license #, lead time, what jobs you've used them on…">${esc(c.notes||'')}</textarea></div>
+    </div>
+    <div class="modal-foot">
+      ${mode==='edit'?`<button class="btn-delete" id="ct-del">Delete</button>`:''}
+      <button class="btn-cancel" id="btn-cx">Cancel</button>
+      <button class="btn-save" id="ct-save">${mode==='add'?'Add Contact':'Save'}</button>
+    </div>
+  </div></div>`;
+
+  $('mc').onclick=$('btn-cx').onclick=closeModal;
+  $('mbd').onclick=e=>{if(e.target===e.currentTarget)closeModal()};
+
+  $('ct-save').onclick=async()=>{
+    const name=$('ct-name').value.trim();
+    if(!name){toast('Enter a company or name','');return}
+    const data={
+      id:c.id,
+      type:$('ct-type').value,
+      trade:$('ct-trade').value.trim(),
+      name,
+      contactName:$('ct-person').value.trim(),
+      phone:$('ct-phone').value.trim(),
+      email:$('ct-email').value.trim(),
+      website:$('ct-website').value.trim(),
+      address:$('ct-address').value.trim(),
+      notes:$('ct-notes').value.trim(),
+      created:c.created||Date.now(),
+    };
+    await writeContact(data);
+    await logAct(mode==='edit'?'updated contact':'added contact',name);
+    closeModal();render();toast(mode==='edit'?'Contact saved':'Contact added');
+  };
+
+  if(mode==='edit')$('ct-del').onclick=async()=>{
+    const backup=JSON.parse(JSON.stringify(c));
+    await deleteContactDB(c.id);await logAct('deleted contact',c.name||'');
+    closeModal();render();
+    const restore=async()=>{await writeContact(backup);render();toast('Contact restored')};
+    UNDO.push(restore);
+    toast('Contact deleted','undo',restore);
+  };
+}
+
 function showWarrantyModal(jobId,warrantyId){
   const j=S.jobs[jobId];if(!j)return;
   const existing=warrantyId?jobWarranties(j).find(w=>w.id===warrantyId):null;
@@ -4221,12 +4408,13 @@ let CMD={open:false,query:'',idx:0,items:[]};
 function cmdItems(){
   const out=[];
   // Views
-  [['dashboard','Home / Dashboard','home'],['jobs','Jobs','briefcase'],['schedule','Schedule','calendar'],['invoices','Invoices','invoice'],['map','Map','map'],['reports','Reports','chart'],['referrals','Referrals','team'],['activity','Activity','list'],['team','Team','team']].forEach(([v,name,ico])=>{
+  [['dashboard','Home / Dashboard','home'],['jobs','Jobs','briefcase'],['schedule','Schedule','calendar'],['invoices','Invoices','invoice'],['map','Map','map'],['reports','Reports','chart'],['referrals','Referrals','team'],['contacts','Contacts','team'],['activity','Activity','list'],['team','Team','team']].forEach(([v,name,ico])=>{
     out.push({type:'view',name:'Go to '+name,sub:'View',ico,run:()=>{S.view=v;S.detail=null;render()}});
   });
   // Actions
   out.push({type:'action',name:'New Job',sub:'Create a job',ico:'plus',run:()=>showJobModal('add')});
   out.push({type:'action',name:'New Referral',sub:'Log who referred a customer',ico:'team',run:()=>showReferralModal('add')});
+  out.push({type:'action',name:'New Contact',sub:'Add a subcontractor or vendor',ico:'team',run:()=>showContactModal('add')});
   out.push({type:'action',name:'New Invoice',sub:'Pick a job, then create invoice',ico:'invoice',run:()=>showJobPickerModal(jobId=>showInvoiceModal(jobId))});
   out.push({type:'action',name:'Settings & Company Info',sub:'Edit name, logo, invoice defaults',ico:'kbd',run:showSettingsModal});
   out.push({type:'action',name:'Export to CSV',sub:'Download all jobs',ico:'download',run:exportCSV});
@@ -4347,6 +4535,7 @@ function showShortcutsModal(){
     ['Go to Map',['G','M']],
     ['Go to Reports',['G','R']],
     ['Go to Referrals',['G','F']],
+    ['Go to Contacts',['G','C']],
     ['Notifications',['B']],
     ['Undo last action',['Ctrl','Z'],['⌘','Z']],
     ['Show this help',['?']],
@@ -4444,7 +4633,7 @@ function onKey(e){
   // g + (d/j/s/m/r) go-to
   if(k==='g'||k==='G'){KBD_BUFFER='g';clearTimeout(KBD_BUFFER_T);KBD_BUFFER_T=setTimeout(()=>KBD_BUFFER='',1200);return}
   if(KBD_BUFFER==='g'){
-    const map={d:'dashboard',j:'jobs',s:'schedule',i:'invoices',m:'map',r:'reports',f:'referrals',a:'activity',t:'team'};
+    const map={d:'dashboard',j:'jobs',s:'schedule',i:'invoices',m:'map',r:'reports',f:'referrals',c:'contacts',a:'activity',t:'team'};
     const target=map[k.toLowerCase()];
     if(target){KBD_BUFFER='';clearTimeout(KBD_BUFFER_T);S.view=target;S.detail=null;render();e.preventDefault()}
   }
@@ -4606,6 +4795,16 @@ function attachHandlers(){
     e.stopPropagation();
     const r=S.referrals[el.dataset.openRefView];
     if(r){S.view='referrals';S.detail=null;render();showReferralModal('edit',r)}
+  });
+  // Contacts (subs & vendors)
+  $('btn-new-contact')?.addEventListener('click',()=>showContactModal('add'));
+  $('contact-search')?.addEventListener('input',e=>{S.contactSearch=e.target.value;render()});
+  document.querySelectorAll('[data-contact-filter]').forEach(c=>c.onclick=()=>{S.contactFilter=c.dataset.contactFilter;render()});
+  document.querySelectorAll('[data-open-contact]').forEach(el=>el.onclick=e=>{
+    if(e.target.closest('a'))return;
+    e.stopPropagation();
+    const c=S.contacts[el.dataset.openContact];
+    if(c)showContactModal('edit',c);
   });
   // Reports
   document.querySelectorAll('[data-range]').forEach(c=>c.onclick=()=>{S.reportRange=c.dataset.range;render()});
