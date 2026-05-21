@@ -569,8 +569,10 @@ input[type=range]{width:100%;accent-color:var(--green-700);height:4px;cursor:poi
   .cal-chip.cs-complete{background:#082f49;color:#7dd3fc}
   .cal-chip.cs-hold{background:#1e2e28;color:var(--text-2)}
   .cal-chip.cs-warranty{background:#3d1f4d;color:#e9d5ff}
+  .cal-chip.cs-reminder{background:#3d2800;color:#fbbf24}
 }
 .cal-chip.cs-warranty{border-left-color:#9333ea;background:#f3e8ff;color:#6b21a8}
+.cal-chip.cs-reminder{border-left-color:#d97706;background:#fef3c7;color:#92400e}
 .cal-day-more{font-size:9.5px;color:var(--text-3);font-weight:600;padding:1px 5px;cursor:pointer}
 .cal-day-more:hover{color:var(--green-700)}
 
@@ -712,6 +714,14 @@ input[type=range]{width:100%;accent-color:var(--green-700);height:4px;cursor:poi
 }
 .warr-doc-link svg{width:13px;height:13px;stroke-width:2}
 .warr-doc-link:hover{background:var(--green-100);border-color:var(--green-600)}
+.warr-rem{margin-top:8px;display:flex;flex-direction:column;gap:4px}
+.warr-rem-item{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-2)}
+.warr-rem-item b{color:var(--text);font-weight:600}
+.w-rem-row{display:grid;grid-template-columns:1fr 150px 30px;gap:6px;align-items:center;margin-bottom:6px}
+.w-rem-row input{margin:0}
+.w-rem-del{background:var(--surface-3);border:none;border-radius:50%;width:30px;height:30px;font-size:13px;cursor:pointer;color:var(--text-3);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.w-rem-del:hover{background:var(--red-light);color:var(--red)}
+@media(max-width:480px){.w-rem-row{grid-template-columns:1fr 124px 28px}}
 @media(prefers-color-scheme:dark){
   .warr-badge.active{background:#052e16;color:#86efac}
   .warr-badge.warn{background:#3d2800;color:#fbbf24}
@@ -1689,11 +1699,15 @@ function renderSchedule(){
     jobWarranties(j).forEach(w=>{
       const exp=warrantyExpiry(w);
       if(exp)(byDay[exp]=byDay[exp]||[]).push({job:j,warranty:w,isWarranty:true});
+      // Custom warranty reminders the user scheduled
+      (w.reminders||[]).forEach(rem=>{
+        if(rem&&rem.date)(byDay[rem.date]=byDay[rem.date]||[]).push({job:j,warranty:w,reminder:rem,isReminder:true});
+      });
     });
   });
-  // Sort each day's chips: jobs first (longest span first), warranty markers last
+  // Sort each day's chips: jobs first (longest span first), warranty/reminder markers last
   Object.values(byDay).forEach(arr=>arr.sort((a,b)=>{
-    const aw=a.isWarranty?1:0,bw=b.isWarranty?1:0;
+    const aw=(a.isWarranty||a.isReminder)?1:0,bw=(b.isWarranty||b.isReminder)?1:0;
     if(aw!==bw)return aw-bw;
     const at=a.totalDays||0,bt=b.totalDays||0;
     if(bt!==at)return bt-at;
@@ -1722,6 +1736,7 @@ function renderSchedule(){
       <div class="cal-legend-item"><div class="cal-legend-sw" style="background:#e0f2fe;border-left:3px solid #0284c7"></div>Complete</div>
       <div class="cal-legend-item"><div class="cal-legend-sw" style="background:var(--surface-3);border-left:3px solid #64748b"></div>On Hold</div>
       <div class="cal-legend-item"><div class="cal-legend-sw" style="background:#f3e8ff;border-left:3px solid #9333ea"></div>Warranty</div>
+      <div class="cal-legend-item"><div class="cal-legend-sw" style="background:#fef3c7;border-left:3px solid #d97706"></div>Reminder</div>
     </div>
     ${isMonth?renderCalMonth(y,m,daysInMonth,startDow,byDay,today,sel):renderCalAgenda(byDay,today)}
     ${isMonth?renderSelectedDay(byDay,sel,today):''}
@@ -1767,6 +1782,10 @@ function renderCalCell(k,dayNum,byDay,today,sel,otherMonth,maxChips){
   const visible=list.slice(0,maxChips);
   const overflow=list.length-visible.length;
   const chips=visible.map(entry=>{
+    if(entry.isReminder){
+      const rem=entry.reminder;
+      return `<div class="cal-chip cs-reminder" data-open-warranty="${entry.job.id}" title="Warranty reminder: ${esc(rem.label||'Reminder')} · ${esc(entry.warranty.name||'Warranty')} · ${esc(entry.job.name)}">🔔 ${esc(rem.label||'Reminder')}</div>`;
+    }
     if(entry.isWarranty){
       const w=entry.warranty;
       return `<div class="cal-chip cs-warranty" data-open-warranty="${entry.job.id}" title="Warranty expires: ${esc(w.name||'Warranty')} · ${esc(entry.job.name)}">🛡 ${esc(w.name||'Warranty')}</div>`;
@@ -1805,6 +1824,17 @@ function renderSelectedDay(byDay,sel,today){
     ${selList.length===0?'<p style="font-size:12.5px;color:var(--text-3);padding:4px 0">Nothing scheduled. Tap a date above with jobs to see what\'s on the books.</p>'
       :selList.map(entry=>{
         const {job,dayIdx,totalDays}=entry;
+        if(entry.isReminder){
+          const rem=entry.reminder;
+          return `<div class="cal-job-row" data-open-warranty="${job.id}">
+            <div class="cal-job-row-bar" style="background:#d97706"></div>
+            <div style="flex:1;min-width:0">
+              <div style="font-weight:600">🔔 ${esc(rem.label||'Reminder')}</div>
+              <div class="cal-job-row-meta">${esc(entry.warranty.name||'Warranty')} · ${esc(job.name)}${job.customerName?' · '+esc(job.customerName):''}</div>
+            </div>
+            <span class="warr-badge warn">Reminder</span>
+          </div>`;
+        }
         if(entry.isWarranty){
           const w=entry.warranty;const st=warrantyStatus(w);
           return `<div class="cal-job-row" data-open-warranty="${job.id}">
@@ -1850,7 +1880,7 @@ function renderCalAgenda(byDay,today){
     const lbl=date.toLocaleDateString(undefined,{weekday:'long',month:'short',day:'numeric'});
     const order={lead:0,active:1,complete:2,hold:3};
     const sorted=list.slice().sort((a,b)=>{
-      const aw=a.isWarranty?1:0,bw=b.isWarranty?1:0;
+      const aw=(a.isWarranty||a.isReminder)?1:0,bw=(b.isWarranty||b.isReminder)?1:0;
       if(aw!==bw)return aw-bw;
       return (order[a.job.status]??9)-(order[b.job.status]??9);
     });
@@ -1858,6 +1888,17 @@ function renderCalAgenda(byDay,today){
       <div class="agenda-day-hd">${esc(lbl)} ${isToday?'<span class="today-pill">TODAY</span>':''}<span style="margin-left:auto;color:var(--text-3);font-weight:600">${sorted.length} item${sorted.length!==1?'s':''}</span></div>
       ${sorted.map(entry=>{
         const {job,dayIdx,totalDays}=entry;
+        if(entry.isReminder){
+          const rem=entry.reminder;
+          return `<div class="cal-job-row" data-open-warranty="${job.id}">
+            <div class="cal-job-row-bar" style="background:#d97706"></div>
+            <div style="flex:1;min-width:0">
+              <div style="font-weight:600">🔔 ${esc(rem.label||'Reminder')}</div>
+              <div class="cal-job-row-meta">${esc(entry.warranty.name||'Warranty')} · ${esc(job.name)}</div>
+            </div>
+            <span class="warr-badge warn">Reminder</span>
+          </div>`;
+        }
         if(entry.isWarranty){
           const w=entry.warranty;const st=warrantyStatus(w);
           return `<div class="cal-job-row" data-open-warranty="${job.id}">
@@ -2654,6 +2695,14 @@ function buildNotifications(){
   all.forEach(j=>{
     jobWarranties(j).forEach(w=>{
       warrantyReminderNotifs(j,w).forEach(n=>out.push({...n,tab:'warranty'}));
+      // User-scheduled warranty reminders
+      (w.reminders||[]).forEach(rem=>{
+        if(!rem||!rem.date)return;
+        const d=daysUntil(rem.date);
+        if(d===null||d>7||d<-30)return;
+        const when=d<0?Math.abs(d)+'d ago':(d===0?'today':d===1?'tomorrow':'in '+d+' days');
+        out.push({type:'warranty',time:new Date(rem.date+'T00:00:00').getTime(),text:`Warranty reminder: <strong>${esc(rem.label||'Reminder')}</strong>`,sub:esc(w.name||'Warranty')+' · '+esc(j.name)+' · '+when,jobId:j.id,tab:'warranty'});
+      });
     });
   });
   // Recent activity on jobs assigned to me
@@ -2984,6 +3033,17 @@ function showWarrantyModal(jobId,warrantyId){
       <div style="background:var(--surface-3);border-radius:var(--r-sm);padding:10px 13px;margin-bottom:14px;font-size:13px;font-weight:600;color:var(--green-800)" id="w-preview">—</div>
       <div class="form-group"><label class="form-label">What's covered</label><textarea class="form-textarea" id="w-coverage" placeholder="Scope of the warranty — e.g. all labor and workmanship on the dock structure">${esc(w.coverage||'')}</textarea></div>
       <div class="form-group"><label class="form-label">Notes</label><textarea class="form-textarea" id="w-notes" placeholder="Claim instructions, terms, exclusions…">${esc(w.notes||'')}</textarea></div>
+      <div class="form-group">
+        <label class="form-label">Schedule reminders</label>
+        <p style="font-size:11.5px;color:var(--text-3);margin:-2px 0 8px;line-height:1.45">Add reminders for inspections, check-ins, or claim deadlines. Each one is automatically added to the schedule calendar and pings your notifications.</p>
+        <div id="w-reminders"></div>
+        <button class="li-add-btn" id="w-rem-add" type="button" style="margin-top:6px;width:100%">＋ Add reminder</button>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">
+          <button class="filter-chip" data-rem-preset="before:30" type="button">＋ 30d before expiry</button>
+          <button class="filter-chip" data-rem-preset="before:90" type="button">＋ 90d before expiry</button>
+          <button class="filter-chip" data-rem-preset="annual" type="button">＋ Annual check</button>
+        </div>
+      </div>
       <div class="form-group"><label class="form-label">Attach warranty document</label>
         <label class="photo-add-btn" style="aspect-ratio:auto;padding:12px;flex-direction:row;gap:8px;cursor:pointer">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M18.375 12.739l-7.693 7.693a4.5 4.5 0 01-6.364-6.364l10.94-10.94A3 3 0 1119.5 7.372L8.552 18.32m.009-.01l-.01.01m5.699-9.941l-7.81 7.81a1.5 1.5 0 002.112 2.13"/></svg>
@@ -3020,6 +3080,41 @@ function showWarrantyModal(jobId,warrantyId){
   $('w-months')?.addEventListener('input',updatePreview);
   updatePreview();
 
+  // ── Scheduled reminders ──
+  const newRemId=()=>'rem_'+Date.now()+'_'+Math.random().toString(36).slice(2,5);
+  let reminders=(Array.isArray(w.reminders)?w.reminders:[]).map(r=>({id:r.id||newRemId(),label:r.label||'',date:r.date||''}));
+  const remBox=$('w-reminders');
+  const syncRem=()=>{reminders=[...remBox.querySelectorAll('.w-rem-row')].map(row=>({id:row.dataset.remId,label:row.querySelector('.w-rem-label').value,date:row.querySelector('.w-rem-date').value}))};
+  const renderRem=()=>{
+    remBox.innerHTML=reminders.length?reminders.map(r=>`<div class="w-rem-row" data-rem-id="${esc(r.id)}">
+      <input class="form-input w-rem-label" value="${esc(r.label)}" placeholder="Reminder (e.g. 6-month inspection)">
+      <input class="form-input w-rem-date" type="date" value="${esc(r.date)}">
+      <button class="w-rem-del" type="button" data-rem-del="${esc(r.id)}" aria-label="Remove reminder">✕</button>
+    </div>`).join(''):'<p style="font-size:12px;color:var(--text-3);padding:2px 0">No reminders scheduled yet.</p>';
+    remBox.querySelectorAll('[data-rem-del]').forEach(b=>b.onclick=()=>{syncRem();reminders=reminders.filter(x=>x.id!==b.dataset.remDel);renderRem()});
+  };
+  renderRem();
+  const currentExpiry=()=>{
+    const term=$('w-term').value;const startVal=$('w-start').value;
+    if(term==='lifetime'||!startVal)return '';
+    const months=term==='custom'?Number($('w-months').value||0):Number(term);
+    return months?addMonths(startVal,months):'';
+  };
+  $('w-rem-add').onclick=()=>{syncRem();reminders.push({id:newRemId(),label:'',date:''});renderRem()};
+  document.querySelectorAll('[data-rem-preset]').forEach(b=>b.onclick=()=>{
+    syncRem();
+    const p=b.dataset.remPreset;const startVal=$('w-start').value;let date='',label='';
+    if(p.startsWith('before:')){
+      const days=Number(p.split(':')[1]);const exp=currentExpiry();
+      if(!exp){toast('Set a start date and term first','');return}
+      date=dateKey(new Date(new Date(exp+'T00:00:00').getTime()-days*86400000));label=days+'-day warranty check';
+    }else if(p==='annual'){
+      if(!startVal){toast('Set a start date first','');return}
+      date=addMonths(startVal,12);label='Annual warranty check';
+    }
+    reminders.push({id:newRemId(),label,date});renderRem();
+  });
+
   $('w-file').onchange=function(){
     const file=this.files[0];if(!file)return;
     if(file.size>5*1024*1024){toast('File too large (max 5MB)','');return}
@@ -3035,6 +3130,7 @@ function showWarrantyModal(jobId,warrantyId){
     const term=$('w-term').value;
     const lifetime=term==='lifetime';
     const months=lifetime?'':(term==='custom'?Number($('w-months').value||0):Number(term));
+    syncRem();
     const data={
       id:w.id,name,
       type:$('w-type').value,
@@ -3045,6 +3141,7 @@ function showWarrantyModal(jobId,warrantyId){
       expiryDate:'',
       coverage:$('w-coverage').value.trim(),
       notes:$('w-notes').value.trim(),
+      reminders:reminders.filter(r=>r.date).map(r=>({id:r.id,label:(r.label||'').trim()||'Reminder',date:r.date})),
       docUrl:pending.docUrl||'',
       docName:pending.docName||'',
       created:w.created||Date.now(),
@@ -3435,6 +3532,7 @@ function renderDetailTab(j,tab){
                   ${!w.lifetime&&w.termMonths?`<span><b>Term:</b> ${esc(String(w.termMonths))} mo</span>`:''}
                 </div>
                 ${w.coverage?`<div style="font-size:12.5px;color:var(--text-2);margin-top:8px;line-height:1.5">${esc(w.coverage)}</div>`:''}
+                ${(w.reminders||[]).length?`<div class="warr-rem">${w.reminders.slice().sort((a,b)=>(a.date||'').localeCompare(b.date||'')).map(rem=>{const dd=daysUntil(rem.date);const rel=dd===null?'':(dd<0?Math.abs(dd)+'d ago':dd===0?'today':'in '+dd+'d');return `<div class="warr-rem-item">🔔 <b>${esc(rem.label||'Reminder')}</b> · ${rem.date?fmtShort(rem.date):''}${rel?' ('+rel+')':''}</div>`}).join('')}</div>`:''}
                 <div class="warr-actions">
                   ${w.docUrl?`<a class="warr-doc-link" href="${w.docUrl}" download="${esc(w.docName||'warranty')}" target="_blank">${fileIcon}${esc(w.docName||'Warranty document')}</a>`:''}
                   <button class="btn-sm" data-warr-edit="${esc(w.id)}" style="padding:5px 11px;font-size:11.5px">Edit</button>
