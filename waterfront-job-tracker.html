@@ -563,7 +563,9 @@ input[type=range]{width:100%;accent-color:var(--green-700);height:4px;cursor:poi
   .cal-chip.cs-lead{background:#3d2800;color:#fbbf24}
   .cal-chip.cs-complete{background:#082f49;color:#7dd3fc}
   .cal-chip.cs-hold{background:#1e2e28;color:var(--text-2)}
+  .cal-chip.cs-warranty{background:#3d1f4d;color:#e9d5ff}
 }
+.cal-chip.cs-warranty{border-left-color:#9333ea;background:#f3e8ff;color:#6b21a8}
 .cal-day-more{font-size:9.5px;color:var(--text-3);font-weight:600;padding:1px 5px;cursor:pointer}
 .cal-day-more:hover{color:var(--green-700)}
 
@@ -671,6 +673,46 @@ input[type=range]{width:100%;accent-color:var(--green-700);height:4px;cursor:poi
 .doc-meta{font-size:11px;color:var(--text-3);margin-top:1px}
 .doc-del{background:none;border:none;color:var(--text-3);cursor:pointer;padding:6px;flex-shrink:0}
 .doc-del:hover{color:var(--red)}
+
+/* ── WARRANTIES ── */
+.warr-list{display:flex;flex-direction:column;gap:8px;margin-bottom:10px}
+.warr-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-left:3px solid #9333ea;border-radius:var(--r-md);padding:12px 14px;
+}
+.warr-card.expired{border-left-color:var(--red)}
+.warr-card.soon{border-left-color:var(--orange)}
+.warr-card.warn{border-left-color:var(--gold)}
+.warr-card.active{border-left-color:#16a34a}
+.warr-card.none{border-left-color:#94a3b8}
+.warr-top{display:flex;align-items:flex-start;gap:8px}
+.warr-name{font-size:14px;font-weight:700;color:var(--text);flex:1;min-width:0}
+.warr-sub{font-size:11.5px;color:var(--text-3);margin-top:2px}
+.warr-badge{
+  display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;
+  letter-spacing:0.03em;text-transform:uppercase;white-space:nowrap;flex-shrink:0;
+  background:var(--surface-3);color:var(--text-2);
+}
+.warr-badge.active{background:#dcfce7;color:#166534}
+.warr-badge.warn{background:var(--gold-light);color:#92600a}
+.warr-badge.soon{background:#ffedd5;color:#9a3412}
+.warr-badge.expired{background:var(--red-light);color:var(--red)}
+.warr-meta{font-size:12px;color:var(--text-2);margin-top:8px;display:flex;flex-wrap:wrap;gap:4px 14px}
+.warr-meta b{color:var(--text);font-weight:600}
+.warr-actions{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
+.warr-doc-link{
+  display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;
+  color:var(--green-700);background:var(--green-50);border:1px solid var(--border);
+  padding:4px 10px;border-radius:20px;text-decoration:none;
+}
+.warr-doc-link svg{width:13px;height:13px;stroke-width:2}
+.warr-doc-link:hover{background:var(--green-100);border-color:var(--green-600)}
+@media(prefers-color-scheme:dark){
+  .warr-badge.active{background:#052e16;color:#86efac}
+  .warr-badge.warn{background:#3d2800;color:#fbbf24}
+  .warr-badge.soon{background:#3d2410;color:#fdba74}
+  .warr-badge.expired{background:#2d1515;color:#fca5a5}
+}
 
 /* ── FINANCIALS ── */
 .fin-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
@@ -1564,6 +1606,66 @@ function jobDateRange(j){
 function chipClass(status){return{lead:'cs-lead',active:'cs-active',complete:'cs-complete',hold:'cs-hold'}[status]||'cs-active'}
 function chipBarColor(status){return{lead:'#d97706',active:'#16a34a',complete:'#0284c7',hold:'#64748b'}[status]||'#16a34a'}
 
+// ══ Warranties ══
+function wid(){return'w_'+Date.now()+'_'+Math.random().toString(36).slice(2,6)}
+const WARRANTY_TYPES=['Workmanship','Manufacturer','Material','Labor','Structural','Other'];
+const WARRANTY_TERMS=[['12','1 year'],['24','2 years'],['36','3 years'],['60','5 years'],['120','10 years'],['lifetime','Lifetime'],['custom','Custom…']];
+// Days-before-expiry that trigger a reminder (descending)
+const WARRANTY_REMINDERS=[90,60,30,14,7,1];
+function addMonths(dateStr,months){
+  if(!dateStr)return'';
+  const s=dateStr.slice(0,10);
+  const d=new Date(s+'T00:00:00');
+  if(isNaN(d))return'';
+  const day=d.getDate();
+  const res=new Date(d.getFullYear(),d.getMonth()+Number(months||0),day);
+  if(res.getDate()!==day)res.setDate(0); // clamp month overflow (e.g. Jan 31 +1mo)
+  return dateKey(res);
+}
+function warrantyExpiry(w){
+  if(!w||w.lifetime)return null;
+  if(w.expiryDate)return w.expiryDate.slice(0,10);
+  if(w.startDate&&w.termMonths)return addMonths(w.startDate,w.termMonths);
+  return null;
+}
+function jobWarranties(j){return (j&&Array.isArray(j.warranties))?j.warranties:[]}
+function allWarranties(){
+  const out=[];
+  jobs().forEach(j=>jobWarranties(j).forEach(w=>out.push({job:j,w})));
+  return out;
+}
+function warrantyStatus(w){
+  if(w.lifetime)return{label:'Lifetime coverage',cls:'active',d:null};
+  const exp=warrantyExpiry(w);
+  if(!exp)return{label:'No expiry set',cls:'none',d:null};
+  const d=daysUntil(exp);
+  if(d===null)return{label:'No expiry set',cls:'none',d:null};
+  if(d<0)return{label:'Expired '+Math.abs(d)+'d ago',cls:'expired',d};
+  if(d===0)return{label:'Expires today',cls:'soon',d};
+  if(d<=30)return{label:'Expires in '+d+' days',cls:'soon',d};
+  if(d<=90)return{label:'Expires in '+d+' days',cls:'warn',d};
+  return{label:'Active until '+fmtShort(exp),cls:'active',d};
+}
+function warrantyReminderNotifs(j,w){
+  const out=[];
+  const exp=warrantyExpiry(w);
+  if(!exp)return out;
+  const d=daysUntil(exp);
+  if(d===null)return out;
+  const expTs=new Date(exp+'T00:00:00').getTime();
+  if(d<0){
+    if(d>=-120)out.push({type:'warranty',time:expTs,text:`Warranty expired: <strong>${esc(w.name||'Warranty')}</strong>`,sub:esc(j.name)+' · '+Math.abs(d)+'d ago',jobId:j.id});
+    return out;
+  }
+  let active=null;
+  WARRANTY_REMINDERS.forEach(T=>{if(d<=T)active=T});
+  if(active!==null){
+    const msTs=expTs-active*86400000;
+    out.push({type:'warranty',time:msTs,text:`Warranty expiring: <strong>${esc(w.name||'Warranty')}</strong>`,sub:esc(j.name)+' · '+(d===0?'today':'in '+d+' day'+(d===1?'':'s')),jobId:j.id});
+  }
+  return out;
+}
+
 function renderSchedule(){
   const y=S.calYear,m=S.calMonth;
   const first=new Date(y,m,1);
@@ -1578,11 +1680,19 @@ function renderSchedule(){
     range.forEach((k,i)=>{
       (byDay[k]=byDay[k]||[]).push({job:j,dayIdx:i,totalDays:range.length,firstDay:range[0],lastDay:range[range.length-1]});
     });
+    // Warranty expiry dates land on the calendar automatically
+    jobWarranties(j).forEach(w=>{
+      const exp=warrantyExpiry(w);
+      if(exp)(byDay[exp]=byDay[exp]||[]).push({job:j,warranty:w,isWarranty:true});
+    });
   });
-  // Sort each day's chips so multi-day jobs come first and stay in stable order
+  // Sort each day's chips: jobs first (longest span first), warranty markers last
   Object.values(byDay).forEach(arr=>arr.sort((a,b)=>{
-    if(b.totalDays!==a.totalDays)return b.totalDays-a.totalDays;
-    return a.job.name.localeCompare(b.job.name);
+    const aw=a.isWarranty?1:0,bw=b.isWarranty?1:0;
+    if(aw!==bw)return aw-bw;
+    const at=a.totalDays||0,bt=b.totalDays||0;
+    if(bt!==at)return bt-at;
+    return (a.job.name||'').localeCompare(b.job.name||'');
   }));
 
   const sel=S.calSelected||today;
@@ -1606,6 +1716,7 @@ function renderSchedule(){
       <div class="cal-legend-item"><div class="cal-legend-sw" style="background:var(--gold-light);border-left:3px solid #d97706"></div>Lead</div>
       <div class="cal-legend-item"><div class="cal-legend-sw" style="background:#e0f2fe;border-left:3px solid #0284c7"></div>Complete</div>
       <div class="cal-legend-item"><div class="cal-legend-sw" style="background:var(--surface-3);border-left:3px solid #64748b"></div>On Hold</div>
+      <div class="cal-legend-item"><div class="cal-legend-sw" style="background:#f3e8ff;border-left:3px solid #9333ea"></div>Warranty</div>
     </div>
     ${isMonth?renderCalMonth(y,m,daysInMonth,startDow,byDay,today,sel):renderCalAgenda(byDay,today)}
     ${isMonth?renderSelectedDay(byDay,sel,today):''}
@@ -1650,7 +1761,12 @@ function renderCalCell(k,dayNum,byDay,today,sel,otherMonth,maxChips){
   const cls='cal-day'+(isToday?' today':'')+(isSel?' selected':'')+(otherMonth?' other-month':'');
   const visible=list.slice(0,maxChips);
   const overflow=list.length-visible.length;
-  const chips=visible.map(({job,dayIdx,totalDays})=>{
+  const chips=visible.map(entry=>{
+    if(entry.isWarranty){
+      const w=entry.warranty;
+      return `<div class="cal-chip cs-warranty" data-open-warranty="${entry.job.id}" title="Warranty expires: ${esc(w.name||'Warranty')} · ${esc(entry.job.name)}">🛡 ${esc(w.name||'Warranty')}</div>`;
+    }
+    const {job,dayIdx,totalDays}=entry;
     const contLeft=dayIdx>0;
     const contRight=dayIdx<totalDays-1;
     const isWeekStart=new Date(k+'T00:00:00').getDay()===0;
@@ -1671,21 +1787,39 @@ function renderSelectedDay(byDay,sel,today){
   const selList=(byDay[sel]||[]).slice();
   // Sort: leads first? Or by status priority. Use status order: lead, active, complete, hold
   const order={lead:0,active:1,complete:2,hold:3};
-  selList.sort((a,b)=>(order[a.job.status]??9)-(order[b.job.status]??9));
+  selList.sort((a,b)=>{
+    const aw=a.isWarranty?1:0,bw=b.isWarranty?1:0;
+    if(aw!==bw)return aw-bw;
+    return (order[a.job.status]??9)-(order[b.job.status]??9);
+  });
   const dt=new Date(sel+'T00:00:00');
   const lbl=dt.toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'});
   const isToday=sel===today;
   return `<div class="cal-day-list">
     <div class="cal-day-list-hd"><span>${esc(lbl)}${isToday?' <span class="kpi-sub" style="color:var(--green-700);font-weight:700;margin-left:6px">Today</span>':''}</span><span class="kpi-sub">${selList.length} job${selList.length!==1?'s':''}</span></div>
     ${selList.length===0?'<p style="font-size:12.5px;color:var(--text-3);padding:4px 0">Nothing scheduled. Tap a date above with jobs to see what\'s on the books.</p>'
-      :selList.map(({job,dayIdx,totalDays})=>`<div class="cal-job-row" data-open="${job.id}">
+      :selList.map(entry=>{
+        const {job,dayIdx,totalDays}=entry;
+        if(entry.isWarranty){
+          const w=entry.warranty;const st=warrantyStatus(w);
+          return `<div class="cal-job-row" data-open-warranty="${job.id}">
+            <div class="cal-job-row-bar" style="background:#9333ea"></div>
+            <div style="flex:1;min-width:0">
+              <div style="font-weight:600">🛡 ${esc(w.name||'Warranty')} expires</div>
+              <div class="cal-job-row-meta">${esc(job.name)}${job.customerName?' · '+esc(job.customerName):''}</div>
+            </div>
+            <span class="warr-badge ${st.cls}">${esc(st.label)}</span>
+          </div>`;
+        }
+        return `<div class="cal-job-row" data-open="${job.id}">
         <div class="cal-job-row-bar" style="background:${chipBarColor(job.status)}"></div>
         <div style="flex:1;min-width:0">
           <div style="font-weight:600">${esc(job.name)}${totalDays>1?` <span class="cal-job-row-day">Day ${dayIdx+1}/${totalDays}</span>`:''}</div>
           <div class="cal-job-row-meta">${esc(job.address||'No address')}${job.assigned?' · '+esc(job.assigned):''}${job.customerName?' · '+esc(job.customerName):''}</div>
         </div>
         <span class="status-pill ${spClass(job.status)}">${spLabel(job.status)}</span>
-      </div>`).join('')}
+      </div>`;
+      }).join('')}
   </div>`;
 }
 
@@ -1710,17 +1844,35 @@ function renderCalAgenda(byDay,today){
     const isToday=k===today;
     const lbl=date.toLocaleDateString(undefined,{weekday:'long',month:'short',day:'numeric'});
     const order={lead:0,active:1,complete:2,hold:3};
-    const sorted=list.slice().sort((a,b)=>(order[a.job.status]??9)-(order[b.job.status]??9));
+    const sorted=list.slice().sort((a,b)=>{
+      const aw=a.isWarranty?1:0,bw=b.isWarranty?1:0;
+      if(aw!==bw)return aw-bw;
+      return (order[a.job.status]??9)-(order[b.job.status]??9);
+    });
     return `<div class="agenda-day">
-      <div class="agenda-day-hd">${esc(lbl)} ${isToday?'<span class="today-pill">TODAY</span>':''}<span style="margin-left:auto;color:var(--text-3);font-weight:600">${sorted.length} job${sorted.length!==1?'s':''}</span></div>
-      ${sorted.map(({job,dayIdx,totalDays})=>`<div class="cal-job-row" data-open="${job.id}">
+      <div class="agenda-day-hd">${esc(lbl)} ${isToday?'<span class="today-pill">TODAY</span>':''}<span style="margin-left:auto;color:var(--text-3);font-weight:600">${sorted.length} item${sorted.length!==1?'s':''}</span></div>
+      ${sorted.map(entry=>{
+        const {job,dayIdx,totalDays}=entry;
+        if(entry.isWarranty){
+          const w=entry.warranty;const st=warrantyStatus(w);
+          return `<div class="cal-job-row" data-open-warranty="${job.id}">
+            <div class="cal-job-row-bar" style="background:#9333ea"></div>
+            <div style="flex:1;min-width:0">
+              <div style="font-weight:600">🛡 ${esc(w.name||'Warranty')} expires</div>
+              <div class="cal-job-row-meta">${esc(job.name)}${job.customerName?' · '+esc(job.customerName):''}</div>
+            </div>
+            <span class="warr-badge ${st.cls}">${esc(st.label)}</span>
+          </div>`;
+        }
+        return `<div class="cal-job-row" data-open="${job.id}">
         <div class="cal-job-row-bar" style="background:${chipBarColor(job.status)}"></div>
         <div style="flex:1;min-width:0">
           <div style="font-weight:600">${esc(job.name)}${totalDays>1?` <span class="cal-job-row-day">Day ${dayIdx+1}/${totalDays}</span>`:''}</div>
           <div class="cal-job-row-meta">${esc(job.address||'No address')}${job.assigned?' · '+esc(job.assigned):''}</div>
         </div>
         <span class="status-pill ${spClass(job.status)}">${spLabel(job.status)}</span>
-      </div>`).join('')}
+      </div>`;
+      }).join('')}
     </div>`;
   }).join('');
 }
@@ -2493,6 +2645,12 @@ function buildNotifications(){
       else if(d<=2)out.push({type:'task',time:new Date(t.due+'T00:00:00').getTime(),text:`Task due ${d===0?'today':d===1?'tomorrow':'in '+d+' days'}: <strong>${esc(t.text)}</strong>`,sub:esc(j.name),jobId:j.id});
     });
   });
+  // Warranty milestone reminders at key dates before expiry (and after lapse)
+  all.forEach(j=>{
+    jobWarranties(j).forEach(w=>{
+      warrantyReminderNotifs(j,w).forEach(n=>out.push({...n,tab:'warranty'}));
+    });
+  });
   // Recent activity on jobs assigned to me
   S.activity.slice(0,40).forEach(a=>{
     const job=Object.values(S.jobs).find(j=>j.name===a.job);
@@ -2525,10 +2683,10 @@ function updateBellBadge(){
 }
 function showNotificationsModal(){
   const notifs=buildNotifications();
-  const ICONS={overdue:'!',task:'○',activity:'•',mention:'@'};
+  const ICONS={overdue:'!',task:'○',activity:'•',mention:'@',warranty:'🛡'};
   const body=notifs.length===0
     ? `<div class="notif-empty">🔕<br><br>You're all caught up.<br><span style="font-size:12px">Tasks assigned to you, mentions, and activity on your jobs will appear here.</span></div>`
-    : '<div class="notif-list">'+notifs.map(n=>`<div class="notif-item ${n.time>S.notifReadAt?'unread':''}" data-open="${n.jobId}">
+    : '<div class="notif-list">'+notifs.map(n=>`<div class="notif-item ${n.time>S.notifReadAt?'unread':''}" data-open="${n.jobId}" data-tab="${n.tab||'overview'}">
         <div class="notif-icon ${n.type}">${ICONS[n.type]||'•'}</div>
         <div class="notif-body"><div class="notif-text">${n.text}</div><div class="notif-meta">${n.sub} · ${ago(n.time)}</div></div>
         ${n.time>S.notifReadAt?'<div class="notif-dot"></div>':''}
@@ -2549,7 +2707,7 @@ function showNotificationsModal(){
   document.querySelectorAll('.notif-item[data-open]').forEach(el=>el.onclick=()=>{
     S.notifReadAt=Math.max(S.notifReadAt,Date.now());
     localStorage.setItem('wfs_notif_read',String(S.notifReadAt));
-    S.detail=el.dataset.open;S.view='jobs';S.detailTab='overview';closeModal();render();
+    S.detail=el.dataset.open;S.view='jobs';S.detailTab=el.dataset.tab||'overview';closeModal();render();
   });
 }
 
@@ -2795,6 +2953,115 @@ function showReferralModal(mode,ref){
   };
 }
 
+function showWarrantyModal(jobId,warrantyId){
+  const j=S.jobs[jobId];if(!j)return;
+  const existing=warrantyId?jobWarranties(j).find(w=>w.id===warrantyId):null;
+  const w=existing?{...existing}:{id:wid(),type:'Workmanship',startDate:(j.completedAt?dateKey(new Date(j.completedAt)):dateKey(new Date())),termMonths:12};
+  let termSel='custom';
+  if(w.lifetime)termSel='lifetime';
+  else{const match=WARRANTY_TERMS.find(([v])=>v!=='lifetime'&&v!=='custom'&&Number(v)===Number(w.termMonths));termSel=match?match[0]:(w.termMonths?'custom':'12')}
+  const pending={docUrl:w.docUrl||'',docName:w.docName||''};
+
+  $('modal-root').innerHTML=`<div class="modal-bd" id="mbd" role="dialog" aria-modal="true" aria-label="${existing?'Edit warranty':'New warranty'}"><div class="modal"><div class="modal-handle"></div>
+    <div class="modal-head"><div class="modal-title">${existing?'Edit Warranty':'New Warranty'}</div><button class="modal-close" id="mc" aria-label="Close"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button></div>
+    <div class="modal-body">
+      <p style="font-size:12.5px;color:var(--text-2);margin-bottom:14px;line-height:1.5">For <strong>${esc(j.name)}</strong>${j.customerName?' · '+esc(j.customerName):''}. The expiry date is added to the calendar and you'll get reminders at ${WARRANTY_REMINDERS.join(', ')} days before it lapses.</p>
+      <div class="form-group"><label class="form-label">Warranty name *</label><input class="form-input" id="w-name" value="${esc(w.name||'')}" placeholder="e.g. Dock workmanship warranty"></div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Type</label><select class="form-select" id="w-type">${WARRANTY_TYPES.map(t=>`<option value="${esc(t)}" ${(w.type||'Workmanship')===t?'selected':''}>${esc(t)}</option>`).join('')}</select></div>
+        <div class="form-group"><label class="form-label">Provider / Issuer</label><input class="form-input" id="w-provider" value="${esc(w.provider||'')}" placeholder="Manufacturer or your company"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Start date</label><input class="form-input" type="date" id="w-start" value="${esc(w.startDate||'')}"></div>
+        <div class="form-group"><label class="form-label">Term</label><select class="form-select" id="w-term">${WARRANTY_TERMS.map(([v,l])=>`<option value="${esc(v)}" ${termSel===v?'selected':''}>${esc(l)}</option>`).join('')}</select></div>
+      </div>
+      <div class="form-group" id="w-months-wrap" style="display:${termSel==='custom'?'block':'none'}"><label class="form-label">Custom term (months)</label><input class="form-input" type="number" min="1" id="w-months" value="${esc(termSel==='custom'?(w.termMonths||''):'')}" placeholder="e.g. 18"></div>
+      <div style="background:var(--surface-3);border-radius:var(--r-sm);padding:10px 13px;margin-bottom:14px;font-size:13px;font-weight:600;color:var(--green-800)" id="w-preview">—</div>
+      <div class="form-group"><label class="form-label">What's covered</label><textarea class="form-textarea" id="w-coverage" placeholder="Scope of the warranty — e.g. all labor and workmanship on the dock structure">${esc(w.coverage||'')}</textarea></div>
+      <div class="form-group"><label class="form-label">Notes</label><textarea class="form-textarea" id="w-notes" placeholder="Claim instructions, terms, exclusions…">${esc(w.notes||'')}</textarea></div>
+      <div class="form-group"><label class="form-label">Attach warranty document</label>
+        <label class="photo-add-btn" style="aspect-ratio:auto;padding:12px;flex-direction:row;gap:8px;cursor:pointer">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M18.375 12.739l-7.693 7.693a4.5 4.5 0 01-6.364-6.364l10.94-10.94A3 3 0 1119.5 7.372L8.552 18.32m.009-.01l-.01.01m5.699-9.941l-7.81 7.81a1.5 1.5 0 002.112 2.13"/></svg>
+          <span id="w-doc-label">${pending.docName?esc(pending.docName):'Choose a file (PDF, DOC, IMG · max 5MB)'}</span>
+          <input type="file" accept="*/*" id="w-file" style="display:none">
+        </label>
+        ${pending.docName?`<button class="btn-sm" id="w-doc-clear" type="button" style="margin-top:6px;padding:4px 10px;font-size:11px">Remove file</button>`:''}
+      </div>
+    </div>
+    <div class="modal-foot">
+      ${existing?`<button class="btn-delete" id="w-del">Delete</button>`:''}
+      <button class="btn-cancel" id="btn-cx">Cancel</button>
+      <button class="btn-save" id="w-save">${existing?'Save':'Add Warranty'}</button>
+    </div>
+  </div></div>`;
+
+  $('mc').onclick=$('btn-cx').onclick=closeModal;
+  $('mbd').onclick=e=>{if(e.target===e.currentTarget)closeModal()};
+
+  const updatePreview=()=>{
+    const term=$('w-term').value;const startVal=$('w-start').value;
+    let txt;
+    if(term==='lifetime')txt='🛡 No expiration — lifetime coverage';
+    else{
+      const months=term==='custom'?Number($('w-months').value||0):Number(term);
+      if(!startVal)txt='Set a start date to calculate the expiry';
+      else if(!months)txt='Set a term to calculate the expiry';
+      else txt='Expires '+fmtDate(addMonths(startVal,months))+' · '+months+' month'+(months===1?'':'s');
+    }
+    $('w-preview').textContent=txt;
+  };
+  $('w-term').onchange=()=>{$('w-months-wrap').style.display=$('w-term').value==='custom'?'block':'none';updatePreview()};
+  $('w-start').onchange=updatePreview;
+  $('w-months')?.addEventListener('input',updatePreview);
+  updatePreview();
+
+  $('w-file').onchange=function(){
+    const file=this.files[0];if(!file)return;
+    if(file.size>5*1024*1024){toast('File too large (max 5MB)','');return}
+    const rd=new FileReader();
+    rd.onload=e=>{pending.docUrl=e.target.result;pending.docName=file.name;const lbl=$('w-doc-label');if(lbl)lbl.textContent=file.name};
+    rd.readAsDataURL(file);
+  };
+  $('w-doc-clear')?.addEventListener('click',()=>{pending.docUrl='';pending.docName='';const lbl=$('w-doc-label');if(lbl)lbl.textContent='Choose a file (PDF, DOC, IMG · max 5MB)';$('w-doc-clear').style.display='none'});
+
+  $('w-save').onclick=async()=>{
+    const name=$('w-name').value.trim();
+    if(!name){toast('Name the warranty','');return}
+    const term=$('w-term').value;
+    const lifetime=term==='lifetime';
+    const months=lifetime?'':(term==='custom'?Number($('w-months').value||0):Number(term));
+    const data={
+      id:w.id,name,
+      type:$('w-type').value,
+      provider:$('w-provider').value.trim(),
+      startDate:$('w-start').value,
+      termMonths:months,
+      lifetime,
+      expiryDate:'',
+      coverage:$('w-coverage').value.trim(),
+      notes:$('w-notes').value.trim(),
+      docUrl:pending.docUrl||'',
+      docName:pending.docName||'',
+      created:w.created||Date.now(),
+    };
+    j.warranties=jobWarranties(j).slice();
+    const idx=j.warranties.findIndex(x=>x.id===w.id);
+    if(idx>=0)j.warranties[idx]=data;else j.warranties.push(data);
+    await writeJob(j);await logAct(existing?'updated warranty on':'added warranty to',j.name);
+    closeModal();render();toast(existing?'Warranty saved':'Warranty added');
+  };
+
+  if(existing)$('w-del').onclick=async()=>{
+    const backup=JSON.parse(JSON.stringify(jobWarranties(j)));
+    j.warranties=jobWarranties(j).filter(x=>x.id!==w.id);
+    await writeJob(j);await logAct('removed warranty from',j.name);
+    closeModal();render();
+    const restore=async()=>{const jj=S.jobs[jobId];if(jj){jj.warranties=backup;await writeJob(jj);render();toast('Warranty restored')}};
+    UNDO.push(restore);
+    toast('Warranty deleted','undo',restore);
+  };
+}
+
 function renderJobs(){
   const all=jobs();
   const cnt={all:all.length,lead:0,active:0,complete:0,hold:0};
@@ -2908,6 +3175,7 @@ function renderDetail(id){
     {id:'log',label:'Daily Log',count:(j.dailyLogs||[]).length},
     {id:'photos',label:'Photos',count:photos.length},
     {id:'docs',label:'Files',count:(j.documents||[]).length},
+    {id:'warranty',label:'Warranty',count:(j.warranties||[]).length},
     {id:'invoices',label:'Invoices',count:(j.invoices||[]).length},
     {id:'financial',label:'Financials'},
     {id:'comms',label:'Comms',count:(j.comms||[]).length},
@@ -2995,6 +3263,7 @@ function renderDetailTab(j,tab){
           <div class="info-cell"><div class="info-label">Open Tasks</div><div class="info-value">${(j.tasks||[]).filter(t=>!t.done).length}</div></div>
           <div class="info-cell"><div class="info-label">Balance Due</div><div class="info-value" style="color:${balance>0?'var(--orange)':'var(--green-700)'}">${money(balance)}</div></div>
           <div class="info-cell"><div class="info-label">Log Entries</div><div class="info-value">${(j.dailyLogs||[]).length}</div></div>
+          <div class="info-cell"><div class="info-label">Warranties</div><div class="info-value">${jobWarranties(j).length}</div></div>
         </div>
       </div>`;
   }
@@ -3012,6 +3281,15 @@ function renderDetailTab(j,tab){
           ${j.referredBy?`<div class="info-cell" style="grid-column:1/-1"><div class="info-label">Referred By</div><div class="info-value">${esc(j.referredBy)} ${j.referralId&&S.referrals[j.referralId]?`<button class="ref-job-link" data-open-ref-view="${esc(j.referralId)}" style="margin-top:0;margin-left:6px;vertical-align:middle"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244"/></svg>View referral</button>`:''}</div></div>`:''}
         </div>
         ${j.customerNotes?`<div style="background:var(--surface-3);border-radius:var(--r-sm);padding:11px 13px;margin-top:10px"><div class="info-label">Customer Notes</div><p style="font-size:13px;margin-top:4px;line-height:1.55">${esc(j.customerNotes)}</p></div>`:''}
+      </div>
+      <div class="section">
+        <div class="section-hd">Warranties <button class="btn-sm" data-go-tab="warranty" style="padding:5px 10px;font-size:11px">Manage</button></div>
+        ${(()=>{const warrs=jobWarranties(j);if(!warrs.length)return '<p style="font-size:13px;color:var(--text-3);padding:4px 0">No warranties on file for this customer yet. Tap <b>Manage</b> to add the warranties given.</p>';
+          return '<div class="warr-list">'+warrs.slice().sort((a,b)=>(warrantyExpiry(a)||'9999').localeCompare(warrantyExpiry(b)||'9999')).map(w=>{
+            const st=warrantyStatus(w);const exp=warrantyExpiry(w);
+            return `<div class="warr-card ${st.cls}" data-go-tab="warranty" style="cursor:pointer"><div class="warr-top"><div style="flex:1;min-width:0"><div class="warr-name">${esc(w.name||'Warranty')}</div><div class="warr-sub">${esc(w.type||'Warranty')}${w.provider?' · '+esc(w.provider):''} · ${w.lifetime?'Lifetime':(exp?'expires '+fmtShort(exp):'no expiry')}</div></div><span class="warr-badge ${st.cls}">${esc(st.label)}</span></div></div>`;
+          }).join('')+'</div>';
+        })()}
       </div>`;
   }
   if(tab==='tasks'){
@@ -3119,6 +3397,49 @@ function renderDetailTab(j,tab){
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v6m3-3H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
           <span>Upload File (PDF, DOC, IMG)</span>
           <input type="file" accept="*/*" id="doc-upload" style="display:none">
+        </label>
+      </div>`;
+  }
+  if(tab==='warranty'){
+    const warrs=jobWarranties(j).slice().sort((a,b)=>{
+      const ea=warrantyExpiry(a)||'9999',eb=warrantyExpiry(b)||'9999';
+      return ea.localeCompare(eb);
+    });
+    const fileIcon=`<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/></svg>`;
+    return `
+      <div class="section">
+        <div class="section-hd">Warranties <span>${warrs.length}</span></div>
+        <div class="warr-list">
+          ${warrs.length===0?'<p style="font-size:13px;color:var(--text-3);padding:4px 0">No warranties recorded. Add the workmanship and manufacturer warranties given to this customer — expiry dates appear on the calendar and you\'ll get reminders before they lapse.</p>'
+            :warrs.map(w=>{
+              const st=warrantyStatus(w);
+              const exp=warrantyExpiry(w);
+              const startTxt=w.startDate?fmtDate(w.startDate):'—';
+              const expTxt=w.lifetime?'No expiration (lifetime)':(exp?fmtDate(exp):'Not set');
+              return `<div class="warr-card ${st.cls}">
+                <div class="warr-top">
+                  <div style="flex:1;min-width:0">
+                    <div class="warr-name">${esc(w.name||'Warranty')}</div>
+                    <div class="warr-sub">${esc(w.type||'Warranty')}${w.provider?' · '+esc(w.provider):''}</div>
+                  </div>
+                  <span class="warr-badge ${st.cls}">${esc(st.label)}</span>
+                </div>
+                <div class="warr-meta">
+                  <span><b>Starts:</b> ${startTxt}</span>
+                  <span><b>Expires:</b> ${expTxt}</span>
+                  ${!w.lifetime&&w.termMonths?`<span><b>Term:</b> ${esc(String(w.termMonths))} mo</span>`:''}
+                </div>
+                ${w.coverage?`<div style="font-size:12.5px;color:var(--text-2);margin-top:8px;line-height:1.5">${esc(w.coverage)}</div>`:''}
+                <div class="warr-actions">
+                  ${w.docUrl?`<a class="warr-doc-link" href="${w.docUrl}" download="${esc(w.docName||'warranty')}" target="_blank">${fileIcon}${esc(w.docName||'Warranty document')}</a>`:''}
+                  <button class="btn-sm" data-warr-edit="${esc(w.id)}" style="padding:5px 11px;font-size:11.5px">Edit</button>
+                </div>
+              </div>`;
+            }).join('')}
+        </div>
+        <label class="photo-add-btn" id="btn-add-warranty" style="aspect-ratio:auto;padding:14px;flex-direction:row;gap:8px;cursor:pointer">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          <span>Add Warranty</span>
         </label>
       </div>`;
   }
@@ -4346,6 +4667,21 @@ function attachHandlers(){
     const restore=async()=>{const jj=S.jobs[j.id];if(jj){jj.documents=jj.documents||[];jj.documents.splice(i,0,removed);await writeJob(jj);render();toast('File restored')}};
     UNDO.push(restore);
     toast('File removed','undo',restore);
+  });
+
+  // Warranties
+  $('btn-add-warranty')?.addEventListener('click',()=>{const id=S.detail;if(id)showWarrantyModal(id)});
+  document.querySelectorAll('[data-warr-edit]').forEach(b=>b.onclick=e=>{
+    e.stopPropagation();const id=S.detail;if(id)showWarrantyModal(id,b.dataset.warrEdit);
+  });
+  document.querySelectorAll('[data-go-tab]').forEach(el=>el.onclick=e=>{
+    if(e.target.closest('[data-warr-edit]'))return;
+    S.detailTab=el.dataset.goTab;render();
+  });
+  document.querySelectorAll('[data-open-warranty]').forEach(el=>el.onclick=e=>{
+    e.stopPropagation();
+    const id=el.dataset.openWarranty;
+    if(S.jobs[id]){S.detail=id;S.view='jobs';S.detailTab='warranty';render()}
   });
 
   // Financials
