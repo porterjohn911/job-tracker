@@ -570,9 +570,13 @@ input[type=range]{width:100%;accent-color:var(--green-700);height:4px;cursor:poi
   .cal-chip.cs-hold{background:#1e2e28;color:var(--text-2)}
   .cal-chip.cs-warranty{background:#3d1f4d;color:#e9d5ff}
   .cal-chip.cs-reminder{background:#3d2800;color:#fbbf24}
+  .cal-chip.cs-note{background:#082f49;color:#7dd3fc}
 }
 .cal-chip.cs-warranty{border-left-color:#9333ea;background:#f3e8ff;color:#6b21a8}
 .cal-chip.cs-reminder{border-left-color:#d97706;background:#fef3c7;color:#92400e}
+.cal-chip.cs-note{border-left-color:#0ea5e9;background:#e0f2fe;color:#075985}
+.cal-chip.cs-note.done{opacity:0.6;text-decoration:line-through}
+.cal-job-row.daynote-done .cal-job-row-meta,.cal-job-row.daynote-done div{opacity:0.65}
 .cal-day-more{font-size:9.5px;color:var(--text-3);font-weight:600;padding:1px 5px;cursor:pointer}
 .cal-day-more:hover{color:var(--green-700)}
 
@@ -585,6 +589,28 @@ input[type=range]{width:100%;accent-color:var(--green-700);height:4px;cursor:poi
 .cal-job-row-bar{width:3px;align-self:stretch;border-radius:2px;flex-shrink:0;min-height:32px}
 .cal-job-row-meta{font-size:11px;color:var(--text-3);margin-top:1px}
 .cal-job-row-day{font-size:10px;color:var(--text-3);font-weight:600;background:var(--surface-3);padding:2px 6px;border-radius:4px;text-transform:uppercase;letter-spacing:0.03em}
+
+/* Day notes & to-dos */
+.day-notes{margin-top:6px;padding-top:6px;border-top:1px solid var(--border)}
+.day-note-list{display:flex;flex-direction:column;gap:2px;margin-bottom:8px}
+.day-note-item{display:flex;align-items:center;gap:9px;padding:6px 0;font-size:13.5px}
+.day-note-check{
+  width:21px;height:21px;border-radius:6px;border:1.8px solid var(--border-md);
+  background:var(--surface);cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;padding:0;
+}
+.day-note-check svg{width:13px;height:13px;stroke-width:3;color:#fff}
+.day-note-item.done .day-note-check{background:var(--green-600);border-color:var(--green-600)}
+.day-note-text{flex:1;min-width:0;line-height:1.4;word-break:break-word}
+.day-note-item.done .day-note-text{text-decoration:line-through;color:var(--text-3)}
+.day-note-del{background:none;border:none;color:var(--text-3);cursor:pointer;padding:4px;flex-shrink:0;font-size:13px;line-height:1}
+.day-note-del:hover{color:var(--red)}
+.day-note-add{display:flex;gap:6px;align-items:center}
+.day-note-add input{
+  flex:1;min-width:0;padding:9px 12px;font-size:13.5px;font-family:var(--font);
+  border:1.5px solid var(--border-md);border-radius:var(--r-sm);background:var(--surface);color:var(--text);outline:none;
+}
+.day-note-add input:focus{border-color:var(--green-600)}
+.day-note-add .btn-post{flex-shrink:0}
 
 /* Agenda list view */
 .agenda-day{margin-bottom:18px}
@@ -1346,7 +1372,7 @@ try{const s=localStorage.getItem('wfs_fb');if(s)FIREBASE_CONFIG=JSON.parse(s)}ca
 // ══ State ══
 let DB=null;
 let MAP=null,MAP_MARKERS=[];
-const S={jobs:{},referrals:{},contacts:{},activity:[],members:[],view:'dashboard',detail:null,detailTab:'overview',filter:'all',search:'',photoCat:'all',calMonth:new Date().getMonth(),calYear:new Date().getFullYear(),calSelected:null,calMode:localStorage.getItem('wfs_calmode')||'month',reportRange:'90',sort:localStorage.getItem('wfs_sort')||'newest',sortOpen:false,bulkMode:false,bulkSel:new Set(),invFilter:'all',invSearch:'',invSort:'date',refFilter:'all',refSearch:'',contactFilter:'all',contactSearch:'',clientDetail:null,clientSearch:'',user:localStorage.getItem('wfs_user')||'',notifReadAt:parseInt(localStorage.getItem('wfs_notif_read')||'0',10)};
+const S={jobs:{},referrals:{},contacts:{},dayNotes:{},activity:[],members:[],view:'dashboard',detail:null,detailTab:'overview',filter:'all',search:'',photoCat:'all',calMonth:new Date().getMonth(),calYear:new Date().getFullYear(),calSelected:null,calMode:localStorage.getItem('wfs_calmode')||'month',reportRange:'90',sort:localStorage.getItem('wfs_sort')||'newest',sortOpen:false,bulkMode:false,bulkSel:new Set(),invFilter:'all',invSearch:'',invSort:'date',refFilter:'all',refSearch:'',contactFilter:'all',contactSearch:'',clientDetail:null,clientSearch:'',user:localStorage.getItem('wfs_user')||'',notifReadAt:parseInt(localStorage.getItem('wfs_notif_read')||'0',10)};
 const UNDO={stack:[],push(op){this.stack.push(op);if(this.stack.length>20)this.stack.shift()},pop(){return this.stack.pop()}};
 
 // ── Company info for invoice letterhead (editable via Settings)
@@ -1463,10 +1489,11 @@ function undoLast(){const op=UNDO.pop();if(!op){toast('Nothing to undo','');retu
 
 // ══ DB layer ══
 const LOCAL={
-  load(){try{S.jobs=JSON.parse(localStorage.getItem('wfs_jobs')||'{}')}catch(e){S.jobs={}}try{S.referrals=JSON.parse(localStorage.getItem('wfs_referrals')||'{}')}catch(e){S.referrals={}}try{S.contacts=JSON.parse(localStorage.getItem('wfs_contacts')||'{}')}catch(e){S.contacts={}}try{S.activity=JSON.parse(localStorage.getItem('wfs_activity')||'[]')}catch(e){S.activity=[]}try{S.members=JSON.parse(localStorage.getItem('wfs_members')||'[]')}catch(e){S.members=[]}},
+  load(){try{S.jobs=JSON.parse(localStorage.getItem('wfs_jobs')||'{}')}catch(e){S.jobs={}}try{S.referrals=JSON.parse(localStorage.getItem('wfs_referrals')||'{}')}catch(e){S.referrals={}}try{S.contacts=JSON.parse(localStorage.getItem('wfs_contacts')||'{}')}catch(e){S.contacts={}}try{S.dayNotes=JSON.parse(localStorage.getItem('wfs_daynotes')||'{}')}catch(e){S.dayNotes={}}try{S.activity=JSON.parse(localStorage.getItem('wfs_activity')||'[]')}catch(e){S.activity=[]}try{S.members=JSON.parse(localStorage.getItem('wfs_members')||'[]')}catch(e){S.members=[]}},
   saveJobs(){try{localStorage.setItem('wfs_jobs',JSON.stringify(S.jobs))}catch(e){}},
   saveReferrals(){try{localStorage.setItem('wfs_referrals',JSON.stringify(S.referrals))}catch(e){}},
   saveContacts(){try{localStorage.setItem('wfs_contacts',JSON.stringify(S.contacts))}catch(e){}},
+  saveDayNotes(){try{localStorage.setItem('wfs_daynotes',JSON.stringify(S.dayNotes))}catch(e){}},
   saveActivity(){try{localStorage.setItem('wfs_activity',JSON.stringify(S.activity.slice(0,300)))}catch(e){}},
   saveMembers(){try{localStorage.setItem('wfs_members',JSON.stringify(S.members))}catch(e){}}
 };
@@ -1479,6 +1506,7 @@ function initFB(cfg){
     DB.child('jobs').on('value',s=>{S.jobs=s.val()||{};LOCAL.saveJobs();syncStatus('ok','Team sync live');render()});
     DB.child('referrals').on('value',s=>{S.referrals=s.val()||{};LOCAL.saveReferrals();render()});
     DB.child('contacts').on('value',s=>{S.contacts=s.val()||{};LOCAL.saveContacts();render()});
+    DB.child('dayNotes').on('value',s=>{S.dayNotes=s.val()||{};LOCAL.saveDayNotes();render()});
     DB.child('activity').on('value',s=>{const r=s.val();S.activity=r?Object.values(r).sort((a,b)=>b.time-a.time):[];LOCAL.saveActivity()});
     DB.child('members').on('value',s=>{S.members=s.val()||[];LOCAL.saveMembers();render()});
     DB.child('.info/connected').on('value',s=>{if(!s.val())syncStatus('err','Reconnecting…')});
@@ -1491,6 +1519,11 @@ async function writeReferral(r){S.referrals[r.id]=r;LOCAL.saveReferrals();if(DB)
 async function deleteReferralDB(id){delete S.referrals[id];LOCAL.saveReferrals();if(DB)await DB.child('referrals/'+id).remove().catch(()=>{})}
 async function writeContact(c){S.contacts[c.id]=c;LOCAL.saveContacts();if(DB)await DB.child('contacts/'+c.id).set(c).catch(()=>{})}
 async function deleteContactDB(id){delete S.contacts[id];LOCAL.saveContacts();if(DB)await DB.child('contacts/'+id).remove().catch(()=>{})}
+async function saveDayNotes(dayKey){
+  if(S.dayNotes[dayKey]&&!S.dayNotes[dayKey].length)delete S.dayNotes[dayKey];
+  LOCAL.saveDayNotes();
+  if(DB){const v=S.dayNotes[dayKey];if(v&&v.length)await DB.child('dayNotes/'+dayKey).set(v).catch(()=>{});else await DB.child('dayNotes/'+dayKey).remove().catch(()=>{})}
+}
 async function logAct(action,job){const e={user:S.user||'Someone',action,job:job||'',time:Date.now()};S.activity.unshift(e);LOCAL.saveActivity();if(DB)await DB.child('activity').push(e).catch(()=>{})}
 async function saveMembers(){LOCAL.saveMembers();if(DB)await DB.child('members').set(S.members).catch(()=>{})}
 
@@ -1665,6 +1698,8 @@ function jobDateRange(j){
 
 function chipClass(status){return{lead:'cs-lead',active:'cs-active',complete:'cs-complete',hold:'cs-hold'}[status]||'cs-active'}
 function chipBarColor(status){return{lead:'#d97706',active:'#16a34a',complete:'#0284c7',hold:'#64748b'}[status]||'#16a34a'}
+function calTier(e){return e.isDayNote?2:((e.isWarranty||e.isReminder)?1:0)}
+function dnid(){return'dn_'+Date.now()+'_'+Math.random().toString(36).slice(2,6)}
 
 // ══ Warranties ══
 function wid(){return'w_'+Date.now()+'_'+Math.random().toString(36).slice(2,6)}
@@ -1750,13 +1785,16 @@ function renderSchedule(){
       });
     });
   });
-  // Sort each day's chips: jobs first (longest span first), warranty/reminder markers last
+  // Day notes & to-dos the user pinned to a date
+  Object.entries(S.dayNotes||{}).forEach(([k,items])=>{
+    (items||[]).forEach(it=>{(byDay[k]=byDay[k]||[]).push({dayNote:it,dateKey:k,isDayNote:true})});
+  });
+  // Sort each day's chips: jobs first (longest span first), then warranty/reminder, then notes
   Object.values(byDay).forEach(arr=>arr.sort((a,b)=>{
-    const aw=(a.isWarranty||a.isReminder)?1:0,bw=(b.isWarranty||b.isReminder)?1:0;
-    if(aw!==bw)return aw-bw;
-    const at=a.totalDays||0,bt=b.totalDays||0;
-    if(bt!==at)return bt-at;
-    return (a.job.name||'').localeCompare(b.job.name||'');
+    const ta=calTier(a),tb=calTier(b);
+    if(ta!==tb)return ta-tb;
+    if(ta===0){const at=a.totalDays||0,bt=b.totalDays||0;if(bt!==at)return bt-at;return (a.job.name||'').localeCompare(b.job.name||'')}
+    return 0;
   }));
 
   const sel=S.calSelected||today;
@@ -1782,6 +1820,7 @@ function renderSchedule(){
       <div class="cal-legend-item"><div class="cal-legend-sw" style="background:var(--surface-3);border-left:3px solid #64748b"></div>On Hold</div>
       <div class="cal-legend-item"><div class="cal-legend-sw" style="background:#f3e8ff;border-left:3px solid #9333ea"></div>Warranty</div>
       <div class="cal-legend-item"><div class="cal-legend-sw" style="background:#fef3c7;border-left:3px solid #d97706"></div>Reminder</div>
+      <div class="cal-legend-item"><div class="cal-legend-sw" style="background:#e0f2fe;border-left:3px solid #0ea5e9"></div>Note / to-do</div>
     </div>
     ${isMonth?renderCalMonth(y,m,daysInMonth,startDow,byDay,today,sel):renderCalAgenda(byDay,today)}
     ${isMonth?renderSelectedDay(byDay,sel,today):''}
@@ -1827,6 +1866,10 @@ function renderCalCell(k,dayNum,byDay,today,sel,otherMonth,maxChips){
   const visible=list.slice(0,maxChips);
   const overflow=list.length-visible.length;
   const chips=visible.map(entry=>{
+    if(entry.isDayNote){
+      const it=entry.dayNote;
+      return `<div class="cal-chip cs-note${it.done?' done':''}" title="${it.done?'Done: ':''}${esc(it.text)}">${it.done?'✓':'📝'} ${esc(it.text)}</div>`;
+    }
     if(entry.isReminder){
       const rem=entry.reminder;
       return `<div class="cal-chip cs-reminder" data-open-warranty="${entry.job.id}" title="Warranty reminder: ${esc(rem.label||'Reminder')} · ${esc(entry.warranty.name||'Warranty')} · ${esc(entry.job.name)}">🔔 ${esc(rem.label||'Reminder')}</div>`;
@@ -1853,20 +1896,32 @@ function renderCalCell(k,dayNum,byDay,today,sel,otherMonth,maxChips){
 }
 
 function renderSelectedDay(byDay,sel,today){
-  const selList=(byDay[sel]||[]).slice();
-  // Sort: leads first? Or by status priority. Use status order: lead, active, complete, hold
   const order={lead:0,active:1,complete:2,hold:3};
+  const selList=(byDay[sel]||[]).filter(e=>!e.isDayNote).slice();
   selList.sort((a,b)=>{
-    const aw=a.isWarranty?1:0,bw=b.isWarranty?1:0;
+    const aw=(a.isWarranty||a.isReminder)?1:0,bw=(b.isWarranty||b.isReminder)?1:0;
     if(aw!==bw)return aw-bw;
-    return (order[a.job.status]??9)-(order[b.job.status]??9);
+    return (order[a.job?a.job.status:'']??9)-(order[b.job?b.job.status:'']??9);
   });
+  const notes=(S.dayNotes[sel]||[]);
   const dt=new Date(sel+'T00:00:00');
   const lbl=dt.toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'});
   const isToday=sel===today;
+  const notesHtml=`<div class="day-notes">
+    <div class="cal-day-list-hd" style="margin-top:14px"><span>Notes &amp; To-dos</span><span class="kpi-sub">${notes.length?notes.filter(n=>!n.done).length+' open':''}</span></div>
+    ${notes.length?`<div class="day-note-list">${notes.map(n=>`<div class="day-note-item${n.done?' done':''}">
+        <button class="day-note-check" data-daynote-toggle="${sel}|${esc(n.id)}" aria-label="Toggle done">${n.done?'<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>':''}</button>
+        <span class="day-note-text">${esc(n.text)}</span>
+        <button class="day-note-del" data-daynote-del="${sel}|${esc(n.id)}" aria-label="Delete">✕</button>
+      </div>`).join('')}</div>`:'<p style="font-size:12.5px;color:var(--text-3);padding:2px 0 6px">No notes or to-dos for this day yet.</p>'}
+    <div class="day-note-add">
+      <input id="daynote-in" data-daynote-day="${sel}" placeholder="Add a note or to-do…" aria-label="Add note or to-do">
+      <button class="btn-post" id="daynote-add">Add</button>
+    </div>
+  </div>`;
   return `<div class="cal-day-list">
     <div class="cal-day-list-hd"><span>${esc(lbl)}${isToday?' <span class="kpi-sub" style="color:var(--green-700);font-weight:700;margin-left:6px">Today</span>':''}</span><span class="kpi-sub">${selList.length} job${selList.length!==1?'s':''}</span></div>
-    ${selList.length===0?'<p style="font-size:12.5px;color:var(--text-3);padding:4px 0">Nothing scheduled. Tap a date above with jobs to see what\'s on the books.</p>'
+    ${selList.length===0?'<p style="font-size:12.5px;color:var(--text-3);padding:4px 0">Nothing scheduled for this day.</p>'
       :selList.map(entry=>{
         const {job,dayIdx,totalDays}=entry;
         if(entry.isReminder){
@@ -1900,6 +1955,7 @@ function renderSelectedDay(byDay,sel,today){
         <span class="status-pill ${spClass(job.status)}">${spLabel(job.status)}</span>
       </div>`;
       }).join('')}
+    ${notesHtml}
   </div>`;
 }
 
@@ -1925,14 +1981,25 @@ function renderCalAgenda(byDay,today){
     const lbl=date.toLocaleDateString(undefined,{weekday:'long',month:'short',day:'numeric'});
     const order={lead:0,active:1,complete:2,hold:3};
     const sorted=list.slice().sort((a,b)=>{
-      const aw=(a.isWarranty||a.isReminder)?1:0,bw=(b.isWarranty||b.isReminder)?1:0;
-      if(aw!==bw)return aw-bw;
-      return (order[a.job.status]??9)-(order[b.job.status]??9);
+      const ta=calTier(a),tb=calTier(b);
+      if(ta!==tb)return ta-tb;
+      if(ta===0)return (order[a.job?a.job.status:'']??9)-(order[b.job?b.job.status:'']??9);
+      return 0;
     });
     return `<div class="agenda-day">
       <div class="agenda-day-hd">${esc(lbl)} ${isToday?'<span class="today-pill">TODAY</span>':''}<span style="margin-left:auto;color:var(--text-3);font-weight:600">${sorted.length} item${sorted.length!==1?'s':''}</span></div>
       ${sorted.map(entry=>{
         const {job,dayIdx,totalDays}=entry;
+        if(entry.isDayNote){
+          const it=entry.dayNote;
+          return `<div class="cal-job-row${it.done?' daynote-done':''}">
+            <div class="cal-job-row-bar" style="background:#0ea5e9"></div>
+            <div style="flex:1;min-width:0">
+              <div style="font-weight:600">${it.done?'✓':'📝'} ${esc(it.text)}</div>
+              <div class="cal-job-row-meta">Note / to-do</div>
+            </div>
+          </div>`;
+        }
         if(entry.isReminder){
           const rem=entry.reminder;
           return `<div class="cal-job-row" data-open-warranty="${job.id}">
@@ -5039,12 +5106,40 @@ function attachHandlers(){
   document.querySelectorAll('[data-cal-mode]').forEach(b=>b.onclick=()=>{S.calMode=b.dataset.calMode;localStorage.setItem('wfs_calmode',S.calMode);render()});
   document.querySelectorAll('[data-cal-day]').forEach(d=>d.onclick=e=>{
     // Ignore clicks on chips (they have their own handler that stops propagation, but be defensive)
-    if(e.target.closest('[data-open]'))return;
+    if(e.target.closest('[data-open]')||e.target.closest('[data-open-warranty]'))return;
     // Tapping a day from outside the current month jumps to that month
     const k=d.dataset.calDay;
     const [yy,mm]=k.split('-').map(n=>parseInt(n,10));
     if(yy!==S.calYear||(mm-1)!==S.calMonth){S.calYear=yy;S.calMonth=mm-1}
     S.calSelected=k;render();
+  });
+
+  // Day notes & to-dos
+  const addDayNote=async()=>{
+    const inp=$('daynote-in');if(!inp)return;
+    const text=inp.value.trim();if(!text)return;
+    const day=inp.dataset.daynoteDay;
+    S.dayNotes[day]=S.dayNotes[day]||[];
+    S.dayNotes[day].push({id:dnid(),text,done:false,user:S.user,time:Date.now()});
+    S.calSelected=day;
+    await saveDayNotes(day);render();toast('Added to '+fmtShort(day));
+    const ni=$('daynote-in');if(ni)ni.focus();
+  };
+  $('daynote-add')?.addEventListener('click',addDayNote);
+  $('daynote-in')?.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();addDayNote()}});
+  document.querySelectorAll('[data-daynote-toggle]').forEach(b=>b.onclick=async()=>{
+    const [day,id]=b.dataset.daynoteToggle.split('|');
+    const it=(S.dayNotes[day]||[]).find(n=>n.id===id);if(!it)return;
+    it.done=!it.done;S.calSelected=day;await saveDayNotes(day);render();
+  });
+  document.querySelectorAll('[data-daynote-del]').forEach(b=>b.onclick=async()=>{
+    const [day,id]=b.dataset.daynoteDel.split('|');
+    const arr=S.dayNotes[day]||[];const idx=arr.findIndex(n=>n.id===id);if(idx<0)return;
+    const removed=arr.splice(idx,1)[0];S.calSelected=day;
+    await saveDayNotes(day);render();
+    const restore=async()=>{S.dayNotes[day]=S.dayNotes[day]||[];S.dayNotes[day].splice(idx,0,removed);S.calSelected=day;await saveDayNotes(day);render();toast('Restored')};
+    UNDO.push(restore);
+    toast('Removed','undo',restore);
   });
 
   // Detail
