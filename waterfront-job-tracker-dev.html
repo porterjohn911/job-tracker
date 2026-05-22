@@ -567,6 +567,47 @@ input[type=range]{width:100%;accent-color:var(--green-700);height:4px;cursor:poi
 .cal-day-more{font-size:9.5px;color:var(--text-3);font-weight:600;padding:1px 5px;cursor:pointer}
 .cal-day-more:hover{color:var(--green-700)}
 
+/* Gantt timeline */
+.gantt-hint{font-size:11.5px;color:var(--text-3);font-weight:600;margin-bottom:8px;display:flex;align-items:center;gap:6px;line-height:1.35}
+.gantt-hint svg{width:13px;height:13px;flex-shrink:0;color:var(--green-700)}
+.gantt-scroll{overflow-x:auto;overflow-y:hidden;border:1px solid var(--border);border-radius:var(--r-md);background:var(--surface);-webkit-overflow-scrolling:touch;margin-bottom:14px}
+.gantt-inner{position:relative;width:max-content;min-width:100%}
+.gantt-row{display:flex;align-items:stretch;border-bottom:1px solid var(--border)}
+.gantt-row:last-child{border-bottom:none}
+.gantt-label{position:sticky;left:0;z-index:5;flex:0 0 var(--label-w);width:var(--label-w);background:var(--surface);border-right:1px solid var(--border-md);padding:6px 10px;min-width:0;display:flex;flex-direction:column;justify-content:center;gap:2px}
+.gantt-label-name{font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text)}
+.gantt-label-crew{font-size:10.5px;color:var(--text-3);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:3px}
+.gantt-label-crew svg{width:10px;height:10px;flex-shrink:0}
+.gantt-track{position:relative;flex:0 0 auto;height:40px;background-image:repeating-linear-gradient(to right,var(--border) 0 1px,transparent 1px var(--day-w))}
+.gantt-head{position:sticky;top:0;z-index:6}
+.gantt-head .gantt-label{justify-content:center}
+.gantt-head-track{height:32px;display:flex;background:var(--surface-2);background-image:none}
+.gantt-corner{z-index:7;font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text-3);background:var(--surface-2)}
+.gantt-daycol{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:10.5px;font-weight:600;color:var(--text-2);border-right:1px solid var(--border);line-height:1.05}
+.gantt-daycol span{font-size:8px;color:var(--text-3);text-transform:uppercase;margin-top:1px}
+.gantt-daycol.weekend{background:var(--surface-3)}
+.gantt-daycol.today{background:var(--green-700);color:#fff}
+.gantt-daycol.today span{color:rgba(255,255,255,.85)}
+.gantt-bar{position:absolute;top:7px;height:26px;z-index:2;border-radius:5px;display:flex;align-items:center;padding:0 8px;cursor:grab;touch-action:none;box-shadow:var(--shadow-sm);border-left:3px solid var(--green-700);background:var(--green-100);color:var(--green-900);overflow:hidden;user-select:none;-webkit-user-select:none}
+.gantt-bar:active{cursor:grabbing}
+.gantt-bar.gantt-bar-dragging{opacity:.9;box-shadow:0 6px 16px rgba(0,0,0,.18);z-index:4;cursor:grabbing}
+.gantt-bar-label{font-size:11px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none}
+.gantt-bar.cs-active{border-left-color:#16a34a;background:#dcfce7;color:#166534}
+.gantt-bar.cs-lead{border-left-color:#d97706;background:var(--gold-light);color:#92400e}
+.gantt-bar.cs-complete{border-left-color:#0284c7;background:#e0f2fe;color:#075985}
+.gantt-bar.cs-hold{border-left-color:#64748b;background:var(--surface-3);color:var(--text-2)}
+.gantt-bar.clip-l{border-top-left-radius:0;border-bottom-left-radius:0;border-left-style:dashed}
+.gantt-bar.clip-r{border-top-right-radius:0;border-bottom-right-radius:0}
+.gantt-today-line{position:absolute;top:32px;bottom:0;width:2px;background:var(--green-700);opacity:.5;z-index:1;pointer-events:none}
+.gantt-empty{padding:28px 18px;text-align:center;font-size:13.5px;color:var(--text-2);background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);margin-bottom:14px;line-height:1.6}
+@media(prefers-color-scheme:dark){
+  .gantt-bar{background:#1a3d2e;color:#a7f3d0}
+  .gantt-bar.cs-active{background:#052e16;color:#86efac}
+  .gantt-bar.cs-lead{background:#3d2800;color:#fbbf24}
+  .gantt-bar.cs-complete{background:#082f49;color:#7dd3fc}
+  .gantt-bar.cs-hold{background:#1e2e28;color:var(--text-2)}
+}
+
 .cal-day-list{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);padding:12px 14px}
 .cal-day-list-hd{font-size:12px;font-weight:700;color:var(--text-2);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.04em;display:flex;justify-content:space-between;align-items:center}
 .cal-day-list-hd .kpi-sub{font-size:10.5px;font-weight:600;color:var(--text-3);text-transform:none;letter-spacing:0}
@@ -1571,11 +1612,13 @@ function renderSchedule(){
   }));
 
   const sel=S.calSelected||today;
-  const isMonth=S.calMode!=='agenda';
+  const mode=(S.calMode==='agenda'||S.calMode==='timeline')?S.calMode:'month';
+  const isMonth=mode==='month';
+  const isTimeline=mode==='timeline';
 
   return `
     <div class="cal-head">
-      <div class="cal-title">${isMonth?monthName:'Upcoming'}</div>
+      <div class="cal-title">${isMonth||isTimeline?monthName:'Upcoming'}</div>
       <div class="cal-nav">
         <button id="cal-prev" aria-label="Previous"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5"/></svg></button>
         <button id="cal-today" style="width:auto;padding:0 12px;font-size:12px;font-weight:600">Today</button>
@@ -1584,7 +1627,8 @@ function renderSchedule(){
     </div>
     <div class="cal-view-toggle" role="tablist">
       <button class="${isMonth?'active':''}" data-cal-mode="month" role="tab" aria-selected="${isMonth}">Month</button>
-      <button class="${!isMonth?'active':''}" data-cal-mode="agenda" role="tab" aria-selected="${!isMonth}">Agenda</button>
+      <button class="${isTimeline?'active':''}" data-cal-mode="timeline" role="tab" aria-selected="${isTimeline}">Timeline</button>
+      <button class="${mode==='agenda'?'active':''}" data-cal-mode="agenda" role="tab" aria-selected="${mode==='agenda'}">Agenda</button>
     </div>
     <div class="cal-legend">
       <div class="cal-legend-item"><div class="cal-legend-sw" style="background:#dcfce7;border-left:3px solid #16a34a"></div>Active</div>
@@ -1592,9 +1636,131 @@ function renderSchedule(){
       <div class="cal-legend-item"><div class="cal-legend-sw" style="background:#e0f2fe;border-left:3px solid #0284c7"></div>Complete</div>
       <div class="cal-legend-item"><div class="cal-legend-sw" style="background:var(--surface-3);border-left:3px solid #64748b"></div>On Hold</div>
     </div>
-    ${isMonth?renderCalMonth(y,m,daysInMonth,startDow,byDay,today,sel):renderCalAgenda(byDay,today)}
+    ${isMonth?renderCalMonth(y,m,daysInMonth,startDow,byDay,today,sel):isTimeline?renderCalTimeline(y,m,monthName,today):renderCalAgenda(byDay,today)}
     ${isMonth?renderSelectedDay(byDay,sel,today):''}
   `;
+}
+
+// ── Gantt timeline (crew scheduling) ──
+const GANTT_LABEL_W=148, GANTT_DAY_W=32;
+function addDaysKey(key,n){const d=new Date(key.slice(0,10)+'T00:00:00');d.setDate(d.getDate()+n);return dateKey(d)}
+const CREW_ICON='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z"/></svg>';
+
+function renderCalTimeline(y,m,monthName,today){
+  const daysInMonth=new Date(y,m+1,0).getDate();
+  const mm=String(m+1).padStart(2,'0');
+  const LABEL_W=GANTT_LABEL_W, DAY_W=GANTT_DAY_W;
+  const trackW=daysInMonth*DAY_W;
+  const monthStart=new Date(y,m,1), monthEnd=new Date(y,m,daysInMonth);
+  const dayMs=86400000;
+
+  // Day-number header
+  let head='';
+  for(let d=1;d<=daysInMonth;d++){
+    const k=`${y}-${mm}-${String(d).padStart(2,'0')}`;
+    const dow=new Date(k+'T00:00:00').getDay();
+    const cls='gantt-daycol'+(k===today?' today':'')+((dow===0||dow===6)?' weekend':'');
+    head+=`<div class="${cls}" style="width:${DAY_W}px">${d}<span>${['S','M','T','W','T','F','S'][dow]}</span></div>`;
+  }
+
+  // Jobs that have a start date and intersect this month
+  const rowsData=jobs().filter(j=>j.startDate).map(j=>{
+    const s=new Date(j.startDate.slice(0,10)+'T00:00:00');
+    let e=new Date((j.dueDate||j.startDate).slice(0,10)+'T00:00:00');
+    if(e<s)e=s;
+    return {j,s,e};
+  }).filter(({s,e})=>e>=monthStart&&s<=monthEnd);
+
+  // Group by crew so a person's jobs sit together and overlaps are obvious
+  rowsData.sort((a,b)=>{
+    const ca=(a.j.assigned||'~~~').toLowerCase(), cb=(b.j.assigned||'~~~').toLowerCase();
+    if(ca!==cb)return ca<cb?-1:1;
+    return a.s-b.s;
+  });
+
+  if(rowsData.length===0){
+    return `<div class="gantt-empty">No jobs scheduled in ${esc(monthName)}.<br><span style="font-size:12px;color:var(--text-3)">Give a job a start date (and optional due date), or use the arrows to change month.</span></div>`;
+  }
+
+  const rows=rowsData.map(({j,s,e})=>{
+    const cs=s<monthStart?monthStart:s;
+    const ce=e>monthEnd?monthEnd:e;
+    const left=Math.round((cs-monthStart)/dayMs)*DAY_W;
+    const span=Math.round((ce-cs)/dayMs)+1;
+    const width=Math.max(span*DAY_W-2,18);
+    const clip=(s<monthStart?' clip-l':'')+(e>monthEnd?' clip-r':'');
+    const crew=j.assigned?esc(j.assigned):'Unassigned';
+    const range=fmtShort(j.startDate)+(j.dueDate?' → '+fmtShort(j.dueDate):'');
+    return `<div class="gantt-row">
+      <div class="gantt-label" title="${esc(j.name)} · ${crew}">
+        <div class="gantt-label-name">${esc(j.name)}</div>
+        <div class="gantt-label-crew">${CREW_ICON}${crew}</div>
+      </div>
+      <div class="gantt-track" style="width:${trackW}px">
+        <div class="gantt-bar ${chipClass(j.status)}${clip}" data-job-id="${j.id}" data-left="${left}" style="left:${left}px;width:${width}px" title="${esc(j.name)} · ${spLabel(j.status)} · ${range} · drag to reschedule">
+          <span class="gantt-bar-label">${esc(j.name)}</span>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  const todayOff=(today.slice(0,7)===`${y}-${mm}`)?(parseInt(today.slice(8,10),10)-1):-1;
+  const todayLine=todayOff>=0?`<div class="gantt-today-line" style="left:${LABEL_W+todayOff*DAY_W}px"></div>`:'';
+
+  return `<div class="gantt-hint">${CREW_ICON}Grouped by crew. Drag a bar sideways to reschedule a job — start &amp; due dates shift together.</div>
+    <div class="gantt-scroll"><div class="gantt-inner" style="--label-w:${LABEL_W}px;--day-w:${DAY_W}px">
+      <div class="gantt-row gantt-head">
+        <div class="gantt-label gantt-corner">Crew / Job</div>
+        <div class="gantt-track gantt-head-track" style="width:${trackW}px">${head}</div>
+      </div>
+      ${rows}
+      ${todayLine}
+    </div></div>`;
+}
+
+async function shiftJobDates(id,deltaDays){
+  const j=S.jobs[id];
+  if(!j||!j.startDate||!deltaDays)return;
+  j.startDate=addDaysKey(j.startDate,deltaDays);
+  if(j.dueDate)j.dueDate=addDaysKey(j.dueDate,deltaDays);
+  await writeJob(j);
+  await logAct('rescheduled to '+fmtShort(j.startDate),j.name);
+  render();
+  toast('Moved “'+j.name+'” '+(deltaDays>0?'+'+deltaDays:deltaDays)+' day'+(Math.abs(deltaDays)===1?'':'s'));
+}
+
+function attachGanttDrag(){
+  document.querySelectorAll('.gantt-bar').forEach(bar=>{
+    bar.addEventListener('pointerdown',e=>{
+      if(e.button>0)return;
+      e.preventDefault();
+      const dayW=GANTT_DAY_W;
+      const baseLeft=parseFloat(bar.dataset.left)||0;
+      const startX=e.clientX;
+      let deltaDays=0, moved=false;
+      bar.setPointerCapture(e.pointerId);
+      bar.classList.add('gantt-bar-dragging');
+      const move=ev=>{
+        const dx=ev.clientX-startX;
+        if(Math.abs(dx)>3)moved=true;
+        deltaDays=Math.round(dx/dayW);
+        bar.style.left=(baseLeft+deltaDays*dayW)+'px';
+      };
+      const up=ev=>{
+        bar.releasePointerCapture(ev.pointerId);
+        bar.removeEventListener('pointermove',move);
+        bar.removeEventListener('pointerup',up);
+        bar.removeEventListener('pointercancel',up);
+        bar.classList.remove('gantt-bar-dragging');
+        if(moved&&deltaDays!==0){shiftJobDates(bar.dataset.jobId,deltaDays)}
+        else if(!moved){S.detail=bar.dataset.jobId;S.view='jobs';S.detailTab='overview';render()}
+        else{bar.style.left=baseLeft+'px'}
+      };
+      bar.addEventListener('pointermove',move);
+      bar.addEventListener('pointerup',up);
+      bar.addEventListener('pointercancel',up);
+    });
+  });
 }
 
 function renderCalMonth(y,m,daysInMonth,startDow,byDay,today,sel){
@@ -3939,6 +4105,7 @@ function attachHandlers(){
   });
   $('cal-today')?.addEventListener('click',()=>{const n=new Date();S.calMonth=n.getMonth();S.calYear=n.getFullYear();S.calSelected=dateKey(n);render()});
   document.querySelectorAll('[data-cal-mode]').forEach(b=>b.onclick=()=>{S.calMode=b.dataset.calMode;localStorage.setItem(LS('calmode'),S.calMode);render()});
+  attachGanttDrag();
   document.querySelectorAll('[data-cal-day]').forEach(d=>d.onclick=e=>{
     // Ignore clicks on chips (they have their own handler that stops propagation, but be defensive)
     if(e.target.closest('[data-open]'))return;
