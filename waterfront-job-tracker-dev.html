@@ -1274,9 +1274,14 @@ if (ENV === 'dev') {
   document.addEventListener('DOMContentLoaded', () => {
     document.title = '[DEV] ' + document.title;
     const b = document.createElement('div');
-    b.textContent = 'DEV SANDBOX — separate data, safe to experiment. Team production is unaffected.';
-    b.style.cssText = 'position:fixed;bottom:0;left:0;right:0;z-index:99999;background:#b45309;color:#fff;font:600 12px/1.4 \'DM Sans\',sans-serif;text-align:center;padding:7px 12px;letter-spacing:.4px';
+    const btn = 'padding:3px 10px;border-radius:6px;border:1px solid rgba(255,255,255,.55);background:rgba(255,255,255,.16);color:#fff;font:600 11px/1 \'DM Sans\',sans-serif;cursor:pointer';
+    b.innerHTML = '<span>DEV SANDBOX — separate data, safe to experiment. Production is unaffected.</span>'
+      + '<button id="dev-seed" style="' + btn + '">Load sample jobs</button>'
+      + '<button id="dev-clear" style="' + btn + '">Clear samples</button>';
+    b.style.cssText = 'position:fixed;bottom:0;left:0;right:0;z-index:99999;background:#b45309;color:#fff;font:600 12px/1.4 \'DM Sans\',sans-serif;display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:10px;padding:7px 12px;letter-spacing:.3px';
     document.body.appendChild(b);
+    b.querySelector('#dev-seed').onclick = () => loadSampleData();
+    b.querySelector('#dev-clear').onclick = () => clearSampleData();
   });
 }
 
@@ -1761,6 +1766,49 @@ function attachGanttDrag(){
       bar.addEventListener('pointercancel',up);
     });
   });
+}
+
+// ── Sample data for the dev sandbox (never used in production) ──
+async function loadSampleData(){
+  const now=new Date(), y=now.getFullYear(), m=now.getMonth();
+  const dim=new Date(y,m+1,0).getDate();
+  const D=n=>dateKey(new Date(y,m,n)); // day-of-month n (may overflow into adjacent months)
+  ['Mike Reyes','Sarah Chen','Tony Boudreaux','Dave Park'].forEach(c=>{if(!S.members.includes(c))S.members.push(c)});
+  await saveMembers();
+  const seed=[
+    {id:'sample_1', name:'Lakeview dock rebuild', assigned:'Mike Reyes', status:'active', stage:'In Progress', type:'Dock / waterfront', s:4, e:11, value:'18500', progress:55, customerName:'Greg & Tina Hollis', address:'412 Lakeview Dr, LaFollette TN', phone:'(865) 555-0142', email:'ghollis@example.com', leadSource:'Referral', desc:'Full teardown and rebuild of failing dock; new decking and posts.'},
+    {id:'sample_2', name:'Boathouse roof', assigned:'Mike Reyes', status:'lead', stage:'Estimate', type:'Renovation', s:9, e:13, value:'9200', progress:0, customerName:'Mark Davenport', address:'88 Coker Creek Rd', phone:'(865) 555-0173', leadSource:'Google Search', desc:'Re-roof boathouse, replace 3 rotted rafters.'},
+    {id:'sample_3', name:'Smith seawall repair', assigned:'Sarah Chen', status:'active', stage:'Scheduled', type:'Repair', s:2, e:6, value:'12750', progress:40, customerName:'Allan Smith', address:'207 Shoreline Way', phone:'(865) 555-0119', leadSource:'Repeat Customer'},
+    {id:'sample_4', name:'Marina pier inspection', assigned:'Sarah Chen', status:'complete', stage:'Complete', type:'Inspection', s:14, e:14, value:'650', progress:100, customerName:'Norris Marina', address:'1 Marina Loop'},
+    {id:'sample_5', name:'Cedar Point boat lift', assigned:'Sarah Chen', status:'active', stage:'In Progress', type:'Dock / waterfront', s:-2, e:3, value:'7400', progress:80, customerName:'Cedar Point HOA', address:'Cedar Point Marina', desc:'Started last month — finishing first week.'},
+    {id:'sample_6', name:'Harbor deck staining', assigned:'Tony Boudreaux', status:'active', stage:'In Progress', type:'Repair', s:12, e:16, value:'4300', progress:25, customerName:'Bill Hodges', address:'19 Harbor Town'},
+    {id:'sample_7', name:'Riverside bulkhead', assigned:'Tony Boudreaux', status:'hold', stage:'Scheduled', type:'New construction', s:20, e:28, value:'31200', progress:35, customerName:'Riverside Resort', address:'500 River Rd', leadSource:'Website', desc:'On hold pending permit approval.'},
+    {id:'sample_8', name:'Anderson floating dock', assigned:'Dave Park', status:'lead', stage:'Approved', type:'Dock / waterfront', s:18, e:22, value:'15900', progress:10, customerName:'Kim Anderson', address:'73 Deerfield Cove'},
+    {id:'sample_9', name:'Lake house gazebo', assigned:'Dave Park', status:'active', stage:'Scheduled', type:'New construction', s:25, e:dim+2, value:'8800', progress:15, customerName:'The Pruitts', address:'9 Sunset Pointe', desc:'Runs into next month.'},
+    {id:'sample_10', name:'Wilson estimate visit', assigned:'', status:'lead', stage:'Lead', type:'Repair', s:24, e:24, value:'', progress:0, customerName:'Roy Wilson', address:'305 Old Hwy 63', leadSource:'Yard Sign', desc:'New lead — needs site visit for dock repair quote.'},
+    {id:'sample_11', name:'Pelican Bay dock demo', assigned:'Mike Reyes', status:'complete', stage:'Complete', type:'Other', s:1, e:2, value:'2200', progress:100, customerName:'Pelican Bay Club', address:'Pelican Bay'},
+  ];
+  for(const r of seed){
+    const j={id:r.id,name:r.name,assigned:r.assigned||'',address:r.address||'',status:r.status,stage:r.stage,type:r.type||'',
+      startDate:D(r.s),dueDate:D(r.e),value:r.value||'',description:r.desc||'',
+      customerName:r.customerName||'',customerPhone:r.phone||'',customerEmail:r.email||'',billingAddress:'',leadSource:r.leadSource||'',
+      progress:r.progress||0,notes:[],photos:[],tasks:[],dailyLogs:[],documents:[],comms:[],created:Date.now()};
+    if(j.status==='complete')j.completedAt=Date.now();
+    await writeJob(j);
+  }
+  await logAct('loaded sample jobs','');
+  S.view='schedule';S.calMode='timeline';S.calYear=y;S.calMonth=m;
+  localStorage.setItem(LS('calmode'),'timeline');
+  render();
+  toast(seed.length+' sample jobs loaded — showing Timeline');
+}
+
+async function clearSampleData(){
+  const ids=Object.keys(S.jobs).filter(id=>id.startsWith('sample_'));
+  for(const id of ids)await deleteJobDB(id);
+  if(ids.length)await logAct('cleared sample jobs','');
+  render();
+  toast(ids.length?('Removed '+ids.length+' sample jobs'):'No sample jobs to remove');
 }
 
 function renderCalMonth(y,m,daysInMonth,startDow,byDay,today,sel){
