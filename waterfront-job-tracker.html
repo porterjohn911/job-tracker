@@ -14,6 +14,7 @@
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Serif+Display&display=swap" rel="stylesheet">
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin="" defer></script>
 <style>
@@ -449,6 +450,9 @@ input[type=range]{width:100%;accent-color:var(--green-700);height:4px;cursor:poi
 .tt-job-sub{font-size:11.5px;color:var(--text-3);margin-top:1px}
 .tt-job-cost{font-size:15px;font-weight:700;color:var(--green-700);font-variant-numeric:tabular-nums;white-space:nowrap}
 .tt-live{font-size:11px;font-weight:700;color:var(--green-600);white-space:nowrap}
+.tt-payroll-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;margin-bottom:18px;background:var(--surface);border:1.5px solid var(--green-600);color:var(--green-700);padding:11px;border-radius:var(--r-sm);font-size:14px;font-weight:700;cursor:pointer;font-family:var(--font)}
+.tt-payroll-btn:active{opacity:.85}
+.tt-payroll-btn svg{width:16px;height:16px}
 
 /* ── MODAL (sheet) ── */
 .modal-bd{
@@ -767,6 +771,8 @@ input[type=range]{width:100%;accent-color:var(--green-700);height:4px;cursor:poi
 .lock-sub{font-size:12.5px;color:var(--text-3);margin-bottom:18px}
 .lock-pin{width:100%;text-align:center;font-size:24px;letter-spacing:8px;padding:12px;border:1.5px solid var(--border-md);border-radius:var(--r-sm);background:var(--surface);color:var(--text);outline:none;font-family:var(--font)}
 .lock-pin:focus{border-color:var(--green-600)}
+.auth-in{width:100%;padding:11px 12px;font-size:15px;border:1.5px solid var(--border-md);border-radius:var(--r-sm);background:var(--surface);color:var(--text);outline:none;font-family:var(--font);margin-bottom:8px}
+.auth-in:focus{border-color:var(--green-600)}
 .lock-err{min-height:18px;font-size:12px;color:var(--red);margin:8px 0}
 .lock-btn{width:100%;background:var(--green-700);color:#fff;border:none;padding:13px;border-radius:var(--r-sm);font-size:15px;font-weight:700;cursor:pointer;font-family:var(--font)}
 .lock-btn:active{opacity:.85}
@@ -1451,8 +1457,146 @@ if (ENV === 'dev') {
 }
 
 // ══ Firebase config ══
-let FIREBASE_CONFIG = null;
-try{const s=localStorage.getItem('wfs_fb');if(s)FIREBASE_CONFIG=JSON.parse(s)}catch(e){}
+// Baked-in config: paste your project's firebaseConfig object below to make
+// every device auto-connect with no per-device "Connect Team" step. The
+// Firebase web config is NOT a secret — it's designed to ship in client code
+// (security comes from the database rules + Auth). Leave null to fall back to
+// the localStorage config set via the in-app "Connect Team" screen.
+const FIREBASE_CONFIG_BAKED = {
+  apiKey: "AIzaSyDCE0Yo6YkYtSkibUx9T7Q5XEkgmEsSKRc",
+  authDomain: "witport-constructionservices.firebaseapp.com",
+  // Realtime Database URL — assumes the default (us-central1) instance.
+  // If you created the database in another region, replace this with the
+  // exact databaseURL shown in the Firebase console.
+  databaseURL: "https://witport-constructionservices-default-rtdb.firebaseio.com",
+  projectId: "witport-constructionservices",
+  storageBucket: "witport-constructionservices.firebasestorage.app",
+  messagingSenderId: "85892975744",
+  appId: "1:85892975744:web:1140f8a3a577225b4a6a65",
+  measurementId: "G-9GYZ4K28V5"
+};
+let FIREBASE_CONFIG = FIREBASE_CONFIG_BAKED;
+try{const s=localStorage.getItem('wfs_fb');if(!FIREBASE_CONFIG&&s)FIREBASE_CONFIG=JSON.parse(s)}catch(e){}
+
+// ── Firebase Authentication gate (real logins + roles) ───────────────
+// Active whenever a Firebase config is present and the Auth SDK loaded.
+// Each signed-in user maps to /users/{uid} = {name,email,role,company}.
+// Roles: worker (one company) · manager/owner (all). The first account to
+// sign in (empty /users) is auto-promoted to owner; later sign-ups start
+// "pending" until an owner assigns them. Database rules enforce all of this
+// server-side — these client checks only shape the UI.
+const FB_AUTH_ON = !!(FIREBASE_CONFIG && typeof firebase!=='undefined' && firebase.auth);
+function gateOn(){return FB_AUTH_ON||accessEnabled()}
+function canSeeAllRec(r){return !!(r&&(r.role==='owner'||r.role==='manager'))}
+let FB_USER=null;
+function ensureLockRoot(){let r=document.getElementById('lock-root');if(!r){r=document.createElement('div');r.id='lock-root';document.body.appendChild(r)}return r}
+function authLockIcon(){return '<div class="lock-ico"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"/></svg></div>'}
+function startAuthGate(){
+  try{if(!firebase.apps.length)firebase.initializeApp(FIREBASE_CONFIG)}catch(e){}
+  let auth;try{auth=firebase.auth()}catch(e){bootApp();return}
+  try{auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)}catch(e){}
+  showAuthLoading();
+  auth.onAuthStateChanged(u=>handleAuthUser(auth,u));
+}
+async function handleAuthUser(auth,user){
+  if(!user){showAuthScreen(auth,'');return}
+  showAuthLoading();
+  try{
+    const db=firebase.database();
+    const uref=db.ref('users/'+user.uid);
+    let rec=null;
+    try{const s=await uref.get();rec=s.exists()?s.val():null}catch(e){}
+    if(!rec){
+      let isFirst=false;
+      try{const all=await db.ref('users').get();isFirst=!all.exists()}catch(e){}
+      rec={name:(user.displayName||(user.email||'').split('@')[0]||'User'),email:user.email||'',role:isFirst?'owner':'pending',company:isFirst?'all':''};
+      try{await uref.set(rec)}catch(e){rec.role='pending'}
+    }
+    FB_USER={uid:user.uid,...rec};
+    SESSION={uid:user.uid,name:rec.name,role:rec.role,company:rec.company};
+    if(rec.role==='pending'||!rec.role){showPendingScreen(auth,rec);return}
+    if(!canSeeAllRec(rec)){
+      let cur=null;try{cur=localStorage.getItem('jt_company')}catch(e){}
+      if(rec.company&&cur!==rec.company){try{localStorage.setItem('jt_company',rec.company)}catch(e){}location.reload();return}
+    }
+    hideAuthScreen();
+    bootApp();
+  }catch(e){showAuthScreen(auth,(e&&e.message)||'Sign-in error')}
+}
+function showAuthLoading(){ensureLockRoot().innerHTML=`<div class="lock-bd"><div class="lock-card">${authLockIcon()}<div class="lock-sub" style="margin-top:10px">Loading…</div></div></div>`}
+function showAuthScreen(auth,errMsg){
+  const root=ensureLockRoot();
+  root.innerHTML=`<div class="lock-bd"><div class="lock-card">
+    ${authLockIcon()}
+    <div class="lock-title">Sign in</div>
+    <div class="lock-sub" id="auth-sub">Use your work email and password</div>
+    <input id="auth-email" class="auth-in" type="email" placeholder="you@company.com" autocomplete="username">
+    <input id="auth-pass" class="auth-in" type="password" placeholder="Password" autocomplete="current-password">
+    <div class="lock-err" id="auth-err">${errMsg?esc(errMsg):''}</div>
+    <button class="lock-btn" id="auth-go" type="button">Sign In</button>
+    <div style="display:flex;justify-content:space-between;margin-top:12px;font-size:12px">
+      <a href="#" id="auth-signup" style="color:var(--green-700);text-decoration:none">Create account</a>
+      <a href="#" id="auth-reset" style="color:var(--text-3);text-decoration:none">Forgot password?</a>
+    </div>
+  </div></div>`;
+  let mode='signin';
+  const setErr=t=>{const e=document.getElementById('auth-err');if(e)e.textContent=t};
+  document.getElementById('auth-signup').onclick=e=>{e.preventDefault();mode=mode==='signup'?'signin':'signup';document.getElementById('auth-go').textContent=mode==='signup'?'Create Account':'Sign In';document.getElementById('auth-sub').textContent=mode==='signup'?'Create your account — an owner grants access after':'Use your work email and password';document.getElementById('auth-signup').textContent=mode==='signup'?'Have an account? Sign in':'Create account';setErr('')};
+  document.getElementById('auth-reset').onclick=async e=>{e.preventDefault();const em=(document.getElementById('auth-email').value||'').trim();if(!em){setErr('Enter your email first');return}try{await auth.sendPasswordResetEmail(em);setErr('Password reset email sent.')}catch(err){setErr((err&&err.message)||'Could not send reset')}};
+  async function go(){
+    const em=(document.getElementById('auth-email').value||'').trim();const pw=document.getElementById('auth-pass').value||'';
+    if(!em||!pw){setErr('Enter email and password');return}
+    setErr('');const btn=document.getElementById('auth-go');btn.textContent='…';
+    try{if(mode==='signup')await auth.createUserWithEmailAndPassword(em,pw);else await auth.signInWithEmailAndPassword(em,pw);}
+    catch(err){setErr((err&&err.message)||'Sign-in failed');btn.textContent=mode==='signup'?'Create Account':'Sign In'}
+  }
+  document.getElementById('auth-go').onclick=go;
+  document.getElementById('auth-pass').onkeydown=e=>{if(e.key==='Enter')go()};
+  setTimeout(()=>{try{document.getElementById('auth-email').focus()}catch(e){}},60);
+}
+function showPendingScreen(auth,rec){
+  ensureLockRoot().innerHTML=`<div class="lock-bd"><div class="lock-card">
+    ${authLockIcon()}
+    <div class="lock-title">Awaiting access</div>
+    <div class="lock-sub">You're signed in as ${esc(rec.email||rec.name||'')}, but an owner hasn't granted you a company yet. You'll get in as soon as they assign you.</div>
+    <button class="lock-btn" id="auth-out" type="button" style="margin-top:16px">Sign out</button>
+  </div></div>`;
+  document.getElementById('auth-out').onclick=()=>{try{auth.signOut()}catch(e){}};
+}
+function hideAuthScreen(){const r=document.getElementById('lock-root');if(r)r.innerHTML=''}
+async function showFbUserAdmin(){
+  if(!(FB_USER&&FB_USER.role==='owner')){toast('Only owners can manage access','');return}
+  $('modal-root').innerHTML=`<div class="modal-bd" id="mbd" role="dialog" aria-modal="true" aria-label="Team access"><div class="modal"><div class="modal-handle"></div>
+    <div class="modal-head"><div class="modal-title">Team Access &amp; Roles</div><button class="modal-close" id="mc" aria-label="Close"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button></div>
+    <div class="modal-body" id="fbu-body"><p style="font-size:13px;color:var(--text-3)">Loading team…</p></div>
+  </div></div>`;
+  $('mc').onclick=closeModal;$('mbd').onclick=e=>{if(e.target===e.currentTarget)closeModal()};
+  try{const snap=await firebase.database().ref('users').get();renderFbUserList(snap.exists()?snap.val():{});}
+  catch(e){const b=$('fbu-body');if(b)b.innerHTML='<p style="color:var(--red);font-size:13px">Could not load users: '+esc(e.message||'')+'</p>'}
+}
+function renderFbUserList(users){
+  const b=$('fbu-body');if(!b)return;
+  const ids=Object.keys(users);
+  const coOpts=c=>Object.values(COMPANIES).map(co=>`<option value="${esc(co.id)}" ${c===co.id?'selected':''}>${esc(co.label)}</option>`).join('');
+  const roleOpts=r=>['worker','manager','owner'].map(x=>`<option value="${x}" ${r===x?'selected':''}>${x[0].toUpperCase()+x.slice(1)}</option>`).join('');
+  b.innerHTML=`
+    <p style="font-size:12px;color:var(--text-2);line-height:1.5;margin-bottom:12px">People who sign in appear here as <strong>pending</strong>. Set each person's role and company, then Save. Workers see only their company; managers &amp; owners see all.</p>
+    ${ids.length?ids.map(uid=>{const u=users[uid]||{};const pend=(u.role==='pending'||!u.role);return `<div class="acc-row" data-fbu="${esc(uid)}" style="flex-wrap:wrap;gap:8px">
+      <div class="acc-info" style="flex:1 1 100%"><div class="acc-name">${esc(u.name||u.email||uid)}${pend?' <span class="acc-role" style="background:var(--gold-light);color:#92400e">pending</span>':''}</div><div class="acc-meta">${esc(u.email||'')}</div></div>
+      <select class="form-select" style="flex:1;min-width:110px" data-fbu-role>${roleOpts(pend?'worker':u.role)}</select>
+      <select class="form-select" style="flex:1;min-width:130px" data-fbu-co>${coOpts(u.company)}</select>
+      <button class="btn-sm" data-fbu-save type="button">Save</button>
+    </div>`}).join(''):'<p style="font-size:13px;color:var(--text-3)">No one has signed in yet. Share the app link — people sign in and show up here to assign.</p>'}
+  `;
+  b.querySelectorAll('[data-fbu]').forEach(row=>{
+    const roleSel=row.querySelector('[data-fbu-role]'),coSel=row.querySelector('[data-fbu-co]');
+    const sync=()=>{coSel.style.display=roleSel.value==='worker'?'':'none'};roleSel.onchange=sync;sync();
+    row.querySelector('[data-fbu-save]').onclick=async()=>{
+      const uid=row.dataset.fbu,role=roleSel.value,company=role==='worker'?coSel.value:'all',u=users[uid]||{};
+      try{await firebase.database().ref('users/'+uid).update({role,company,name:u.name||'',email:u.email||''});u.role=role;u.company=company;toast('Saved')}catch(e){toast('Save failed: '+(e.message||''),'')}
+    };
+  });
+}
 
 // ══ State ══
 let DB=null;
@@ -1535,6 +1679,11 @@ function nextInvoiceNumber(){
     });
   });
   return 'INV-'+(max+1);
+}
+function nextEstimateNumber(){
+  let max=1000;
+  Object.values(S.jobs).forEach(j=>{(j.estimates||[]).forEach(e=>{const m=String(e.number||'').match(/(\d+)/);if(m){const n=parseInt(m[1],10);if(n>max)max=n}})});
+  return 'EST-'+(max+1);
 }
 function invoiceTotals(j){
   const invs=j.invoices||[];
@@ -1645,7 +1794,7 @@ function ownerInitFB(cfg){
 }
 function ownerJobs(id){return (S.owner&&S.owner[id])||[]}
 
-if(!LOCKED){
+function loadAndConnect(){
   if(OWNER_MODE){ownerLoadLocal();if(FIREBASE_CONFIG)ownerInitFB(FIREBASE_CONFIG);}
   else{LOCAL.load();if(FIREBASE_CONFIG)initFB(FIREBASE_CONFIG);}
 }
@@ -2200,7 +2349,8 @@ function showJobPickerModal(onPick){
 }
 
 // ── Build polished HTML email body for an invoice ──
-function buildInvoiceEmailHTML(j,inv,customMsg){
+function buildInvoiceEmailHTML(j,inv,customMsg,kind){
+  kind=kind||'invoice';const EST=kind==='estimate';
   const c=calcInvoice(inv);
   const co=COMPANY;
   const logoSrc=getBrandLogoSrc();
@@ -2214,19 +2364,26 @@ function buildInvoiceEmailHTML(j,inv,customMsg){
       <td style="padding:10px 8px;border-bottom:1px solid #eef3f1;font-size:13px;color:#0a1f18;text-align:right;font-weight:600;white-space:nowrap">${money(amt)}</td></tr>`;
   }).join('');
   const greeting=`Hi ${esc(firstName)},`;
-  const intro=customMsg?esc(customMsg).replace(/\n/g,'<br>'):`Thank you for letting <strong>${esc(co.name||'us')}</strong> work with you on <strong>${esc(j.name||'your project')}</strong>. Your invoice is ready and the details are below.`;
-  const balanceLine=c.balance<=0.005
+  const intro=customMsg?esc(customMsg).replace(/\n/g,'<br>'):(EST
+    ?`Thank you for considering <strong>${esc(co.name||'us')}</strong> for <strong>${esc(j.name||'your project')}</strong>. Here is your estimate — the details are below. Let us know if you'd like to move forward.`
+    :`Thank you for letting <strong>${esc(co.name||'us')}</strong> work with you on <strong>${esc(j.name||'your project')}</strong>. Your invoice is ready and the details are below.`);
+  const balanceLine=EST
+    ?`<div style="background:#e6f7f1;color:#0a3d2e;padding:16px 18px;border-radius:10px;margin:18px 0;text-align:center">
+        <div style="font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;opacity:0.85">Estimated Total${inv.dueDate?' · valid until '+fmtDate(inv.dueDate):''}</div>
+        <div style="font-size:26px;font-weight:800;margin-top:4px;font-variant-numeric:tabular-nums">${money(c.total)}</div>
+      </div>`
+    :(c.balance<=0.005
     ?`<div style="background:#dcfce7;color:#166534;padding:14px 18px;border-radius:10px;margin:18px 0;font-size:15px;font-weight:700;text-align:center">✓ Paid in Full — Thank you!</div>`
     :`<div style="background:#fef3c7;color:#92400e;padding:16px 18px;border-radius:10px;margin:18px 0;text-align:center">
         <div style="font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#92400e;opacity:0.85">Balance Due${inv.dueDate?' by '+fmtDate(inv.dueDate):''}</div>
         <div style="font-size:26px;font-weight:800;color:#92400e;margin-top:4px;font-variant-numeric:tabular-nums">${money(c.balance)}</div>
-      </div>`;
+      </div>`);
   const contactLine=[co.phone?`<a href="tel:${esc(co.phone)}" style="color:${P.link};text-decoration:none">${esc(co.phone)}</a>`:'',
     co.email?`<a href="mailto:${esc(co.email)}" style="color:${P.link};text-decoration:none">${esc(co.email)}</a>`:'',
     co.website?`<a href="${esc(co.website)}" style="color:${P.link};text-decoration:none">${esc(co.website)}</a>`:''
   ].filter(Boolean).join(' &nbsp;·&nbsp; ');
 
-  return `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Invoice ${esc(inv.number||'')}</title></head>
+  return `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${EST?'Estimate':'Invoice'} ${esc(inv.number||'')}</title></head>
 <body style="margin:0;padding:0;background:#f0faf6;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#0a1f18">
 <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:#f0faf6">
   <tr><td align="center" style="padding:24px 12px">
@@ -2239,7 +2396,7 @@ function buildInvoiceEmailHTML(j,inv,customMsg){
         ${co.address?`<div style="font-size:11.5px;color:rgba(255,255,255,0.75);margin-top:${logoFull?'12':'4'}px;letter-spacing:0.02em">${esc(co.address.replace(/\n/g,' · '))}</div>`:''}
       </td></tr>
       <tr><td style="padding:28px 32px 8px">
-        <div style="font-size:11px;font-weight:700;color:#7aa898;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:6px">Invoice ${esc(inv.number||'')}</div>
+        <div style="font-size:11px;font-weight:700;color:#7aa898;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:6px">${EST?'Estimate':'Invoice'} ${esc(inv.number||'')}</div>
         <h1 style="font-size:22px;font-weight:700;color:${P.primary};margin:0 0 18px;line-height:1.25">${greeting}</h1>
         <p style="font-size:14.5px;color:#3d6358;line-height:1.65;margin:0 0 8px">${intro}</p>
       </td></tr>
@@ -2251,8 +2408,8 @@ function buildInvoiceEmailHTML(j,inv,customMsg){
           <tr><td style="padding:14px 16px;background:#f0faf6;border-bottom:1px solid #e6f0eb">
             <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
               <tr>
-                <td style="font-size:11px;font-weight:700;color:#7aa898;text-transform:uppercase;letter-spacing:0.06em">Invoice Date</td>
-                <td style="font-size:11px;font-weight:700;color:#7aa898;text-transform:uppercase;letter-spacing:0.06em;text-align:right">${inv.dueDate?'Due Date':''}</td>
+                <td style="font-size:11px;font-weight:700;color:#7aa898;text-transform:uppercase;letter-spacing:0.06em">${EST?'Estimate Date':'Invoice Date'}</td>
+                <td style="font-size:11px;font-weight:700;color:#7aa898;text-transform:uppercase;letter-spacing:0.06em;text-align:right">${inv.dueDate?(EST?'Valid Until':'Due Date'):''}</td>
               </tr>
               <tr>
                 <td style="font-size:13.5px;color:#0a1f18;font-weight:600;padding-top:2px">${fmtDate(inv.date)||'—'}</td>
@@ -2298,17 +2455,18 @@ function buildInvoiceEmailHTML(j,inv,customMsg){
         ${co.license?`<div style="font-size:10.5px;color:#7aa898;margin-top:3px;letter-spacing:0.04em">License #${esc(co.license)}</div>`:''}
       </td></tr>
     </table>
-    <div style="font-size:11px;color:#7aa898;text-align:center;margin-top:14px">This invoice was sent from your ${esc(co.name||'Waterfront Solutions')} job tracker.</div>
+    <div style="font-size:11px;color:#7aa898;text-align:center;margin-top:14px">This ${EST?'estimate':'invoice'} was sent from your ${esc(co.name||'Waterfront Solutions')} job tracker.</div>
   </td></tr>
 </table>
 </body></html>`;
 }
 
-function buildInvoiceEmailText(j,inv,customMsg){
+function buildInvoiceEmailText(j,inv,customMsg,kind){
+  kind=kind||'invoice';const EST=kind==='estimate';
   const c=calcInvoice(inv);
   const co=COMPANY;
   const firstName=((j.customerName||'').trim().split(/\s+/)[0])||'there';
-  const intro=customMsg||`Thanks for letting ${co.name||'us'} work with you on ${j.name||'your project'}. Your invoice is ready — details below.`;
+  const intro=customMsg||(EST?`Thanks for considering ${co.name||'us'} for ${j.name||'your project'}. Your estimate is ready — details below. Let us know if you'd like to move forward.`:`Thanks for letting ${co.name||'us'} work with you on ${j.name||'your project'}. Your invoice is ready — details below.`);
   const items=(inv.items||[]).map(it=>{
     const amt=Number(it.qty||0)*Number(it.rate||0);
     return `  • ${(it.desc||'').padEnd(40)} ${(it.qty??'')+' × '+money(Number(it.rate||0))}   ${money(amt)}`;
@@ -2316,15 +2474,15 @@ function buildInvoiceEmailText(j,inv,customMsg){
   const lines=[
     `Hi ${firstName},`,'',
     intro,'',
-    `INVOICE ${inv.number||''}`,
+    `${EST?'ESTIMATE':'INVOICE'} ${inv.number||''}`,
     `Date: ${fmtDate(inv.date)||''}`,
-    inv.dueDate?`Due:  ${fmtDate(inv.dueDate)}`:'',
+    inv.dueDate?`${EST?'Valid until':'Due'}:  ${fmtDate(inv.dueDate)}`:'',
     '','Line Items:',items||'  (none)','',
     `Subtotal:   ${money(c.sub)}`,
     `Tax (${Number(inv.taxRate||0)}%):  ${money(c.tax)}`,
     `Total:      ${money(c.total)}`,
-    c.paid>0?`Paid:      -${money(c.paid)}`:'',
-    c.balance<=0.005?`PAID IN FULL — Thank you!`:`Balance Due: ${money(c.balance)}`,
+    EST?'':(c.paid>0?`Paid:      -${money(c.paid)}`:''),
+    EST?`ESTIMATED TOTAL: ${money(c.total)}`:(c.balance<=0.005?`PAID IN FULL — Thank you!`:`Balance Due: ${money(c.balance)}`),
     '',
     inv.notes?'Notes:\n'+inv.notes+'\n':'',
     `Questions? Just reply to this email${co.phone?' or call '+co.phone:''}. We appreciate your business!`,'',
@@ -2336,15 +2494,16 @@ function buildInvoiceEmailText(j,inv,customMsg){
   return lines.join('\n').replace(/\n{3,}/g,'\n\n');
 }
 
-function buildInvoiceEml(j,inv,customMsg){
+function buildInvoiceEml(j,inv,customMsg,kind){
+  kind=kind||'invoice';const EST=kind==='estimate';
   const co=COMPANY;
-  const subject=`Invoice ${inv.number||''} from ${co.name||'Waterfront Solutions'}`;
+  const subject=`${EST?'Estimate':'Invoice'} ${inv.number||''} from ${co.name||'Waterfront Solutions'}`;
   const fromName=co.name||'Waterfront Solutions';
   const fromEmail=co.email||'noreply@example.com';
   const toName=j.customerName||'';
   const toEmail=j.customerEmail||'';
-  const html=buildInvoiceEmailHTML(j,inv,customMsg);
-  const text=buildInvoiceEmailText(j,inv,customMsg);
+  const html=buildInvoiceEmailHTML(j,inv,customMsg,kind);
+  const text=buildInvoiceEmailText(j,inv,customMsg,kind);
   const bnd='----=_Boundary_'+Date.now().toString(36);
   // Use base64 encoding to safely handle Unicode & long lines
   const enc=s=>{
@@ -2400,13 +2559,14 @@ function downloadFile(filename,content,mime){
   setTimeout(()=>URL.revokeObjectURL(a.href),1000);
 }
 
-function emailInvoice(j,inv){showSendInvoiceModal(j,inv)}
+function emailInvoice(j,inv,kind){showSendInvoiceModal(j,inv,kind)}
 
-function showSendInvoiceModal(j,inv){
+function showSendInvoiceModal(j,inv,kind){
+  kind=kind||'invoice';const EST=kind==='estimate';
   const co=COMPANY;
-  const defaultSubject=`Invoice ${inv.number||''} from ${co.name||'Waterfront Solutions'}`;
-  $('modal-root').innerHTML=`<div class="modal-bd" id="mbd" role="dialog" aria-modal="true" aria-label="Send invoice"><div class="modal" style="max-width:680px"><div class="modal-handle"></div>
-    <div class="modal-head"><div class="modal-title">Send Invoice ${esc(inv.number||'')}</div><button class="modal-close" id="mc" aria-label="Close"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button></div>
+  const defaultSubject=`${EST?'Estimate':'Invoice'} ${inv.number||''} from ${co.name||'Waterfront Solutions'}`;
+  $('modal-root').innerHTML=`<div class="modal-bd" id="mbd" role="dialog" aria-modal="true" aria-label="Send ${EST?'estimate':'invoice'}"><div class="modal" style="max-width:680px"><div class="modal-handle"></div>
+    <div class="modal-head"><div class="modal-title">Send ${EST?'Estimate':'Invoice'} ${esc(inv.number||'')}</div><button class="modal-close" id="mc" aria-label="Close"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button></div>
     <div class="modal-body">
       <div class="form-row">
         <div class="form-group"><label class="form-label">To</label><input class="form-input" id="em-to" value="${esc(j.customerEmail||'')}" placeholder="customer@example.com"></div>
@@ -2449,7 +2609,7 @@ function showSendInvoiceModal(j,inv){
   function currentSubject(){return $('em-subject')?.value||''}
   function currentTo(){return $('em-to')?.value.trim()||''}
   function refreshPreview(){
-    const html=buildInvoiceEmailHTML(j,inv,currentMsg());
+    const html=buildInvoiceEmailHTML(j,inv,currentMsg(),kind);
     const f=$('em-iframe');if(!f)return;
     const d=f.contentDocument||f.contentWindow.document;
     d.open();d.write(html);d.close();
@@ -2457,7 +2617,7 @@ function showSendInvoiceModal(j,inv){
   function refreshSendLinks(){
     const to=currentTo();
     const subject=currentSubject();
-    const text=buildInvoiceEmailText(j,inv,currentMsg());
+    const text=buildInvoiceEmailText(j,inv,currentMsg(),kind);
     const enc=encodeURIComponent;
     const mailto=`mailto:${enc(to)}?subject=${enc(subject)}&body=${enc(text)}`;
     const gmail=`https://mail.google.com/mail/?view=cm&fs=1&to=${enc(to)}&su=${enc(subject)}&body=${enc(text)}`;
@@ -2473,25 +2633,25 @@ function showSendInvoiceModal(j,inv){
   $('mc').onclick=$('btn-cx').onclick=closeModal;
   $('mbd').onclick=e=>{if(e.target===e.currentTarget)closeModal()};
   $('em-mailto').onclick=async()=>{
-    if(!inv.sent){inv.sent=Date.now();if(inv.status==='draft')inv.status='sent';await writeJob(j);await logAct('emailed invoice '+(inv.number||'')+' for',j.name)}
+    if(!inv.sent){inv.sent=Date.now();if(inv.status==='draft')inv.status='sent';await writeJob(j);await logAct('emailed '+(EST?'estimate':'invoice')+' '+(inv.number||'')+' for',j.name)}
   };
   $('em-gmail').onclick=async()=>{
-    if(!inv.sent){inv.sent=Date.now();if(inv.status==='draft')inv.status='sent';await writeJob(j);await logAct('emailed invoice '+(inv.number||'')+' for',j.name)}
+    if(!inv.sent){inv.sent=Date.now();if(inv.status==='draft')inv.status='sent';await writeJob(j);await logAct('emailed '+(EST?'estimate':'invoice')+' '+(inv.number||'')+' for',j.name)}
   };
   $('em-copy').onclick=async()=>{
-    const ok=await copyHtmlToClipboard(buildInvoiceEmailHTML(j,inv,currentMsg()),buildInvoiceEmailText(j,inv,currentMsg()));
+    const ok=await copyHtmlToClipboard(buildInvoiceEmailHTML(j,inv,currentMsg(),kind),buildInvoiceEmailText(j,inv,currentMsg(),kind));
     if(ok){
-      if(!inv.sent){inv.sent=Date.now();if(inv.status==='draft')inv.status='sent';await writeJob(j);await logAct('prepared invoice '+(inv.number||'')+' to send for',j.name)}
+      if(!inv.sent){inv.sent=Date.now();if(inv.status==='draft')inv.status='sent';await writeJob(j);await logAct('prepared '+(EST?'estimate':'invoice')+' '+(inv.number||'')+' to send for',j.name)}
       toast('Copied — paste into your email');
     }else{toast('Copy failed','')}
   };
   $('em-eml').onclick=async()=>{
-    const eml=buildInvoiceEml(j,inv,currentMsg());
-    downloadFile(`Invoice-${inv.number||'draft'}.eml`,eml,'message/rfc822');
-    if(!inv.sent){inv.sent=Date.now();if(inv.status==='draft')inv.status='sent';await writeJob(j);await logAct('downloaded invoice '+(inv.number||'')+' draft for',j.name)}
+    const eml=buildInvoiceEml(j,inv,currentMsg(),kind);
+    downloadFile(`${EST?'Estimate':'Invoice'}-${inv.number||'draft'}.eml`,eml,'message/rfc822');
+    if(!inv.sent){inv.sent=Date.now();if(inv.status==='draft')inv.status='sent';await writeJob(j);await logAct('downloaded '+(EST?'estimate':'invoice')+' '+(inv.number||'')+' draft for',j.name)}
     toast('.eml downloaded — open it to send');
   };
-  $('em-print').onclick=()=>printInvoice(j,inv);
+  $('em-print').onclick=()=>printInvoice(j,inv,kind);
 }
 
 // ══ Reports ══
@@ -3192,6 +3352,7 @@ function renderDetail(id){
     {id:'docs',label:'Files',count:(j.documents||[]).length},
     {id:'receipts',label:'Receipts',count:(j.receipts||[]).length},
     {id:'invoices',label:'Invoices',count:(j.invoices||[]).length},
+    {id:'estimates',label:'Estimates',count:(j.estimates||[]).length},
     {id:'financial',label:'Financials'},
     {id:'comms',label:'Comms',count:(j.comms||[]).length},
     {id:'notes',label:'Notes',count:(j.notes||[]).length},
@@ -3267,6 +3428,7 @@ function triggerQuickAdd(tab){
     else if(tab==='docs')$('doc-upload')?.click();
     else if(tab==='receipts')$('rcpt-amount')?.focus();
     else if(tab==='invoices')$('btn-new-inv')?.click();
+    else if(tab==='estimates')$('btn-new-est')?.click();
     else if(tab==='log'||tab==='comms'){const f=document.querySelector('#tab-content input,#tab-content textarea,#tab-content select');if(f){f.focus();f.scrollIntoView({block:'center'});}}
   },50);
 }
@@ -3299,6 +3461,7 @@ function renderDetailTab(j,tab){
           ${statCell('Files','docs',(j.documents||[]).length,true)}
           ${statCell('Receipts','receipts',money2(receiptTotal(j)),true)}
           ${statCell('Invoices','invoices',(j.invoices||[]).length,true)}
+          ${statCell('Estimates','estimates',(j.estimates||[]).length,true)}
           ${statCell('Comms','comms',(j.comms||[]).length,true)}
           ${statCell('Notes','notes',(j.notes||[]).length,true)}
           ${statCell('Balance Due','financial',money(balance),false,balance>0?'var(--orange)':'var(--green-700)')}
@@ -3576,6 +3739,31 @@ function renderDetailTab(j,tab){
         <button class="btn-post" id="btn-new-inv" style="margin-top:6px">+ New Invoice</button>
       </div>`;
   }
+  if(tab==='estimates'){
+    const ests=(j.estimates||[]).slice().sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+    return `
+      <div class="section">
+        <div class="section-hd" style="margin-bottom:12px">Estimates <span>${ests.length}</span></div>
+        <div class="invoice-list">
+          ${ests.length===0?'<p style="font-size:13px;color:var(--text-3);padding:4px 0">No estimates yet. Create one — it uses the same letterhead as your invoices and sends the same way.</p>'
+            :ests.map(e=>{
+              const c=calcInvoice(e);
+              const st=e.status||'draft';
+              return `<div class="invoice-row ${st}" data-est-id="${esc(e.id)}">
+                <div class="invoice-row-main">
+                  <div class="invoice-num">${esc(e.number||'')} <span class="invoice-status ${st}">${st}</span></div>
+                  <div class="invoice-meta">${fmtDate(e.date)}${e.dueDate?' · valid until '+fmtDate(e.dueDate):''} · ${(e.items||[]).length} item${(e.items||[]).length!==1?'s':''}</div>
+                </div>
+                <div class="invoice-row-amt">
+                  <div class="invoice-row-total">${money(c.total)}</div>
+                  <div class="invoice-row-bal">estimate</div>
+                </div>
+              </div>`;
+            }).join('')}
+        </div>
+        <button class="btn-post" id="btn-new-est" style="margin-top:6px">+ New Estimate</button>
+      </div>`;
+  }
   if(tab==='notes'){
     const notesHtml=(j.notes||[]).length===0?`<p style="font-size:13px;color:var(--text-3);padding:4px 0">No notes yet — be the first to add one.</p>`
       :(j.notes||[]).slice().reverse().map(n=>`<div class="note-card"><div class="note-meta"><div class="note-avatar">${initials(n.user)}</div>${esc(n.user)} · ${ago(n.time)}</div><div class="note-text">${esc(n.text)}</div></div>`).join('');
@@ -3802,6 +3990,7 @@ function renderTime(){
       <div class="tt-field"><label>Note (optional)</label><input id="tt-note" placeholder="e.g. framing the deck"></div>
       <button class="tt-clockin-btn" id="tt-clockin">Clock In</button>
     </div>
+    ${(!gateOn()||canSeeAll(SESSION))?`<button class="tt-payroll-btn" id="tt-payroll" type="button"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>Export payroll for Gusto</button>`:''}
     <div class="section-hd">On the clock now</div>
     ${activeHtml}
     <div class="section-hd" style="margin-top:20px">Labor cost by job</div>
@@ -3858,6 +4047,94 @@ function showTimeModal(entry){
     await deleteTimeEntryDB(t.id);closeModal();render();
     const restore=async()=>{await writeTimeEntry(backup);render();toast('Entry restored')};
     UNDO.push(restore);toast('Entry deleted','undo',restore);
+  };
+}
+
+// ── Payroll export (crew hours → Gusto) ──
+// No live API: a static page can't hold Gusto's OAuth secret or call its API
+// (CORS), so this produces a payroll-ready CSV / copyable table you enter into
+// Gusto. Read-only — never alters time entries, invoices, or estimates.
+let PAYROLL_RANGE=null;
+function payrollData(fromKey,toKey){
+  const within=t=>{const k=dateKey(t.start);return (!fromKey||k>=fromKey)&&(!toKey||k<=toKey)};
+  const byMember={};
+  timeList().forEach(t=>{
+    if(!t.end)return;            // only completed sessions count toward payroll
+    if(!within(t))return;
+    const m=t.member||'(unassigned)';
+    const e=byMember[m]||(byMember[m]={member:m,ms:0,days:{}});
+    const d=entryDur(t);e.ms+=d;const k=dateKey(t.start);e.days[k]=(e.days[k]||0)+d;
+  });
+  const rows=Object.values(byMember).map(e=>{
+    const hours=e.ms/3600000,rate=rateOf(e.member);
+    return {member:e.member,hours,rate,gross:hours*rate,days:Object.keys(e.days).sort().map(k=>({date:k,hours:e.days[k]/3600000}))};
+  }).sort((a,b)=>a.member.localeCompare(b.member));
+  return {rows,totalHours:rows.reduce((s,r)=>s+r.hours,0),totalGross:rows.reduce((s,r)=>s+r.gross,0)};
+}
+function csvCell(s){s=String(s==null?'':s);return /[",\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s}
+function payrollSummaryCSV(data,anyRates){
+  const lines=[['Employee','Total Hours'].concat(anyRates?['Hourly Rate','Gross Pay']:[])];
+  data.rows.forEach(r=>lines.push([r.member,r.hours.toFixed(2)].concat(anyRates?[r.rate?r.rate.toFixed(2):'',r.rate?r.gross.toFixed(2):'']:[])));
+  return lines.map(r=>r.map(csvCell).join(',')).join('\r\n');
+}
+function payrollDailyCSV(data,anyRates){
+  const lines=[['Employee','Date','Hours'].concat(anyRates?['Hourly Rate','Gross Pay']:[])];
+  data.rows.forEach(r=>r.days.forEach(d=>lines.push([r.member,d.date,d.hours.toFixed(2)].concat(anyRates?[r.rate?r.rate.toFixed(2):'',r.rate?(d.hours*r.rate).toFixed(2):'']:[]))));
+  return lines.map(r=>r.map(csvCell).join(',')).join('\r\n');
+}
+function payrollFileBase(fromKey,toKey){
+  const co=((ACTIVE_CO&&ACTIVE_CO.label)||'company').replace(/[^a-z0-9]+/gi,'-').replace(/^-|-$/g,'');
+  return 'Payroll-'+co+'-'+fromKey+'_to_'+toKey;
+}
+function showPayrollModal(){
+  if(gateOn()&&!canSeeAll(SESSION)){toast('Only managers and owners can run payroll','');return}
+  if(!S.members.length){toast('Add team members first','');return}
+  const today=dateKey(new Date());
+  const start=new Date();start.setDate(start.getDate()-13);
+  const def=PAYROLL_RANGE||{from:dateKey(start),to:today};
+  renderPayrollModal(def.from,def.to);
+}
+function renderPayrollModal(fromKey,toKey){
+  PAYROLL_RANGE={from:fromKey,to:toKey};
+  const data=payrollData(fromKey,toKey);
+  const anyRates=S.members.some(m=>rateOf(m)>0)||data.rows.some(r=>r.rate>0);
+  const cols=anyRates?4:2;
+  const rowsHtml=data.rows.length?data.rows.map(r=>`<tr><td>${esc(r.member)}</td><td class="num">${r.hours.toFixed(2)}</td>${anyRates?`<td class="num">${r.rate?money2(r.rate):'—'}</td><td class="num">${r.rate?money2(r.gross):'—'}</td>`:''}</tr>`).join(''):`<tr><td colspan="${cols}" style="text-align:center;color:var(--text-3);padding:14px">No tracked hours in this range</td></tr>`;
+  const dailyHtml=data.rows.length?data.rows.map(r=>`<div style="margin-top:10px"><div style="font-weight:600;font-size:12.5px;display:flex;justify-content:space-between"><span>${esc(r.member)}</span><span>${r.hours.toFixed(2)} h${r.rate?' · '+money2(r.gross):''}</span></div>${r.days.map(d=>`<div style="display:flex;justify-content:space-between;font-size:11.5px;color:var(--text-3);padding:1px 0 1px 8px"><span>${esc(fmtDate(d.date))}</span><span>${d.hours.toFixed(2)} h</span></div>`).join('')}</div>`).join(''):'<div class="tt-empty">No hours.</div>';
+  $('modal-root').innerHTML=`<div class="modal-bd" id="mbd" role="dialog" aria-modal="true" aria-label="Payroll export"><div class="modal" style="max-width:640px"><div class="modal-handle"></div>
+    <div class="modal-head"><div class="modal-title">Payroll Export — ${esc(ACTIVE_CO.label)}</div><button class="modal-close" id="mc" aria-label="Close"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button></div>
+    <div class="modal-body">
+      <p style="font-size:12.5px;color:var(--text-2);line-height:1.55;margin-bottom:12px">Total tracked crew hours for the pay period. Download the summary as CSV (or copy it) and enter the hours into Gusto when you run payroll. Read-only — it never changes time entries, invoices, or estimates.</p>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">From</label><input class="form-input" type="date" id="pr-from" value="${esc(fromKey)}"></div>
+        <div class="form-group"><label class="form-label">To</label><input class="form-input" type="date" id="pr-to" value="${esc(toKey)}"></div>
+      </div>
+      <div style="overflow-x:auto;-webkit-overflow-scrolling:touch"><table class="admin-table">
+        <thead><tr><th>Employee</th><th class="num">Hours</th>${anyRates?'<th class="num">Rate</th><th class="num">Gross</th>':''}</tr></thead>
+        <tbody>${rowsHtml}
+          <tr class="total-row"><td>Total</td><td class="num">${data.totalHours.toFixed(2)}</td>${anyRates?`<td></td><td class="num">${money2(data.totalGross)}</td>`:''}</tr>
+        </tbody></table></div>
+      ${anyRates?'':'<div class="tt-hint" style="margin-top:10px">Set hourly rates on the Team tab to include gross pay.</div>'}
+      <div class="section-hd" style="margin-top:16px">Daily breakdown</div>
+      ${dailyHtml}
+    </div>
+    <div class="modal-foot">
+      <button class="btn-cancel" id="btn-cx">Close</button>
+      <button class="btn-sm" id="pr-copy" type="button">Copy summary</button>
+      <button class="btn-sm" id="pr-daily" type="button">Daily CSV</button>
+      <button class="btn-save" id="pr-csv" type="button">Download for Gusto</button>
+    </div>
+  </div></div>`;
+  $('mc').onclick=$('btn-cx').onclick=()=>closeModal();
+  $('mbd').onclick=e=>{if(e.target===e.currentTarget)closeModal()};
+  $('pr-from').onchange=()=>renderPayrollModal($('pr-from').value,$('pr-to').value);
+  $('pr-to').onchange=()=>renderPayrollModal($('pr-from').value,$('pr-to').value);
+  $('pr-csv').onclick=()=>{downloadFile(payrollFileBase(fromKey,toKey)+'.csv',payrollSummaryCSV(data,anyRates),'text/csv;charset=utf-8');toast('Payroll CSV downloaded')};
+  $('pr-daily').onclick=()=>{downloadFile(payrollFileBase(fromKey,toKey)+'-daily.csv',payrollDailyCSV(data,anyRates),'text/csv;charset=utf-8');toast('Daily CSV downloaded')};
+  $('pr-copy').onclick=async()=>{
+    const head=['Employee','Hours'].concat(anyRates?['Rate','Gross']:[]);
+    const tsv=[head].concat(data.rows.map(r=>[r.member,r.hours.toFixed(2)].concat(anyRates?[r.rate?r.rate.toFixed(2):'',r.rate?r.gross.toFixed(2):'']:[]))).map(r=>r.join('\t')).join('\n');
+    try{await navigator.clipboard.writeText(tsv);toast('Copied — paste into a sheet or Gusto')}catch(e){toast('Copy failed','')}
   };
 }
 
@@ -4065,20 +4342,41 @@ function defaultInvoice(j){
   };
 }
 
-function showInvoiceModal(jobId,invoiceId){
+function defaultEstimate(j){
+  const today=dateKey(new Date());
+  const exp=new Date();exp.setDate(exp.getDate()+30);
+  return {
+    id:'est_'+Date.now()+'_'+Math.random().toString(36).slice(2,6),
+    number:nextEstimateNumber(),
+    date:today,
+    dueDate:dateKey(exp),
+    items:[{desc:j.name||'Proposed work',qty:1,rate:Number(j.value||0)||0}],
+    taxRate:COMPANY.taxRate||'',
+    notes:'',
+    terms:COMPANY.terms||'',
+    photos:[],
+    status:'draft',
+    created:Date.now(),
+  };
+}
+
+function showInvoiceModal(jobId,invoiceId,kind){
+  kind=kind||'invoice';
   const j=S.jobs[jobId];if(!j)return;
+  const arr=kind==='estimate'?(j.estimates||[]):(j.invoices||[]);
   let inv;
   if(invoiceId){
-    inv=(j.invoices||[]).find(i=>i.id===invoiceId);
+    inv=arr.find(i=>i.id===invoiceId);
     if(!inv)return;
     INV_DRAFT=JSON.parse(JSON.stringify(inv));
   }else{
-    INV_DRAFT=defaultInvoice(j);
+    INV_DRAFT=kind==='estimate'?defaultEstimate(j):defaultInvoice(j);
   }
-  renderInvoiceModal(jobId,!!invoiceId);
+  renderInvoiceModal(jobId,!!invoiceId,kind);
 }
 
-function renderInvoiceModal(jobId,isEdit){
+function renderInvoiceModal(jobId,isEdit,kind){
+  kind=kind||'invoice';const EST=kind==='estimate';
   const inv=INV_DRAFT;
   const c=calcInvoice(inv);
   const itemsHtml=(inv.items||[]).map((it,i)=>`<div class="li-row" data-li="${i}">
@@ -4090,21 +4388,21 @@ function renderInvoiceModal(jobId,isEdit){
   </div>`).join('');
 
   $('modal-root').innerHTML=`<div class="modal-bd" id="mbd" role="dialog" aria-modal="true" aria-label="Invoice editor"><div class="modal"><div class="modal-handle"></div>
-    <div class="modal-head"><div class="modal-title">${isEdit?'Edit Invoice':'New Invoice'}</div><button class="modal-close" id="mc" aria-label="Close"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button></div>
+    <div class="modal-head"><div class="modal-title">${isEdit?(EST?'Edit Estimate':'Edit Invoice'):(EST?'New Estimate':'New Invoice')}</div><button class="modal-close" id="mc" aria-label="Close"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button></div>
     <div class="modal-body">
       <div class="form-row">
-        <div class="form-group"><label class="form-label">Invoice #</label><input class="form-input" id="inv-num" value="${esc(inv.number||'')}"></div>
+        <div class="form-group"><label class="form-label">${EST?'Estimate #':'Invoice #'}</label><input class="form-input" id="inv-num" value="${esc(inv.number||'')}"></div>
         <div class="form-group"><label class="form-label">Status</label>
           <select class="form-select" id="inv-status">
             <option value="draft" ${inv.status==='draft'?'selected':''}>Draft</option>
             <option value="sent" ${inv.status==='sent'?'selected':''}>Sent</option>
-            <option value="paid" ${inv.status==='paid'?'selected':''}>Paid</option>
+            ${EST?`<option value="accepted" ${inv.status==='accepted'?'selected':''}>Accepted</option><option value="declined" ${inv.status==='declined'?'selected':''}>Declined</option>`:`<option value="paid" ${inv.status==='paid'?'selected':''}>Paid</option>`}
           </select>
         </div>
       </div>
       <div class="form-row">
-        <div class="form-group"><label class="form-label">Invoice Date</label><input class="form-input" type="date" id="inv-date" value="${esc(inv.date||'')}"></div>
-        <div class="form-group"><label class="form-label">Due Date</label><input class="form-input" type="date" id="inv-due" value="${esc(inv.dueDate||'')}"></div>
+        <div class="form-group"><label class="form-label">${EST?'Estimate Date':'Invoice Date'}</label><input class="form-input" type="date" id="inv-date" value="${esc(inv.date||'')}"></div>
+        <div class="form-group"><label class="form-label">${EST?'Valid Until':'Due Date'}</label><input class="form-input" type="date" id="inv-due" value="${esc(inv.dueDate||'')}"></div>
       </div>
       <div class="form-group"><label class="form-label">Line Items</label>
         <div class="li-head"><div>Description</div><div>Qty</div><div>Rate</div><div>Amount</div><div></div></div>
@@ -4113,20 +4411,20 @@ function renderInvoiceModal(jobId,isEdit){
       </div>
       <div class="form-row">
         <div class="form-group"><label class="form-label">Tax Rate (%)</label><input class="form-input" type="number" step="0.01" id="inv-tax" value="${esc(inv.taxRate??'')}"></div>
-        <div class="form-group"><label class="form-label">Amount Paid</label><input class="form-input" type="number" step="0.01" id="inv-paid" value="${esc(inv.paid??'')}"></div>
+        ${EST?'':`<div class="form-group"><label class="form-label">Amount Paid</label><input class="form-input" type="number" step="0.01" id="inv-paid" value="${esc(inv.paid??'')}"></div>`}
       </div>
       <div class="inv-totals" id="inv-totals">
         <div class="inv-total-row"><span>Subtotal</span><span class="v" id="t-sub">${money(c.sub)}</span></div>
         <div class="inv-total-row"><span>Tax (${Number(inv.taxRate||0)}%)</span><span class="v" id="t-tax">${money(c.tax)}</span></div>
         <div class="inv-total-row grand"><span>Total</span><span class="v" id="t-total">${money(c.total)}</span></div>
-        <div class="inv-total-row" style="color:var(--text-3);margin-top:4px"><span>Paid</span><span class="v" id="t-paid">${money(c.paid)}</span></div>
-        <div class="inv-total-row" style="font-weight:700"><span>Balance Due</span><span class="v" id="t-bal">${money(c.balance)}</span></div>
+        ${EST?'':`<div class="inv-total-row" style="color:var(--text-3);margin-top:4px"><span>Paid</span><span class="v" id="t-paid">${money(c.paid)}</span></div>
+        <div class="inv-total-row" style="font-weight:700"><span>Balance Due</span><span class="v" id="t-bal">${money(c.balance)}</span></div>`}
       </div>
-      <div class="form-group"><label class="form-label">Notes (visible on invoice)</label>
+      <div class="form-group"><label class="form-label">Notes (visible on ${EST?'estimate':'invoice'})</label>
         <div class="textarea-with-mic"><textarea class="form-textarea" id="inv-notes" placeholder="Additional notes for the customer…">${esc(inv.notes||'')}</textarea>${micButton('#inv-notes')}</div>
       </div>
       <div class="form-group"><label class="form-label">Payment Terms</label><textarea class="form-textarea" id="inv-terms">${esc(inv.terms||'')}</textarea></div>
-      <div class="form-group"><label class="form-label">Photos / Attachments <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text-3);font-size:11px">attached to the printed / PDF invoice</span></label>
+      <div class="form-group"><label class="form-label">Photos / Attachments <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text-3);font-size:11px">attached to the printed / PDF ${EST?'estimate':'invoice'}</span></label>
         <div class="inv-photos" id="inv-photos"></div>
         <label class="photo-add-btn" style="aspect-ratio:auto;padding:12px;flex-direction:row;gap:8px">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z"/><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zM18.75 10.5h.008v.008h-.008V10.5z"/></svg>
@@ -4240,15 +4538,14 @@ function renderInvoiceModal(jobId,isEdit){
     // Drop empty trailing items
     INV_DRAFT.items=(INV_DRAFT.items||[]).filter(it=>(it.desc&&it.desc.trim())||Number(it.qty||0)!==0||Number(it.rate||0)!==0);
     if(INV_DRAFT.items.length===0){toast('Add at least one line item','');return null}
-    j.invoices=j.invoices||[];
-    const existing=j.invoices.findIndex(i=>i.id===INV_DRAFT.id);
-    if(existing>=0)j.invoices[existing]=INV_DRAFT;else j.invoices.push(INV_DRAFT);
-    // Update aggregate invoiced/paid totals on the job for the financial summary
-    const tot=invoiceTotals(j);
-    j.invoiced=tot.total;
-    j.paid=tot.paid;
+    const key=EST?'estimates':'invoices';
+    j[key]=j[key]||[];
+    const existing=j[key].findIndex(i=>i.id===INV_DRAFT.id);
+    if(existing>=0)j[key][existing]=INV_DRAFT;else j[key].push(INV_DRAFT);
+    // Invoices update the job's aggregate invoiced/paid totals; estimates never do.
+    if(!EST){const tot=invoiceTotals(j);j.invoiced=tot.total;j.paid=tot.paid;}
     await writeJob(j);
-    await logAct(existing>=0?'updated invoice on':'created invoice on',j.name);
+    await logAct((existing>=0?'updated ':'created ')+(EST?'estimate':'invoice')+' on',j.name);
     return INV_DRAFT;
   }
 
@@ -4258,32 +4555,35 @@ function renderInvoiceModal(jobId,isEdit){
   };
   $('inv-print').onclick=async()=>{
     const saved=await saveInvoice();
-    if(saved){INV_DRAFT=null;closeModal();render();printInvoice(S.jobs[jobId],saved)}
+    if(saved){INV_DRAFT=null;closeModal();render();printInvoice(S.jobs[jobId],saved,kind)}
   };
   $('inv-send').onclick=async()=>{
     const saved=await saveInvoice();
-    if(saved){INV_DRAFT=null;closeModal();render();showSendInvoiceModal(S.jobs[jobId],saved)}
+    if(saved){INV_DRAFT=null;closeModal();render();showSendInvoiceModal(S.jobs[jobId],saved,kind)}
   };
   if(isEdit){
     $('inv-del').onclick=async()=>{
       const j=S.jobs[jobId];if(!j)return;
+      const key=EST?'estimates':'invoices';
       const backup=JSON.parse(JSON.stringify(INV_DRAFT));
-      j.invoices=(j.invoices||[]).filter(i=>i.id!==INV_DRAFT.id);
-      const tot=invoiceTotals(j);j.invoiced=tot?tot.total:0;j.paid=tot?tot.paid:0;
-      await writeJob(j);await logAct('deleted invoice on',j.name);
+      j[key]=(j[key]||[]).filter(i=>i.id!==INV_DRAFT.id);
+      if(!EST){const tot=invoiceTotals(j);j.invoiced=tot?tot.total:0;j.paid=tot?tot.paid:0;}
+      await writeJob(j);await logAct('deleted '+(EST?'estimate':'invoice')+' on',j.name);
       INV_DRAFT=null;closeModal();render();
-      const restore=async()=>{const jj=S.jobs[jobId];if(jj){jj.invoices=jj.invoices||[];jj.invoices.push(backup);const t=invoiceTotals(jj);jj.invoiced=t.total;jj.paid=t.paid;await writeJob(jj);render();toast('Invoice restored')}};
+      const restore=async()=>{const jj=S.jobs[jobId];if(jj){jj[key]=jj[key]||[];jj[key].push(backup);if(!EST){const t=invoiceTotals(jj);jj.invoiced=t.total;jj.paid=t.paid;}await writeJob(jj);render();toast((EST?'Estimate':'Invoice')+' restored')}};
       UNDO.push(restore);
-      toast('Invoice deleted','undo',restore);
+      toast((EST?'Estimate':'Invoice')+' deleted','undo',restore);
     };
   }
 }
 
 // ══ Printable invoice with company letterhead ══
-function printInvoice(j,inv){
+function printInvoice(j,inv,kind){
+  kind=kind||'invoice';const EST=kind==='estimate';
   const w=window.open('','_blank');
   if(!w){toast('Pop-up blocked — allow pop-ups to print','');return}
   const c=calcInvoice(inv);
+  const stText=EST?(inv.status||'draft'):invoiceStatus(inv);
   const logoSrc=getBrandLogoSrc();
   const co=COMPANY;
   const P=invTheme();
@@ -4317,8 +4617,10 @@ function printInvoice(j,inv){
       .lh-r .num{font-size:13px;color:#555;margin-top:6px}
       .lh-r .status{display:inline-block;margin-top:8px;font-size:10.5px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;padding:4px 12px;border-radius:20px;background:#fef3c7;color:#92400e}
       .lh-r .status.paid{background:#dcfce7;color:#166534}
+      .lh-r .status.accepted{background:#dcfce7;color:#166534}
       .lh-r .status.draft{background:#f1f5f9;color:#475569}
       .lh-r .status.overdue{background:#fee2e2;color:#991b1b}
+      .lh-r .status.declined{background:#fee2e2;color:#991b1b}
       .meta{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:24px}
       .meta-box .lbl{font-size:9.5px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#888;margin-bottom:4px}
       .meta-box .v{font-size:13px;color:#0a1f18;line-height:1.5}
@@ -4366,21 +4668,21 @@ function printInvoice(j,inv){
         </div>`}
       </div>
       <div class="lh-r">
-        <div class="title">INVOICE</div>
+        <div class="title">${EST?'ESTIMATE':'INVOICE'}</div>
         <div class="num">${esc(inv.number||'')}</div>
-        <div class="status ${invoiceStatus(inv)}">${invoiceStatus(inv)}</div>
+        <div class="status ${stText}">${stText}</div>
       </div>
     </header>
     <section class="meta">
       <div class="meta-box">
-        <div class="lbl">Bill To</div>
+        <div class="lbl">${EST?'Prepared For':'Bill To'}</div>
         <div class="v"><strong>${esc(j.customerName||'Customer')}</strong>${j.billingAddress?'\n'+esc(j.billingAddress):(j.address?'\n'+esc(j.address):'')}${j.customerPhone?'\n'+esc(j.customerPhone):''}${j.customerEmail?'\n'+esc(j.customerEmail):''}</div>
       </div>
       <div class="meta-box">
         <div class="lbl">Project</div>
         <div class="v"><strong>${esc(j.name||'')}</strong>${j.address?'\n'+esc(j.address):''}</div>
-        <div style="margin-top:12px"><div class="lbl">Invoice Date</div><div class="v">${fmtDate(inv.date)||''}</div></div>
-        ${inv.dueDate?`<div style="margin-top:8px"><div class="lbl">Due Date</div><div class="v">${fmtDate(inv.dueDate)}</div></div>`:''}
+        <div style="margin-top:12px"><div class="lbl">${EST?'Estimate Date':'Invoice Date'}</div><div class="v">${fmtDate(inv.date)||''}</div></div>
+        ${inv.dueDate?`<div style="margin-top:8px"><div class="lbl">${EST?'Valid Until':'Due Date'}</div><div class="v">${fmtDate(inv.dueDate)}</div></div>`:''}
       </div>
     </section>
     <table>
@@ -4391,8 +4693,10 @@ function printInvoice(j,inv){
       <div class="row"><span>Subtotal</span><span class="v">${money(c.sub)}</span></div>
       <div class="row"><span>Tax (${Number(inv.taxRate||0)}%)</span><span class="v">${money(c.tax)}</span></div>
       <div class="row grand"><span>Total</span><span class="v">${money(c.total)}</span></div>
-      ${c.paid>0?`<div class="row"><span>Paid</span><span class="v">-${money(c.paid)}</span></div>`:''}
-      <div class="due ${c.balance<=0.005?'zero':''}"><span>${c.balance<=0.005?'Paid in Full':'Balance Due'}</span><span class="v">${money(Math.max(0,c.balance))}</span></div>
+      ${EST
+        ?`<div class="due zero"><span>Estimated Total${inv.dueDate?' · valid until '+fmtDate(inv.dueDate):''}</span><span class="v">${money(c.total)}</span></div>`
+        :`${c.paid>0?`<div class="row"><span>Paid</span><span class="v">-${money(c.paid)}</span></div>`:''}
+      <div class="due ${c.balance<=0.005?'zero':''}"><span>${c.balance<=0.005?'Paid in Full':'Balance Due'}</span><span class="v">${money(Math.max(0,c.balance))}</span></div>`}
     </div>
     ${inv.notes?`<div class="notes"><div class="lbl">Notes</div>${esc(inv.notes).replace(/\n/g,'<br>')}</div>`:''}
     ${inv.terms?`<div class="terms">${esc(inv.terms)}</div>`:''}
@@ -4423,7 +4727,7 @@ function showSettingsModal(){
       <div class="form-group"><label class="form-label">Default Tax Rate (%)</label><input class="form-input" type="number" step="0.01" id="set-co-tax" value="${esc(c.taxRate||'')}"></div>
       <div class="form-group"><label class="form-label">Default Invoice Terms</label><textarea class="form-textarea" id="set-co-terms">${esc(c.terms||'')}</textarea></div>
       <div style="margin:14px 0 10px;padding-top:14px;border-top:1px solid var(--border)"><div class="form-label" style="font-size:12px">Team Access &amp; Roles</div></div>
-      ${accessEnabled()
+      ${(FB_AUTH_ON||accessEnabled())
         ? `<div class="tt-hint" style="margin-bottom:10px">Signed in as <strong>${esc(SESSION?SESSION.name:'?')}</strong> · ${esc(SESSION?SESSION.role:'')}${SESSION&&!canSeeAll(SESSION)?' · '+esc((COMPANIES[SESSION.company]||{}).label||SESSION.company):' · all companies'}</div>
            <div style="display:flex;gap:8px;flex-wrap:wrap">${isOwnerRole(SESSION)?'<button class="btn-sm" id="set-access" type="button">Manage team access</button>':''}<button class="btn-sm" id="set-signout" type="button">Sign out</button></div>`
         : `<div class="tt-hint" style="margin-bottom:10px">Access control is <strong>off</strong> — anyone can open any company. Turn it on to lock each worker to their company and give owners &amp; managers the full view.</div>
@@ -4455,7 +4759,7 @@ function showSettingsModal(){
 
 // ══ Company Switcher ══
 function showCompanySwitcher(){
-  if(accessEnabled()&&!canSeeAll(SESSION)){toast('You only have access to '+ACTIVE_CO.label,'');return}
+  if(gateOn()&&!canSeeAll(SESSION)){toast('You only have access to '+ACTIVE_CO.label,'');return}
   const cur=OWNER_MODE?'owner':COMPANY_ID;
   const rows=Object.values(COMPANIES).map(co=>`
     <button class="co-pick${co.id===cur?' active':''}" data-co="${esc(co.id)}">
@@ -4507,10 +4811,11 @@ function showLockScreen(msg){
   document.getElementById('lock-go').onclick=tryIn;
   pin.onkeydown=e=>{if(e.key==='Enter')tryIn()};
 }
-function signOut(){try{localStorage.removeItem(SESSION_KEY)}catch(e){}location.reload()}
+function signOut(){if(FB_AUTH_ON){try{firebase.auth().signOut()}catch(e){}return}try{localStorage.removeItem(SESSION_KEY)}catch(e){}location.reload()}
 
 let ACCESS_DRAFT=null;
 function showAccessModal(){
+  if(FB_AUTH_ON){return showFbUserAdmin();}
   if(accessEnabled()&&!isOwnerRole(SESSION)){toast('Only owners can manage access','');return}
   ACCESS_DRAFT=ACCESS?JSON.parse(JSON.stringify(ACCESS)):{enabled:false,members:[]};
   ACCESS_DRAFT.members=ACCESS_DRAFT.members||[];
@@ -4599,9 +4904,10 @@ function cmdItems(){
   // Actions
   out.push({type:'action',name:'New Job',sub:'Create a job',ico:'plus',run:()=>showJobModal('add')});
   out.push({type:'action',name:'New Invoice',sub:'Pick a job, then create invoice',ico:'invoice',run:()=>showJobPickerModal(jobId=>showInvoiceModal(jobId))});
+  out.push({type:'action',name:'New Estimate',sub:'Pick a job, then create an estimate',ico:'invoice',run:()=>showJobPickerModal(jobId=>showInvoiceModal(jobId,null,'estimate'))});
   out.push({type:'action',name:'New Referral',sub:'Log a referred lead & payout',ico:'plus',run:()=>showReferralModal('add')});
   out.push({type:'action',name:'Settings & Company Info',sub:'Edit name, logo, invoice defaults',ico:'kbd',run:showSettingsModal});
-  if(!accessEnabled()||canSeeAll(SESSION)){
+  if(!gateOn()||canSeeAll(SESSION)){
     out.push({type:'action',name:'Switch company / workspace',sub:'Waterfront · Manufactured Housing · Norris Lake · Owner',ico:'link',run:showCompanySwitcher});
     if(!OWNER_MODE)out.push({type:'action',name:'Owner workspace',sub:'Analytics across all companies',ico:'chart',run:()=>{try{localStorage.setItem('jt_company','owner')}catch(e){};location.reload()}});
   }
@@ -4847,7 +5153,7 @@ function attachHandlers(){
   $('user-btn').onclick=showSettingsModal;
   $('setup-link').onclick=showSetupModal;
   const _bco=$('brand-co');if(_bco)_bco.textContent=OWNER_MODE?'All Companies':ACTIVE_CO.label;
-  const _bsw=$('brand-switch');if(_bsw){if(accessEnabled()&&!canSeeAll(SESSION)){_bsw.style.display='none';}else{_bsw.onclick=showCompanySwitcher;}}
+  const _bsw=$('brand-switch');if(_bsw){if(gateOn()&&!canSeeAll(SESSION)){_bsw.style.display='none';}else{_bsw.onclick=showCompanySwitcher;}}
   $('owner-refresh')?.addEventListener('click',refreshOwnerData);
   document.querySelectorAll('[data-view-company]').forEach(b=>b.onclick=()=>{
     const id=b.dataset.viewCompany;
@@ -4929,6 +5235,10 @@ function attachHandlers(){
   $('btn-new-inv')?.addEventListener('click',()=>{const id=S.detail;if(id)showInvoiceModal(id)});
   document.querySelectorAll('[data-inv-id]').forEach(row=>row.onclick=()=>{
     const id=S.detail;if(id)showInvoiceModal(id,row.dataset.invId);
+  });
+  $('btn-new-est')?.addEventListener('click',()=>{const id=S.detail;if(id)showInvoiceModal(id,null,'estimate')});
+  document.querySelectorAll('[data-est-id]').forEach(row=>row.onclick=()=>{
+    const id=S.detail;if(id)showInvoiceModal(id,row.dataset.estId,'estimate');
   });
 
   // Invoices (global view)
@@ -5208,6 +5518,7 @@ function attachHandlers(){
 
   // Time tracking
   stopTimeTick();
+  $('tt-payroll')?.addEventListener('click',showPayrollModal);
   $('tt-goto-team')?.addEventListener('click',()=>{S.view='team';render()});
   $('tt-clockin')?.addEventListener('click',async()=>{
     const member=$('tt-member')?.value;
@@ -5243,8 +5554,14 @@ document.addEventListener('keydown',onKey);
 // Service worker would require a same-origin .js file; manifest alone makes it installable.
 // Browsers prompt "Add to Home Screen" when the manifest + HTTPS + an icon are present.
 
-if(LOCKED){showLockScreen();}
-else{if(OWNER_MODE)applyOwnerChrome();else applyCompanyBranding();render();}
+function bootApp(){
+  loadAndConnect();
+  if(OWNER_MODE)applyOwnerChrome();else applyCompanyBranding();
+  render();
+}
+if(FB_AUTH_ON){startAuthGate();}
+else if(LOCKED){showLockScreen();}
+else{bootApp();}
 </script>
 </body>
 </html>
