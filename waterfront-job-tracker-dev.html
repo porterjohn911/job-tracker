@@ -404,6 +404,40 @@ input[type=range]{width:100%;accent-color:var(--green-700);height:4px;cursor:poi
 .btn-remove:hover{border-color:var(--red);color:var(--red)}
 .team-info-card{background:var(--surface-3);border-radius:var(--r-md);padding:14px 16px;margin-top:18px;font-size:12.5px;color:var(--text-2);line-height:1.65}
 
+/* ── TIME TRACKING ── */
+.tt-kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px}
+.tt-kpi{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);padding:12px 8px;text-align:center}
+.tt-kpi-val{font-size:21px;font-weight:700;color:var(--green-700);font-family:var(--font-display);font-variant-numeric:tabular-nums}
+.tt-kpi-lbl{font-size:10px;color:var(--text-3);text-transform:uppercase;letter-spacing:0.05em;font-weight:600;margin-top:2px}
+.tt-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);padding:14px;margin-bottom:20px;box-shadow:var(--shadow-sm)}
+.tt-card-hd{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-3);margin-bottom:12px}
+.tt-field{margin-bottom:10px}
+.tt-field label{display:block;font-size:10.5px;color:var(--text-3);font-weight:600;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:5px}
+.tt-field select,.tt-field input{width:100%;padding:10px 12px;font-size:14px;border:1.5px solid var(--border-md);border-radius:var(--r-sm);background:var(--surface);color:var(--text);outline:none;font-family:var(--font)}
+.tt-field select:focus,.tt-field input:focus{border-color:var(--green-600)}
+.tt-clockin-btn{width:100%;margin-top:4px;background:var(--green-700);color:#fff;border:none;padding:13px;border-radius:var(--r-sm);font-size:15px;font-weight:700;cursor:pointer;font-family:var(--font)}
+.tt-clockin-btn:active{opacity:.85}
+.tt-active{display:flex;align-items:center;gap:11px;background:var(--green-50);border:1.5px solid var(--green-400);border-radius:var(--r-md);padding:10px 13px;margin-bottom:8px}
+.tt-active-body{flex:1;min-width:0}
+.tt-active-name{font-size:14px;font-weight:600}
+.tt-active-meta{font-size:11.5px;color:var(--text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tt-timer{font-variant-numeric:tabular-nums;font-weight:700;font-size:15px;color:var(--green-700);font-family:var(--font-display)}
+.tt-btn-out{background:var(--green-700);color:#fff;border:none;padding:8px 12px;border-radius:var(--r-sm);font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font);white-space:nowrap}
+.tt-btn-out:active{opacity:.85}
+.tt-day{margin-top:14px}
+.tt-day-hd{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;padding:0 2px}
+.tt-day-date{font-size:12px;font-weight:700;color:var(--text-2)}
+.tt-day-total{font-size:12px;font-weight:700;color:var(--green-700);font-variant-numeric:tabular-nums}
+.tt-row{display:flex;align-items:center;gap:11px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);padding:10px 12px;margin-bottom:6px}
+.tt-row-body{flex:1;min-width:0}
+.tt-row-top{display:flex;justify-content:space-between;gap:8px}
+.tt-row-name{font-size:13.5px;font-weight:600}
+.tt-row-dur{font-size:13px;font-weight:700;color:var(--green-700);font-variant-numeric:tabular-nums;white-space:nowrap}
+.tt-row-meta{font-size:11.5px;color:var(--text-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tt-icon{background:none;border:none;color:var(--text-3);cursor:pointer;font-size:14px;padding:4px 6px;border-radius:6px;flex-shrink:0;font-family:var(--font)}
+.tt-icon:hover{color:var(--text);background:var(--surface-3)}
+.tt-empty{text-align:center;color:var(--text-3);font-size:13px;padding:16px 0}
+
 /* ── MODAL (sheet) ── */
 .modal-bd{
   position:fixed;inset:0;background:rgba(0,0,0,0.45);
@@ -1273,6 +1307,10 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z"/></svg>
     Team
   </button>
+  <button class="nav-btn" data-view="time">
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+    Time
+  </button>
 </nav>
 
 <main class="content" id="content" role="main"><div class="loader">Loading…</div></main>
@@ -1401,7 +1439,7 @@ try{const s=localStorage.getItem('wfs_fb');if(s)FIREBASE_CONFIG=JSON.parse(s)}ca
 // ══ State ══
 let DB=null;
 let MAP=null,MAP_MARKERS=[];
-const S={jobs:{},activity:[],members:[],view:'dashboard',detail:null,detailTab:'overview',filter:'all',search:'',photoCat:'all',calMonth:new Date().getMonth(),calYear:new Date().getFullYear(),calSelected:null,calMode:localStorage.getItem(LS('calmode'))||'month',reportRange:'90',sort:localStorage.getItem(LS('sort'))||'newest',sortOpen:false,bulkMode:false,bulkSel:new Set(),invFilter:'all',invSearch:'',invSort:'date',user:localStorage.getItem(LS('user'))||'',notifReadAt:parseInt(localStorage.getItem(LS('notif_read'))||'0',10),refFilter:'all',referrals:{},owner:{}};
+const S={jobs:{},activity:[],members:[],view:'dashboard',detail:null,detailTab:'overview',filter:'all',search:'',photoCat:'all',calMonth:new Date().getMonth(),calYear:new Date().getFullYear(),calSelected:null,calMode:localStorage.getItem(LS('calmode'))||'month',reportRange:'90',sort:localStorage.getItem(LS('sort'))||'newest',sortOpen:false,bulkMode:false,bulkSel:new Set(),invFilter:'all',invSearch:'',invSort:'date',user:localStorage.getItem(LS('user'))||'',notifReadAt:parseInt(localStorage.getItem(LS('notif_read'))||'0',10),refFilter:'all',referrals:{},timeEntries:{},owner:{}};
 const UNDO={stack:[],push(op){this.stack.push(op);if(this.stack.length>20)this.stack.shift()},pop(){return this.stack.pop()}};
 
 // ── Company info for invoice letterhead (editable via Settings)
@@ -1513,11 +1551,12 @@ function undoLast(){const op=UNDO.pop();if(!op){toast('Nothing to undo','');retu
 
 // ══ DB layer ══
 const LOCAL={
-  load(){try{S.jobs=JSON.parse(localStorage.getItem(LS('jobs'))||'{}')}catch(e){S.jobs={}}try{S.activity=JSON.parse(localStorage.getItem(LS('activity'))||'[]')}catch(e){S.activity=[]}try{S.members=JSON.parse(localStorage.getItem(LS('members'))||'[]')}catch(e){S.members=[]}try{S.referrals=JSON.parse(localStorage.getItem(LS('referrals'))||'{}')}catch(e){S.referrals={}}},
+  load(){try{S.jobs=JSON.parse(localStorage.getItem(LS('jobs'))||'{}')}catch(e){S.jobs={}}try{S.activity=JSON.parse(localStorage.getItem(LS('activity'))||'[]')}catch(e){S.activity=[]}try{S.members=JSON.parse(localStorage.getItem(LS('members'))||'[]')}catch(e){S.members=[]}try{S.referrals=JSON.parse(localStorage.getItem(LS('referrals'))||'{}')}catch(e){S.referrals={}}try{S.timeEntries=JSON.parse(localStorage.getItem(LS('time'))||'{}')}catch(e){S.timeEntries={}}},
   saveJobs(){try{localStorage.setItem(LS('jobs'),JSON.stringify(S.jobs))}catch(e){}},
   saveActivity(){try{localStorage.setItem(LS('activity'),JSON.stringify(S.activity.slice(0,300)))}catch(e){}},
   saveMembers(){try{localStorage.setItem(LS('members'),JSON.stringify(S.members))}catch(e){}},
-  saveReferrals(){try{localStorage.setItem(LS('referrals'),JSON.stringify(S.referrals))}catch(e){}}
+  saveReferrals(){try{localStorage.setItem(LS('referrals'),JSON.stringify(S.referrals))}catch(e){}},
+  saveTime(){try{localStorage.setItem(LS('time'),JSON.stringify(S.timeEntries))}catch(e){}}
 };
 function syncStatus(state,msg){const d=$('sync-dot'),t=$('sync-text');d.className='sync-dot '+state;t.textContent=msg}
 function initFB(cfg){
@@ -1529,6 +1568,7 @@ function initFB(cfg){
     DB.child('activity').on('value',s=>{const r=s.val();S.activity=r?Object.values(r).sort((a,b)=>b.time-a.time):[];LOCAL.saveActivity()});
     DB.child('members').on('value',s=>{S.members=s.val()||[];LOCAL.saveMembers();render()});
     DB.child('referrals').on('value',s=>{S.referrals=s.val()||{};LOCAL.saveReferrals();render()});
+    DB.child('time').on('value',s=>{S.timeEntries=s.val()||{};LOCAL.saveTime();render()});
     DB.child('.info/connected').on('value',s=>{if(!s.val())syncStatus('err','Reconnecting…')});
     return true;
   }catch(e){syncStatus('err','Firebase error');return false}
@@ -1539,6 +1579,23 @@ async function logAct(action,job){const e={user:S.user||'Someone',action,job:job
 async function saveMembers(){LOCAL.saveMembers();if(DB)await DB.child('members').set(S.members).catch(()=>{})}
 async function writeReferral(r){S.referrals[r.id]=r;LOCAL.saveReferrals();if(DB)await DB.child('referrals/'+r.id).set(r).catch(()=>{})}
 async function deleteReferralDB(id){delete S.referrals[id];LOCAL.saveReferrals();if(DB)await DB.child('referrals/'+id).remove().catch(()=>{})}
+
+// ── Time tracking (clock in / clock out) ──
+async function writeTimeEntry(t){S.timeEntries[t.id]=t;LOCAL.saveTime();if(DB)await DB.child('time/'+t.id).set(t).catch(()=>{})}
+async function deleteTimeEntryDB(id){delete S.timeEntries[id];LOCAL.saveTime();if(DB)await DB.child('time/'+id).remove().catch(()=>{})}
+function tid(){return't_'+Date.now()+'_'+Math.random().toString(36).slice(2,6)}
+function timeList(){return Object.values(S.timeEntries||{})}
+function activeEntry(member){return timeList().find(t=>t.member===member&&!t.end)}
+function entryDur(t){return Math.max(0,(t.end||Date.now())-t.start)}
+function fmtHM(ms){const m=Math.floor(Math.max(0,ms)/60000);const h=Math.floor(m/60);return (h?h+'h ':'')+(m%60)+'m'}
+function fmtHMS(ms){const s=Math.floor(Math.max(0,ms)/1000);const h=Math.floor(s/3600),m=Math.floor((s%3600)/60),ss=s%60;const p=n=>String(n).padStart(2,'0');return (h?h+':':'')+p(m)+':'+p(ss)}
+function fmtClockT(ts){try{return new Date(ts).toLocaleTimeString(undefined,{hour:'numeric',minute:'2-digit'})}catch(e){return''}}
+function dtLocalValue(ts){const d=new Date(ts);const p=n=>String(n).padStart(2,'0');return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())+'T'+p(d.getHours())+':'+p(d.getMinutes())}
+function dtLocalParse(v){if(!v)return null;const t=new Date(v).getTime();return isNaN(t)?null:t}
+function weekStart(){const d=new Date();d.setHours(0,0,0,0);d.setDate(d.getDate()-d.getDay());return d.getTime()}
+let TIME_TICK=null;
+function stopTimeTick(){if(TIME_TICK){clearInterval(TIME_TICK);TIME_TICK=null}}
+function startTimeTick(){stopTimeTick();TIME_TICK=setInterval(()=>{document.querySelectorAll('[data-tick-start]').forEach(el=>{const s=parseInt(el.getAttribute('data-tick-start'),10);if(s)el.textContent=fmtHMS(Date.now()-s)})},1000)}
 
 // ── Owner mode: read every company's jobs (read-only, all nodes) ──
 function ownerPrefix(co){return co.ns+(ENV==='dev'?'_dev_':'_')}
@@ -1575,6 +1632,7 @@ function render(){
   else if(S.view==='reports')c.innerHTML=renderReports();
   else if(S.view==='activity')c.innerHTML=renderActivity();
   else if(S.view==='team')c.innerHTML=renderTeam();
+  else if(S.view==='time')c.innerHTML=renderTime();
   updateUserUI();
   updateBellBadge();
   attachHandlers();
@@ -3707,6 +3765,126 @@ function renderTeam(){
   </div>`;
 }
 
+function renderTime(){
+  if(!S.members.length){
+    return `<div class="tt-empty" style="padding:44px 16px">
+      <p style="font-size:14px;color:var(--text-2);margin-bottom:18px;line-height:1.6">Add your team members first, then you can clock them in and out and track hours.</p>
+      <button class="btn-save" id="tt-goto-team">Go to Team →</button>
+    </div>`;
+  }
+  const all=timeList();
+  const active=all.filter(t=>!t.end).sort((a,b)=>a.start-b.start);
+  const today=dateKey(new Date());
+  const ws=weekStart();
+  const todayMs=all.filter(t=>dateKey(t.start)===today).reduce((s,t)=>s+entryDur(t),0);
+  const weekMs=all.filter(t=>t.start>=ws).reduce((s,t)=>s+entryDur(t),0);
+  const defMember=S.members.includes(S.user)?S.user:S.members[0];
+  const mOpts=S.members.map(m=>`<option value="${esc(m)}" ${m===defMember?'selected':''}>${esc(m)}</option>`).join('');
+  const jOpts=jobs().map(j=>`<option value="${esc(j.id)}">${esc(j.name)}</option>`).join('');
+
+  const completed=all.filter(t=>t.end).sort((a,b)=>b.start-a.start);
+  const groups={};
+  completed.forEach(t=>{const k=dateKey(t.start);(groups[k]=groups[k]||[]).push(t)});
+  const dayKeys=Object.keys(groups).sort((a,b)=>b.localeCompare(a)).slice(0,30);
+
+  const activeHtml=active.length?active.map(t=>{
+    const jn=t.job&&S.jobs[t.job]?S.jobs[t.job].name:'';
+    const meta=['Since '+fmtClockT(t.start),jn,t.note].filter(Boolean).join(' · ');
+    return `<div class="tt-active">
+      <div class="member-ava">${initials(t.member)}</div>
+      <div class="tt-active-body"><div class="tt-active-name">${esc(t.member)}</div><div class="tt-active-meta">${esc(meta)}</div></div>
+      <div class="tt-timer" data-tick-start="${t.start}">${fmtHMS(Date.now()-t.start)}</div>
+      <button class="tt-btn-out" data-clock-out="${esc(t.id)}">Clock Out</button>
+    </div>`;
+  }).join(''):`<div class="tt-empty">No one is on the clock right now.</div>`;
+
+  const logHtml=dayKeys.length?dayKeys.map(k=>{
+    const rows=groups[k];
+    const dayTotal=rows.reduce((s,t)=>s+entryDur(t),0);
+    const label=new Date(k+'T00:00:00').toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric'});
+    return `<div class="tt-day"><div class="tt-day-hd"><span class="tt-day-date">${k===today?'Today':esc(label)}</span><span class="tt-day-total">${fmtHM(dayTotal)}</span></div>${
+      rows.map(t=>{
+        const jn=t.job&&S.jobs[t.job]?S.jobs[t.job].name:'';
+        const meta=[fmtClockT(t.start)+' – '+fmtClockT(t.end),jn,t.note].filter(Boolean).join(' · ');
+        return `<div class="tt-row">
+          <div class="member-ava">${initials(t.member)}</div>
+          <div class="tt-row-body"><div class="tt-row-top"><span class="tt-row-name">${esc(t.member)}</span><span class="tt-row-dur">${fmtHM(entryDur(t))}</span></div><div class="tt-row-meta">${esc(meta)}</div></div>
+          <button class="tt-icon" data-time-edit="${esc(t.id)}" title="Edit" aria-label="Edit entry">✎</button>
+          <button class="tt-icon" data-time-del="${esc(t.id)}" title="Delete" aria-label="Delete entry">✕</button>
+        </div>`;
+      }).join('')
+    }</div>`;
+  }).join(''):`<div class="tt-empty">No completed time entries yet.</div>`;
+
+  return `
+    <div class="tt-kpis">
+      <div class="tt-kpi"><div class="tt-kpi-val">${active.length}</div><div class="tt-kpi-lbl">On the clock</div></div>
+      <div class="tt-kpi"><div class="tt-kpi-val">${fmtHM(todayMs)}</div><div class="tt-kpi-lbl">Today</div></div>
+      <div class="tt-kpi"><div class="tt-kpi-val">${fmtHM(weekMs)}</div><div class="tt-kpi-lbl">This week</div></div>
+    </div>
+    <div class="tt-card">
+      <div class="tt-card-hd">Clock in</div>
+      <div class="tt-field"><label>Team member</label><select id="tt-member">${mOpts}</select></div>
+      <div class="tt-field"><label>Job (optional)</label><select id="tt-job"><option value="">— No job / general —</option>${jOpts}</select></div>
+      <div class="tt-field"><label>Note (optional)</label><input id="tt-note" placeholder="e.g. framing the deck"></div>
+      <button class="tt-clockin-btn" id="tt-clockin">Clock In</button>
+    </div>
+    <div class="section-hd">On the clock now</div>
+    ${activeHtml}
+    <div class="section-hd" style="margin-top:20px">Time log <button class="btn-mini" id="tt-add-manual">+ Add entry</button></div>
+    ${logHtml}
+  `;
+}
+
+function showTimeModal(entry){
+  if(OWNER_MODE){toast('Open a company to edit time','');return}
+  if(!S.members.length){toast('Add team members first','');return}
+  const add=!entry;
+  const defMember=S.members.includes(S.user)?S.user:S.members[0];
+  const t=entry||{member:defMember,job:'',note:'',start:Date.now(),end:Date.now()};
+  const running=!add&&!t.end;
+  const mOpts=S.members.map(m=>`<option value="${esc(m)}" ${t.member===m?'selected':''}>${esc(m)}</option>`).join('');
+  const jOpts=jobs().map(j=>`<option value="${esc(j.id)}" ${t.job===j.id?'selected':''}>${esc(j.name)}</option>`).join('');
+  $('modal-root').innerHTML=`<div class="modal-bd" id="mbd"><div class="modal"><div class="modal-handle"></div>
+    <div class="modal-head"><div class="modal-title">${add?'Add Time Entry':'Edit Time Entry'}</div><button class="modal-close" id="mc"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button></div>
+    <div class="modal-body">
+      <div class="form-group"><label class="form-label">Team member</label><select class="form-select" id="tm-member">${mOpts}</select></div>
+      <div class="form-group"><label class="form-label">Job (optional)</label><select class="form-select" id="tm-job"><option value="">— No job / general —</option>${jOpts}</select></div>
+      <div class="form-group"><label class="form-label">Note (optional)</label><input class="form-input" id="tm-note" value="${esc(t.note||'')}" placeholder="What was worked on"></div>
+      <div class="form-group"><label class="form-label">Clock in</label><input class="form-input" type="datetime-local" id="tm-start" value="${dtLocalValue(t.start)}"></div>
+      <div class="form-group" style="display:flex;align-items:center;gap:8px"><input type="checkbox" id="tm-running" ${running?'checked':''} style="width:auto"><label class="form-label" for="tm-running" style="margin:0">Still on the clock</label></div>
+      <div class="form-group" id="tm-end-wrap" style="${running?'display:none':''}"><label class="form-label">Clock out</label><input class="form-input" type="datetime-local" id="tm-end" value="${dtLocalValue(t.end||Date.now())}"></div>
+    </div>
+    <div class="modal-foot">
+      ${add?'':`<button class="btn-delete" id="tm-del">Delete</button>`}
+      <button class="btn-cancel" id="btn-cx">Cancel</button>
+      <button class="btn-save" id="tm-save">${add?'Add':'Save'}</button>
+    </div>
+  </div></div>`;
+  $('mc').onclick=$('btn-cx').onclick=closeModal;
+  $('mbd').onclick=e=>{if(e.target===e.currentTarget)closeModal()};
+  $('tm-running').onchange=function(){$('tm-end-wrap').style.display=this.checked?'none':''};
+  $('tm-save').onclick=async()=>{
+    const member=$('tm-member').value;
+    if(!member){toast('Pick a team member','');return}
+    const start=dtLocalParse($('tm-start').value);
+    if(!start){toast('Enter a valid clock-in time','');return}
+    const stillRunning=$('tm-running').checked;
+    let end=stillRunning?null:dtLocalParse($('tm-end').value);
+    if(!stillRunning&&!end){toast('Enter a clock-out time','');return}
+    if(end&&end<start){toast('Clock out must be after clock in','');return}
+    const rec={id:t.id||tid(),member,job:$('tm-job').value||'',note:$('tm-note').value.trim(),start,end,by:t.by||S.user||'',created:t.created||Date.now()};
+    await writeTimeEntry(rec);closeModal();render();toast(add?'Time entry added':'Time entry saved');
+  };
+  if(!add)$('tm-del').onclick=async()=>{
+    if(!confirm('Delete this time entry?'))return;
+    const backup=JSON.parse(JSON.stringify(t));
+    await deleteTimeEntryDB(t.id);closeModal();render();
+    const restore=async()=>{await writeTimeEntry(backup);render();toast('Entry restored')};
+    UNDO.push(restore);toast('Entry deleted','undo',restore);
+  };
+}
+
 // ══ Modals ══
 function closeModal(){$('modal-root').innerHTML=''}
 
@@ -4298,7 +4476,7 @@ let CMD={open:false,query:'',idx:0,items:[]};
 function cmdItems(){
   const out=[];
   // Views
-  [['dashboard','Home / Dashboard','home'],['jobs','Jobs','briefcase'],['schedule','Schedule','calendar'],['invoices','Invoices','invoice'],['referrals','Referrals','team'],['map','Map','map'],['reports','Reports','chart'],['activity','Activity','list'],['team','Team','team']].forEach(([v,name,ico])=>{
+  [['dashboard','Home / Dashboard','home'],['jobs','Jobs','briefcase'],['schedule','Schedule','calendar'],['invoices','Invoices','invoice'],['referrals','Referrals','team'],['map','Map','map'],['reports','Reports','chart'],['activity','Activity','list'],['team','Team','team'],['time','Time','calendar']].forEach(([v,name,ico])=>{
     out.push({type:'view',name:'Go to '+name,sub:'View',ico,run:()=>{S.view=v;S.detail=null;render()}});
   });
   // Actions
@@ -4880,6 +5058,35 @@ function attachHandlers(){
     S.members.push(name);await saveMembers();inp.value='';render();toast(name+' added to team');
   });
   document.querySelectorAll('[data-rm]').forEach(b=>b.onclick=async()=>{S.members.splice(parseInt(b.dataset.rm),1);await saveMembers();render()});
+
+  // Time tracking
+  stopTimeTick();
+  $('tt-goto-team')?.addEventListener('click',()=>{S.view='team';render()});
+  $('tt-clockin')?.addEventListener('click',async()=>{
+    const member=$('tt-member')?.value;
+    if(!member){toast('Pick a team member','');return}
+    if(activeEntry(member)){toast(member+' is already clocked in','');return}
+    const job=$('tt-job')?.value||'';
+    const note=$('tt-note')?.value.trim()||'';
+    const t={id:tid(),member,job,note,start:Date.now(),end:null,by:S.user||'',created:Date.now()};
+    await writeTimeEntry(t);await logAct('clocked in '+member,job&&S.jobs[job]?S.jobs[job].name:'');render();toast(member+' clocked in');
+  });
+  document.querySelectorAll('[data-clock-out]').forEach(b=>b.onclick=async()=>{
+    const t=S.timeEntries[b.dataset.clockOut];if(!t||t.end)return;
+    t.end=Date.now();await writeTimeEntry(t);
+    await logAct('clocked out '+t.member+' ('+fmtHM(entryDur(t))+')',t.job&&S.jobs[t.job]?S.jobs[t.job].name:'');
+    render();toast(t.member+' clocked out · '+fmtHM(entryDur(t)));
+  });
+  $('tt-add-manual')?.addEventListener('click',()=>showTimeModal(null));
+  document.querySelectorAll('[data-time-edit]').forEach(b=>b.onclick=()=>{const t=S.timeEntries[b.dataset.timeEdit];if(t)showTimeModal(t)});
+  document.querySelectorAll('[data-time-del]').forEach(b=>b.onclick=async()=>{
+    const t=S.timeEntries[b.dataset.timeDel];if(!t)return;
+    const backup=JSON.parse(JSON.stringify(t));
+    await deleteTimeEntryDB(t.id);render();
+    const restore=async()=>{await writeTimeEntry(backup);render();toast('Entry restored')};
+    UNDO.push(restore);toast('Entry deleted','undo',restore);
+  });
+  if(S.view==='time'&&timeList().some(t=>!t.end))startTimeTick();
 }
 
 document.addEventListener('keydown',onKey);
