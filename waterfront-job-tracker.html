@@ -1688,8 +1688,8 @@ function renderDashboard(){
   const leads=all.filter(j=>j.status==='lead');
   const done=all.filter(j=>j.status==='complete');
   const totalValue=all.reduce((s,j)=>s+Number(j.value||0),0);
-  const totalInvoiced=all.reduce((s,j)=>s+Number(j.invoiced||0),0);
-  const totalPaid=all.reduce((s,j)=>s+Number(j.paid||0),0);
+  const totalInvoiced=all.reduce((s,j)=>{const t=invoiceTotals(j);return s+(t?t.total:Number(j.invoiced||0))},0);
+  const totalPaid=all.reduce((s,j)=>{const t=invoiceTotals(j);return s+(t?t.paid:Number(j.paid||0))},0);
   const outstanding=totalInvoiced-totalPaid;
   const pipeline=leads.reduce((s,j)=>s+Number(j.value||0),0);
   // Upcoming: jobs with start date in next 14 days, or not yet started
@@ -2777,8 +2777,8 @@ function renderReports(){
 
   // Financial
   const totalValue=inRange.reduce((s,j)=>s+Number(j.value||0),0);
-  const revenue=inRange.filter(j=>j.status==='complete').reduce((s,j)=>s+Number(j.invoiced||j.value||0),0);
-  const collected=inRange.reduce((s,j)=>s+Number(j.paid||0),0);
+  const revenue=inRange.filter(j=>j.status==='complete').reduce((s,j)=>{const t=invoiceTotals(j);return s+(t?t.total:Number(j.invoiced||j.value||0))},0);
+  const collected=inRange.reduce((s,j)=>{const t=invoiceTotals(j);return s+(t?t.paid:Number(j.paid||0))},0);
   const avgDeal=won>0?revenue/won:0;
   const pipeline=inRange.filter(j=>j.status!=='complete'&&j.status!=='hold').reduce((s,j)=>s+Number(j.value||0),0);
 
