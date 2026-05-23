@@ -1292,12 +1292,37 @@ const MHS_LOGO = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192">
 <text x="96" y="146" text-anchor="middle" font-family="'DM Sans',Arial,sans-serif" font-weight="600" font-size="12.5" letter-spacing="4" fill="#9fb1c4">SOLUTIONS</text>
 </svg>`;
 
+// Full horizontal MHS lockup with its own dark panel, so it reads on any
+// surface (used on invoice letterheads — email and printed/PDF).
+const MHS_LOGO_FULL = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 280">
+<rect width="720" height="280" rx="22" fill="#0b0f17"/>
+<g fill="none" stroke="#e8a830" stroke-width="2.5" stroke-linecap="square">
+<path d="M40 60V38H78"/><path d="M642 38H680V60"/><path d="M680 220V242H642"/><path d="M78 242H40V220"/>
+<line x1="92" y1="38" x2="628" y2="38"/><line x1="92" y1="242" x2="628" y2="242"/>
+</g>
+<text x="360" y="116" text-anchor="middle" font-family="'DM Sans',Arial,sans-serif" font-weight="800" font-size="54" letter-spacing="1" fill="#ffffff">MANUFACTURED</text>
+<line x1="170" y1="134" x2="550" y2="134" stroke="#e8a830" stroke-width="2.5"/>
+<circle cx="170" cy="134" r="5" fill="#e8a830"/><circle cx="550" cy="134" r="5" fill="#e8a830"/>
+<g fill="none" stroke="#e8a830" stroke-width="2.5"><path d="M150 100H132V168H150"/><path d="M570 100H588V168H570"/></g>
+<text x="360" y="178" text-anchor="middle" font-family="'DM Sans',Arial,sans-serif" font-weight="600" font-size="38" letter-spacing="16" fill="#9fb1c4">HOUSING</text>
+<line x1="210" y1="196" x2="510" y2="196" stroke="#2a3850" stroke-width="1"/>
+<text x="360" y="224" text-anchor="middle" font-family="'DM Sans',Arial,sans-serif" font-weight="700" font-size="21" letter-spacing="10" fill="#e8a830">SOLUTIONS</text>
+<text x="360" y="250" text-anchor="middle" font-family="'DM Sans',Arial,sans-serif" font-weight="500" font-size="11.5" letter-spacing="5" fill="#5a7088">FULL SERVICE CONSTRUCTION</text>
+</svg>`;
+
 const COMPANIES = {
-  wfs: { id:'wfs', ns:'wfs', label:'Waterfront Solutions',           tag:'Construction & Waterfront Services' },
-  mhs: { id:'mhs', ns:'mhs', label:'Manufactured Housing Solutions', tag:'Full Service Construction', logoSvg:MHS_LOGO,
-         theme:{ headerBg:'linear-gradient(135deg,#0a0e16 0%,#141a26 55%,#202c3d 100%)', syncBg:'#0a0e16', navActive:'#33506f' } },
+  wfs: { id:'wfs', ns:'wfs', label:'Waterfront Solutions',           tag:'Construction & Waterfront Services',
+         inv:{ band:'linear-gradient(135deg,#0a3d2e 0%,#1a6e55 100%)', primary:'#0a3d2e', link:'#0f5040', notesBar:'#1a6e55', rule:'#0a3d2e' } },
+  mhs: { id:'mhs', ns:'mhs', label:'Manufactured Housing Solutions', tag:'Full Service Construction', logoSvg:MHS_LOGO, logoFull:MHS_LOGO_FULL,
+         theme:{ headerBg:'linear-gradient(135deg,#0a0e16 0%,#141a26 55%,#202c3d 100%)', syncBg:'#0a0e16', navActive:'#33506f' },
+         inv:{ band:'linear-gradient(135deg,#0a0e16 0%,#202c3d 100%)', primary:'#1f2a3a', link:'#33506f', notesBar:'#e8a830', rule:'#e8a830' } },
   nlr: { id:'nlr', ns:'nlr', label:'Norris Lake Roofing',            tag:'Roofing & Exteriors' },
 };
+// Invoice palette helpers — default matches Waterfront so other companies
+// (and any without an override) keep the original green invoice styling.
+const INV_DEFAULT={ band:'linear-gradient(135deg,#0a3d2e 0%,#1a6e55 100%)', primary:'#0a3d2e', link:'#0f5040', notesBar:'#1a6e55', rule:'#0a3d2e' };
+function invTheme(){ return ACTIVE_CO.inv||INV_DEFAULT }
+function brandLogoFull(){ return ACTIVE_CO.logoFull?'data:image/svg+xml;utf8,'+encodeURIComponent(ACTIVE_CO.logoFull):'' }
 const COMPANY_ID = (() => { try { const s = localStorage.getItem('jt_company'); return (s && COMPANIES[s]) ? s : 'wfs'; } catch (e) { return 'wfs'; } })();
 const ACTIVE_CO = COMPANIES[COMPANY_ID];
 document.title = 'Job Tracker — ' + ACTIVE_CO.label;
@@ -2189,6 +2214,8 @@ function buildInvoiceEmailHTML(j,inv,customMsg){
   const c=calcInvoice(inv);
   const co=COMPANY;
   const logoSrc=getBrandLogoSrc();
+  const P=invTheme();
+  const logoFull=brandLogoFull();
   const firstName=((j.customerName||'').trim().split(/\s+/)[0])||'there';
   const itemsRows=(inv.items||[]).map(it=>{
     const amt=Number(it.qty||0)*Number(it.rate||0);
@@ -2204,9 +2231,9 @@ function buildInvoiceEmailHTML(j,inv,customMsg){
         <div style="font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#92400e;opacity:0.85">Balance Due${inv.dueDate?' by '+fmtDate(inv.dueDate):''}</div>
         <div style="font-size:26px;font-weight:800;color:#92400e;margin-top:4px;font-variant-numeric:tabular-nums">${money(c.balance)}</div>
       </div>`;
-  const contactLine=[co.phone?`<a href="tel:${esc(co.phone)}" style="color:#0f5040;text-decoration:none">${esc(co.phone)}</a>`:'',
-    co.email?`<a href="mailto:${esc(co.email)}" style="color:#0f5040;text-decoration:none">${esc(co.email)}</a>`:'',
-    co.website?`<a href="${esc(co.website)}" style="color:#0f5040;text-decoration:none">${esc(co.website)}</a>`:''
+  const contactLine=[co.phone?`<a href="tel:${esc(co.phone)}" style="color:${P.link};text-decoration:none">${esc(co.phone)}</a>`:'',
+    co.email?`<a href="mailto:${esc(co.email)}" style="color:${P.link};text-decoration:none">${esc(co.email)}</a>`:'',
+    co.website?`<a href="${esc(co.website)}" style="color:${P.link};text-decoration:none">${esc(co.website)}</a>`:''
   ].filter(Boolean).join(' &nbsp;·&nbsp; ');
 
   return `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Invoice ${esc(inv.number||'')}</title></head>
@@ -2214,14 +2241,16 @@ function buildInvoiceEmailHTML(j,inv,customMsg){
 <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:#f0faf6">
   <tr><td align="center" style="padding:24px 12px">
     <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="600" style="max-width:600px;background:#ffffff;border-radius:14px;overflow:hidden;box-shadow:0 4px 24px rgba(10,61,46,0.08)">
-      <tr><td style="background:linear-gradient(135deg,#0a3d2e 0%,#1a6e55 100%);padding:28px 32px;text-align:center">
-        ${logoSrc?`<img src="${logoSrc}" alt="${esc(co.name||'Waterfront Solutions')}" width="84" height="84" style="display:inline-block;width:84px;height:84px;object-fit:contain;filter:drop-shadow(0 2px 6px rgba(0,0,0,0.25))">`:''}
-        <div style="font-family:Georgia,'Times New Roman',serif;font-size:22px;font-weight:600;color:#ffffff;letter-spacing:0.01em;margin-top:10px">${esc(co.name||'Waterfront Solutions')}</div>
-        ${co.address?`<div style="font-size:11.5px;color:rgba(255,255,255,0.75);margin-top:4px;letter-spacing:0.02em">${esc(co.address.replace(/\n/g,' · '))}</div>`:''}
+      <tr><td style="background:${P.band};padding:28px 32px;text-align:center">
+        ${logoFull
+          ?`<img src="${logoFull}" alt="${esc(co.name||'')}" width="380" style="display:inline-block;width:100%;max-width:380px;height:auto">`
+          :`${logoSrc?`<img src="${logoSrc}" alt="${esc(co.name||'Waterfront Solutions')}" width="84" height="84" style="display:inline-block;width:84px;height:84px;object-fit:contain;filter:drop-shadow(0 2px 6px rgba(0,0,0,0.25))">`:''}
+        <div style="font-family:Georgia,'Times New Roman',serif;font-size:22px;font-weight:600;color:#ffffff;letter-spacing:0.01em;margin-top:10px">${esc(co.name||'Waterfront Solutions')}</div>`}
+        ${co.address?`<div style="font-size:11.5px;color:rgba(255,255,255,0.75);margin-top:${logoFull?'12':'4'}px;letter-spacing:0.02em">${esc(co.address.replace(/\n/g,' · '))}</div>`:''}
       </td></tr>
       <tr><td style="padding:28px 32px 8px">
         <div style="font-size:11px;font-weight:700;color:#7aa898;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:6px">Invoice ${esc(inv.number||'')}</div>
-        <h1 style="font-size:22px;font-weight:700;color:#0a3d2e;margin:0 0 18px;line-height:1.25">${greeting}</h1>
+        <h1 style="font-size:22px;font-weight:700;color:${P.primary};margin:0 0 18px;line-height:1.25">${greeting}</h1>
         <p style="font-size:14.5px;color:#3d6358;line-height:1.65;margin:0 0 8px">${intro}</p>
       </td></tr>
       <tr><td style="padding:8px 32px">
@@ -2250,31 +2279,31 @@ function buildInvoiceEmailHTML(j,inv,customMsg){
             <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="font-size:13px">
               <tr><td style="padding:3px 0;color:#3d6358">Subtotal</td><td style="padding:3px 0;text-align:right;font-variant-numeric:tabular-nums;font-weight:600;color:#0a1f18">${money(c.sub)}</td></tr>
               <tr><td style="padding:3px 0;color:#3d6358">Tax (${Number(inv.taxRate||0)}%)</td><td style="padding:3px 0;text-align:right;font-variant-numeric:tabular-nums;font-weight:600;color:#0a1f18">${money(c.tax)}</td></tr>
-              <tr><td style="padding:9px 0 3px;color:#0a3d2e;font-size:14px;font-weight:700;border-top:2px solid #0a3d2e">Total</td><td style="padding:9px 0 3px;text-align:right;font-variant-numeric:tabular-nums;font-weight:800;color:#0a3d2e;font-size:15px;border-top:2px solid #0a3d2e">${money(c.total)}</td></tr>
+              <tr><td style="padding:9px 0 3px;color:${P.primary};font-size:14px;font-weight:700;border-top:2px solid ${P.rule}">Total</td><td style="padding:9px 0 3px;text-align:right;font-variant-numeric:tabular-nums;font-weight:800;color:${P.primary};font-size:15px;border-top:2px solid ${P.rule}">${money(c.total)}</td></tr>
               ${c.paid>0?`<tr><td style="padding:3px 0;color:#3d6358">Paid</td><td style="padding:3px 0;text-align:right;font-variant-numeric:tabular-nums;color:#3d6358">-${money(c.paid)}</td></tr>`:''}
             </table>
           </td></tr>
         </table>
       </td></tr>
       ${inv.notes?`<tr><td style="padding:18px 32px 0">
-        <div style="padding:14px 16px;background:#f7f9f8;border-left:3px solid #1a6e55;border-radius:8px">
-          <div style="font-size:10px;font-weight:700;color:#0f5040;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:5px">Notes</div>
+        <div style="padding:14px 16px;background:#f7f9f8;border-left:3px solid ${P.notesBar};border-radius:8px">
+          <div style="font-size:10px;font-weight:700;color:${P.link};text-transform:uppercase;letter-spacing:0.08em;margin-bottom:5px">Notes</div>
           <div style="font-size:13px;color:#3d6358;line-height:1.6">${esc(inv.notes).replace(/\n/g,'<br>')}</div>
         </div>
       </td></tr>`:''}
       ${co.phone||co.email?`<tr><td style="padding:24px 32px 0">
         <p style="font-size:14px;color:#3d6358;line-height:1.65;margin:0">
-          Questions? Just reply to this email${co.phone?` or give us a call at <a href="tel:${esc(co.phone)}" style="color:#0f5040;font-weight:600;text-decoration:none">${esc(co.phone)}</a>`:''}. We appreciate your business!
+          Questions? Just reply to this email${co.phone?` or give us a call at <a href="tel:${esc(co.phone)}" style="color:${P.link};font-weight:600;text-decoration:none">${esc(co.phone)}</a>`:''}. We appreciate your business!
         </p>
       </td></tr>`:''}
       <tr><td style="padding:24px 32px 8px">
-        <p style="font-size:14.5px;color:#0a1f18;margin:0;line-height:1.5">Thanks,<br><strong style="color:#0a3d2e">${esc(S.user||co.name||'The Waterfront Solutions Team')}</strong></p>
+        <p style="font-size:14.5px;color:#0a1f18;margin:0;line-height:1.5">Thanks,<br><strong style="color:${P.primary}">${esc(S.user||co.name||'The Waterfront Solutions Team')}</strong></p>
       </td></tr>
       ${inv.terms?`<tr><td style="padding:14px 32px 0">
         <div style="font-size:11px;color:#7aa898;line-height:1.6;border-top:1px solid #e6f0eb;padding-top:14px;font-style:italic">${esc(inv.terms).replace(/\n/g,'<br>')}</div>
       </td></tr>`:''}
       <tr><td style="background:#f0faf6;padding:18px 32px;text-align:center;border-top:1px solid #e6f0eb;margin-top:24px">
-        <div style="font-family:Georgia,serif;font-size:13px;font-weight:600;color:#0a3d2e">${esc(co.name||'Waterfront Solutions')}</div>
+        <div style="font-family:Georgia,serif;font-size:13px;font-weight:600;color:${P.primary}">${esc(co.name||'Waterfront Solutions')}</div>
         ${contactLine?`<div style="font-size:11.5px;color:#7aa898;margin-top:4px">${contactLine}</div>`:''}
         ${co.license?`<div style="font-size:10.5px;color:#7aa898;margin-top:3px;letter-spacing:0.04em">License #${esc(co.license)}</div>`:''}
       </td></tr>
@@ -3642,6 +3671,8 @@ function printInvoice(j,inv){
   const c=calcInvoice(inv);
   const logoSrc=getBrandLogoSrc();
   const co=COMPANY;
+  const P=invTheme();
+  const logoFull=brandLogoFull();
   const itemsRows=(inv.items||[]).map(it=>{
     const amt=Number(it.qty||0)*Number(it.rate||0);
     return `<tr>
@@ -3658,15 +3689,16 @@ function printInvoice(j,inv){
     <style>
       *{box-sizing:border-box;margin:0;padding:0}
       body{font-family:Helvetica,Arial,sans-serif;color:#0a1f18;background:#fff;max-width:780px;margin:30px auto;padding:0 32px;font-size:13px;line-height:1.5}
-      .lh{display:flex;justify-content:space-between;align-items:flex-start;padding-bottom:18px;border-bottom:3px solid #0a3d2e;margin-bottom:24px;gap:20px}
+      .lh{display:flex;justify-content:space-between;align-items:flex-start;padding-bottom:18px;border-bottom:3px solid ${P.rule};margin-bottom:24px;gap:20px}
       .lh-l{display:flex;align-items:center;gap:14px;flex:1}
       .lh-l img{width:78px;height:78px;object-fit:contain}
+      .lh-l img.full{width:300px;height:auto;max-width:62%}
       .lh-co{flex:1}
-      .lh-co h1{font-family:Georgia,serif;font-size:24px;font-weight:600;color:#0a3d2e;letter-spacing:0.01em;line-height:1.1;margin-bottom:4px}
+      .lh-co h1{font-family:Georgia,serif;font-size:24px;font-weight:600;color:${P.primary};letter-spacing:0.01em;line-height:1.1;margin-bottom:4px}
       .lh-co .tag{font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#666}
       .lh-co .addr{font-size:11.5px;color:#555;margin-top:6px;line-height:1.5;white-space:pre-line}
       .lh-r{text-align:right}
-      .lh-r .title{font-size:36px;font-weight:800;color:#0a3d2e;letter-spacing:0.04em;line-height:1}
+      .lh-r .title{font-size:36px;font-weight:800;color:${P.primary};letter-spacing:0.04em;line-height:1}
       .lh-r .num{font-size:13px;color:#555;margin-top:6px}
       .lh-r .status{display:inline-block;margin-top:8px;font-size:10.5px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;padding:4px 12px;border-radius:20px;background:#fef3c7;color:#92400e}
       .lh-r .status.paid{background:#dcfce7;color:#166534}
@@ -3684,17 +3716,17 @@ function printInvoice(j,inv){
       .totals{margin-left:auto;width:300px;margin-bottom:20px}
       .totals .row{display:flex;justify-content:space-between;padding:5px 0;font-size:13px}
       .totals .row .v{font-variant-numeric:tabular-nums;font-weight:600}
-      .totals .grand{padding:10px 0;border-top:2px solid #0a3d2e;margin-top:6px;font-size:16px;font-weight:700;color:#0a3d2e}
+      .totals .grand{padding:10px 0;border-top:2px solid ${P.rule};margin-top:6px;font-size:16px;font-weight:700;color:${P.primary}}
       .totals .due{margin-top:8px;padding:10px 14px;background:#fef3c7;border-radius:6px;font-size:14px;font-weight:700;color:#92400e;display:flex;justify-content:space-between}
       .totals .due.zero{background:#dcfce7;color:#166534}
-      .notes{margin-top:16px;padding:14px;background:#f7f9f8;border-left:3px solid #0a3d2e;border-radius:6px;font-size:12px;color:#3d6358;line-height:1.6}
-      .notes .lbl{font-size:9.5px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#0a3d2e;margin-bottom:5px}
+      .notes{margin-top:16px;padding:14px;background:#f7f9f8;border-left:3px solid ${P.notesBar};border-radius:6px;font-size:12px;color:#3d6358;line-height:1.6}
+      .notes .lbl{font-size:9.5px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:${P.primary};margin-bottom:5px}
       .terms{margin-top:14px;font-size:11px;color:#777;line-height:1.6;white-space:pre-line}
       .ft{margin-top:28px;padding-top:14px;border-top:1px solid #ddd;text-align:center;font-size:10.5px;color:#888;letter-spacing:0.04em}
       @media print{body{margin:0;padding:18mm 16mm;max-width:none}.no-print{display:none}}
       .print-bar{position:fixed;top:12px;right:12px;display:flex;gap:8px}
-      .print-bar button{padding:8px 16px;background:#0a3d2e;color:#fff;border:none;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;font-family:Helvetica,sans-serif}
-      .print-bar button.alt{background:#fff;color:#0a3d2e;border:1.5px solid #0a3d2e}
+      .print-bar button{padding:8px 16px;background:${P.primary};color:#fff;border:none;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;font-family:Helvetica,sans-serif}
+      .print-bar button.alt{background:#fff;color:${P.primary};border:1.5px solid ${P.primary}}
     </style></head><body>
     <div class="no-print print-bar">
       <button class="alt" onclick="window.close()">Close</button>
@@ -3702,12 +3734,15 @@ function printInvoice(j,inv){
     </div>
     <header class="lh">
       <div class="lh-l">
-        ${logoSrc?`<img src="${logoSrc}" alt="">`:''}
+        ${logoFull
+          ?`<img class="full" src="${logoFull}" alt="${esc(co.name||'')}">
+        <div class="lh-co"><div class="addr">${esc(co.address||'')}${co.phone?'\n'+esc(co.phone):''}${co.email?' · '+esc(co.email):''}${co.website?'\n'+esc(co.website):''}</div></div>`
+          :`${logoSrc?`<img src="${logoSrc}" alt="">`:''}
         <div class="lh-co">
           <h1>${esc(co.name||'Waterfront Solutions')}</h1>
           <div class="tag">${esc(co.license?'Lic. '+co.license:'Construction & Waterfront Services')}</div>
           <div class="addr">${esc(co.address||'')}${co.phone?'\n'+esc(co.phone):''}${co.email?' · '+esc(co.email):''}${co.website?'\n'+esc(co.website):''}</div>
-        </div>
+        </div>`}
       </div>
       <div class="lh-r">
         <div class="title">INVOICE</div>
