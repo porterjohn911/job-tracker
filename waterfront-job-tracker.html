@@ -437,6 +437,18 @@ input[type=range]{width:100%;accent-color:var(--green-700);height:4px;cursor:poi
 .tt-icon{background:none;border:none;color:var(--text-3);cursor:pointer;font-size:14px;padding:4px 6px;border-radius:6px;flex-shrink:0;font-family:var(--font)}
 .tt-icon:hover{color:var(--text);background:var(--surface-3)}
 .tt-empty{text-align:center;color:var(--text-3);font-size:13px;padding:16px 0}
+.tt-rate{display:flex;align-items:center;gap:2px;font-size:12px;color:var(--text-3)}
+.tt-rate-in{width:56px;padding:6px;font-size:13px;text-align:right;border:1.5px solid var(--border-md);border-radius:var(--r-sm);background:var(--surface);color:var(--text);outline:none;font-family:var(--font)}
+.tt-rate-in:focus{border-color:var(--green-600)}
+.tt-hint{font-size:12px;color:var(--text-2);background:var(--surface-3);border-radius:var(--r-sm);padding:9px 12px;margin-bottom:10px;line-height:1.5}
+.tt-job{display:flex;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);padding:11px 13px;margin-bottom:6px}
+.tt-job[data-labor-job]{cursor:pointer}
+.tt-job[data-labor-job]:hover{border-color:var(--green-400)}
+.tt-job-body{flex:1;min-width:0}
+.tt-job-name{font-size:14px;font-weight:600}
+.tt-job-sub{font-size:11.5px;color:var(--text-3);margin-top:1px}
+.tt-job-cost{font-size:15px;font-weight:700;color:var(--green-700);font-variant-numeric:tabular-nums;white-space:nowrap}
+.tt-live{font-size:11px;font-weight:700;color:var(--green-600);white-space:nowrap}
 
 /* ── MODAL (sheet) ── */
 .modal-bd{
@@ -1345,6 +1357,7 @@ const OWNER_NAV = `
   <button class="nav-btn" data-view="o_pipeline">${_navIcon('M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 01-.659 1.591l-5.432 5.432a2.25 2.25 0 00-.659 1.591v2.927a2.25 2.25 0 01-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 00-.659-1.591L3.659 7.409A2.25 2.25 0 013 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0112 3z')}Pipeline</button>
   <button class="nav-btn" data-view="o_leads">${_navIcon('M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 01.865-.501 48.172 48.172 0 003.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z')}Leads</button>
   <button class="nav-btn" data-view="o_companies">${_navIcon('M3.75 21h16.5M4.5 3h15M5.25 3v18m13.5-18v18M9 6.75h1.5m-1.5 3h1.5m-1.5 3h1.5m3-6H15m-1.5 3H15m-1.5 3H15M9 21v-3.375c0-.621.504-1.125 1.125-1.125h3.75c.621 0 1.125.504 1.125 1.125V21')}Companies</button>
+  <button class="nav-btn" data-view="o_hours">${_navIcon('M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z')}Hours</button>
 `;
 
 const COMPANIES = {
@@ -1393,7 +1406,7 @@ try{const s=localStorage.getItem('wfs_fb');if(s)FIREBASE_CONFIG=JSON.parse(s)}ca
 // ══ State ══
 let DB=null;
 let MAP=null,MAP_MARKERS=[];
-const S={jobs:{},activity:[],members:[],view:'dashboard',detail:null,detailTab:'overview',filter:'all',search:'',photoCat:'all',calMonth:new Date().getMonth(),calYear:new Date().getFullYear(),calSelected:null,calMode:localStorage.getItem(LS('calmode'))||'month',reportRange:'90',sort:localStorage.getItem(LS('sort'))||'newest',sortOpen:false,bulkMode:false,bulkSel:new Set(),invFilter:'all',invSearch:'',invSort:'date',user:localStorage.getItem(LS('user'))||'',notifReadAt:parseInt(localStorage.getItem(LS('notif_read'))||'0',10),refFilter:'all',referrals:{},timeEntries:{},owner:{}};
+const S={jobs:{},activity:[],members:[],view:'dashboard',detail:null,detailTab:'overview',filter:'all',search:'',photoCat:'all',calMonth:new Date().getMonth(),calYear:new Date().getFullYear(),calSelected:null,calMode:localStorage.getItem(LS('calmode'))||'month',reportRange:'90',sort:localStorage.getItem(LS('sort'))||'newest',sortOpen:false,bulkMode:false,bulkSel:new Set(),invFilter:'all',invSearch:'',invSort:'date',user:localStorage.getItem(LS('user'))||'',notifReadAt:parseInt(localStorage.getItem(LS('notif_read'))||'0',10),refFilter:'all',referrals:{},timeEntries:{},payRates:{},owner:{}};
 const UNDO={stack:[],push(op){this.stack.push(op);if(this.stack.length>20)this.stack.shift()},pop(){return this.stack.pop()}};
 
 // ── Company info for invoice letterhead (editable via Settings)
@@ -1505,12 +1518,13 @@ function undoLast(){const op=UNDO.pop();if(!op){toast('Nothing to undo','');retu
 
 // ══ DB layer ══
 const LOCAL={
-  load(){try{S.jobs=JSON.parse(localStorage.getItem(LS('jobs'))||'{}')}catch(e){S.jobs={}}try{S.activity=JSON.parse(localStorage.getItem(LS('activity'))||'[]')}catch(e){S.activity=[]}try{S.members=JSON.parse(localStorage.getItem(LS('members'))||'[]')}catch(e){S.members=[]}try{S.referrals=JSON.parse(localStorage.getItem(LS('referrals'))||'{}')}catch(e){S.referrals={}}try{S.timeEntries=JSON.parse(localStorage.getItem(LS('time'))||'{}')}catch(e){S.timeEntries={}}},
+  load(){try{S.jobs=JSON.parse(localStorage.getItem(LS('jobs'))||'{}')}catch(e){S.jobs={}}try{S.activity=JSON.parse(localStorage.getItem(LS('activity'))||'[]')}catch(e){S.activity=[]}try{S.members=JSON.parse(localStorage.getItem(LS('members'))||'[]')}catch(e){S.members=[]}try{S.referrals=JSON.parse(localStorage.getItem(LS('referrals'))||'{}')}catch(e){S.referrals={}}try{S.timeEntries=JSON.parse(localStorage.getItem(LS('time'))||'{}')}catch(e){S.timeEntries={}}try{S.payRates=JSON.parse(localStorage.getItem(LS('payrates'))||'{}')}catch(e){S.payRates={}}},
   saveJobs(){try{localStorage.setItem(LS('jobs'),JSON.stringify(S.jobs))}catch(e){}},
   saveActivity(){try{localStorage.setItem(LS('activity'),JSON.stringify(S.activity.slice(0,300)))}catch(e){}},
   saveMembers(){try{localStorage.setItem(LS('members'),JSON.stringify(S.members))}catch(e){}},
   saveReferrals(){try{localStorage.setItem(LS('referrals'),JSON.stringify(S.referrals))}catch(e){}},
-  saveTime(){try{localStorage.setItem(LS('time'),JSON.stringify(S.timeEntries))}catch(e){}}
+  saveTime(){try{localStorage.setItem(LS('time'),JSON.stringify(S.timeEntries))}catch(e){}},
+  savePayRates(){try{localStorage.setItem(LS('payrates'),JSON.stringify(S.payRates))}catch(e){}}
 };
 function syncStatus(state,msg){const d=$('sync-dot'),t=$('sync-text');d.className='sync-dot '+state;t.textContent=msg}
 function initFB(cfg){
@@ -1523,6 +1537,7 @@ function initFB(cfg){
     DB.child('members').on('value',s=>{S.members=s.val()||[];LOCAL.saveMembers();render()});
     DB.child('referrals').on('value',s=>{S.referrals=s.val()||{};LOCAL.saveReferrals();render()});
     DB.child('time').on('value',s=>{S.timeEntries=s.val()||{};LOCAL.saveTime();render()});
+    DB.child('payrates').on('value',s=>{S.payRates=s.val()||{};LOCAL.savePayRates();render()});
     DB.child('.info/connected').on('value',s=>{if(!s.val())syncStatus('err','Reconnecting…')});
     return true;
   }catch(e){syncStatus('err','Firebase error');return false}
@@ -1550,17 +1565,25 @@ function weekStart(){const d=new Date();d.setHours(0,0,0,0);d.setDate(d.getDate(
 let TIME_TICK=null;
 function stopTimeTick(){if(TIME_TICK){clearInterval(TIME_TICK);TIME_TICK=null}}
 function startTimeTick(){stopTimeTick();TIME_TICK=setInterval(()=>{document.querySelectorAll('[data-tick-start]').forEach(el=>{const s=parseInt(el.getAttribute('data-tick-start'),10);if(s)el.textContent=fmtHMS(Date.now()-s)})},1000)}
+// ── Labor cost roll-ups ──
+async function savePayRates(){LOCAL.savePayRates();if(DB)await DB.child('payrates').set(S.payRates).catch(()=>{})}
+function rateOf(m){return Number((S.payRates||{})[m]||0)}
+function hoursOf(ms){return ms/3600000}
+function jobLaborStats(jobId){let ms=0,cost=0,active=0;timeList().forEach(t=>{if((t.job||'')!==jobId)return;const d=entryDur(t);ms+=d;cost+=hoursOf(d)*rateOf(t.member);if(!t.end)active++});return{ms,hours:hoursOf(ms),cost,active}}
+function laborByJob(){const map={};timeList().forEach(t=>{const k=t.job||'';const e=map[k]||(map[k]={ms:0,cost:0,active:0});const d=entryDur(t);e.ms+=d;e.cost+=hoursOf(d)*rateOf(t.member);if(!t.end)e.active++});return map}
 
 // ── Owner mode: read every company's jobs (read-only, all nodes) ──
 function ownerPrefix(co){return co.ns+(ENV==='dev'?'_dev_':'_')}
 function ownerNode(co){return co.ns+(ENV==='dev'?'_dev':'')}
-function ownerLoadLocal(){S.owner=S.owner||{};Object.values(COMPANIES).forEach(co=>{try{S.owner[co.id]=Object.values(JSON.parse(localStorage.getItem(ownerPrefix(co)+'jobs')||'{}')||{})}catch(e){S.owner[co.id]=[]}})}
+function ownerLoadLocal(){S.owner=S.owner||{};S.ownerTime=S.ownerTime||{};S.ownerRates=S.ownerRates||{};Object.values(COMPANIES).forEach(co=>{try{S.owner[co.id]=Object.values(JSON.parse(localStorage.getItem(ownerPrefix(co)+'jobs')||'{}')||{})}catch(e){S.owner[co.id]=[]}try{S.ownerTime[co.id]=Object.values(JSON.parse(localStorage.getItem(ownerPrefix(co)+'time')||'{}')||{})}catch(e){S.ownerTime[co.id]=[]}try{S.ownerRates[co.id]=JSON.parse(localStorage.getItem(ownerPrefix(co)+'payrates')||'{}')||{}}catch(e){S.ownerRates[co.id]={}}})}
 function ownerInitFB(cfg){
   try{
     if(!firebase.apps.length)firebase.initializeApp(cfg);
     syncStatus('pulse','Connecting…');
     Object.values(COMPANIES).forEach(co=>{
       firebase.database().ref(ownerNode(co)).child('jobs').on('value',s=>{S.owner=S.owner||{};S.owner[co.id]=Object.values(s.val()||{});syncStatus('ok','Live · all companies');render()});
+      firebase.database().ref(ownerNode(co)).child('time').on('value',s=>{S.ownerTime=S.ownerTime||{};S.ownerTime[co.id]=Object.values(s.val()||{});render()});
+      firebase.database().ref(ownerNode(co)).child('payrates').on('value',s=>{S.ownerRates=S.ownerRates||{};S.ownerRates[co.id]=s.val()||{};render()});
     });
     firebase.database().ref('.info/connected').on('value',s=>{if(!s.val())syncStatus('err','Reconnecting…')});
     return true;
@@ -2485,6 +2508,7 @@ function renderOwner(c){
     : v==='o_pipeline'?ownerPipeline()
     : v==='o_leads'?ownerLeads()
     : v==='o_companies'?ownerCompanies()
+    : v==='o_hours'?ownerHours()
     : ownerOverview();
   updateUserUI();
   attachHandlers();
@@ -2550,6 +2574,44 @@ function ownerFinancials(){
         <thead><tr><th>Company</th><th class="num">Revenue</th><th class="num">Invoiced</th><th class="num">Collected</th><th class="num">Outstanding</th><th class="num">Collect%</th><th class="num">Avg job</th></tr></thead>
         <tbody>${rows}
           <tr class="total-row"><td>All companies</td><td class="num">${money(g.revenue)}</td><td class="num">${money(g.invoiced)}</td><td class="num">${money(g.collected)}</td><td class="num">${money(g.outstanding)}</td><td class="num">${collRate}</td><td class="num">${money(g.won>0?g.revenue/g.won:0)}</td></tr>
+        </tbody></table></div>
+    </div>
+  `;
+}
+function ownerHours(){
+  const cos=Object.values(COMPANIES);
+  const rows=cos.map(co=>{
+    const entries=(S.ownerTime&&S.ownerTime[co.id])||[];
+    const rates=(S.ownerRates&&S.ownerRates[co.id])||{};
+    let ms=0,cost=0,active=0;
+    entries.forEach(t=>{const d=Math.max(0,(t.end||Date.now())-t.start);ms+=d;cost+=(d/3600000)*Number(rates[t.member]||0);if(!t.end)active++});
+    return {co,ms,cost,active,count:entries.length};
+  });
+  const gMs=rows.reduce((s,r)=>s+r.ms,0),gCost=rows.reduce((s,r)=>s+r.cost,0),gActive=rows.reduce((s,r)=>s+r.active,0),gCount=rows.reduce((s,r)=>s+r.count,0);
+  const anyRates=rows.some(r=>r.cost>0);
+  const maxMs=Math.max(1,...rows.map(r=>r.ms));
+  const cards=rows.map(r=>`
+    <div class="report-section">
+      <div class="report-hd" style="align-items:center"><span style="display:flex;align-items:center;gap:8px"><span style="width:11px;height:11px;border-radius:3px;background:${colorOf(r.co)}"></span>${esc(r.co.label)}</span>${r.active?`<span class="tt-live">● ${r.active} on the clock</span>`:''}</div>
+      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-top:4px"><div style="font-size:22px;font-weight:700;font-family:var(--font-display)">${fmtHM(r.ms)}</div><div style="font-size:15px;font-weight:700;color:var(--green-700)">${anyRates?money(r.cost):'—'}</div></div>
+      <div class="bar-row-track" style="margin-top:8px"><div class="bar-row-fill" style="width:${(r.ms/maxMs*100).toFixed(1)}%;background:${colorOf(r.co)}"></div></div>
+    </div>`).join('');
+  const tableRows=rows.map(r=>`<tr><td style="font-weight:700"><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:${colorOf(r.co)};margin-right:7px;vertical-align:middle"></span>${esc(r.co.label)}</td><td class="num">${fmtHM(r.ms)}</td><td class="num">${r.active}</td><td class="num">${anyRates?money(r.cost):'—'}</td></tr>`).join('');
+  return `
+    ${ownerTitle('Labor Hours')}
+    <div class="kpi-grid">
+      <div class="kpi-card accent"><div class="kpi-label">Total hours</div><div class="kpi-value">${fmtHM(gMs)}</div><div class="kpi-sub">across ${rows.length} companies</div></div>
+      <div class="kpi-card"><div class="kpi-label">Labor cost</div><div class="kpi-value">${anyRates?money(gCost):'—'}</div><div class="kpi-sub">${anyRates?'from tracked time':'set rates per company'}</div></div>
+      <div class="kpi-card"><div class="kpi-label">On the clock</div><div class="kpi-value">${gActive}</div><div class="kpi-sub">right now</div></div>
+      <div class="kpi-card"><div class="kpi-label">Sessions</div><div class="kpi-value">${gCount}</div><div class="kpi-sub">total time entries</div></div>
+    </div>
+    ${cards}
+    <div class="report-section">
+      <div class="report-hd">Hours by company</div>
+      <div style="overflow-x:auto;-webkit-overflow-scrolling:touch"><table class="admin-table">
+        <thead><tr><th>Company</th><th class="num">Hours</th><th class="num">On clock</th><th class="num">Labor $</th></tr></thead>
+        <tbody>${tableRows}
+          <tr class="total-row"><td>All companies</td><td class="num">${fmtHM(gMs)}</td><td class="num">${gActive}</td><td class="num">${anyRates?money(gCost):'—'}</td></tr>
         </tbody></table></div>
     </div>
   `;
@@ -3302,6 +3364,7 @@ function renderDetailTab(j,tab){
   }
   if(tab==='financial'){
     const est=Number(j.value||0);
+    const lab=jobLaborStats(j.id);const anyRates=S.members.some(m=>rateOf(m)>0);
     const invTot=invoiceTotals(j);
     const inv=invTot?invTot.total:Number(j.invoiced||0);
     const paid=invTot?invTot.paid:Number(j.paid||0);
@@ -3322,6 +3385,7 @@ function renderDetailTab(j,tab){
             <div style="font-size:11.5px;color:var(--text-3)">${pctPaid.toFixed(0)}% collected</div>
           </div>
           <div class="fin-cell" style="grid-column:1/-1"><div class="fin-label">Projected Margin</div><div class="fin-value" style="color:${margin>=0?'var(--green-700)':'var(--orange)'}">${money(margin)} <span style="font-size:12px;color:var(--text-3);font-weight:500">${est>0?'('+((margin/est)*100).toFixed(0)+'%)':''}</span></div></div>
+          <div class="fin-cell" style="grid-column:1/-1"><div class="fin-label">Actual Labor (tracked)${lab.active?' · <span style="color:var(--green-700);text-transform:none;letter-spacing:0;font-weight:600">'+lab.active+' on the clock</span>':''}</div><div class="fin-value">${anyRates?money(lab.cost):'—'} <span style="font-size:12px;color:var(--text-3);font-weight:500">${fmtHM(lab.ms)}${anyRates?'':' · set rates on Team'}</span></div></div>
         </div>
         <div class="form-row">
           <div class="form-group"><label class="form-label">Estimate ($)</label><input class="form-input" type="number" id="fin-est" value="${esc(est||'')}"></div>
@@ -3544,7 +3608,8 @@ function renderTeam(){
     <input id="member-in" placeholder="Add team member name…">
     <button class="btn-save" id="btn-add-member">Add</button>
   </div>
-  <div class="member-list">${S.members.map((m,i)=>`<div class="member-row"><div class="member-ava">${initials(m)}</div><div class="member-name">${esc(m)}</div><button class="btn-remove" data-rm="${i}">Remove</button></div>`).join('')}</div>
+  <div class="member-list">${S.members.map((m,i)=>`<div class="member-row"><div class="member-ava">${initials(m)}</div><div class="member-name">${esc(m)}</div><div class="tt-rate"><span>$</span><input class="tt-rate-in" type="number" inputmode="decimal" min="0" step="0.5" data-rate-member="${esc(m)}" value="${rateOf(m)||''}" placeholder="0" aria-label="Hourly rate for ${esc(m)}"><span>/hr</span></div><button class="btn-remove" data-rm="${i}">Remove</button></div>`).join('')}</div>
+  ${S.members.length?`<div class="tt-hint" style="margin-top:10px">Set each person’s hourly pay rate to calculate actual labor cost per job on the Time tab.</div>`:''}
   <div class="team-info-card">
     <strong>Team sharing:</strong><br>
     ${DB?'✅ Firebase connected — all devices share the same data in real time.':'⚠️ Not connected. Each phone saves its own data. Tap <strong>Connect team →</strong> above to enable live sharing.'}
@@ -3602,6 +3667,17 @@ function renderTime(){
     }</div>`;
   }).join(''):`<div class="tt-empty">No completed time entries yet.</div>`;
 
+  const anyRates=S.members.some(m=>rateOf(m)>0);
+  const lb=laborByJob();
+  const laborRows=Object.keys(lb).map(k=>({k,name:k?(S.jobs[k]?S.jobs[k].name:'(deleted job)'):'General / no job',ms:lb[k].ms,cost:lb[k].cost,active:lb[k].active})).filter(r=>r.ms>0).sort((a,b)=>(b.cost-a.cost)||(b.ms-a.ms));
+  const laborHtml=laborRows.length?laborRows.map(r=>{
+    const clickable=r.k&&S.jobs[r.k];
+    return `<div class="tt-job"${clickable?` data-labor-job="${esc(r.k)}"`:''}>
+      <div class="tt-job-body"><div class="tt-job-name">${esc(r.name)}${r.active?` <span class="tt-live">● ${r.active} on the clock</span>`:''}</div><div class="tt-job-sub">${fmtHM(r.ms)} total${anyRates?'':' · set rates for cost'}</div></div>
+      <div class="tt-job-cost">${anyRates?money(r.cost):'—'}</div>
+    </div>`;
+  }).join(''):`<div class="tt-empty">No labor logged to jobs yet.</div>`;
+
   return `
     <div class="tt-kpis">
       <div class="tt-kpi"><div class="tt-kpi-val">${active.length}</div><div class="tt-kpi-lbl">On the clock</div></div>
@@ -3617,6 +3693,9 @@ function renderTime(){
     </div>
     <div class="section-hd">On the clock now</div>
     ${activeHtml}
+    <div class="section-hd" style="margin-top:20px">Labor cost by job</div>
+    ${anyRates?'':`<div class="tt-hint">Set each person’s hourly rate on the Team tab to calculate labor cost.</div>`}
+    ${laborHtml}
     <div class="section-hd" style="margin-top:20px">Time log <button class="btn-mini" id="tt-add-manual">+ Add entry</button></div>
     ${logHtml}
   `;
@@ -4863,6 +4942,8 @@ function attachHandlers(){
     render();toast(t.member+' clocked out · '+fmtHM(entryDur(t)));
   });
   $('tt-add-manual')?.addEventListener('click',()=>showTimeModal(null));
+  document.querySelectorAll('[data-rate-member]').forEach(inp=>{inp.onchange=async()=>{const m=inp.dataset.rateMember;const v=parseFloat(inp.value);S.payRates=S.payRates||{};if(!v||v<=0)delete S.payRates[m];else S.payRates[m]=v;await savePayRates();toast('Saved rate for '+m)}});
+  document.querySelectorAll('[data-labor-job]').forEach(el=>el.onclick=()=>{S.detail=el.dataset.laborJob;S.view='jobs';S.detailTab='financial';render()});
   document.querySelectorAll('[data-time-edit]').forEach(b=>b.onclick=()=>{const t=S.timeEntries[b.dataset.timeEdit];if(t)showTimeModal(t)});
   document.querySelectorAll('[data-time-del]').forEach(b=>b.onclick=async()=>{
     const t=S.timeEntries[b.dataset.timeDel];if(!t)return;
