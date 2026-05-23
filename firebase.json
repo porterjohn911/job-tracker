@@ -1,0 +1,17 @@
+{
+  "hosting": {
+    "public": ".",
+    "ignore": [
+      "firebase.json",
+      "database.rules.json",
+      ".firebaserc",
+      "**/.*",
+      "**/node_modules/**",
+      "waterfront-job-tracker-dev.html",
+      "*.md"
+    ],
+    "rewrites": [
+      { "source": "**", "destination": "/waterfront-job-tracker.html" }
+    ]
+  }
+}
