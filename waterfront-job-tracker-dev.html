@@ -1258,10 +1258,6 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z"/></svg>
     Team
   </button>
-  <button class="nav-btn" data-view="admin">
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 21h16.5M4.5 3h15M5.25 3v18m13.5-18v18M9 6.75h1.5m-1.5 3h1.5m-1.5 3h1.5m3-6H15m-1.5 3H15m-1.5 3H15M9 21v-3.375c0-.621.504-1.125 1.125-1.125h3.75c.621 0 1.125.504 1.125 1.125V21"/></svg>
-    Owner
-  </button>
 </nav>
 
 <main class="content" id="content" role="main"><div class="loader">Loading…</div></main>
@@ -1321,6 +1317,24 @@ const MHS_LOGO_FULL = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 
 <text x="360" y="250" text-anchor="middle" font-family="'DM Sans',Arial,sans-serif" font-weight="500" font-size="11.5" letter-spacing="5" fill="#5a7088">FULL SERVICE CONSTRUCTION</text>
 </svg>`;
 
+// Owner-mode emblem (growth chart) — signals the cross-company workspace.
+const OWNER_LOGO = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192">
+<rect width="192" height="192" rx="40" fill="#1e1b2e"/>
+<rect x="46" y="106" width="22" height="44" rx="3" fill="#7c6cc4"/>
+<rect x="85" y="80" width="22" height="70" rx="3" fill="#a99ce0"/>
+<rect x="124" y="58" width="22" height="92" rx="3" fill="#e8a830"/>
+<path d="M57 96 L96 68 L135 48" fill="none" stroke="#ffffff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.9"/>
+<circle cx="57" cy="96" r="5.5" fill="#a99ce0"/><circle cx="96" cy="68" r="5.5" fill="#e8a830"/><circle cx="135" cy="48" r="5.5" fill="#ffffff"/>
+</svg>`;
+const _navIcon=d=>`<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="${d}"/></svg>`;
+const OWNER_NAV = `
+  <button class="nav-btn" data-view="o_overview">${_navIcon('M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z')}Overview</button>
+  <button class="nav-btn" data-view="o_financials">${_navIcon('M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z')}Financials</button>
+  <button class="nav-btn" data-view="o_pipeline">${_navIcon('M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 01-.659 1.591l-5.432 5.432a2.25 2.25 0 00-.659 1.591v2.927a2.25 2.25 0 01-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 00-.659-1.591L3.659 7.409A2.25 2.25 0 013 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0112 3z')}Pipeline</button>
+  <button class="nav-btn" data-view="o_leads">${_navIcon('M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 01.865-.501 48.172 48.172 0 003.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z')}Leads</button>
+  <button class="nav-btn" data-view="o_companies">${_navIcon('M3.75 21h16.5M4.5 3h15M5.25 3v18m13.5-18v18M9 6.75h1.5m-1.5 3h1.5m-1.5 3h1.5m3-6H15m-1.5 3H15m-1.5 3H15M9 21v-3.375c0-.621.504-1.125 1.125-1.125h3.75c.621 0 1.125.504 1.125 1.125V21')}Companies</button>
+`;
+
 const COMPANIES = {
   wfs: { id:'wfs', ns:'wfs', label:'Waterfront Solutions',           tag:'Construction & Waterfront Services',
          inv:{ band:'linear-gradient(135deg,#0a3d2e 0%,#1a6e55 100%)', primary:'#0a3d2e', link:'#0f5040', notesBar:'#1a6e55', rule:'#0a3d2e' } },
@@ -1334,9 +1348,13 @@ const COMPANIES = {
 const INV_DEFAULT={ band:'linear-gradient(135deg,#0a3d2e 0%,#1a6e55 100%)', primary:'#0a3d2e', link:'#0f5040', notesBar:'#1a6e55', rule:'#0a3d2e' };
 function invTheme(){ return ACTIVE_CO.inv||INV_DEFAULT }
 function brandLogoFull(){ return ACTIVE_CO.logoFull?'data:image/svg+xml;utf8,'+encodeURIComponent(ACTIVE_CO.logoFull):'' }
-const COMPANY_ID = (() => { try { const s = localStorage.getItem('jt_company'); return (s && COMPANIES[s]) ? s : 'wfs'; } catch (e) { return 'wfs'; } })();
+const _stored = (() => { try { return localStorage.getItem('jt_company'); } catch (e) { return null; } })();
+// 'owner' is a special selectable mode (not a company): a cross-company
+// analytics workspace. Otherwise we resolve to one of the three companies.
+const OWNER_MODE = _stored === 'owner';
+const COMPANY_ID = (_stored && COMPANIES[_stored]) ? _stored : 'wfs';
 const ACTIVE_CO = COMPANIES[COMPANY_ID];
-document.title = 'Job Tracker — ' + ACTIVE_CO.label;
+document.title = OWNER_MODE ? 'Job Tracker — Owner' : ('Job Tracker — ' + ACTIVE_CO.label);
 
 // Data (localStorage + the Firebase node) is namespaced by company AND by
 // ENV, so each company's prod and dev sandboxes stay completely separate.
@@ -1368,7 +1386,7 @@ try{const s=localStorage.getItem('wfs_fb');if(s)FIREBASE_CONFIG=JSON.parse(s)}ca
 // ══ State ══
 let DB=null;
 let MAP=null,MAP_MARKERS=[];
-const S={jobs:{},activity:[],members:[],view:'dashboard',detail:null,detailTab:'overview',filter:'all',search:'',photoCat:'all',calMonth:new Date().getMonth(),calYear:new Date().getFullYear(),calSelected:null,calMode:localStorage.getItem(LS('calmode'))||'month',reportRange:'90',sort:localStorage.getItem(LS('sort'))||'newest',sortOpen:false,bulkMode:false,bulkSel:new Set(),invFilter:'all',invSearch:'',invSort:'date',user:localStorage.getItem(LS('user'))||'',notifReadAt:parseInt(localStorage.getItem(LS('notif_read'))||'0',10)};
+const S={jobs:{},activity:[],members:[],view:'dashboard',detail:null,detailTab:'overview',filter:'all',search:'',photoCat:'all',calMonth:new Date().getMonth(),calYear:new Date().getFullYear(),calSelected:null,calMode:localStorage.getItem(LS('calmode'))||'month',reportRange:'90',sort:localStorage.getItem(LS('sort'))||'newest',sortOpen:false,bulkMode:false,bulkSel:new Set(),invFilter:'all',invSearch:'',invSort:'date',user:localStorage.getItem(LS('user'))||'',notifReadAt:parseInt(localStorage.getItem(LS('notif_read'))||'0',10),owner:{}};
 const UNDO={stack:[],push(op){this.stack.push(op);if(this.stack.length>20)this.stack.shift()},pop(){return this.stack.pop()}};
 
 // ── Company info for invoice letterhead (editable via Settings)
@@ -1503,12 +1521,30 @@ async function deleteJobDB(id){delete S.jobs[id];LOCAL.saveJobs();if(DB)await DB
 async function logAct(action,job){const e={user:S.user||'Someone',action,job:job||'',time:Date.now()};S.activity.unshift(e);LOCAL.saveActivity();if(DB)await DB.child('activity').push(e).catch(()=>{})}
 async function saveMembers(){LOCAL.saveMembers();if(DB)await DB.child('members').set(S.members).catch(()=>{})}
 
-LOCAL.load();
-if(FIREBASE_CONFIG)initFB(FIREBASE_CONFIG);
+// ── Owner mode: read every company's jobs (read-only, all nodes) ──
+function ownerPrefix(co){return co.ns+(ENV==='dev'?'_dev_':'_')}
+function ownerNode(co){return co.ns+(ENV==='dev'?'_dev':'')}
+function ownerLoadLocal(){S.owner=S.owner||{};Object.values(COMPANIES).forEach(co=>{try{S.owner[co.id]=Object.values(JSON.parse(localStorage.getItem(ownerPrefix(co)+'jobs')||'{}')||{})}catch(e){S.owner[co.id]=[]}})}
+function ownerInitFB(cfg){
+  try{
+    if(!firebase.apps.length)firebase.initializeApp(cfg);
+    syncStatus('pulse','Connecting…');
+    Object.values(COMPANIES).forEach(co=>{
+      firebase.database().ref(ownerNode(co)).child('jobs').on('value',s=>{S.owner=S.owner||{};S.owner[co.id]=Object.values(s.val()||{});syncStatus('ok','Live · all companies');render()});
+    });
+    firebase.database().ref('.info/connected').on('value',s=>{if(!s.val())syncStatus('err','Reconnecting…')});
+    return true;
+  }catch(e){syncStatus('err','Firebase error');return false}
+}
+function ownerJobs(id){return (S.owner&&S.owner[id])||[]}
+
+if(OWNER_MODE){ownerLoadLocal();if(FIREBASE_CONFIG)ownerInitFB(FIREBASE_CONFIG);}
+else{LOCAL.load();if(FIREBASE_CONFIG)initFB(FIREBASE_CONFIG);}
 
 // ══ Render ══
 function render(){
   const c=$('content');
+  if(OWNER_MODE){renderOwner(c);return}
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.toggle('active',b.dataset.view===S.view));
   if(S.view==='jobs'&&S.detail)c.innerHTML=renderDetail(S.detail);
   else if(S.view==='jobs')c.innerHTML=renderJobs();
@@ -1519,7 +1555,6 @@ function render(){
   else if(S.view==='reports')c.innerHTML=renderReports();
   else if(S.view==='activity')c.innerHTML=renderActivity();
   else if(S.view==='team')c.innerHTML=renderTeam();
-  else if(S.view==='admin')c.innerHTML=renderAdmin();
   updateUserUI();
   updateBellBadge();
   attachHandlers();
@@ -2520,23 +2555,7 @@ function showSendInvoiceModal(j,inv){
 // ══ Owner / Admin — cross-company dashboard ══
 const ADMIN_COLORS={wfs:'#2a9070',mhs:'#e8a830',nlr:'#3ab5c8'};
 function adminFirebaseReady(){return typeof firebase!=='undefined'&&firebase.apps&&firebase.apps.length}
-function loadCompanyJobs(co){
-  if(co.id===COMPANY_ID)return Object.values(S.jobs); // active company is always live
-  if(S.adminData&&S.adminData[co.id])return S.adminData[co.id];
-  const prefix=co.ns+(ENV==='dev'?'_dev_':'_');
-  try{return Object.values(JSON.parse(localStorage.getItem(prefix+'jobs')||'{}')||{})}catch(e){return[]}
-}
-async function refreshAdminData(){
-  if(!adminFirebaseReady())return;
-  const data={};
-  for(const co of Object.values(COMPANIES)){
-    const node=co.ns+(ENV==='dev'?'_dev':'');
-    try{const snap=await firebase.database().ref(node).child('jobs').once('value');data[co.id]=Object.values(snap.val()||{});}
-    catch(e){data[co.id]=loadCompanyJobs(co);}
-  }
-  S.adminData=data;
-  if(S.view==='admin')render();
-}
+function refreshOwnerData(){ownerLoadLocal();render();toast('Refreshed');}
 function companyMetrics(arr){
   const m={total:arr.length,active:0,leads:0,complete:0,hold:0,value:0,pipeline:0,invoiced:0,collected:0,revenue:0,won:0,lost:0};
   arr.forEach(j=>{
@@ -2568,85 +2587,189 @@ function adminCompareChart(title,rows,fmt){
     </div>
   </div>`;
 }
-function renderAdmin(){
-  if(!S.adminData&&!S._adminFetching&&adminFirebaseReady()){S._adminFetching=true;refreshAdminData().finally(()=>{S._adminFetching=false});}
-  const list=Object.values(COMPANIES).map(co=>({co,m:companyMetrics(loadCompanyJobs(co))}));
-  const sum=k=>list.reduce((s,x)=>s+x.m[k],0);
-  const grand={collected:sum('collected'),invoiced:sum('invoiced'),outstanding:sum('outstanding'),pipeline:sum('pipeline'),revenue:sum('revenue'),active:sum('active'),total:sum('total'),leads:sum('leads'),complete:sum('complete')};
+// ── stats + owner helpers ──
+function pctStr(n,d){return d>0?((n/d)*100).toFixed(0)+'%':'—'}
+function fmtMoneyShort(v){v=Number(v||0);if(Math.abs(v)>=1000)return '$'+(v/1000).toFixed(Math.abs(v)>=10000?0:1)+'k';return '$'+Math.round(v)}
+const colorOf=co=>ADMIN_COLORS[co.id]||'var(--green-600)';
+const coLbl=co=>co.id.toUpperCase();
+function ownerList(){return Object.values(COMPANIES).map(co=>({co,jobs:ownerJobs(co.id),m:companyMetrics(ownerJobs(co.id))}))}
+function ownerGrand(list){const g={};['total','active','leads','complete','hold','value','pipeline','invoiced','collected','revenue','won','lost'].forEach(k=>g[k]=list.reduce((s,x)=>s+x.m[k],0));g.outstanding=g.invoiced-g.collected;g.winRate=(g.won+g.lost)>0?g.won/(g.won+g.lost)*100:0;return g}
+function monthlyRevenue(jobsArr){
+  const months=[];const now=new Date();
+  for(let i=5;i>=0;i--){const d=new Date(now.getFullYear(),now.getMonth()-i,1);months.push({label:d.toLocaleDateString(undefined,{month:'short'}),key:d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'),val:0});}
+  jobsArr.forEach(j=>{if(j.status!=='complete')return;const t=j.completedAt||j.created;if(!t)return;const d=new Date(t);const k=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');const m=months.find(x=>x.key===k);if(m)m.val+=Number(j.invoiced||j.value||0);});
+  return months;
+}
+function reportChart(series){
+  const max=Math.max(1,...series.map(m=>m.val));
+  return `<div class="report-chart">${series.map(m=>`<div class="report-bar" style="height:${(m.val/max*100).toFixed(1)}%">${m.val?`<span class="report-bar-val">${fmtMoneyShort(m.val)}</span>`:''}<span class="report-bar-label">${esc(m.label)}</span></div>`).join('')}</div><div class="report-x-pad"></div>`;
+}
+function ownerTitle(sub){
+  return `<div style="margin-bottom:14px">
+    <div style="font-size:11px;color:var(--text-3);text-transform:uppercase;letter-spacing:0.06em;font-weight:700">Owner · All Companies</div>
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">
+      <div style="font-size:20px;font-weight:700;margin-top:2px">${esc(sub)}</div>
+      <button class="btn-mini" id="owner-refresh">${adminFirebaseReady()?'↻ Refresh':'Reload local'}</button>
+    </div>
+  </div>`;
+}
+function renderOwner(c){
+  if(!String(S.view||'').startsWith('o_'))S.view='o_overview';
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.toggle('active',b.dataset.view===S.view));
+  const v=S.view;
+  c.innerHTML = v==='o_financials'?ownerFinancials()
+    : v==='o_pipeline'?ownerPipeline()
+    : v==='o_leads'?ownerLeads()
+    : v==='o_companies'?ownerCompanies()
+    : ownerOverview();
+  updateUserUI();
+  attachHandlers();
+}
+function ownerOverview(){
+  const list=ownerList(),g=ownerGrand(list);
   const top=[...list].sort((a,b)=>b.m.collected-a.m.collected)[0];
-  const colorOf=co=>ADMIN_COLORS[co.id]||'var(--green-600)';
-  const lbl=co=>co.id.toUpperCase();
-
-  const compare=[
-    adminCompareChart('Collected (cash in)',list.map(x=>({label:lbl(x.co),val:x.m.collected,color:colorOf(x.co)})),money),
-    adminCompareChart('Outstanding balance',list.map(x=>({label:lbl(x.co),val:x.m.outstanding,color:colorOf(x.co)})),money),
-    adminCompareChart('Pipeline value',list.map(x=>({label:lbl(x.co),val:x.m.pipeline,color:colorOf(x.co)})),money),
-    adminCompareChart('Active jobs',list.map(x=>({label:lbl(x.co),val:x.m.active,color:colorOf(x.co)})),v=>String(v)),
-  ].join('');
-
+  const watch=[...list].sort((a,b)=>b.m.outstanding-a.m.outstanding)[0];
+  const allJobs=list.flatMap(x=>x.jobs);
   const tableRows=list.map(x=>`<tr>
     <td style="font-weight:700"><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:${colorOf(x.co)};margin-right:7px;vertical-align:middle"></span>${esc(x.co.label)}</td>
     <td class="num">${x.m.total}</td><td class="num">${x.m.active}</td><td class="num">${x.m.leads}</td><td class="num">${x.m.complete}</td>
-    <td class="num">${money(x.m.pipeline)}</td><td class="num">${money(x.m.invoiced)}</td><td class="num">${money(x.m.collected)}</td>
-    <td class="num">${money(x.m.outstanding)}</td><td class="num">${x.m.winRate.toFixed(0)}%</td>
+    <td class="num">${money(x.m.pipeline)}</td><td class="num">${money(x.m.collected)}</td><td class="num">${money(x.m.outstanding)}</td><td class="num">${x.m.winRate.toFixed(0)}%</td>
   </tr>`).join('');
-
-  const cards=list.map(x=>{
-    const m=x.m,co=x.co;
-    return `<div class="report-section">
-      <div class="report-hd" style="align-items:center">
-        <span style="display:flex;align-items:center;gap:8px"><span style="width:11px;height:11px;border-radius:3px;background:${colorOf(co)}"></span>${esc(co.label)}</span>
-        <button class="btn-mini" data-view-company="${esc(co.id)}">Open${co.id===COMPANY_ID?' (current)':''} →</button>
-      </div>
-      <div class="kpi-grid" style="margin-bottom:0">
-        <div class="kpi-card"><div class="kpi-label">Collected</div><div class="kpi-value">${money(m.collected)}</div><div class="kpi-sub">${money(m.outstanding)} outstanding</div></div>
-        <div class="kpi-card"><div class="kpi-label">Pipeline</div><div class="kpi-value">${money(m.pipeline)}</div><div class="kpi-sub">${m.active} active · ${m.leads} lead${m.leads!==1?'s':''}</div></div>
-        <div class="kpi-card"><div class="kpi-label">Jobs</div><div class="kpi-value">${m.total}</div><div class="kpi-sub">${m.complete} complete</div></div>
-        <div class="kpi-card"><div class="kpi-label">Win rate</div><div class="kpi-value">${m.winRate.toFixed(0)}%</div><div class="kpi-sub">${m.won} won · ${m.lost} lost</div></div>
-      </div>
-    </div>`;
-  }).join('');
-
   return `
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
-      <div>
-        <div style="font-size:11px;color:var(--text-3);text-transform:uppercase;letter-spacing:0.06em;font-weight:700">Owner</div>
-        <div style="font-size:20px;font-weight:700;margin-top:2px">All Companies</div>
-      </div>
-      <button class="btn-mini" id="admin-refresh">${adminFirebaseReady()?'↻ Refresh live':'Local data only'}</button>
-    </div>
-
+    ${ownerTitle('Overview')}
     <div class="kpi-grid">
-      <div class="kpi-card accent"><div class="kpi-label">Total Collected</div><div class="kpi-value">${money(grand.collected)}</div><div class="kpi-sub">across ${list.length} companies</div></div>
-      <div class="kpi-card"><div class="kpi-label">Outstanding</div><div class="kpi-value">${money(grand.outstanding)}</div><div class="kpi-sub">${money(grand.invoiced)} invoiced</div></div>
-      <div class="kpi-card"><div class="kpi-label">Pipeline</div><div class="kpi-value">${money(grand.pipeline)}</div><div class="kpi-sub">${grand.active} active jobs</div></div>
-      <div class="kpi-card"><div class="kpi-label">Total Jobs</div><div class="kpi-value">${grand.total}</div><div class="kpi-sub">${grand.leads} leads · ${grand.complete} done</div></div>
+      <div class="kpi-card accent"><div class="kpi-label">Total Collected</div><div class="kpi-value">${money(g.collected)}</div><div class="kpi-sub">across ${list.length} companies</div></div>
+      <div class="kpi-card"><div class="kpi-label">Outstanding</div><div class="kpi-value">${money(g.outstanding)}</div><div class="kpi-sub">${money(g.invoiced)} invoiced</div></div>
+      <div class="kpi-card"><div class="kpi-label">Pipeline</div><div class="kpi-value">${money(g.pipeline)}</div><div class="kpi-sub">${g.active} active jobs</div></div>
+      <div class="kpi-card"><div class="kpi-label">Total Jobs</div><div class="kpi-value">${g.total}</div><div class="kpi-sub">${g.leads} leads · ${g.complete} done</div></div>
     </div>
-
+    <div class="report-section" style="display:flex;gap:14px;flex-wrap:wrap">
+      <div style="flex:1;min-width:150px"><div class="kpi-label">Top performer</div><div style="font-size:16px;font-weight:800;color:${colorOf(top.co)};margin-top:3px">${esc(top.co.label)}</div><div class="kpi-sub">${money(top.m.collected)} collected</div></div>
+      <div style="flex:1;min-width:150px"><div class="kpi-label">Most outstanding</div><div style="font-size:16px;font-weight:800;color:${colorOf(watch.co)};margin-top:3px">${esc(watch.co.label)}</div><div class="kpi-sub">${money(watch.m.outstanding)} unpaid</div></div>
+    </div>
+    ${adminCompareChart('Revenue share — collected',list.map(x=>({label:coLbl(x.co),val:x.m.collected,color:colorOf(x.co)})),money)}
+    <div class="report-section"><div class="report-hd">Monthly revenue · all companies <span class="kpi-sub">last 6 months</span></div>${reportChart(monthlyRevenue(allJobs))}</div>
+    ${adminCompareChart('Outstanding balance',list.map(x=>({label:coLbl(x.co),val:x.m.outstanding,color:colorOf(x.co)})),money)}
+    ${adminCompareChart('Pipeline value',list.map(x=>({label:coLbl(x.co),val:x.m.pipeline,color:colorOf(x.co)})),money)}
     <div class="report-section">
-      <div class="report-hd">Top performer <span class="kpi-sub">by cash collected</span></div>
-      <div style="font-size:18px;font-weight:800;color:${colorOf(top.co)}">${esc(top.co.label)}</div>
-      <div class="kpi-sub" style="margin-top:3px">${money(top.m.collected)} collected · ${money(top.m.pipeline)} in pipeline · ${top.m.winRate.toFixed(0)}% win rate</div>
+      <div class="report-hd">Side-by-side</div>
+      <div style="overflow-x:auto;-webkit-overflow-scrolling:touch"><table class="admin-table">
+        <thead><tr><th>Company</th><th class="num">Jobs</th><th class="num">Active</th><th class="num">Leads</th><th class="num">Done</th><th class="num">Pipeline</th><th class="num">Collected</th><th class="num">Outstanding</th><th class="num">Win%</th></tr></thead>
+        <tbody>${tableRows}
+          <tr class="total-row"><td>All companies</td><td class="num">${g.total}</td><td class="num">${g.active}</td><td class="num">${g.leads}</td><td class="num">${g.complete}</td><td class="num">${money(g.pipeline)}</td><td class="num">${money(g.collected)}</td><td class="num">${money(g.outstanding)}</td><td class="num">${g.winRate.toFixed(0)}%</td></tr>
+        </tbody></table></div>
     </div>
-
-    ${compare}
-
-    <div class="report-section">
-      <div class="report-hd">Side-by-side comparison</div>
-      <div style="overflow-x:auto;-webkit-overflow-scrolling:touch">
-        <table class="admin-table">
-          <thead><tr><th>Company</th><th class="num">Jobs</th><th class="num">Active</th><th class="num">Leads</th><th class="num">Done</th><th class="num">Pipeline</th><th class="num">Invoiced</th><th class="num">Collected</th><th class="num">Outstanding</th><th class="num">Win%</th></tr></thead>
-          <tbody>${tableRows}
-            <tr class="total-row"><td>All companies</td><td class="num">${grand.total}</td><td class="num">${grand.active}</td><td class="num">${grand.leads}</td><td class="num">${grand.complete}</td><td class="num">${money(grand.pipeline)}</td><td class="num">${money(grand.invoiced)}</td><td class="num">${money(grand.collected)}</td><td class="num">${money(grand.outstanding)}</td><td class="num">—</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-    <div style="font-size:13px;font-weight:700;margin:18px 0 10px">Individual company reports</div>
-    ${cards}
-    <div class="report-x-pad"></div>
   `;
+}
+function ownerFinancials(){
+  const list=ownerList(),g=ownerGrand(list);
+  const allJobs=list.flatMap(x=>x.jobs);
+  const collRate=pctStr(g.collected,g.invoiced);
+  const rows=list.map(x=>{const m=x.m;return `<tr>
+    <td style="font-weight:700"><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:${colorOf(x.co)};margin-right:7px;vertical-align:middle"></span>${esc(x.co.label)}</td>
+    <td class="num">${money(m.revenue)}</td><td class="num">${money(m.invoiced)}</td><td class="num">${money(m.collected)}</td><td class="num">${money(m.outstanding)}</td><td class="num">${pctStr(m.collected,m.invoiced)}</td><td class="num">${money(m.avg)}</td>
+  </tr>`}).join('');
+  return `
+    ${ownerTitle('Financials')}
+    <div class="kpi-grid">
+      <div class="kpi-card accent"><div class="kpi-label">Collected</div><div class="kpi-value">${money(g.collected)}</div><div class="kpi-sub">${collRate} of invoiced</div></div>
+      <div class="kpi-card"><div class="kpi-label">Invoiced</div><div class="kpi-value">${money(g.invoiced)}</div><div class="kpi-sub">${money(g.revenue)} won revenue</div></div>
+      <div class="kpi-card"><div class="kpi-label">Outstanding (A/R)</div><div class="kpi-value">${money(g.outstanding)}</div><div class="kpi-sub">to be collected</div></div>
+      <div class="kpi-card"><div class="kpi-label">Avg job size</div><div class="kpi-value">${money(g.won>0?g.revenue/g.won:0)}</div><div class="kpi-sub">across ${g.won} won</div></div>
+    </div>
+    <div class="report-section"><div class="report-hd">Monthly revenue · all companies <span class="kpi-sub">last 6 months</span></div>${reportChart(monthlyRevenue(allJobs))}</div>
+    ${adminCompareChart('Collected by company',list.map(x=>({label:coLbl(x.co),val:x.m.collected,color:colorOf(x.co)})),money)}
+    ${adminCompareChart('Outstanding by company',list.map(x=>({label:coLbl(x.co),val:x.m.outstanding,color:colorOf(x.co)})),money)}
+    <div class="report-section">
+      <div class="report-hd">Financial breakdown</div>
+      <div style="overflow-x:auto;-webkit-overflow-scrolling:touch"><table class="admin-table">
+        <thead><tr><th>Company</th><th class="num">Revenue</th><th class="num">Invoiced</th><th class="num">Collected</th><th class="num">Outstanding</th><th class="num">Collect%</th><th class="num">Avg job</th></tr></thead>
+        <tbody>${rows}
+          <tr class="total-row"><td>All companies</td><td class="num">${money(g.revenue)}</td><td class="num">${money(g.invoiced)}</td><td class="num">${money(g.collected)}</td><td class="num">${money(g.outstanding)}</td><td class="num">${collRate}</td><td class="num">${money(g.won>0?g.revenue/g.won:0)}</td></tr>
+        </tbody></table></div>
+    </div>
+  `;
+}
+function ownerPipeline(){
+  const list=ownerList(),g=ownerGrand(list);
+  const leadsN=g.leads,activeN=g.active,completeN=g.complete;
+  const funnelMax=Math.max(1,leadsN,activeN,completeN);
+  const funnel=[['Leads',leadsN,'#3ab5c8'],['Active',activeN,'#e8a830'],['Complete',completeN,'#2a9070']];
+  const conv=pctStr(completeN,leadsN+activeN+completeN);
+  const rows=list.map(x=>{const m=x.m;return `<tr>
+    <td style="font-weight:700"><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:${colorOf(x.co)};margin-right:7px;vertical-align:middle"></span>${esc(x.co.label)}</td>
+    <td class="num">${money(m.pipeline)}</td><td class="num">${m.leads}</td><td class="num">${m.active}</td><td class="num">${m.complete}</td><td class="num">${m.winRate.toFixed(0)}%</td>
+  </tr>`}).join('');
+  return `
+    ${ownerTitle('Pipeline')}
+    <div class="kpi-grid">
+      <div class="kpi-card accent"><div class="kpi-label">Open pipeline</div><div class="kpi-value">${money(g.pipeline)}</div><div class="kpi-sub">${g.active+g.leads} open jobs</div></div>
+      <div class="kpi-card"><div class="kpi-label">Win rate</div><div class="kpi-value">${g.winRate.toFixed(0)}%</div><div class="kpi-sub">${g.won} won · ${g.lost} lost</div></div>
+      <div class="kpi-card"><div class="kpi-label">Conversion</div><div class="kpi-value">${conv}</div><div class="kpi-sub">to completed</div></div>
+      <div class="kpi-card"><div class="kpi-label">Active jobs</div><div class="kpi-value">${g.active}</div><div class="kpi-sub">${g.leads} leads waiting</div></div>
+    </div>
+    <div class="report-section">
+      <div class="report-hd">Funnel · all companies</div>
+      <div class="bar-chart">${funnel.map(([lab,val,col])=>`<div class="bar-row"><div class="bar-row-label" style="flex-basis:80px">${lab}</div><div class="bar-row-track"><div class="bar-row-fill" style="width:${(val/funnelMax*100).toFixed(1)}%;background:${col}"></div></div><div class="bar-row-val">${val}</div></div>`).join('')}</div>
+    </div>
+    ${adminCompareChart('Pipeline value by company',list.map(x=>({label:coLbl(x.co),val:x.m.pipeline,color:colorOf(x.co)})),money)}
+    ${adminCompareChart('Active jobs by company',list.map(x=>({label:coLbl(x.co),val:x.m.active,color:colorOf(x.co)})),v=>String(v))}
+    <div class="report-section">
+      <div class="report-hd">Pipeline breakdown</div>
+      <div style="overflow-x:auto;-webkit-overflow-scrolling:touch"><table class="admin-table">
+        <thead><tr><th>Company</th><th class="num">Pipeline</th><th class="num">Leads</th><th class="num">Active</th><th class="num">Done</th><th class="num">Win%</th></tr></thead>
+        <tbody>${rows}
+          <tr class="total-row"><td>All companies</td><td class="num">${money(g.pipeline)}</td><td class="num">${g.leads}</td><td class="num">${g.active}</td><td class="num">${g.complete}</td><td class="num">${g.winRate.toFixed(0)}%</td></tr>
+        </tbody></table></div>
+    </div>
+  `;
+}
+function ownerLeads(){
+  const list=ownerList();
+  const allJobs=list.flatMap(x=>x.jobs);
+  const bySrc={};
+  allJobs.forEach(j=>{const s=j.leadSource||'Unknown';bySrc[s]=bySrc[s]||{src:s,total:0,won:0,revenue:0};bySrc[s].total++;if(j.status==='complete'){bySrc[s].won++;bySrc[s].revenue+=Number(j.invoiced||j.value||0)}});
+  const srcs=Object.values(bySrc).sort((a,b)=>b.revenue-a.revenue);
+  const best=srcs.find(s=>s.revenue>0)||srcs[0];
+  const maxRev=Math.max(1,...srcs.map(s=>s.revenue));
+  const rows=srcs.map(s=>`<tr><td style="font-weight:600">${esc(s.src)}</td><td class="num">${s.total}</td><td class="num">${s.won}</td><td class="num">${pctStr(s.won,s.total)}</td><td class="num">${money(s.revenue)}</td></tr>`).join('');
+  return `
+    ${ownerTitle('Leads & sources')}
+    ${best?`<div class="report-section"><div class="kpi-label">Best lead source</div><div style="font-size:17px;font-weight:800;color:var(--green-700);margin-top:3px">${esc(best.src)}</div><div class="kpi-sub">${money(best.revenue)} won revenue · ${pctStr(best.won,best.total)} conversion</div></div>`:''}
+    <div class="report-section">
+      <div class="report-hd">Revenue by lead source <span class="kpi-sub">all companies</span></div>
+      <div class="bar-chart">${srcs.slice(0,8).map(s=>`<div class="bar-row"><div class="bar-row-label" style="flex-basis:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(s.src)}</div><div class="bar-row-track"><div class="bar-row-fill" style="width:${(s.revenue/maxRev*100).toFixed(1)}%;background:var(--green-600)"></div></div><div class="bar-row-val" style="min-width:64px">${money(s.revenue)}</div></div>`).join('')||'<div class="kpi-sub">No lead-source data yet.</div>'}</div>
+    </div>
+    <div class="report-section">
+      <div class="report-hd">Lead source detail</div>
+      <div style="overflow-x:auto;-webkit-overflow-scrolling:touch"><table class="admin-table">
+        <thead><tr><th>Source</th><th class="num">Total</th><th class="num">Won</th><th class="num">Conv%</th><th class="num">Revenue</th></tr></thead>
+        <tbody>${rows||'<tr><td colspan="5" style="text-align:center;color:var(--text-3)">No data</td></tr>'}</tbody>
+      </table></div>
+    </div>
+  `;
+}
+function ownerCompanies(){
+  const list=ownerList();
+  const cards=list.map(x=>{const m=x.m,co=x.co;return `<div class="report-section">
+    <div class="report-hd" style="align-items:center"><span style="display:flex;align-items:center;gap:8px"><span style="width:11px;height:11px;border-radius:3px;background:${colorOf(co)}"></span>${esc(co.label)}</span><button class="btn-mini" data-view-company="${esc(co.id)}">Open →</button></div>
+    <div class="kpi-grid" style="margin-bottom:0">
+      <div class="kpi-card"><div class="kpi-label">Collected</div><div class="kpi-value">${money(m.collected)}</div><div class="kpi-sub">${money(m.outstanding)} outstanding</div></div>
+      <div class="kpi-card"><div class="kpi-label">Pipeline</div><div class="kpi-value">${money(m.pipeline)}</div><div class="kpi-sub">${m.active} active · ${m.leads} lead${m.leads!==1?'s':''}</div></div>
+      <div class="kpi-card"><div class="kpi-label">Jobs</div><div class="kpi-value">${m.total}</div><div class="kpi-sub">${m.complete} complete</div></div>
+      <div class="kpi-card"><div class="kpi-label">Win rate</div><div class="kpi-value">${m.winRate.toFixed(0)}%</div><div class="kpi-sub">avg ${money(m.avg)}</div></div>
+    </div></div>`}).join('');
+  return `${ownerTitle('Companies')}<div class="kpi-sub" style="margin:-6px 0 12px">Open any company to manage it in its own workspace.</div>${cards}<div class="report-x-pad"></div>`;
+}
+function applyOwnerChrome(){
+  if(!OWNER_MODE)return;
+  const bco=$('brand-co');if(bco)bco.textContent='All Companies';
+  const h1=document.querySelector('.brand-text h1');if(h1)h1.textContent='Owner';
+  const img=document.querySelector('.brand-logo');if(img){img.src='data:image/svg+xml;utf8,'+encodeURIComponent(OWNER_LOGO);img.alt='Owner';}
+  let s=document.getElementById('co-theme');if(!s){s=document.createElement('style');s.id='co-theme';document.head.appendChild(s);}
+  s.textContent='.header{background:linear-gradient(135deg,#1e1b2e 0%,#2b2440 60%,#3a2f55 100%)}.sync-bar{background:#1e1b2e}.nav-btn.active{color:#a99ce0;border-bottom-color:#a99ce0}';
+  const nav=document.querySelector('.nav');if(nav)nav.innerHTML=OWNER_NAV;
+  const fab=$('fab');if(fab)fab.style.display='none';
 }
 
 function renderReports(){
@@ -3433,6 +3556,7 @@ function renderTeam(){
 function closeModal(){$('modal-root').innerHTML=''}
 
 function showJobModal(mode,job){
+  if(OWNER_MODE){toast('Open a company to add or edit jobs','');return}
   const j=job||{};
   const mOpts=S.members.map(m=>`<option value="${esc(m)}" ${j.assigned===m?'selected':''}>${esc(m)}</option>`).join('');
   $('modal-root').innerHTML=`<div class="modal-bd" id="mbd"><div class="modal"><div class="modal-handle"></div>
@@ -3969,26 +4093,26 @@ function showSettingsModal(){
 
 // ══ Company Switcher ══
 function showCompanySwitcher(){
-  const cur=COMPANY_ID;
+  const cur=OWNER_MODE?'owner':COMPANY_ID;
   const rows=Object.values(COMPANIES).map(co=>`
     <button class="co-pick${co.id===cur?' active':''}" data-co="${esc(co.id)}">
       <div><div class="co-pick-name">${esc(co.label)}</div><div class="co-pick-tag">${esc(co.tag)}</div></div>
       ${co.id===cur?'<span class="co-pick-badge">Current</span>':''}
     </button>`).join('');
-  $('modal-root').innerHTML=`<div class="modal-bd" id="mbd" role="dialog" aria-modal="true" aria-label="Choose company"><div class="modal"><div class="modal-handle"></div>
-    <div class="modal-head"><div class="modal-title">Choose company</div><button class="modal-close" id="mc" aria-label="Close"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button></div>
+  const ownerActive=cur==='owner';
+  $('modal-root').innerHTML=`<div class="modal-bd" id="mbd" role="dialog" aria-modal="true" aria-label="Choose workspace"><div class="modal"><div class="modal-handle"></div>
+    <div class="modal-head"><div class="modal-title">Choose workspace</div><button class="modal-close" id="mc" aria-label="Close"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button></div>
     <div class="modal-body">
-      <p style="font-size:13px;color:var(--text-2);margin-bottom:16px;line-height:1.5">Each company keeps completely separate jobs, invoices, schedule, photos, and settings. Pick one to switch — the app reloads with that company's data.</p>
-      <button class="co-pick" data-owner="1" style="border-color:var(--gold);background:var(--gold-light)">
-        <div><div class="co-pick-name">Owner Dashboard</div><div class="co-pick-tag">Combined reports across all companies</div></div>
-        <span class="co-pick-badge">All</span>
-      </button>
+      <p style="font-size:13px;color:var(--text-2);margin-bottom:16px;line-height:1.5">Each company keeps completely separate jobs, invoices, schedule, photos, and settings. Owner is a cross-company analytics workspace. Picking any one reloads the app.</p>
       ${rows}
+      <button class="co-pick${ownerActive?' active':''}" data-co="owner" style="border-color:var(--gold);background:${ownerActive?'var(--gold-light)':'var(--surface)'}">
+        <div><div class="co-pick-name">Owner</div><div class="co-pick-tag">Analytics &amp; reports across all companies</div></div>
+        ${ownerActive?'<span class="co-pick-badge">Current</span>':'<span class="co-pick-badge">All</span>'}
+      </button>
     </div>
   </div></div>`;
   $('mc').onclick=closeModal;
   $('mbd').onclick=e=>{if(e.target===e.currentTarget)closeModal()};
-  const _own=document.querySelector('[data-owner]');if(_own)_own.onclick=()=>{closeModal();S.view='admin';S.detail=null;render();};
   document.querySelectorAll('[data-co]').forEach(b=>b.onclick=()=>{
     const id=b.dataset.co;
     if(id===cur){closeModal();return}
@@ -4019,13 +4143,15 @@ let CMD={open:false,query:'',idx:0,items:[]};
 function cmdItems(){
   const out=[];
   // Views
-  [['dashboard','Home / Dashboard','home'],['jobs','Jobs','briefcase'],['schedule','Schedule','calendar'],['invoices','Invoices','invoice'],['map','Map','map'],['reports','Reports','chart'],['activity','Activity','list'],['team','Team','team'],['admin','Owner Dashboard (all companies)','chart']].forEach(([v,name,ico])=>{
+  [['dashboard','Home / Dashboard','home'],['jobs','Jobs','briefcase'],['schedule','Schedule','calendar'],['invoices','Invoices','invoice'],['map','Map','map'],['reports','Reports','chart'],['activity','Activity','list'],['team','Team','team']].forEach(([v,name,ico])=>{
     out.push({type:'view',name:'Go to '+name,sub:'View',ico,run:()=>{S.view=v;S.detail=null;render()}});
   });
   // Actions
   out.push({type:'action',name:'New Job',sub:'Create a job',ico:'plus',run:()=>showJobModal('add')});
   out.push({type:'action',name:'New Invoice',sub:'Pick a job, then create invoice',ico:'invoice',run:()=>showJobPickerModal(jobId=>showInvoiceModal(jobId))});
   out.push({type:'action',name:'Settings & Company Info',sub:'Edit name, logo, invoice defaults',ico:'kbd',run:showSettingsModal});
+  out.push({type:'action',name:'Switch company / workspace',sub:'Waterfront · Manufactured Housing · Norris Lake · Owner',ico:'link',run:showCompanySwitcher});
+  if(!OWNER_MODE)out.push({type:'action',name:'Owner workspace',sub:'Analytics across all companies',ico:'chart',run:()=>{try{localStorage.setItem('jt_company','owner')}catch(e){};location.reload()}});
   out.push({type:'action',name:'Export to CSV',sub:'Download all jobs',ico:'download',run:exportCSV});
   out.push({type:'action',name:'Notifications',sub:'See your inbox',ico:'bell',run:showNotificationsModal});
   out.push({type:'action',name:'Connect Team (Firebase)',sub:'Live sync setup',ico:'link',run:showSetupModal});
@@ -4233,6 +4359,7 @@ function onKey(e){
   // Don't trigger single-letter shortcuts while typing
   if(isTyping(e))return;
   const k=e.key;
+  if(OWNER_MODE){if(k==='?'){e.preventDefault();showShortcutsModal()}return}
   if(k==='/'){e.preventDefault();const s=document.getElementById('search-in');if(s){s.focus();s.select()}else{showCommandPalette()};return}
   if(k==='n'||k==='N'){e.preventDefault();showJobModal('add');return}
   if(k==='?'){e.preventDefault();showShortcutsModal();return}
@@ -4266,12 +4393,11 @@ function attachHandlers(){
   });
   $('user-btn').onclick=showSettingsModal;
   $('setup-link').onclick=showSetupModal;
-  const _bco=$('brand-co');if(_bco)_bco.textContent=ACTIVE_CO.label;
+  const _bco=$('brand-co');if(_bco)_bco.textContent=OWNER_MODE?'All Companies':ACTIVE_CO.label;
   const _bsw=$('brand-switch');if(_bsw)_bsw.onclick=showCompanySwitcher;
-  $('admin-refresh')?.addEventListener('click',()=>{S.adminData=null;if(adminFirebaseReady())refreshAdminData();else render();});
+  $('owner-refresh')?.addEventListener('click',refreshOwnerData);
   document.querySelectorAll('[data-view-company]').forEach(b=>b.onclick=()=>{
     const id=b.dataset.viewCompany;
-    if(id===COMPANY_ID){S.view='dashboard';S.detail=null;render();return}
     try{localStorage.setItem('jt_company',id)}catch(e){}
     location.reload();
   });
@@ -4592,7 +4718,7 @@ document.addEventListener('keydown',onKey);
 // Service worker would require a same-origin .js file; manifest alone makes it installable.
 // Browsers prompt "Add to Home Screen" when the manifest + HTTPS + an icon are present.
 
-applyCompanyBranding();
+if(OWNER_MODE)applyOwnerChrome();else applyCompanyBranding();
 render();
 </script>
 </body>
