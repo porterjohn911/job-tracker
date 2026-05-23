@@ -1459,7 +1459,19 @@ if (ENV === 'dev') {
 // Firebase web config is NOT a secret — it's designed to ship in client code
 // (security comes from the database rules + Auth). Leave null to fall back to
 // the localStorage config set via the in-app "Connect Team" screen.
-const FIREBASE_CONFIG_BAKED = null; // e.g. { apiKey:"…", authDomain:"…", databaseURL:"…", projectId:"…", storageBucket:"…", messagingSenderId:"…", appId:"…" }
+const FIREBASE_CONFIG_BAKED = {
+  apiKey: "AIzaSyDCE0Yo6YkYtSkibUx9T7Q5XEkgmEsSKRc",
+  authDomain: "witport-constructionservices.firebaseapp.com",
+  // Realtime Database URL — assumes the default (us-central1) instance.
+  // If you created the database in another region, replace this with the
+  // exact databaseURL shown in the Firebase console.
+  databaseURL: "https://witport-constructionservices-default-rtdb.firebaseio.com",
+  projectId: "witport-constructionservices",
+  storageBucket: "witport-constructionservices.firebasestorage.app",
+  messagingSenderId: "85892975744",
+  appId: "1:85892975744:web:1140f8a3a577225b4a6a65",
+  measurementId: "G-9GYZ4K28V5"
+};
 let FIREBASE_CONFIG = FIREBASE_CONFIG_BAKED;
 try{const s=localStorage.getItem('wfs_fb');if(!FIREBASE_CONFIG&&s)FIREBASE_CONFIG=JSON.parse(s)}catch(e){}
 
