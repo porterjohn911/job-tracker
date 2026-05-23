@@ -1688,8 +1688,8 @@ function renderDashboard(){
   const leads=all.filter(j=>j.status==='lead');
   const done=all.filter(j=>j.status==='complete');
   const totalValue=all.reduce((s,j)=>s+Number(j.value||0),0);
-  const totalInvoiced=all.reduce((s,j)=>s+Number(j.invoiced||0),0);
-  const totalPaid=all.reduce((s,j)=>s+Number(j.paid||0),0);
+  const totalInvoiced=all.reduce((s,j)=>{const t=invoiceTotals(j);return s+(t?t.total:Number(j.invoiced||0))},0);
+  const totalPaid=all.reduce((s,j)=>{const t=invoiceTotals(j);return s+(t?t.paid:Number(j.paid||0))},0);
   const outstanding=totalInvoiced-totalPaid;
   const pipeline=leads.reduce((s,j)=>s+Number(j.value||0),0);
   // Upcoming: jobs with start date in next 14 days, or not yet started
@@ -2503,14 +2503,21 @@ function companyMetrics(arr){
   const m={total:arr.length,active:0,leads:0,complete:0,hold:0,value:0,pipeline:0,invoiced:0,collected:0,revenue:0,won:0,lost:0};
   arr.forEach(j=>{
     const st=j.status;
+    // Invoiced/collected come from the job's actual invoices when present
+    // (source of truth), falling back to the saved aggregate fields. This
+    // keeps the owner rollup correct even if j.invoiced/j.paid weren't synced
+    // — otherwise both Collected and Outstanding can read 0 (the same number).
+    const t=invoiceTotals(j);
+    const invd=t?t.total:Number(j.invoiced||0);
+    const pd=t?t.paid:Number(j.paid||0);
     if(st==='active')m.active++;
     else if(st==='lead')m.leads++;
-    else if(st==='complete'){m.complete++;m.won++;m.revenue+=Number(j.invoiced||j.value||0);}
+    else if(st==='complete'){m.complete++;m.won++;m.revenue+=invd||Number(j.value||0);}
     else if(st==='hold'){m.hold++;m.lost++;}
     m.value+=Number(j.value||0);
     if(st!=='complete'&&st!=='hold')m.pipeline+=Number(j.value||0);
-    m.invoiced+=Number(j.invoiced||0);
-    m.collected+=Number(j.paid||0);
+    m.invoiced+=invd;
+    m.collected+=pd;
   });
   m.outstanding=m.invoiced-m.collected;
   m.winRate=(m.won+m.lost)>0?(m.won/(m.won+m.lost))*100:0;
@@ -2770,8 +2777,8 @@ function renderReports(){
 
   // Financial
   const totalValue=inRange.reduce((s,j)=>s+Number(j.value||0),0);
-  const revenue=inRange.filter(j=>j.status==='complete').reduce((s,j)=>s+Number(j.invoiced||j.value||0),0);
-  const collected=inRange.reduce((s,j)=>s+Number(j.paid||0),0);
+  const revenue=inRange.filter(j=>j.status==='complete').reduce((s,j)=>{const t=invoiceTotals(j);return s+(t?t.total:Number(j.invoiced||j.value||0))},0);
+  const collected=inRange.reduce((s,j)=>{const t=invoiceTotals(j);return s+(t?t.paid:Number(j.paid||0))},0);
   const avgDeal=won>0?revenue/won:0;
   const pipeline=inRange.filter(j=>j.status!=='complete'&&j.status!=='hold').reduce((s,j)=>s+Number(j.value||0),0);
 
