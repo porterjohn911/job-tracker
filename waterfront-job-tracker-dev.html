@@ -1253,6 +1253,10 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25zM6.75 12h.008v.008H6.75V12zm0 3h.008v.008H6.75V15zm0 3h.008v.008H6.75V18z"/></svg>
     Invoices
   </button>
+  <button class="nav-btn" data-view="referrals">
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21 11.25v8.25a1.5 1.5 0 01-1.5 1.5H5.25a1.5 1.5 0 01-1.5-1.5v-8.25M12 4.875A2.625 2.625 0 109.375 7.5H12m0-2.625V7.5m0-2.625A2.625 2.625 0 1114.625 7.5H12m0 0V21m-8.625-9.75h18c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125h-18c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z"/></svg>
+    Referrals
+  </button>
   <button class="nav-btn" data-view="map">
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 6.75V15m6-6v8.25m.503 3.498l4.875-2.437c.381-.19.622-.58.622-1.006V4.82c0-.836-.88-1.38-1.628-1.006l-3.869 1.934c-.317.159-.69.159-1.006 0L9.503 3.252a1.125 1.125 0 00-1.006 0L3.622 5.689C3.24 5.88 3 6.27 3 6.695V19.18c0 .836.88 1.38 1.628 1.006l3.869-1.934c.317-.159.69-.159 1.006 0l4.994 2.497c.317.158.69.158 1.006 0z"/></svg>
     Map
@@ -1397,7 +1401,7 @@ try{const s=localStorage.getItem('wfs_fb');if(s)FIREBASE_CONFIG=JSON.parse(s)}ca
 // ══ State ══
 let DB=null;
 let MAP=null,MAP_MARKERS=[];
-const S={jobs:{},activity:[],members:[],view:'dashboard',detail:null,detailTab:'overview',filter:'all',search:'',photoCat:'all',calMonth:new Date().getMonth(),calYear:new Date().getFullYear(),calSelected:null,calMode:localStorage.getItem(LS('calmode'))||'month',reportRange:'90',sort:localStorage.getItem(LS('sort'))||'newest',sortOpen:false,bulkMode:false,bulkSel:new Set(),invFilter:'all',invSearch:'',invSort:'date',user:localStorage.getItem(LS('user'))||'',notifReadAt:parseInt(localStorage.getItem(LS('notif_read'))||'0',10),owner:{}};
+const S={jobs:{},activity:[],members:[],view:'dashboard',detail:null,detailTab:'overview',filter:'all',search:'',photoCat:'all',calMonth:new Date().getMonth(),calYear:new Date().getFullYear(),calSelected:null,calMode:localStorage.getItem(LS('calmode'))||'month',reportRange:'90',sort:localStorage.getItem(LS('sort'))||'newest',sortOpen:false,bulkMode:false,bulkSel:new Set(),invFilter:'all',invSearch:'',invSort:'date',user:localStorage.getItem(LS('user'))||'',notifReadAt:parseInt(localStorage.getItem(LS('notif_read'))||'0',10),refFilter:'all',referrals:{},owner:{}};
 const UNDO={stack:[],push(op){this.stack.push(op);if(this.stack.length>20)this.stack.shift()},pop(){return this.stack.pop()}};
 
 // ── Company info for invoice letterhead (editable via Settings)
@@ -1509,10 +1513,11 @@ function undoLast(){const op=UNDO.pop();if(!op){toast('Nothing to undo','');retu
 
 // ══ DB layer ══
 const LOCAL={
-  load(){try{S.jobs=JSON.parse(localStorage.getItem(LS('jobs'))||'{}')}catch(e){S.jobs={}}try{S.activity=JSON.parse(localStorage.getItem(LS('activity'))||'[]')}catch(e){S.activity=[]}try{S.members=JSON.parse(localStorage.getItem(LS('members'))||'[]')}catch(e){S.members=[]}},
+  load(){try{S.jobs=JSON.parse(localStorage.getItem(LS('jobs'))||'{}')}catch(e){S.jobs={}}try{S.activity=JSON.parse(localStorage.getItem(LS('activity'))||'[]')}catch(e){S.activity=[]}try{S.members=JSON.parse(localStorage.getItem(LS('members'))||'[]')}catch(e){S.members=[]}try{S.referrals=JSON.parse(localStorage.getItem(LS('referrals'))||'{}')}catch(e){S.referrals={}}},
   saveJobs(){try{localStorage.setItem(LS('jobs'),JSON.stringify(S.jobs))}catch(e){}},
   saveActivity(){try{localStorage.setItem(LS('activity'),JSON.stringify(S.activity.slice(0,300)))}catch(e){}},
-  saveMembers(){try{localStorage.setItem(LS('members'),JSON.stringify(S.members))}catch(e){}}
+  saveMembers(){try{localStorage.setItem(LS('members'),JSON.stringify(S.members))}catch(e){}},
+  saveReferrals(){try{localStorage.setItem(LS('referrals'),JSON.stringify(S.referrals))}catch(e){}}
 };
 function syncStatus(state,msg){const d=$('sync-dot'),t=$('sync-text');d.className='sync-dot '+state;t.textContent=msg}
 function initFB(cfg){
@@ -1523,6 +1528,7 @@ function initFB(cfg){
     DB.child('jobs').on('value',s=>{S.jobs=s.val()||{};LOCAL.saveJobs();syncStatus('ok','Team sync live');render()});
     DB.child('activity').on('value',s=>{const r=s.val();S.activity=r?Object.values(r).sort((a,b)=>b.time-a.time):[];LOCAL.saveActivity()});
     DB.child('members').on('value',s=>{S.members=s.val()||[];LOCAL.saveMembers();render()});
+    DB.child('referrals').on('value',s=>{S.referrals=s.val()||{};LOCAL.saveReferrals();render()});
     DB.child('.info/connected').on('value',s=>{if(!s.val())syncStatus('err','Reconnecting…')});
     return true;
   }catch(e){syncStatus('err','Firebase error');return false}
@@ -1531,6 +1537,8 @@ async function writeJob(j){S.jobs[j.id]=j;LOCAL.saveJobs();if(DB)await DB.child(
 async function deleteJobDB(id){delete S.jobs[id];LOCAL.saveJobs();if(DB)await DB.child('jobs/'+id).remove().catch(()=>{})}
 async function logAct(action,job){const e={user:S.user||'Someone',action,job:job||'',time:Date.now()};S.activity.unshift(e);LOCAL.saveActivity();if(DB)await DB.child('activity').push(e).catch(()=>{})}
 async function saveMembers(){LOCAL.saveMembers();if(DB)await DB.child('members').set(S.members).catch(()=>{})}
+async function writeReferral(r){S.referrals[r.id]=r;LOCAL.saveReferrals();if(DB)await DB.child('referrals/'+r.id).set(r).catch(()=>{})}
+async function deleteReferralDB(id){delete S.referrals[id];LOCAL.saveReferrals();if(DB)await DB.child('referrals/'+id).remove().catch(()=>{})}
 
 // ── Owner mode: read every company's jobs (read-only, all nodes) ──
 function ownerPrefix(co){return co.ns+(ENV==='dev'?'_dev_':'_')}
@@ -1562,6 +1570,7 @@ function render(){
   else if(S.view==='dashboard')c.innerHTML=renderDashboard();
   else if(S.view==='schedule')c.innerHTML=renderSchedule();
   else if(S.view==='invoices')c.innerHTML=renderInvoicesView();
+  else if(S.view==='referrals')c.innerHTML=renderReferrals();
   else if(S.view==='map')c.innerHTML=renderMap();
   else if(S.view==='reports')c.innerHTML=renderReports();
   else if(S.view==='activity')c.innerHTML=renderActivity();
@@ -3573,6 +3582,119 @@ function renderActivity(){
   return'<div class="activity-feed">'+S.activity.map((a,i)=>'<div class="activity-item" style="animation-delay:'+( i*0.03)+'s">'+'<div class="activity-ava">'+initials(a.user)+'</div>'+'<div class="activity-body">'+'<div class="activity-text"><strong>'+esc(a.user)+'</strong> '+esc(a.action)+(a.job?' · <strong>'+esc(a.job)+'</strong>':'')+'</div><div class="activity-time">'+ago(a.time)+'</div></div></div>').join('')+'</div>';
 }
 
+// ══ Referrals — referred leads & payouts (per company) ══
+function refStatusMeta(s){
+  return ({new:{label:'New lead',pill:'sp-lead',col:'var(--gold)'},won:{label:'Won',pill:'sp-complete',col:'var(--green-600)'},lost:{label:'Lost',pill:'sp-hold',col:'var(--text-3)'}})[s]||{label:'New lead',pill:'sp-lead',col:'var(--gold)'};
+}
+function renderReferrals(){
+  const all=Object.values(S.referrals).sort((a,b)=>(b.created||0)-(a.created||0));
+  const total=all.length;
+  const won=all.filter(r=>r.status==='won').length;
+  const owed=all.filter(r=>r.payoutStatus!=='paid').reduce((s,r)=>s+Number(r.payout||0),0);
+  const paid=all.filter(r=>r.payoutStatus==='paid').reduce((s,r)=>s+Number(r.payout||0),0);
+  const f=S.refFilter||'all';
+  const isOwed=r=>r.payoutStatus!=='paid'&&Number(r.payout||0)>0;
+  const match=r=>f==='all'?true:f==='new'?r.status==='new':f==='won'?r.status==='won':f==='owed'?isOwed(r):f==='paid'?r.payoutStatus==='paid':true;
+  const shown=all.filter(match);
+  const cnt={all:total,new:all.filter(r=>r.status==='new').length,won:won,owed:all.filter(isOwed).length,paid:all.filter(r=>r.payoutStatus==='paid').length};
+  const chips=[['all','All'],['new','New'],['won','Won'],['owed','Owed'],['paid','Paid']];
+  const rows=shown.map(r=>{
+    const m=refStatusMeta(r.status);
+    const job=r.jobId&&S.jobs[r.jobId]?S.jobs[r.jobId]:null;
+    const meta=[r.dateReferred?fmtDate(r.dateReferred):'',job?'Job: '+esc(job.name):'',r.referrerPhone?esc(r.referrerPhone):'',r.dealValue?money(r.dealValue)+' deal':''].filter(Boolean).join(' · ');
+    const payoutCol=Number(r.payout||0)>0?(r.payoutStatus==='paid'?'var(--green-700)':'var(--orange)'):'var(--text-3)';
+    return `<div class="invoice-row" data-ref-open="${esc(r.id)}" style="border-left-color:${m.col}">
+      <div class="invoice-row-main">
+        <div class="invoice-num">${esc(r.referrer||'—')} <span style="color:var(--text-3);font-weight:500">referred</span> ${esc(r.lead||'—')}</div>
+        ${meta?`<div class="invoice-meta">${meta}</div>`:''}
+        <div style="margin-top:6px"><span class="status-pill ${m.pill}">${m.label}</span></div>
+      </div>
+      <div class="invoice-row-amt">
+        <div style="font-size:10px;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;font-weight:700">Payout</div>
+        <div style="font-weight:800;font-size:15px;color:${payoutCol}">${Number(r.payout||0)>0?money(r.payout):'—'}</div>
+        ${Number(r.payout||0)>0?`<span class="badge ${r.payoutStatus==='paid'?'':'danger'}" style="margin-top:4px">${r.payoutStatus==='paid'?'Paid'+(r.paidAt?' '+fmtShort(r.paidAt):''):'Owed'}</span>`:''}
+        ${isOwed(r)?`<div><button class="btn-mini" data-ref-paid="${esc(r.id)}" style="margin-top:7px">Mark paid</button></div>`:''}
+      </div>
+    </div>`;
+  }).join('');
+  const giftIcon='<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21 11.25v8.25a1.5 1.5 0 01-1.5 1.5H5.25a1.5 1.5 0 01-1.5-1.5v-8.25M12 4.875A2.625 2.625 0 109.375 7.5H12m0-2.625V7.5m0-2.625A2.625 2.625 0 1114.625 7.5H12m0 0V21m-8.625-9.75h18c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125h-18c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z"/></svg>';
+  return `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+      <div>
+        <div style="font-size:11px;color:var(--text-3);text-transform:uppercase;letter-spacing:0.06em;font-weight:700">Referrals</div>
+        <div style="font-size:20px;font-weight:700;margin-top:2px">Referred leads &amp; payouts</div>
+      </div>
+      <button class="btn-add" id="btn-add-ref"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>New Referral</button>
+    </div>
+    <div class="kpi-grid">
+      <div class="kpi-card accent"><div class="kpi-label">Payouts Owed</div><div class="kpi-value">${money(owed)}</div><div class="kpi-sub">to referrers</div></div>
+      <div class="kpi-card"><div class="kpi-label">Paid Out</div><div class="kpi-value">${money(paid)}</div><div class="kpi-sub">all-time</div></div>
+      <div class="kpi-card"><div class="kpi-label">Referrals</div><div class="kpi-value">${total}</div><div class="kpi-sub">${won} won</div></div>
+      <div class="kpi-card"><div class="kpi-label">Conversion</div><div class="kpi-value">${total>0?Math.round(won/total*100):0}%</div><div class="kpi-sub">leads → won</div></div>
+    </div>
+    <div class="filter-row" style="margin-bottom:14px">
+      ${chips.map(([k,l])=>`<div class="filter-chip ${f===k?'active':''}" data-ref-filter="${k}">${l} ${cnt[k]}</div>`).join('')}
+    </div>
+    ${shown.length===0?`<div class="empty"><div class="empty-icon">${giftIcon}</div><h3>${total===0?'No referrals yet':'No matches'}</h3><p>${total===0?'Track who sent you leads and what you owe them.':'Try a different filter.'}</p>${total===0?'<button class="btn-add" id="btn-add-ref2" style="margin:0 auto">+ Add Referral</button>':''}</div>`:`<div style="display:flex;flex-direction:column;gap:8px">${rows}</div>`}
+  `;
+}
+function showReferralModal(mode,ref){
+  const r=ref||{};
+  const sel=(v,cur)=>v===cur?'selected':'';
+  const jobOpts=Object.values(S.jobs).sort((a,b)=>(a.name||'').localeCompare(b.name||'')).map(j=>`<option value="${esc(j.id)}" ${r.jobId===j.id?'selected':''}>${esc(j.name)}</option>`).join('');
+  $('modal-root').innerHTML=`<div class="modal-bd" id="mbd" role="dialog" aria-modal="true" aria-label="Referral"><div class="modal"><div class="modal-handle"></div>
+    <div class="modal-head"><div class="modal-title">${mode==='add'?'New Referral':'Edit Referral'}</div><button class="modal-close" id="mc" aria-label="Close"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button></div>
+    <div class="modal-body">
+      <div class="form-group"><label class="form-label">Referred by (referrer)</label><input class="form-input" id="rf-referrer" value="${esc(r.referrer||'')}" placeholder="Who sent you this lead?"></div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Referrer phone</label><input class="form-input" type="tel" id="rf-phone" value="${esc(r.referrerPhone||'')}"></div>
+        <div class="form-group"><label class="form-label">Referrer email</label><input class="form-input" type="email" id="rf-email" value="${esc(r.referrerEmail||'')}"></div>
+      </div>
+      <div class="form-group"><label class="form-label">Referred lead / customer</label><input class="form-input" id="rf-lead" value="${esc(r.lead||'')}" placeholder="Name of the new lead"></div>
+      <div class="form-group"><label class="form-label">Linked job (optional)</label><select class="form-select" id="rf-job"><option value="">— None —</option>${jobOpts}</select></div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Status</label><select class="form-select" id="rf-status"><option value="new" ${sel('new',r.status||'new')}>New lead</option><option value="won" ${sel('won',r.status)}>Won</option><option value="lost" ${sel('lost',r.status)}>Lost</option></select></div>
+        <div class="form-group"><label class="form-label">Date referred</label><input class="form-input" type="date" id="rf-date" value="${esc(r.dateReferred||dateKey(new Date()))}"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Deal value</label><input class="form-input" type="number" step="0.01" id="rf-deal" value="${esc(r.dealValue||'')}" placeholder="0"></div>
+        <div class="form-group"><label class="form-label">Referral payout</label><input class="form-input" type="number" step="0.01" id="rf-payout" value="${esc(r.payout||'')}" placeholder="0"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Payout status</label><select class="form-select" id="rf-pstatus"><option value="pending" ${sel('pending',r.payoutStatus||'pending')}>Pending</option><option value="paid" ${sel('paid',r.payoutStatus)}>Paid</option></select></div>
+        <div class="form-group"><label class="form-label">Date paid</label><input class="form-input" type="date" id="rf-paid" value="${esc(r.paidAt||'')}"></div>
+      </div>
+      <div class="form-group"><label class="form-label">Notes</label><textarea class="form-textarea" id="rf-notes">${esc(r.notes||'')}</textarea></div>
+    </div>
+    <div class="modal-foot">${mode==='edit'?'<button class="btn-cancel" id="rf-del" style="color:var(--red);margin-right:auto">Delete</button>':''}<button class="btn-cancel" id="btn-cx">Cancel</button><button class="btn-save" id="rf-save">Save</button></div>
+  </div></div>`;
+  $('mc').onclick=$('btn-cx').onclick=closeModal;
+  $('mbd').onclick=e=>{if(e.target===e.currentTarget)closeModal()};
+  if(mode==='edit'){const d=$('rf-del');if(d)d.onclick=async()=>{if(confirm('Delete this referral?')){await deleteReferralDB(r.id);closeModal();render();toast('Referral deleted')}}}
+  $('rf-save').onclick=async()=>{
+    const rec={
+      id:r.id||('r_'+Date.now()+'_'+Math.random().toString(36).slice(2,6)),
+      created:r.created||Date.now(),
+      referrer:$('rf-referrer').value.trim(),
+      referrerPhone:$('rf-phone').value.trim(),
+      referrerEmail:$('rf-email').value.trim(),
+      lead:$('rf-lead').value.trim(),
+      jobId:$('rf-job').value||'',
+      status:$('rf-status').value,
+      dateReferred:$('rf-date').value,
+      dealValue:$('rf-deal').value,
+      payout:$('rf-payout').value,
+      payoutStatus:$('rf-pstatus').value,
+      paidAt:$('rf-paid').value,
+      notes:$('rf-notes').value.trim(),
+    };
+    if(!rec.referrer&&!rec.lead){toast('Add a referrer or lead name','');return}
+    if(rec.payoutStatus==='paid'&&!rec.paidAt)rec.paidAt=dateKey(new Date());
+    await writeReferral(rec);
+    await logAct((mode==='add'?'added a referral from ':'updated referral from ')+(rec.referrer||'someone'),rec.lead||'');
+    closeModal();render();toast(mode==='add'?'Referral added':'Referral saved');
+  };
+}
 function renderTeam(){
   return`<div class="member-add">
     <input id="member-in" placeholder="Add team member name…">
@@ -4176,12 +4298,13 @@ let CMD={open:false,query:'',idx:0,items:[]};
 function cmdItems(){
   const out=[];
   // Views
-  [['dashboard','Home / Dashboard','home'],['jobs','Jobs','briefcase'],['schedule','Schedule','calendar'],['invoices','Invoices','invoice'],['map','Map','map'],['reports','Reports','chart'],['activity','Activity','list'],['team','Team','team']].forEach(([v,name,ico])=>{
+  [['dashboard','Home / Dashboard','home'],['jobs','Jobs','briefcase'],['schedule','Schedule','calendar'],['invoices','Invoices','invoice'],['referrals','Referrals','team'],['map','Map','map'],['reports','Reports','chart'],['activity','Activity','list'],['team','Team','team']].forEach(([v,name,ico])=>{
     out.push({type:'view',name:'Go to '+name,sub:'View',ico,run:()=>{S.view=v;S.detail=null;render()}});
   });
   // Actions
   out.push({type:'action',name:'New Job',sub:'Create a job',ico:'plus',run:()=>showJobModal('add')});
   out.push({type:'action',name:'New Invoice',sub:'Pick a job, then create invoice',ico:'invoice',run:()=>showJobPickerModal(jobId=>showInvoiceModal(jobId))});
+  out.push({type:'action',name:'New Referral',sub:'Log a referred lead & payout',ico:'plus',run:()=>showReferralModal('add')});
   out.push({type:'action',name:'Settings & Company Info',sub:'Edit name, logo, invoice defaults',ico:'kbd',run:showSettingsModal});
   out.push({type:'action',name:'Switch company / workspace',sub:'Waterfront · Manufactured Housing · Norris Lake · Owner',ico:'link',run:showCompanySwitcher});
   if(!OWNER_MODE)out.push({type:'action',name:'Owner workspace',sub:'Analytics across all companies',ico:'chart',run:()=>{try{localStorage.setItem('jt_company','owner')}catch(e){};location.reload()}});
@@ -4437,6 +4560,11 @@ function attachHandlers(){
   $('bell-btn')?.addEventListener('click',showNotificationsModal);
   $('cmd-btn')?.addEventListener('click',showCommandPalette);
   $('fab')?.addEventListener('click',()=>showJobModal('add'));
+  $('btn-add-ref')?.addEventListener('click',()=>showReferralModal('add'));
+  $('btn-add-ref2')?.addEventListener('click',()=>showReferralModal('add'));
+  document.querySelectorAll('[data-ref-open]').forEach(el=>el.onclick=()=>showReferralModal('edit',S.referrals[el.dataset.refOpen]));
+  document.querySelectorAll('[data-ref-paid]').forEach(b=>b.onclick=async e=>{e.stopPropagation();const r=S.referrals[b.dataset.refPaid];if(!r)return;r.payoutStatus='paid';if(!r.paidAt)r.paidAt=dateKey(new Date());await writeReferral(r);render();toast('Marked paid')});
+  document.querySelectorAll('[data-ref-filter]').forEach(c=>c.onclick=()=>{S.refFilter=c.dataset.refFilter;render()});
 
   // Sort menu
   $('btn-sort')?.addEventListener('click',e=>{e.stopPropagation();S.sortOpen=!S.sortOpen;render()});
