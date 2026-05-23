@@ -383,6 +383,33 @@ input[type=range]{width:100%;accent-color:var(--green-700);height:4px;cursor:poi
 .btn-remove{background:none;border:1.5px solid var(--border-md);padding:6px 11px;border-radius:var(--r-sm);font-size:12px;cursor:pointer;color:var(--text-3);font-family:var(--font)}
 .btn-remove:hover{border-color:var(--red);color:var(--red)}
 .team-info-card{background:var(--surface-3);border-radius:var(--r-md);padding:14px 16px;margin-top:18px;font-size:12.5px;color:var(--text-2);line-height:1.65}
+/* Time tracking */
+.clockin-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.clockin-row select,.clockin-row input{flex:1;min-width:120px;padding:10px 12px;font-size:14px;border:1.5px solid var(--border-md);border-radius:var(--r-sm);background:var(--surface);color:var(--text);font-family:var(--font);outline:none}
+.clockin-row select:focus,.clockin-row input:focus{border-color:var(--green-600)}
+.clockin-row .btn-add{flex:0 0 auto}
+.tc-running{display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--green-50);border:1px solid var(--green-100);border-radius:var(--r-md);margin-bottom:8px}
+.tc-run-info{flex:1;min-width:0}
+.tc-name{font-size:14px;font-weight:600}
+.tc-meta{font-size:11.5px;color:var(--text-2);margin-top:2px}
+.tc-timer{font-size:20px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--green-700);letter-spacing:.02em;white-space:nowrap}
+.btn-clockout{background:var(--green-700);color:#fff;border:none;padding:9px 14px;border-radius:var(--r-sm);font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font);white-space:nowrap}
+.btn-clockout:active{transform:scale(.97);background:var(--green-800)}
+.tc-empty{font-size:13px;color:var(--text-3);padding:6px 0;line-height:1.6}
+.tc-toolbar{display:flex;gap:8px;align-items:center;margin-bottom:10px}
+.tc-toolbar .cal-view-toggle{flex:1;margin-bottom:0}
+.tc-toolbar .btn-sm{flex:0 0 auto;white-space:nowrap}
+.tc-member-hd{display:flex;align-items:center;gap:10px;padding:12px 0 6px;margin-top:4px;border-bottom:1.5px solid var(--border)}
+.tc-member-hd .member-ava{width:26px;height:26px;font-size:11px}
+.tc-member-name{flex:1;font-weight:600;font-size:14px}
+.tc-member-total{font-weight:700;font-variant-numeric:tabular-nums;color:var(--green-700)}
+.tc-entry{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);font-size:13px}
+.tc-entry-main{flex:1;min-width:0}
+.tc-entry-when{font-weight:500}
+.tc-entry-sub{font-size:11.5px;color:var(--text-2);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tc-entry-dur{font-variant-numeric:tabular-nums;font-weight:600;min-width:54px;text-align:right}
+.tc-icon{background:none;border:1px solid var(--border-md);border-radius:6px;padding:5px 9px;font-size:12px;cursor:pointer;color:var(--text-3);font-family:var(--font);flex:0 0 auto}
+.tc-icon:hover{border-color:var(--green-600);color:var(--green-700)}
 
 /* ── MODAL (sheet) ── */
 .modal-bd{
@@ -1242,6 +1269,10 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z"/></svg>
     Team
   </button>
+  <button class="nav-btn" data-view="time">
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+    Time
+  </button>
 </nav>
 
 <main class="content" id="content" role="main"><div class="loader">Loading…</div></main>
@@ -1292,7 +1323,7 @@ try{const s=localStorage.getItem('wfs_fb');if(s)FIREBASE_CONFIG=JSON.parse(s)}ca
 // ══ State ══
 let DB=null;
 let MAP=null,MAP_MARKERS=[];
-const S={jobs:{},activity:[],members:[],view:'dashboard',detail:null,detailTab:'overview',filter:'all',search:'',photoCat:'all',calMonth:new Date().getMonth(),calYear:new Date().getFullYear(),calSelected:null,calMode:localStorage.getItem(LS('calmode'))||'month',reportRange:'90',sort:localStorage.getItem(LS('sort'))||'newest',sortOpen:false,bulkMode:false,bulkSel:new Set(),invFilter:'all',invSearch:'',invSort:'date',user:localStorage.getItem(LS('user'))||'',notifReadAt:parseInt(localStorage.getItem(LS('notif_read'))||'0',10)};
+const S={jobs:{},activity:[],members:[],view:'dashboard',detail:null,detailTab:'overview',filter:'all',search:'',photoCat:'all',calMonth:new Date().getMonth(),calYear:new Date().getFullYear(),calSelected:null,calMode:localStorage.getItem(LS('calmode'))||'month',reportRange:'90',sort:localStorage.getItem(LS('sort'))||'newest',sortOpen:false,bulkMode:false,bulkSel:new Set(),invFilter:'all',invSearch:'',invSort:'date',user:localStorage.getItem(LS('user'))||'',notifReadAt:parseInt(localStorage.getItem(LS('notif_read'))||'0',10),companies:[],timeEntries:{},timeCompany:'all',timeRange:'today'};
 const UNDO={stack:[],push(op){this.stack.push(op);if(this.stack.length>20)this.stack.shift()},pop(){return this.stack.pop()}};
 
 // ── Company info for invoice letterhead (editable via Settings)
@@ -1404,10 +1435,12 @@ function undoLast(){const op=UNDO.pop();if(!op){toast('Nothing to undo','');retu
 
 // ══ DB layer ══
 const LOCAL={
-  load(){try{S.jobs=JSON.parse(localStorage.getItem(LS('jobs'))||'{}')}catch(e){S.jobs={}}try{S.activity=JSON.parse(localStorage.getItem(LS('activity'))||'[]')}catch(e){S.activity=[]}try{S.members=JSON.parse(localStorage.getItem(LS('members'))||'[]')}catch(e){S.members=[]}},
+  load(){try{S.jobs=JSON.parse(localStorage.getItem(LS('jobs'))||'{}')}catch(e){S.jobs={}}try{S.activity=JSON.parse(localStorage.getItem(LS('activity'))||'[]')}catch(e){S.activity=[]}try{S.members=JSON.parse(localStorage.getItem(LS('members'))||'[]')}catch(e){S.members=[]}try{S.companies=JSON.parse(localStorage.getItem(LS('companies'))||'[]')}catch(e){S.companies=[]}try{S.timeEntries=JSON.parse(localStorage.getItem(LS('time'))||'{}')}catch(e){S.timeEntries={}}},
   saveJobs(){try{localStorage.setItem(LS('jobs'),JSON.stringify(S.jobs))}catch(e){}},
   saveActivity(){try{localStorage.setItem(LS('activity'),JSON.stringify(S.activity.slice(0,300)))}catch(e){}},
-  saveMembers(){try{localStorage.setItem(LS('members'),JSON.stringify(S.members))}catch(e){}}
+  saveMembers(){try{localStorage.setItem(LS('members'),JSON.stringify(S.members))}catch(e){}},
+  saveCompanies(){try{localStorage.setItem(LS('companies'),JSON.stringify(S.companies))}catch(e){}},
+  saveTime(){try{localStorage.setItem(LS('time'),JSON.stringify(S.timeEntries))}catch(e){}}
 };
 function syncStatus(state,msg){const d=$('sync-dot'),t=$('sync-text');d.className='sync-dot '+state;t.textContent=msg}
 function initFB(cfg){
@@ -1418,6 +1451,8 @@ function initFB(cfg){
     DB.child('jobs').on('value',s=>{S.jobs=s.val()||{};LOCAL.saveJobs();syncStatus('ok','Team sync live');render()});
     DB.child('activity').on('value',s=>{const r=s.val();S.activity=r?Object.values(r).sort((a,b)=>b.time-a.time):[];LOCAL.saveActivity()});
     DB.child('members').on('value',s=>{S.members=s.val()||[];LOCAL.saveMembers();render()});
+    DB.child('companies').on('value',s=>{S.companies=s.val()||[];LOCAL.saveCompanies();render()});
+    DB.child('timeEntries').on('value',s=>{S.timeEntries=s.val()||{};LOCAL.saveTime();render()});
     DB.child('.info/connected').on('value',s=>{if(!s.val())syncStatus('err','Reconnecting…')});
     return true;
   }catch(e){syncStatus('err','Firebase error');return false}
@@ -1426,6 +1461,9 @@ async function writeJob(j){S.jobs[j.id]=j;LOCAL.saveJobs();if(DB)await DB.child(
 async function deleteJobDB(id){delete S.jobs[id];LOCAL.saveJobs();if(DB)await DB.child('jobs/'+id).remove().catch(()=>{})}
 async function logAct(action,job){const e={user:S.user||'Someone',action,job:job||'',time:Date.now()};S.activity.unshift(e);LOCAL.saveActivity();if(DB)await DB.child('activity').push(e).catch(()=>{})}
 async function saveMembers(){LOCAL.saveMembers();if(DB)await DB.child('members').set(S.members).catch(()=>{})}
+async function saveCompanies(){LOCAL.saveCompanies();if(DB)await DB.child('companies').set(S.companies).catch(()=>{})}
+async function writeTime(e){S.timeEntries[e.id]=e;LOCAL.saveTime();if(DB)await DB.child('timeEntries/'+e.id).set(e).catch(()=>{})}
+async function deleteTime(id){delete S.timeEntries[id];LOCAL.saveTime();if(DB)await DB.child('timeEntries/'+id).remove().catch(()=>{})}
 
 LOCAL.load();
 if(FIREBASE_CONFIG)initFB(FIREBASE_CONFIG);
@@ -1443,6 +1481,7 @@ function render(){
   else if(S.view==='reports')c.innerHTML=renderReports();
   else if(S.view==='activity')c.innerHTML=renderActivity();
   else if(S.view==='team')c.innerHTML=renderTeam();
+  else if(S.view==='time')c.innerHTML=renderTime();
   updateUserUI();
   updateBellBadge();
   attachHandlers();
@@ -3204,6 +3243,162 @@ function renderActivity(){
   return'<div class="activity-feed">'+S.activity.map((a,i)=>'<div class="activity-item" style="animation-delay:'+( i*0.03)+'s">'+'<div class="activity-ava">'+initials(a.user)+'</div>'+'<div class="activity-body">'+'<div class="activity-text"><strong>'+esc(a.user)+'</strong> '+esc(a.action)+(a.job?' · <strong>'+esc(a.job)+'</strong>':'')+'</div><div class="activity-time">'+ago(a.time)+'</div></div></div>').join('')+'</div>';
 }
 
+// ══ Time tracking ══
+let TIMER=null;
+function tid(){return 't_'+Date.now()+'_'+Math.random().toString(36).slice(2,6)}
+function companyList(){return (S.companies&&S.companies.length)?S.companies:[COMPANY.name].filter(Boolean)}
+function ensureCompanies(){if(!S.companies||!S.companies.length)S.companies=[COMPANY.name].filter(Boolean)}
+function timeAll(){return Object.values(S.timeEntries||{})}
+function runningFor(member){return timeAll().find(e=>e.member===member&&!e.end)}
+function entryDur(e){return Math.max(0,(e.end||Date.now())-e.start)}
+function dayStartTs(){const d=new Date();d.setHours(0,0,0,0);return d.getTime()}
+function weekStartTs(){const d=new Date();d.setHours(0,0,0,0);d.setDate(d.getDate()-d.getDay());return d.getTime()}
+function fmtClock(ms){const s=Math.max(0,Math.floor(ms/1000)),h=Math.floor(s/3600),m=Math.floor((s%3600)/60),x=s%60;return String(h).padStart(2,'0')+':'+String(m).padStart(2,'0')+':'+String(x).padStart(2,'0')}
+function fmtHours(ms){return (Math.round(ms/3600000*100)/100).toFixed(2)+' h'}
+function fmtTimeOf(ts){return ts?new Date(ts).toLocaleTimeString(undefined,{hour:'numeric',minute:'2-digit'}):'—'}
+function toLocalInput(ts){const d=new Date(ts),p=n=>String(n).padStart(2,'0');return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())+'T'+p(d.getHours())+':'+p(d.getMinutes())}
+function tickTimers(){document.querySelectorAll('[data-elapsed]').forEach(el=>{el.textContent=fmtClock(Date.now()-Number(el.getAttribute('data-elapsed')))})}
+
+async function clockIn(member,company,jobId,note){
+  if(!member){toast('Pick a team member first','');return}
+  if(runningFor(member)){toast(member+' is already clocked in','');return}
+  const job=jobId?S.jobs[jobId]:null;
+  const e={id:tid(),member,company:company||companyList()[0]||'',jobId:jobId||'',jobName:job?job.name:'',start:Date.now(),end:null,note:note||'',user:S.user||member,created:Date.now()};
+  await writeTime(e);
+  await logAct('clocked in'+(e.company?' · '+e.company:''),job?job.name:'');
+  render();toast(member+' clocked in');
+}
+async function clockOut(id){
+  const e=S.timeEntries[id];if(!e||e.end)return;
+  e.end=Date.now();
+  await writeTime(e);
+  await logAct('clocked out · '+fmtHours(entryDur(e)),e.jobName||'');
+  render();toast('Clocked out · '+fmtHours(entryDur(e)));
+}
+
+function renderTime(){
+  if(!TIMER)TIMER=setInterval(tickTimers,1000);
+  const cos=companyList();
+  const scope=S.timeCompany;
+  const inScope=e=>scope==='all'||e.company===scope;
+  const all=timeAll().filter(inScope);
+  const running=all.filter(e=>!e.end).sort((a,b)=>a.start-b.start);
+  const dayS=dayStartTs(),weekS=weekStartTs();
+  const sumDur=arr=>arr.reduce((s,e)=>s+entryDur(e),0);
+  const todayH=sumDur(all.filter(e=>e.start>=dayS));
+  const weekH=sumDur(all.filter(e=>e.start>=weekS));
+  const rangeFloor=S.timeRange==='today'?dayS:S.timeRange==='week'?weekS:0;
+  const rangeLabel=S.timeRange==='today'?'Today':S.timeRange==='week'?'This week':'All time';
+  const done=all.filter(e=>e.end&&e.start>=rangeFloor);
+  const grand=sumDur(done);
+  const byMember={};
+  done.forEach(e=>{(byMember[e.member]=byMember[e.member]||[]).push(e)});
+  const members=Object.keys(byMember).sort((a,b)=>sumDur(byMember[b])-sumDur(byMember[a]));
+  const memberOpts=S.members.map(m=>`<option value="${esc(m)}">${esc(m)}</option>`).join('');
+  const coOpts=cos.map(c=>`<option value="${esc(c)}" ${scope!=='all'&&scope===c?'selected':''}>${esc(c)}</option>`).join('');
+  const jobOpts=jobs().filter(j=>j.status!=='complete').map(j=>`<option value="${esc(j.id)}">${esc(j.name)}</option>`).join('');
+
+  return `
+  <div class="filter-row" style="margin-bottom:14px">
+    ${['all',...cos].map(c=>`<button class="filter-chip ${scope===c?'active':''}" data-time-co="${esc(c)}">${c==='all'?'All companies':esc(c)}</button>`).join('')}
+  </div>
+  <div class="kpi-grid">
+    <div class="kpi-card accent"><div class="kpi-label">On the clock</div><div class="kpi-value">${running.length}</div><div class="kpi-sub">${running.length===1?'1 person':running.length+' people'} working now</div></div>
+    <div class="kpi-card"><div class="kpi-label">Hours today</div><div class="kpi-value">${(todayH/3600000).toFixed(1)}</div><div class="kpi-sub">${fmtDate(dateKey(new Date()))}</div></div>
+    <div class="kpi-card"><div class="kpi-label">Hours this week</div><div class="kpi-value">${(weekH/3600000).toFixed(1)}</div><div class="kpi-sub">since Sunday</div></div>
+    <div class="kpi-card"><div class="kpi-label">Companies</div><div class="kpi-value">${cos.length}</div><div class="kpi-sub">operating</div></div>
+  </div>
+
+  <div class="dash-section">
+    <div class="section-hd">Clock In</div>
+    ${S.members.length?`<div class="clockin-row">
+      <select id="ci-member"><option value="">Team member…</option>${memberOpts}</select>
+      <select id="ci-company">${coOpts}</select>
+      <select id="ci-job"><option value="">No job — general time</option>${jobOpts}</select>
+      <input id="ci-note" placeholder="Note (optional)">
+      <button class="btn-add" id="ci-go"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Clock In</button>
+    </div>`:`<p class="tc-empty">Add team members in the <strong>Team</strong> tab to start tracking their time.</p>`}
+  </div>
+
+  <div class="dash-section">
+    <div class="section-hd">On the clock now</div>
+    ${running.length?running.map(r=>`<div class="tc-running">
+      <div class="tc-run-info"><div class="tc-name">${esc(r.member)}</div><div class="tc-meta">${esc(r.company||'')}${r.jobName?' · '+esc(r.jobName):''} · in at ${fmtTimeOf(r.start)}</div></div>
+      <div class="tc-timer" data-elapsed="${r.start}">${fmtClock(Date.now()-r.start)}</div>
+      <button class="btn-clockout" data-clockout="${esc(r.id)}">Clock Out</button>
+    </div>`).join(''):`<p class="tc-empty">Nobody is on the clock right now.</p>`}
+  </div>
+
+  <div class="dash-section">
+    <div class="section-hd">Timesheet <span>${rangeLabel} · ${fmtHours(grand)} total</span></div>
+    <div class="tc-toolbar">
+      <div class="cal-view-toggle">
+        <button data-trange="today" class="${S.timeRange==='today'?'active':''}">Today</button>
+        <button data-trange="week" class="${S.timeRange==='week'?'active':''}">This Week</button>
+        <button data-trange="all" class="${S.timeRange==='all'?'active':''}">All</button>
+      </div>
+      <button class="btn-sm" id="tc-add">+ Add entry</button>
+    </div>
+    ${members.length?members.map(m=>{
+      const list=byMember[m].sort((a,b)=>b.start-a.start);
+      return `<div class="tc-member-hd"><div class="member-ava">${initials(m)}</div><div class="tc-member-name">${esc(m)}</div><div class="tc-member-total">${fmtHours(sumDur(list))}</div></div>`+
+      list.map(e=>`<div class="tc-entry">
+        <div class="tc-entry-main"><div class="tc-entry-when">${fmtShort(dateKey(e.start))} · ${fmtTimeOf(e.start)}–${fmtTimeOf(e.end)}</div><div class="tc-entry-sub">${esc(e.company||'')}${e.jobName?' · '+esc(e.jobName):''}${e.note?' · '+esc(e.note):''}</div></div>
+        <div class="tc-entry-dur">${fmtHours(entryDur(e))}</div>
+        <button class="tc-icon" data-edit-time="${esc(e.id)}">Edit</button>
+        <button class="tc-icon" data-del-time="${esc(e.id)}">✕</button>
+      </div>`).join('');
+    }).join(''):`<p class="tc-empty">No completed time logged for this range yet.</p>`}
+  </div>
+
+  <div class="dash-section">
+    <div class="section-hd">Operating Companies <span>tracked separately</span></div>
+    <div class="member-add"><input id="co-in" placeholder="Add operating company…"><button class="btn-save" id="co-add">Add</button></div>
+    <div class="member-list">${cos.map((c,i)=>`<div class="member-row"><div class="member-ava">${initials(c)}</div><div class="member-name">${esc(c)}</div><button class="btn-remove" data-rm-co="${i}">Remove</button></div>`).join('')}</div>
+  </div>`;
+}
+
+function showTimeModal(mode,entry){
+  const e=entry||{};
+  const memberOpts=S.members.map(m=>`<option value="${esc(m)}" ${e.member===m?'selected':''}>${esc(m)}</option>`).join('');
+  const coOpts=companyList().map(c=>`<option value="${esc(c)}" ${e.company===c?'selected':''}>${esc(c)}</option>`).join('');
+  const jobOpts=jobs().map(j=>`<option value="${esc(j.id)}" ${e.jobId===j.id?'selected':''}>${esc(j.name)}</option>`).join('');
+  $('modal-root').innerHTML=`<div class="modal-bd" id="mbd"><div class="modal"><div class="modal-handle"></div>
+    <div class="modal-head"><div class="modal-title">${mode==='add'?'Add Time Entry':'Edit Time Entry'}</div><button class="modal-close" id="mc"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button></div>
+    <div class="modal-body">
+      <div class="form-group"><label class="form-label">Team member *</label><select class="form-select" id="t-member"><option value="">Select…</option>${memberOpts}</select></div>
+      <div class="form-group"><label class="form-label">Operating company</label><select class="form-select" id="t-company">${coOpts}</select></div>
+      <div class="form-group"><label class="form-label">Job (optional)</label><select class="form-select" id="t-job"><option value="">No job — general time</option>${jobOpts}</select></div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Clock in *</label><input class="form-input" type="datetime-local" id="t-start" value="${toLocalInput(e.start||Date.now())}"></div>
+        <div class="form-group"><label class="form-label">Clock out</label><input class="form-input" type="datetime-local" id="t-end" value="${e.end?toLocalInput(e.end):''}"></div>
+      </div>
+      <div class="form-group"><label class="form-label">Note</label><input class="form-input" id="t-note" value="${esc(e.note||'')}" placeholder="What was worked on"></div>
+    </div>
+    <div class="modal-foot">
+      ${mode==='edit'?`<button class="btn-delete" id="t-del">Delete</button>`:''}
+      <button class="btn-cancel" id="btn-cx">Cancel</button>
+      <button class="btn-save" id="btn-sv">${mode==='add'?'Add':'Save'}</button>
+    </div>
+  </div></div>`;
+  $('mc').onclick=$('btn-cx').onclick=closeModal;
+  $('mbd').onclick=ev=>{if(ev.target===ev.currentTarget)closeModal()};
+  if(mode==='edit'&&$('t-del'))$('t-del').onclick=async()=>{await deleteTime(e.id);closeModal();render();toast('Entry deleted')};
+  $('btn-sv').onclick=async()=>{
+    const member=$('t-member').value;
+    if(!member){toast('Pick a team member','');return}
+    const start=$('t-start').value?new Date($('t-start').value).getTime():null;
+    if(!start){toast('Clock-in time is required','');return}
+    const endV=$('t-end').value?new Date($('t-end').value).getTime():null;
+    if(endV&&endV<start){toast('Clock-out is before clock-in','');return}
+    const jobId=$('t-job').value;const job=jobId?S.jobs[jobId]:null;
+    const rec={id:e.id||tid(),member,company:$('t-company').value,jobId:jobId||'',jobName:job?job.name:'',start,end:endV,note:$('t-note').value.trim(),user:e.user||S.user||member,created:e.created||Date.now()};
+    await writeTime(rec);
+    await logAct(mode==='add'?'added a time entry':'edited a time entry',rec.jobName||'');
+    closeModal();render();toast(mode==='add'?'Time entry added':'Saved');
+  };
+}
+
 function renderTeam(){
   return`<div class="member-add">
     <input id="member-in" placeholder="Add team member name…">
@@ -4310,6 +4505,17 @@ function attachHandlers(){
     S.members.push(name);await saveMembers();inp.value='';render();toast(name+' added to team');
   });
   document.querySelectorAll('[data-rm]').forEach(b=>b.onclick=async()=>{S.members.splice(parseInt(b.dataset.rm),1);await saveMembers();render()});
+
+  // Time tracking
+  $('ci-go')?.addEventListener('click',()=>clockIn($('ci-member').value,$('ci-company').value,$('ci-job').value,$('ci-note').value.trim()));
+  document.querySelectorAll('[data-clockout]').forEach(b=>b.onclick=()=>clockOut(b.dataset.clockout));
+  document.querySelectorAll('[data-time-co]').forEach(c=>c.onclick=()=>{S.timeCompany=c.dataset.timeCo;render()});
+  document.querySelectorAll('[data-trange]').forEach(b=>b.onclick=()=>{S.timeRange=b.dataset.trange;render()});
+  $('tc-add')?.addEventListener('click',()=>showTimeModal('add'));
+  document.querySelectorAll('[data-edit-time]').forEach(b=>b.onclick=()=>{const e=S.timeEntries[b.dataset.editTime];if(e)showTimeModal('edit',e)});
+  document.querySelectorAll('[data-del-time]').forEach(b=>b.onclick=async()=>{if(!confirm('Delete this time entry?'))return;await deleteTime(b.dataset.delTime);render();toast('Entry deleted')});
+  $('co-add')?.addEventListener('click',async()=>{const inp=$('co-in');const n=inp?.value.trim();if(!n){toast('Enter a company name','');return}ensureCompanies();if(S.companies.includes(n)){toast('Already added','');return}S.companies.push(n);await saveCompanies();render();toast(n+' added')});
+  document.querySelectorAll('[data-rm-co]').forEach(b=>b.onclick=async()=>{ensureCompanies();S.companies.splice(parseInt(b.dataset.rmCo),1);await saveCompanies();render()});
 }
 
 document.addEventListener('keydown',onKey);
