@@ -1278,9 +1278,24 @@ const ENV = 'dev';
 // localStorage namespace). Waterfront keeps the original 'wfs' namespace
 // so every bit of existing data is preserved untouched. The chosen
 // company is remembered in one global key shared across all companies.
+// Square brand emblem for Manufactured Housing Solutions, styled to match
+// the supplied logo (dark field, gold corner brackets + accent line, white
+// MHS wordmark, steel-blue detail).
+const MHS_LOGO = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192">
+<rect width="192" height="192" rx="40" fill="#0b0f17"/>
+<g fill="none" stroke="#e8a830" stroke-width="5" stroke-linecap="square">
+<path d="M30 50V30H50"/><path d="M142 30H162V50"/><path d="M162 142V162H142"/><path d="M50 162H30V142"/>
+</g>
+<text x="96" y="103" text-anchor="middle" font-family="'DM Sans',Arial,sans-serif" font-weight="700" font-size="56" letter-spacing="1" fill="#ffffff">MHS</text>
+<line x1="60" y1="123" x2="132" y2="123" stroke="#e8a830" stroke-width="3.5"/>
+<circle cx="60" cy="123" r="4.5" fill="#e8a830"/><circle cx="132" cy="123" r="4.5" fill="#e8a830"/>
+<text x="96" y="146" text-anchor="middle" font-family="'DM Sans',Arial,sans-serif" font-weight="600" font-size="12.5" letter-spacing="4" fill="#9fb1c4">SOLUTIONS</text>
+</svg>`;
+
 const COMPANIES = {
   wfs: { id:'wfs', ns:'wfs', label:'Waterfront Solutions',           tag:'Construction & Waterfront Services' },
-  mhs: { id:'mhs', ns:'mhs', label:'Manufactured Housing Solutions', tag:'Manufactured Housing Sales & Service' },
+  mhs: { id:'mhs', ns:'mhs', label:'Manufactured Housing Solutions', tag:'Full Service Construction', logoSvg:MHS_LOGO,
+         theme:{ headerBg:'linear-gradient(135deg,#0a0e16 0%,#141a26 55%,#202c3d 100%)', syncBg:'#0a0e16', navActive:'#33506f' } },
   nlr: { id:'nlr', ns:'nlr', label:'Norris Lake Roofing',            tag:'Roofing & Exteriors' },
 };
 const COMPANY_ID = (() => { try { const s = localStorage.getItem('jt_company'); return (s && COMPANIES[s]) ? s : 'wfs'; } catch (e) { return 'wfs'; } })();
@@ -3798,6 +3813,23 @@ function showCompanySwitcher(){
   });
 }
 
+// Apply the active company's logo + color theme (logo/theme are optional;
+// Waterfront has none, so it keeps its original logo and green header).
+function applyCompanyBranding(){
+  if(ACTIVE_CO.logoSvg){
+    const img=document.querySelector('.brand-logo');
+    if(img){img.src='data:image/svg+xml;utf8,'+encodeURIComponent(ACTIVE_CO.logoSvg);img.alt=ACTIVE_CO.label;}
+  }
+  const t=ACTIVE_CO.theme;
+  if(t&&!document.getElementById('co-theme')){
+    let css='';
+    if(t.headerBg)css+='.header{background:'+t.headerBg+'}';
+    if(t.syncBg)css+='.sync-bar{background:'+t.syncBg+'}';
+    if(t.navActive)css+='.nav-btn.active{color:'+t.navActive+';border-bottom-color:'+t.navActive+'}';
+    if(css){const s=document.createElement('style');s.id='co-theme';s.textContent=css;document.head.appendChild(s);}
+  }
+}
+
 // ══ Command Palette ══
 let CMD={open:false,query:'',idx:0,items:[]};
 function cmdItems(){
@@ -4369,6 +4401,7 @@ document.addEventListener('keydown',onKey);
 // Service worker would require a same-origin .js file; manifest alone makes it installable.
 // Browsers prompt "Add to Home Screen" when the manifest + HTTPS + an icon are present.
 
+applyCompanyBranding();
 render();
 </script>
 </body>
