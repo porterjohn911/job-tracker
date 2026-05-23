@@ -4,9 +4,10 @@
     ".write": false,
 
     "users": {
+      ".read": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'owner' || root.child('users').child(auth.uid).child('role').val() === 'manager')",
       "$uid": {
         ".read": "auth != null && auth.uid === $uid",
-        ".write": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'owner'"
+        ".write": "auth != null && ( (auth.uid === $uid && !data.exists() && (!data.parent().exists() || newData.child('role').val() === 'pending')) || root.child('users').child(auth.uid).child('role').val() === 'owner' )"
       }
     },
 
