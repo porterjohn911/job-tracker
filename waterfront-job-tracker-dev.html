@@ -1500,8 +1500,14 @@ if (ENV === 'dev') {
 }
 
 // ══ Firebase config ══
-let FIREBASE_CONFIG = null;
-try{const s=localStorage.getItem('wfs_fb');if(s)FIREBASE_CONFIG=JSON.parse(s)}catch(e){}
+// Baked-in config: paste your project's firebaseConfig object below to make
+// every device auto-connect with no per-device "Connect Team" step. The
+// Firebase web config is NOT a secret — it's designed to ship in client code
+// (security comes from the database rules + Auth). Leave null to fall back to
+// the localStorage config set via the in-app "Connect Team" screen.
+const FIREBASE_CONFIG_BAKED = null; // e.g. { apiKey:"…", authDomain:"…", databaseURL:"…", projectId:"…", storageBucket:"…", messagingSenderId:"…", appId:"…" }
+let FIREBASE_CONFIG = FIREBASE_CONFIG_BAKED;
+try{const s=localStorage.getItem('wfs_fb');if(!FIREBASE_CONFIG&&s)FIREBASE_CONFIG=JSON.parse(s)}catch(e){}
 
 // ══ State ══
 let DB=null;
