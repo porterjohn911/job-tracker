@@ -449,6 +449,9 @@ input[type=range]{width:100%;accent-color:var(--green-700);height:4px;cursor:poi
 .tt-job-sub{font-size:11.5px;color:var(--text-3);margin-top:1px}
 .tt-job-cost{font-size:15px;font-weight:700;color:var(--green-700);font-variant-numeric:tabular-nums;white-space:nowrap}
 .tt-live{font-size:11px;font-weight:700;color:var(--green-600);white-space:nowrap}
+.tt-payroll-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;margin-bottom:18px;background:var(--surface);border:1.5px solid var(--green-600);color:var(--green-700);padding:11px;border-radius:var(--r-sm);font-size:14px;font-weight:700;cursor:pointer;font-family:var(--font)}
+.tt-payroll-btn:active{opacity:.85}
+.tt-payroll-btn svg{width:16px;height:16px}
 
 /* ── MODAL (sheet) ── */
 .modal-bd{
@@ -3846,6 +3849,7 @@ function renderTime(){
       <div class="tt-field"><label>Note (optional)</label><input id="tt-note" placeholder="e.g. framing the deck"></div>
       <button class="tt-clockin-btn" id="tt-clockin">Clock In</button>
     </div>
+    ${(!accessEnabled()||canSeeAll(SESSION))?`<button class="tt-payroll-btn" id="tt-payroll" type="button"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>Export payroll for Gusto</button>`:''}
     <div class="section-hd">On the clock now</div>
     ${activeHtml}
     <div class="section-hd" style="margin-top:20px">Labor cost by job</div>
@@ -3902,6 +3906,94 @@ function showTimeModal(entry){
     await deleteTimeEntryDB(t.id);closeModal();render();
     const restore=async()=>{await writeTimeEntry(backup);render();toast('Entry restored')};
     UNDO.push(restore);toast('Entry deleted','undo',restore);
+  };
+}
+
+// ── Payroll export (crew hours → Gusto) ──
+// No live API: a static page can't hold Gusto's OAuth secret or call its API
+// (CORS), so this produces a payroll-ready CSV / copyable table you enter into
+// Gusto. Read-only — never alters time entries, invoices, or estimates.
+let PAYROLL_RANGE=null;
+function payrollData(fromKey,toKey){
+  const within=t=>{const k=dateKey(t.start);return (!fromKey||k>=fromKey)&&(!toKey||k<=toKey)};
+  const byMember={};
+  timeList().forEach(t=>{
+    if(!t.end)return;            // only completed sessions count toward payroll
+    if(!within(t))return;
+    const m=t.member||'(unassigned)';
+    const e=byMember[m]||(byMember[m]={member:m,ms:0,days:{}});
+    const d=entryDur(t);e.ms+=d;const k=dateKey(t.start);e.days[k]=(e.days[k]||0)+d;
+  });
+  const rows=Object.values(byMember).map(e=>{
+    const hours=e.ms/3600000,rate=rateOf(e.member);
+    return {member:e.member,hours,rate,gross:hours*rate,days:Object.keys(e.days).sort().map(k=>({date:k,hours:e.days[k]/3600000}))};
+  }).sort((a,b)=>a.member.localeCompare(b.member));
+  return {rows,totalHours:rows.reduce((s,r)=>s+r.hours,0),totalGross:rows.reduce((s,r)=>s+r.gross,0)};
+}
+function csvCell(s){s=String(s==null?'':s);return /[",\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s}
+function payrollSummaryCSV(data,anyRates){
+  const lines=[['Employee','Total Hours'].concat(anyRates?['Hourly Rate','Gross Pay']:[])];
+  data.rows.forEach(r=>lines.push([r.member,r.hours.toFixed(2)].concat(anyRates?[r.rate?r.rate.toFixed(2):'',r.rate?r.gross.toFixed(2):'']:[])));
+  return lines.map(r=>r.map(csvCell).join(',')).join('\r\n');
+}
+function payrollDailyCSV(data,anyRates){
+  const lines=[['Employee','Date','Hours'].concat(anyRates?['Hourly Rate','Gross Pay']:[])];
+  data.rows.forEach(r=>r.days.forEach(d=>lines.push([r.member,d.date,d.hours.toFixed(2)].concat(anyRates?[r.rate?r.rate.toFixed(2):'',r.rate?(d.hours*r.rate).toFixed(2):'']:[]))));
+  return lines.map(r=>r.map(csvCell).join(',')).join('\r\n');
+}
+function payrollFileBase(fromKey,toKey){
+  const co=((ACTIVE_CO&&ACTIVE_CO.label)||'company').replace(/[^a-z0-9]+/gi,'-').replace(/^-|-$/g,'');
+  return 'Payroll-'+co+'-'+fromKey+'_to_'+toKey;
+}
+function showPayrollModal(){
+  if(accessEnabled()&&!canSeeAll(SESSION)){toast('Only managers and owners can run payroll','');return}
+  if(!S.members.length){toast('Add team members first','');return}
+  const today=dateKey(new Date());
+  const start=new Date();start.setDate(start.getDate()-13);
+  const def=PAYROLL_RANGE||{from:dateKey(start),to:today};
+  renderPayrollModal(def.from,def.to);
+}
+function renderPayrollModal(fromKey,toKey){
+  PAYROLL_RANGE={from:fromKey,to:toKey};
+  const data=payrollData(fromKey,toKey);
+  const anyRates=S.members.some(m=>rateOf(m)>0)||data.rows.some(r=>r.rate>0);
+  const cols=anyRates?4:2;
+  const rowsHtml=data.rows.length?data.rows.map(r=>`<tr><td>${esc(r.member)}</td><td class="num">${r.hours.toFixed(2)}</td>${anyRates?`<td class="num">${r.rate?money2(r.rate):'—'}</td><td class="num">${r.rate?money2(r.gross):'—'}</td>`:''}</tr>`).join(''):`<tr><td colspan="${cols}" style="text-align:center;color:var(--text-3);padding:14px">No tracked hours in this range</td></tr>`;
+  const dailyHtml=data.rows.length?data.rows.map(r=>`<div style="margin-top:10px"><div style="font-weight:600;font-size:12.5px;display:flex;justify-content:space-between"><span>${esc(r.member)}</span><span>${r.hours.toFixed(2)} h${r.rate?' · '+money2(r.gross):''}</span></div>${r.days.map(d=>`<div style="display:flex;justify-content:space-between;font-size:11.5px;color:var(--text-3);padding:1px 0 1px 8px"><span>${esc(fmtDate(d.date))}</span><span>${d.hours.toFixed(2)} h</span></div>`).join('')}</div>`).join(''):'<div class="tt-empty">No hours.</div>';
+  $('modal-root').innerHTML=`<div class="modal-bd" id="mbd" role="dialog" aria-modal="true" aria-label="Payroll export"><div class="modal" style="max-width:640px"><div class="modal-handle"></div>
+    <div class="modal-head"><div class="modal-title">Payroll Export — ${esc(ACTIVE_CO.label)}</div><button class="modal-close" id="mc" aria-label="Close"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button></div>
+    <div class="modal-body">
+      <p style="font-size:12.5px;color:var(--text-2);line-height:1.55;margin-bottom:12px">Total tracked crew hours for the pay period. Download the summary as CSV (or copy it) and enter the hours into Gusto when you run payroll. Read-only — it never changes time entries, invoices, or estimates.</p>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">From</label><input class="form-input" type="date" id="pr-from" value="${esc(fromKey)}"></div>
+        <div class="form-group"><label class="form-label">To</label><input class="form-input" type="date" id="pr-to" value="${esc(toKey)}"></div>
+      </div>
+      <div style="overflow-x:auto;-webkit-overflow-scrolling:touch"><table class="admin-table">
+        <thead><tr><th>Employee</th><th class="num">Hours</th>${anyRates?'<th class="num">Rate</th><th class="num">Gross</th>':''}</tr></thead>
+        <tbody>${rowsHtml}
+          <tr class="total-row"><td>Total</td><td class="num">${data.totalHours.toFixed(2)}</td>${anyRates?`<td></td><td class="num">${money2(data.totalGross)}</td>`:''}</tr>
+        </tbody></table></div>
+      ${anyRates?'':'<div class="tt-hint" style="margin-top:10px">Set hourly rates on the Team tab to include gross pay.</div>'}
+      <div class="section-hd" style="margin-top:16px">Daily breakdown</div>
+      ${dailyHtml}
+    </div>
+    <div class="modal-foot">
+      <button class="btn-cancel" id="btn-cx">Close</button>
+      <button class="btn-sm" id="pr-copy" type="button">Copy summary</button>
+      <button class="btn-sm" id="pr-daily" type="button">Daily CSV</button>
+      <button class="btn-save" id="pr-csv" type="button">Download for Gusto</button>
+    </div>
+  </div></div>`;
+  $('mc').onclick=$('btn-cx').onclick=()=>closeModal();
+  $('mbd').onclick=e=>{if(e.target===e.currentTarget)closeModal()};
+  $('pr-from').onchange=()=>renderPayrollModal($('pr-from').value,$('pr-to').value);
+  $('pr-to').onchange=()=>renderPayrollModal($('pr-from').value,$('pr-to').value);
+  $('pr-csv').onclick=()=>{downloadFile(payrollFileBase(fromKey,toKey)+'.csv',payrollSummaryCSV(data,anyRates),'text/csv;charset=utf-8');toast('Payroll CSV downloaded')};
+  $('pr-daily').onclick=()=>{downloadFile(payrollFileBase(fromKey,toKey)+'-daily.csv',payrollDailyCSV(data,anyRates),'text/csv;charset=utf-8');toast('Daily CSV downloaded')};
+  $('pr-copy').onclick=async()=>{
+    const head=['Employee','Hours'].concat(anyRates?['Rate','Gross']:[]);
+    const tsv=[head].concat(data.rows.map(r=>[r.member,r.hours.toFixed(2)].concat(anyRates?[r.rate?r.rate.toFixed(2):'',r.rate?r.gross.toFixed(2):'']:[]))).map(r=>r.join('\t')).join('\n');
+    try{await navigator.clipboard.writeText(tsv);toast('Copied — paste into a sheet or Gusto')}catch(e){toast('Copy failed','')}
   };
 }
 
@@ -5284,6 +5376,7 @@ function attachHandlers(){
 
   // Time tracking
   stopTimeTick();
+  $('tt-payroll')?.addEventListener('click',showPayrollModal);
   $('tt-goto-team')?.addEventListener('click',()=>{S.view='team';render()});
   $('tt-clockin')?.addEventListener('click',async()=>{
     const member=$('tt-member')?.value;
