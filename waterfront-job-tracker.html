@@ -71,6 +71,15 @@ body{display:flex;flex-direction:column;max-width:680px;margin:0 auto;min-height
 .brand-logo{width:44px;height:44px;object-fit:contain;filter:drop-shadow(0 2px 6px rgba(0,0,0,0.3))}
 .brand-text h1{font-family:var(--font-display);font-size:17px;font-weight:400;color:#fff;letter-spacing:0.01em;line-height:1.2}
 .brand-text p{font-size:11px;color:rgba(255,255,255,0.45);letter-spacing:0.04em;text-transform:uppercase}
+.brand-switch{display:inline-flex;align-items:center;gap:4px;background:none;border:0;padding:0;cursor:pointer;font-family:inherit;font-size:11px;color:rgba(255,255,255,0.45);letter-spacing:0.04em;text-transform:uppercase;line-height:1.2}
+.brand-switch:hover{color:rgba(255,255,255,0.85)}
+.brand-switch svg{width:11px;height:11px;stroke-width:2.5;opacity:.65;flex-shrink:0}
+.co-pick{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;text-align:left;padding:14px 16px;margin-bottom:10px;border:1.5px solid var(--border);border-radius:var(--r-md);background:var(--surface);cursor:pointer;transition:border-color .15s,background .15s,box-shadow .15s}
+.co-pick:hover{border-color:var(--gold);box-shadow:var(--shadow-sm)}
+.co-pick.active{border-color:var(--gold);background:var(--gold-light)}
+.co-pick-name{font-weight:600;font-size:15px;color:var(--text)}
+.co-pick-tag{font-size:12px;color:var(--text-3);margin-top:2px}
+.co-pick-badge{font-size:10px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--gold);background:var(--surface);border:1px solid var(--gold);border-radius:99px;padding:3px 9px;flex-shrink:0}
 .user-btn{
   display:flex;align-items:center;gap:7px;
   background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.18);
@@ -268,6 +277,17 @@ body{display:flex;flex-direction:column;max-width:680px;margin:0 auto;min-height
 .info-cell{background:var(--surface-3);border-radius:var(--r-sm);padding:11px 13px}
 .info-label{font-size:10.5px;color:var(--text-3);font-weight:600;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px}
 .info-value{font-size:14px;font-weight:600;color:var(--text)}
+.stat-cell{position:relative;cursor:pointer;border:1px solid transparent;width:100%;text-align:left;font-family:inherit;transition:border-color .15s,box-shadow .15s,transform .1s}
+.stat-cell:hover{border-color:var(--green-600);box-shadow:var(--shadow-sm);transform:translateY(-1px)}
+.stat-cell:focus-visible{outline:2px solid var(--green-600);outline-offset:1px}
+.stat-cell .info-value{display:flex;align-items:center;gap:6px}
+.stat-cell .stat-go{margin-left:auto;color:var(--text-3);opacity:0;transition:opacity .15s}
+.stat-cell:hover .stat-go{opacity:.7}
+.stat-cell .stat-go svg{width:13px;height:13px;stroke-width:2.5}
+.stat-add{position:absolute;top:7px;right:7px;width:22px;height:22px;border-radius:50%;border:none;background:var(--green-700);color:#fff;font-size:16px;font-weight:700;line-height:1;cursor:pointer;opacity:0;transition:opacity .15s,background .15s;display:flex;align-items:center;justify-content:center;padding:0}
+.stat-add:hover{background:var(--green-600)}
+.stat-cell:hover .stat-add,.stat-cell:focus-within .stat-add{opacity:1}
+@media(hover:none){.stat-add{opacity:1}.stat-cell .stat-go{opacity:.6}}
 
 /* ── PROGRESS ── */
 .prog-section{background:var(--surface-3);border-radius:var(--r-md);padding:14px 16px;margin-bottom:22px}
@@ -383,6 +403,40 @@ input[type=range]{width:100%;accent-color:var(--green-700);height:4px;cursor:poi
 .btn-remove{background:none;border:1.5px solid var(--border-md);padding:6px 11px;border-radius:var(--r-sm);font-size:12px;cursor:pointer;color:var(--text-3);font-family:var(--font)}
 .btn-remove:hover{border-color:var(--red);color:var(--red)}
 .team-info-card{background:var(--surface-3);border-radius:var(--r-md);padding:14px 16px;margin-top:18px;font-size:12.5px;color:var(--text-2);line-height:1.65}
+
+/* ── TIME TRACKING ── */
+.tt-kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px}
+.tt-kpi{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);padding:12px 8px;text-align:center}
+.tt-kpi-val{font-size:21px;font-weight:700;color:var(--green-700);font-family:var(--font-display);font-variant-numeric:tabular-nums}
+.tt-kpi-lbl{font-size:10px;color:var(--text-3);text-transform:uppercase;letter-spacing:0.05em;font-weight:600;margin-top:2px}
+.tt-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);padding:14px;margin-bottom:20px;box-shadow:var(--shadow-sm)}
+.tt-card-hd{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-3);margin-bottom:12px}
+.tt-field{margin-bottom:10px}
+.tt-field label{display:block;font-size:10.5px;color:var(--text-3);font-weight:600;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:5px}
+.tt-field select,.tt-field input{width:100%;padding:10px 12px;font-size:14px;border:1.5px solid var(--border-md);border-radius:var(--r-sm);background:var(--surface);color:var(--text);outline:none;font-family:var(--font)}
+.tt-field select:focus,.tt-field input:focus{border-color:var(--green-600)}
+.tt-clockin-btn{width:100%;margin-top:4px;background:var(--green-700);color:#fff;border:none;padding:13px;border-radius:var(--r-sm);font-size:15px;font-weight:700;cursor:pointer;font-family:var(--font)}
+.tt-clockin-btn:active{opacity:.85}
+.tt-active{display:flex;align-items:center;gap:11px;background:var(--green-50);border:1.5px solid var(--green-400);border-radius:var(--r-md);padding:10px 13px;margin-bottom:8px}
+.tt-active-body{flex:1;min-width:0}
+.tt-active-name{font-size:14px;font-weight:600}
+.tt-active-meta{font-size:11.5px;color:var(--text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tt-timer{font-variant-numeric:tabular-nums;font-weight:700;font-size:15px;color:var(--green-700);font-family:var(--font-display)}
+.tt-btn-out{background:var(--green-700);color:#fff;border:none;padding:8px 12px;border-radius:var(--r-sm);font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font);white-space:nowrap}
+.tt-btn-out:active{opacity:.85}
+.tt-day{margin-top:14px}
+.tt-day-hd{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;padding:0 2px}
+.tt-day-date{font-size:12px;font-weight:700;color:var(--text-2)}
+.tt-day-total{font-size:12px;font-weight:700;color:var(--green-700);font-variant-numeric:tabular-nums}
+.tt-row{display:flex;align-items:center;gap:11px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);padding:10px 12px;margin-bottom:6px}
+.tt-row-body{flex:1;min-width:0}
+.tt-row-top{display:flex;justify-content:space-between;gap:8px}
+.tt-row-name{font-size:13.5px;font-weight:600}
+.tt-row-dur{font-size:13px;font-weight:700;color:var(--green-700);font-variant-numeric:tabular-nums;white-space:nowrap}
+.tt-row-meta{font-size:11.5px;color:var(--text-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tt-icon{background:none;border:none;color:var(--text-3);cursor:pointer;font-size:14px;padding:4px 6px;border-radius:6px;flex-shrink:0;font-family:var(--font)}
+.tt-icon:hover{color:var(--text);background:var(--surface-3)}
+.tt-empty{text-align:center;color:var(--text-3);font-size:13px;padding:16px 0}
 
 /* ── MODAL (sheet) ── */
 .modal-bd{
@@ -797,6 +851,13 @@ input[type=range]{width:100%;accent-color:var(--green-700);height:4px;cursor:poi
 .report-bar-label{position:absolute;bottom:-22px;left:50%;transform:translateX(-50%);font-size:10px;color:var(--text-3);font-weight:600;white-space:nowrap}
 .report-bar-val{position:absolute;top:-18px;left:50%;transform:translateX(-50%);font-size:10px;color:var(--text-2);font-weight:700;white-space:nowrap}
 .report-x-pad{height:24px}
+.admin-table{width:100%;border-collapse:collapse;font-size:12.5px;min-width:660px}
+.admin-table th{text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-3);padding:8px 10px;border-bottom:1px solid var(--border)}
+.admin-table td{padding:9px 10px;border-bottom:1px solid var(--border);color:var(--text);white-space:nowrap}
+.admin-table .num{text-align:right;font-variant-numeric:tabular-nums}
+.admin-table .total-row td{border-top:2px solid var(--border-md);border-bottom:none;font-weight:700}
+.btn-mini{font-size:11.5px;font-weight:600;color:var(--green-700);background:var(--green-50);border:1px solid var(--border);border-radius:8px;padding:5px 11px;cursor:pointer;font-family:var(--font);white-space:nowrap}
+.btn-mini:hover{background:var(--green-100)}
 .leaderboard{display:flex;flex-direction:column;gap:6px}
 .lb-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)}
 .lb-row:last-child{border-bottom:none}
@@ -1144,7 +1205,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
     <img class="brand-logo" src="data:image/png;base64,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/tSn6O7p4cEHHuDPy5cD8La3vpXDDzuMBx54ABFDLp/n5FNOQSnF9665hjVr1vDGE09ARDh07qFMnTZtl9npee6LmqQwDFm/bh3f/e53OPXUUxgasrO9ltPXXXcdt912G1prLnzHOzjt9NMox5qeaKpSii1bNvHII49wzDHHsPiZxfH5aqr129/+Ng8/8ggA73vfXzJ//nEArF+/PhXGlCmTR+CHCRMsACwWi3R3daX34Wd8C7KuvhqlFJVKxRb7j9jTZN9LsVkvlUqpBXg5tE8CTnziY48+SqVSIZ/P0zZlCk88+STFoSGeftoCsGzGPuD69/ffj1KKw484gtmzZrF9xw6+8tWvct3113PnL38JKOrr6jjrrAU2j1yTm9VK7yLgWkY0NjXhOA4bN2zk5FNO2SV/3DZlCj/84Q9T/3fJJZemfTQ3NaXt6urq4342pFaktq9sNsNNN91kxwb8zcXWpC9Z8qd4RVKYP39+VfMyGSZMnIiI8NSipymVSja7hp2YSilu+/nPefgPf8D3/d3mnpVSqXvyfR/vZfjehPZNwPFNrFq1ivUbNthjxrDwscdQSvGnxTaEUlrT29fHc0uWICIsOOssHK259tprufqqq7jsE5/gve95D1vbt2KM4eyzF9h9PCJ09/RgRHBddxffWqmUMcYQGUNfXz9RFPGRSy7liccfJ5vL0dfXh4mT/ZlMhi2bN7PomWcwxvDOCy9kfGurNbUDgylw6entIYqiEcweHBpKz4vAgw88wJatdqwXXHABSmsWPb2Ip556GqUUZy1YwISJEwmCgPd/4K+YNs2mOm+88UYAhoeHMcbgODpdjLj6qqsoVyrpdapkwaobh2S+76fCfrm0txmRESm6/6rJzpx08kkCyPjx46Wru0tERJY895worWX6jBnywrp1IiJyzTXfk2w2K5lMRmbNni1btmwVEZHunh458uijpHVCq6xevTrt96IPfUgAcV1X8vm8PPnHP6bnFj7+uDy2cKGIiBSLw5LNZuWKz3wmPf+Tn/1MPN+XD334w+mxm2++WRqbGtOMmIjId665RjzPE8dxxI0zdtdff316/pvf+pYA8v0f/CA99q//9m+itZazFiyQShCIiMiq1avlpptvlqE4mfGL228X1/PE9/30etdee524jiue5wkg//nDH4qIyIqVK21SQilRSsms2bOlPc7o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" alt="Waterfront Solutions">
     <div class="brand-text">
       <h1>Job Tracker</h1>
-      <p>Waterfront Solutions</p>
+      <button class="brand-switch" id="brand-switch" title="Switch company" aria-label="Switch company"><span id="brand-co">Waterfront Solutions</span><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5"/></svg></button>
     </div>
   </div>
   <div style="display:flex;align-items:center;gap:6px">
@@ -1185,6 +1246,10 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25zM6.75 12h.008v.008H6.75V12zm0 3h.008v.008H6.75V15zm0 3h.008v.008H6.75V18z"/></svg>
     Invoices
   </button>
+  <button class="nav-btn" data-view="referrals">
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21 11.25v8.25a1.5 1.5 0 01-1.5 1.5H5.25a1.5 1.5 0 01-1.5-1.5v-8.25M12 4.875A2.625 2.625 0 109.375 7.5H12m0-2.625V7.5m0-2.625A2.625 2.625 0 1114.625 7.5H12m0 0V21m-8.625-9.75h18c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125h-18c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z"/></svg>
+    Referrals
+  </button>
   <button class="nav-btn" data-view="map">
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 6.75V15m6-6v8.25m.503 3.498l4.875-2.437c.381-.19.622-.58.622-1.006V4.82c0-.836-.88-1.38-1.628-1.006l-3.869 1.934c-.317.159-.69.159-1.006 0L9.503 3.252a1.125 1.125 0 00-1.006 0L3.622 5.689C3.24 5.88 3 6.27 3 6.695V19.18c0 .836.88 1.38 1.628 1.006l3.869-1.934c.317-.159.69-.159 1.006 0l4.994 2.497c.317.158.69.158 1.006 0z"/></svg>
     Map
@@ -1200,6 +1265,10 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
   <button class="nav-btn" data-view="team">
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z"/></svg>
     Team
+  </button>
+  <button class="nav-btn" data-view="time">
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+    Time
   </button>
 </nav>
 
@@ -1223,8 +1292,86 @@ const ENV = 'prod';
 // All data (localStorage + the Firebase node) is namespaced by ENV, so
 // the dev copy reads/writes a completely separate sandbox and can never
 // affect what the team sees in production.
-const DB_NS = ENV === 'dev' ? 'wfs_dev' : 'wfs';
-const LS = k => (ENV === 'dev' ? 'wfs_dev_' : 'wfs_') + k;
+// ── Multi-company support ───────────────────────────────────────────
+// Each company keeps completely isolated data (its own Firebase node +
+// localStorage namespace). Waterfront keeps the original 'wfs' namespace
+// so every bit of existing data is preserved untouched. The chosen
+// company is remembered in one global key shared across all companies.
+// Square brand emblem for Manufactured Housing Solutions, styled to match
+// the supplied logo (dark field, gold corner brackets + accent line, white
+// MHS wordmark, steel-blue detail).
+const MHS_LOGO = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192">
+<rect width="192" height="192" rx="40" fill="#0b0f17"/>
+<g fill="none" stroke="#e8a830" stroke-width="5" stroke-linecap="square">
+<path d="M30 50V30H50"/><path d="M142 30H162V50"/><path d="M162 142V162H142"/><path d="M50 162H30V142"/>
+</g>
+<text x="96" y="103" text-anchor="middle" font-family="'DM Sans',Arial,sans-serif" font-weight="700" font-size="56" letter-spacing="1" fill="#ffffff">MHS</text>
+<line x1="60" y1="123" x2="132" y2="123" stroke="#e8a830" stroke-width="3.5"/>
+<circle cx="60" cy="123" r="4.5" fill="#e8a830"/><circle cx="132" cy="123" r="4.5" fill="#e8a830"/>
+<text x="96" y="146" text-anchor="middle" font-family="'DM Sans',Arial,sans-serif" font-weight="600" font-size="12.5" letter-spacing="4" fill="#9fb1c4">SOLUTIONS</text>
+</svg>`;
+
+// Full horizontal MHS lockup with its own dark panel, so it reads on any
+// surface (used on invoice letterheads — email and printed/PDF).
+const MHS_LOGO_FULL = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 280">
+<rect width="720" height="280" rx="22" fill="#0b0f17"/>
+<g fill="none" stroke="#e8a830" stroke-width="2.5" stroke-linecap="square">
+<path d="M40 60V38H78"/><path d="M642 38H680V60"/><path d="M680 220V242H642"/><path d="M78 242H40V220"/>
+<line x1="92" y1="38" x2="628" y2="38"/><line x1="92" y1="242" x2="628" y2="242"/>
+</g>
+<text x="360" y="116" text-anchor="middle" font-family="'DM Sans',Arial,sans-serif" font-weight="800" font-size="54" letter-spacing="1" fill="#ffffff">MANUFACTURED</text>
+<line x1="170" y1="134" x2="550" y2="134" stroke="#e8a830" stroke-width="2.5"/>
+<circle cx="170" cy="134" r="5" fill="#e8a830"/><circle cx="550" cy="134" r="5" fill="#e8a830"/>
+<g fill="none" stroke="#e8a830" stroke-width="2.5"><path d="M150 100H132V168H150"/><path d="M570 100H588V168H570"/></g>
+<text x="360" y="178" text-anchor="middle" font-family="'DM Sans',Arial,sans-serif" font-weight="600" font-size="38" letter-spacing="16" fill="#9fb1c4">HOUSING</text>
+<line x1="210" y1="196" x2="510" y2="196" stroke="#2a3850" stroke-width="1"/>
+<text x="360" y="224" text-anchor="middle" font-family="'DM Sans',Arial,sans-serif" font-weight="700" font-size="21" letter-spacing="10" fill="#e8a830">SOLUTIONS</text>
+<text x="360" y="250" text-anchor="middle" font-family="'DM Sans',Arial,sans-serif" font-weight="500" font-size="11.5" letter-spacing="5" fill="#5a7088">FULL SERVICE CONSTRUCTION</text>
+</svg>`;
+
+// Owner-mode emblem (growth chart) — signals the cross-company workspace.
+const OWNER_LOGO = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192">
+<rect width="192" height="192" rx="40" fill="#1e1b2e"/>
+<rect x="46" y="106" width="22" height="44" rx="3" fill="#7c6cc4"/>
+<rect x="85" y="80" width="22" height="70" rx="3" fill="#a99ce0"/>
+<rect x="124" y="58" width="22" height="92" rx="3" fill="#e8a830"/>
+<path d="M57 96 L96 68 L135 48" fill="none" stroke="#ffffff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.9"/>
+<circle cx="57" cy="96" r="5.5" fill="#a99ce0"/><circle cx="96" cy="68" r="5.5" fill="#e8a830"/><circle cx="135" cy="48" r="5.5" fill="#ffffff"/>
+</svg>`;
+const _navIcon=d=>`<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="${d}"/></svg>`;
+const OWNER_NAV = `
+  <button class="nav-btn" data-view="o_overview">${_navIcon('M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z')}Overview</button>
+  <button class="nav-btn" data-view="o_financials">${_navIcon('M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z')}Financials</button>
+  <button class="nav-btn" data-view="o_pipeline">${_navIcon('M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 01-.659 1.591l-5.432 5.432a2.25 2.25 0 00-.659 1.591v2.927a2.25 2.25 0 01-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 00-.659-1.591L3.659 7.409A2.25 2.25 0 013 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0112 3z')}Pipeline</button>
+  <button class="nav-btn" data-view="o_leads">${_navIcon('M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 01.865-.501 48.172 48.172 0 003.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z')}Leads</button>
+  <button class="nav-btn" data-view="o_companies">${_navIcon('M3.75 21h16.5M4.5 3h15M5.25 3v18m13.5-18v18M9 6.75h1.5m-1.5 3h1.5m-1.5 3h1.5m3-6H15m-1.5 3H15m-1.5 3H15M9 21v-3.375c0-.621.504-1.125 1.125-1.125h3.75c.621 0 1.125.504 1.125 1.125V21')}Companies</button>
+`;
+
+const COMPANIES = {
+  wfs: { id:'wfs', ns:'wfs', label:'Waterfront Solutions',           tag:'Construction & Waterfront Services',
+         inv:{ band:'linear-gradient(135deg,#0a3d2e 0%,#1a6e55 100%)', primary:'#0a3d2e', link:'#0f5040', notesBar:'#1a6e55', rule:'#0a3d2e' } },
+  mhs: { id:'mhs', ns:'mhs', label:'Manufactured Housing Solutions', tag:'Full Service Construction', logoSvg:MHS_LOGO, logoFull:MHS_LOGO_FULL,
+         theme:{ headerBg:'linear-gradient(135deg,#0a0e16 0%,#141a26 55%,#202c3d 100%)', syncBg:'#0a0e16', navActive:'#33506f' },
+         inv:{ band:'linear-gradient(135deg,#0a0e16 0%,#202c3d 100%)', primary:'#1f2a3a', link:'#33506f', notesBar:'#e8a830', rule:'#e8a830' } },
+  nlr: { id:'nlr', ns:'nlr', label:'Norris Lake Roofing',            tag:'Roofing & Exteriors' },
+};
+// Invoice palette helpers — default matches Waterfront so other companies
+// (and any without an override) keep the original green invoice styling.
+const INV_DEFAULT={ band:'linear-gradient(135deg,#0a3d2e 0%,#1a6e55 100%)', primary:'#0a3d2e', link:'#0f5040', notesBar:'#1a6e55', rule:'#0a3d2e' };
+function invTheme(){ return ACTIVE_CO.inv||INV_DEFAULT }
+function brandLogoFull(){ return ACTIVE_CO.logoFull?'data:image/svg+xml;utf8,'+encodeURIComponent(ACTIVE_CO.logoFull):'' }
+const _stored = (() => { try { return localStorage.getItem('jt_company'); } catch (e) { return null; } })();
+// 'owner' is a special selectable mode (not a company): a cross-company
+// analytics workspace. Otherwise we resolve to one of the three companies.
+const OWNER_MODE = _stored === 'owner';
+const COMPANY_ID = (_stored && COMPANIES[_stored]) ? _stored : 'wfs';
+const ACTIVE_CO = COMPANIES[COMPANY_ID];
+document.title = OWNER_MODE ? 'Job Tracker — Owner' : ('Job Tracker — ' + ACTIVE_CO.label);
+
+// Data (localStorage + the Firebase node) is namespaced by company AND by
+// ENV, so each company's prod and dev sandboxes stay completely separate.
+const DB_NS = ACTIVE_CO.ns + (ENV === 'dev' ? '_dev' : '');
+const LS = k => ACTIVE_CO.ns + (ENV === 'dev' ? '_dev_' : '_') + k;
 
 // The Firebase connection config is shared (key 'wfs_fb'), so once you
 // set up Firebase in either file the other auto-connects to the same
@@ -1246,12 +1393,12 @@ try{const s=localStorage.getItem('wfs_fb');if(s)FIREBASE_CONFIG=JSON.parse(s)}ca
 // ══ State ══
 let DB=null;
 let MAP=null,MAP_MARKERS=[];
-const S={jobs:{},activity:[],members:[],view:'dashboard',detail:null,detailTab:'overview',filter:'all',search:'',photoCat:'all',calMonth:new Date().getMonth(),calYear:new Date().getFullYear(),calSelected:null,calMode:localStorage.getItem(LS('calmode'))||'month',reportRange:'90',sort:localStorage.getItem(LS('sort'))||'newest',sortOpen:false,bulkMode:false,bulkSel:new Set(),invFilter:'all',invSearch:'',invSort:'date',user:localStorage.getItem(LS('user'))||'',notifReadAt:parseInt(localStorage.getItem(LS('notif_read'))||'0',10)};
+const S={jobs:{},activity:[],members:[],view:'dashboard',detail:null,detailTab:'overview',filter:'all',search:'',photoCat:'all',calMonth:new Date().getMonth(),calYear:new Date().getFullYear(),calSelected:null,calMode:localStorage.getItem(LS('calmode'))||'month',reportRange:'90',sort:localStorage.getItem(LS('sort'))||'newest',sortOpen:false,bulkMode:false,bulkSel:new Set(),invFilter:'all',invSearch:'',invSort:'date',user:localStorage.getItem(LS('user'))||'',notifReadAt:parseInt(localStorage.getItem(LS('notif_read'))||'0',10),refFilter:'all',referrals:{},timeEntries:{},owner:{}};
 const UNDO={stack:[],push(op){this.stack.push(op);if(this.stack.length>20)this.stack.shift()},pop(){return this.stack.pop()}};
 
 // ── Company info for invoice letterhead (editable via Settings)
 const COMPANY_DEFAULT={
-  name:'Waterfront Solutions',
+  name:ACTIVE_CO.label,
   address:'LaFollette, TN',
   phone:'',
   email:'',
@@ -1358,10 +1505,12 @@ function undoLast(){const op=UNDO.pop();if(!op){toast('Nothing to undo','');retu
 
 // ══ DB layer ══
 const LOCAL={
-  load(){try{S.jobs=JSON.parse(localStorage.getItem(LS('jobs'))||'{}')}catch(e){S.jobs={}}try{S.activity=JSON.parse(localStorage.getItem(LS('activity'))||'[]')}catch(e){S.activity=[]}try{S.members=JSON.parse(localStorage.getItem(LS('members'))||'[]')}catch(e){S.members=[]}},
+  load(){try{S.jobs=JSON.parse(localStorage.getItem(LS('jobs'))||'{}')}catch(e){S.jobs={}}try{S.activity=JSON.parse(localStorage.getItem(LS('activity'))||'[]')}catch(e){S.activity=[]}try{S.members=JSON.parse(localStorage.getItem(LS('members'))||'[]')}catch(e){S.members=[]}try{S.referrals=JSON.parse(localStorage.getItem(LS('referrals'))||'{}')}catch(e){S.referrals={}}try{S.timeEntries=JSON.parse(localStorage.getItem(LS('time'))||'{}')}catch(e){S.timeEntries={}}},
   saveJobs(){try{localStorage.setItem(LS('jobs'),JSON.stringify(S.jobs))}catch(e){}},
   saveActivity(){try{localStorage.setItem(LS('activity'),JSON.stringify(S.activity.slice(0,300)))}catch(e){}},
-  saveMembers(){try{localStorage.setItem(LS('members'),JSON.stringify(S.members))}catch(e){}}
+  saveMembers(){try{localStorage.setItem(LS('members'),JSON.stringify(S.members))}catch(e){}},
+  saveReferrals(){try{localStorage.setItem(LS('referrals'),JSON.stringify(S.referrals))}catch(e){}},
+  saveTime(){try{localStorage.setItem(LS('time'),JSON.stringify(S.timeEntries))}catch(e){}}
 };
 function syncStatus(state,msg){const d=$('sync-dot'),t=$('sync-text');d.className='sync-dot '+state;t.textContent=msg}
 function initFB(cfg){
@@ -1372,6 +1521,8 @@ function initFB(cfg){
     DB.child('jobs').on('value',s=>{S.jobs=s.val()||{};LOCAL.saveJobs();syncStatus('ok','Team sync live');render()});
     DB.child('activity').on('value',s=>{const r=s.val();S.activity=r?Object.values(r).sort((a,b)=>b.time-a.time):[];LOCAL.saveActivity()});
     DB.child('members').on('value',s=>{S.members=s.val()||[];LOCAL.saveMembers();render()});
+    DB.child('referrals').on('value',s=>{S.referrals=s.val()||{};LOCAL.saveReferrals();render()});
+    DB.child('time').on('value',s=>{S.timeEntries=s.val()||{};LOCAL.saveTime();render()});
     DB.child('.info/connected').on('value',s=>{if(!s.val())syncStatus('err','Reconnecting…')});
     return true;
   }catch(e){syncStatus('err','Firebase error');return false}
@@ -1380,23 +1531,62 @@ async function writeJob(j){S.jobs[j.id]=j;LOCAL.saveJobs();if(DB)await DB.child(
 async function deleteJobDB(id){delete S.jobs[id];LOCAL.saveJobs();if(DB)await DB.child('jobs/'+id).remove().catch(()=>{})}
 async function logAct(action,job){const e={user:S.user||'Someone',action,job:job||'',time:Date.now()};S.activity.unshift(e);LOCAL.saveActivity();if(DB)await DB.child('activity').push(e).catch(()=>{})}
 async function saveMembers(){LOCAL.saveMembers();if(DB)await DB.child('members').set(S.members).catch(()=>{})}
+async function writeReferral(r){S.referrals[r.id]=r;LOCAL.saveReferrals();if(DB)await DB.child('referrals/'+r.id).set(r).catch(()=>{})}
+async function deleteReferralDB(id){delete S.referrals[id];LOCAL.saveReferrals();if(DB)await DB.child('referrals/'+id).remove().catch(()=>{})}
 
-LOCAL.load();
-if(FIREBASE_CONFIG)initFB(FIREBASE_CONFIG);
+// ── Time tracking (clock in / clock out) ──
+async function writeTimeEntry(t){S.timeEntries[t.id]=t;LOCAL.saveTime();if(DB)await DB.child('time/'+t.id).set(t).catch(()=>{})}
+async function deleteTimeEntryDB(id){delete S.timeEntries[id];LOCAL.saveTime();if(DB)await DB.child('time/'+id).remove().catch(()=>{})}
+function tid(){return't_'+Date.now()+'_'+Math.random().toString(36).slice(2,6)}
+function timeList(){return Object.values(S.timeEntries||{})}
+function activeEntry(member){return timeList().find(t=>t.member===member&&!t.end)}
+function entryDur(t){return Math.max(0,(t.end||Date.now())-t.start)}
+function fmtHM(ms){const m=Math.floor(Math.max(0,ms)/60000);const h=Math.floor(m/60);return (h?h+'h ':'')+(m%60)+'m'}
+function fmtHMS(ms){const s=Math.floor(Math.max(0,ms)/1000);const h=Math.floor(s/3600),m=Math.floor((s%3600)/60),ss=s%60;const p=n=>String(n).padStart(2,'0');return (h?h+':':'')+p(m)+':'+p(ss)}
+function fmtClockT(ts){try{return new Date(ts).toLocaleTimeString(undefined,{hour:'numeric',minute:'2-digit'})}catch(e){return''}}
+function dtLocalValue(ts){const d=new Date(ts);const p=n=>String(n).padStart(2,'0');return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())+'T'+p(d.getHours())+':'+p(d.getMinutes())}
+function dtLocalParse(v){if(!v)return null;const t=new Date(v).getTime();return isNaN(t)?null:t}
+function weekStart(){const d=new Date();d.setHours(0,0,0,0);d.setDate(d.getDate()-d.getDay());return d.getTime()}
+let TIME_TICK=null;
+function stopTimeTick(){if(TIME_TICK){clearInterval(TIME_TICK);TIME_TICK=null}}
+function startTimeTick(){stopTimeTick();TIME_TICK=setInterval(()=>{document.querySelectorAll('[data-tick-start]').forEach(el=>{const s=parseInt(el.getAttribute('data-tick-start'),10);if(s)el.textContent=fmtHMS(Date.now()-s)})},1000)}
+
+// ── Owner mode: read every company's jobs (read-only, all nodes) ──
+function ownerPrefix(co){return co.ns+(ENV==='dev'?'_dev_':'_')}
+function ownerNode(co){return co.ns+(ENV==='dev'?'_dev':'')}
+function ownerLoadLocal(){S.owner=S.owner||{};Object.values(COMPANIES).forEach(co=>{try{S.owner[co.id]=Object.values(JSON.parse(localStorage.getItem(ownerPrefix(co)+'jobs')||'{}')||{})}catch(e){S.owner[co.id]=[]}})}
+function ownerInitFB(cfg){
+  try{
+    if(!firebase.apps.length)firebase.initializeApp(cfg);
+    syncStatus('pulse','Connecting…');
+    Object.values(COMPANIES).forEach(co=>{
+      firebase.database().ref(ownerNode(co)).child('jobs').on('value',s=>{S.owner=S.owner||{};S.owner[co.id]=Object.values(s.val()||{});syncStatus('ok','Live · all companies');render()});
+    });
+    firebase.database().ref('.info/connected').on('value',s=>{if(!s.val())syncStatus('err','Reconnecting…')});
+    return true;
+  }catch(e){syncStatus('err','Firebase error');return false}
+}
+function ownerJobs(id){return (S.owner&&S.owner[id])||[]}
+
+if(OWNER_MODE){ownerLoadLocal();if(FIREBASE_CONFIG)ownerInitFB(FIREBASE_CONFIG);}
+else{LOCAL.load();if(FIREBASE_CONFIG)initFB(FIREBASE_CONFIG);}
 
 // ══ Render ══
 function render(){
   const c=$('content');
+  if(OWNER_MODE){renderOwner(c);return}
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.toggle('active',b.dataset.view===S.view));
   if(S.view==='jobs'&&S.detail)c.innerHTML=renderDetail(S.detail);
   else if(S.view==='jobs')c.innerHTML=renderJobs();
   else if(S.view==='dashboard')c.innerHTML=renderDashboard();
   else if(S.view==='schedule')c.innerHTML=renderSchedule();
   else if(S.view==='invoices')c.innerHTML=renderInvoicesView();
+  else if(S.view==='referrals')c.innerHTML=renderReferrals();
   else if(S.view==='map')c.innerHTML=renderMap();
   else if(S.view==='reports')c.innerHTML=renderReports();
   else if(S.view==='activity')c.innerHTML=renderActivity();
   else if(S.view==='team')c.innerHTML=renderTeam();
+  else if(S.view==='time')c.innerHTML=renderTime();
   updateUserUI();
   updateBellBadge();
   attachHandlers();
@@ -1935,6 +2125,8 @@ function buildInvoiceEmailHTML(j,inv,customMsg){
   const c=calcInvoice(inv);
   const co=COMPANY;
   const logoSrc=getBrandLogoSrc();
+  const P=invTheme();
+  const logoFull=brandLogoFull();
   const firstName=((j.customerName||'').trim().split(/\s+/)[0])||'there';
   const itemsRows=(inv.items||[]).map(it=>{
     const amt=Number(it.qty||0)*Number(it.rate||0);
@@ -1950,9 +2142,9 @@ function buildInvoiceEmailHTML(j,inv,customMsg){
         <div style="font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#92400e;opacity:0.85">Balance Due${inv.dueDate?' by '+fmtDate(inv.dueDate):''}</div>
         <div style="font-size:26px;font-weight:800;color:#92400e;margin-top:4px;font-variant-numeric:tabular-nums">${money(c.balance)}</div>
       </div>`;
-  const contactLine=[co.phone?`<a href="tel:${esc(co.phone)}" style="color:#0f5040;text-decoration:none">${esc(co.phone)}</a>`:'',
-    co.email?`<a href="mailto:${esc(co.email)}" style="color:#0f5040;text-decoration:none">${esc(co.email)}</a>`:'',
-    co.website?`<a href="${esc(co.website)}" style="color:#0f5040;text-decoration:none">${esc(co.website)}</a>`:''
+  const contactLine=[co.phone?`<a href="tel:${esc(co.phone)}" style="color:${P.link};text-decoration:none">${esc(co.phone)}</a>`:'',
+    co.email?`<a href="mailto:${esc(co.email)}" style="color:${P.link};text-decoration:none">${esc(co.email)}</a>`:'',
+    co.website?`<a href="${esc(co.website)}" style="color:${P.link};text-decoration:none">${esc(co.website)}</a>`:''
   ].filter(Boolean).join(' &nbsp;·&nbsp; ');
 
   return `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Invoice ${esc(inv.number||'')}</title></head>
@@ -1960,14 +2152,16 @@ function buildInvoiceEmailHTML(j,inv,customMsg){
 <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:#f0faf6">
   <tr><td align="center" style="padding:24px 12px">
     <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="600" style="max-width:600px;background:#ffffff;border-radius:14px;overflow:hidden;box-shadow:0 4px 24px rgba(10,61,46,0.08)">
-      <tr><td style="background:linear-gradient(135deg,#0a3d2e 0%,#1a6e55 100%);padding:28px 32px;text-align:center">
-        ${logoSrc?`<img src="${logoSrc}" alt="${esc(co.name||'Waterfront Solutions')}" width="84" height="84" style="display:inline-block;width:84px;height:84px;object-fit:contain;filter:drop-shadow(0 2px 6px rgba(0,0,0,0.25))">`:''}
-        <div style="font-family:Georgia,'Times New Roman',serif;font-size:22px;font-weight:600;color:#ffffff;letter-spacing:0.01em;margin-top:10px">${esc(co.name||'Waterfront Solutions')}</div>
-        ${co.address?`<div style="font-size:11.5px;color:rgba(255,255,255,0.75);margin-top:4px;letter-spacing:0.02em">${esc(co.address.replace(/\n/g,' · '))}</div>`:''}
+      <tr><td style="background:${P.band};padding:28px 32px;text-align:center">
+        ${logoFull
+          ?`<img src="${logoFull}" alt="${esc(co.name||'')}" width="380" style="display:inline-block;width:100%;max-width:380px;height:auto">`
+          :`${logoSrc?`<img src="${logoSrc}" alt="${esc(co.name||'Waterfront Solutions')}" width="84" height="84" style="display:inline-block;width:84px;height:84px;object-fit:contain;filter:drop-shadow(0 2px 6px rgba(0,0,0,0.25))">`:''}
+        <div style="font-family:Georgia,'Times New Roman',serif;font-size:22px;font-weight:600;color:#ffffff;letter-spacing:0.01em;margin-top:10px">${esc(co.name||'Waterfront Solutions')}</div>`}
+        ${co.address?`<div style="font-size:11.5px;color:rgba(255,255,255,0.75);margin-top:${logoFull?'12':'4'}px;letter-spacing:0.02em">${esc(co.address.replace(/\n/g,' · '))}</div>`:''}
       </td></tr>
       <tr><td style="padding:28px 32px 8px">
         <div style="font-size:11px;font-weight:700;color:#7aa898;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:6px">Invoice ${esc(inv.number||'')}</div>
-        <h1 style="font-size:22px;font-weight:700;color:#0a3d2e;margin:0 0 18px;line-height:1.25">${greeting}</h1>
+        <h1 style="font-size:22px;font-weight:700;color:${P.primary};margin:0 0 18px;line-height:1.25">${greeting}</h1>
         <p style="font-size:14.5px;color:#3d6358;line-height:1.65;margin:0 0 8px">${intro}</p>
       </td></tr>
       <tr><td style="padding:8px 32px">
@@ -1996,31 +2190,31 @@ function buildInvoiceEmailHTML(j,inv,customMsg){
             <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="font-size:13px">
               <tr><td style="padding:3px 0;color:#3d6358">Subtotal</td><td style="padding:3px 0;text-align:right;font-variant-numeric:tabular-nums;font-weight:600;color:#0a1f18">${money(c.sub)}</td></tr>
               <tr><td style="padding:3px 0;color:#3d6358">Tax (${Number(inv.taxRate||0)}%)</td><td style="padding:3px 0;text-align:right;font-variant-numeric:tabular-nums;font-weight:600;color:#0a1f18">${money(c.tax)}</td></tr>
-              <tr><td style="padding:9px 0 3px;color:#0a3d2e;font-size:14px;font-weight:700;border-top:2px solid #0a3d2e">Total</td><td style="padding:9px 0 3px;text-align:right;font-variant-numeric:tabular-nums;font-weight:800;color:#0a3d2e;font-size:15px;border-top:2px solid #0a3d2e">${money(c.total)}</td></tr>
+              <tr><td style="padding:9px 0 3px;color:${P.primary};font-size:14px;font-weight:700;border-top:2px solid ${P.rule}">Total</td><td style="padding:9px 0 3px;text-align:right;font-variant-numeric:tabular-nums;font-weight:800;color:${P.primary};font-size:15px;border-top:2px solid ${P.rule}">${money(c.total)}</td></tr>
               ${c.paid>0?`<tr><td style="padding:3px 0;color:#3d6358">Paid</td><td style="padding:3px 0;text-align:right;font-variant-numeric:tabular-nums;color:#3d6358">-${money(c.paid)}</td></tr>`:''}
             </table>
           </td></tr>
         </table>
       </td></tr>
       ${inv.notes?`<tr><td style="padding:18px 32px 0">
-        <div style="padding:14px 16px;background:#f7f9f8;border-left:3px solid #1a6e55;border-radius:8px">
-          <div style="font-size:10px;font-weight:700;color:#0f5040;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:5px">Notes</div>
+        <div style="padding:14px 16px;background:#f7f9f8;border-left:3px solid ${P.notesBar};border-radius:8px">
+          <div style="font-size:10px;font-weight:700;color:${P.link};text-transform:uppercase;letter-spacing:0.08em;margin-bottom:5px">Notes</div>
           <div style="font-size:13px;color:#3d6358;line-height:1.6">${esc(inv.notes).replace(/\n/g,'<br>')}</div>
         </div>
       </td></tr>`:''}
       ${co.phone||co.email?`<tr><td style="padding:24px 32px 0">
         <p style="font-size:14px;color:#3d6358;line-height:1.65;margin:0">
-          Questions? Just reply to this email${co.phone?` or give us a call at <a href="tel:${esc(co.phone)}" style="color:#0f5040;font-weight:600;text-decoration:none">${esc(co.phone)}</a>`:''}. We appreciate your business!
+          Questions? Just reply to this email${co.phone?` or give us a call at <a href="tel:${esc(co.phone)}" style="color:${P.link};font-weight:600;text-decoration:none">${esc(co.phone)}</a>`:''}. We appreciate your business!
         </p>
       </td></tr>`:''}
       <tr><td style="padding:24px 32px 8px">
-        <p style="font-size:14.5px;color:#0a1f18;margin:0;line-height:1.5">Thanks,<br><strong style="color:#0a3d2e">${esc(S.user||co.name||'The Waterfront Solutions Team')}</strong></p>
+        <p style="font-size:14.5px;color:#0a1f18;margin:0;line-height:1.5">Thanks,<br><strong style="color:${P.primary}">${esc(S.user||co.name||'The Waterfront Solutions Team')}</strong></p>
       </td></tr>
       ${inv.terms?`<tr><td style="padding:14px 32px 0">
         <div style="font-size:11px;color:#7aa898;line-height:1.6;border-top:1px solid #e6f0eb;padding-top:14px;font-style:italic">${esc(inv.terms).replace(/\n/g,'<br>')}</div>
       </td></tr>`:''}
       <tr><td style="background:#f0faf6;padding:18px 32px;text-align:center;border-top:1px solid #e6f0eb;margin-top:24px">
-        <div style="font-family:Georgia,serif;font-size:13px;font-weight:600;color:#0a3d2e">${esc(co.name||'Waterfront Solutions')}</div>
+        <div style="font-family:Georgia,serif;font-size:13px;font-weight:600;color:${P.primary}">${esc(co.name||'Waterfront Solutions')}</div>
         ${contactLine?`<div style="font-size:11.5px;color:#7aa898;margin-top:4px">${contactLine}</div>`:''}
         ${co.license?`<div style="font-size:10.5px;color:#7aa898;margin-top:3px;letter-spacing:0.04em">License #${esc(co.license)}</div>`:''}
       </td></tr>
@@ -2222,6 +2416,226 @@ function showSendInvoiceModal(j,inv){
 }
 
 // ══ Reports ══
+// ══ Owner / Admin — cross-company dashboard ══
+const ADMIN_COLORS={wfs:'#2a9070',mhs:'#e8a830',nlr:'#3ab5c8'};
+function adminFirebaseReady(){return typeof firebase!=='undefined'&&firebase.apps&&firebase.apps.length}
+function refreshOwnerData(){ownerLoadLocal();render();toast('Refreshed');}
+function companyMetrics(arr){
+  const m={total:arr.length,active:0,leads:0,complete:0,hold:0,value:0,pipeline:0,invoiced:0,collected:0,revenue:0,won:0,lost:0};
+  arr.forEach(j=>{
+    const st=j.status;
+    if(st==='active')m.active++;
+    else if(st==='lead')m.leads++;
+    else if(st==='complete'){m.complete++;m.won++;m.revenue+=Number(j.invoiced||j.value||0);}
+    else if(st==='hold'){m.hold++;m.lost++;}
+    m.value+=Number(j.value||0);
+    if(st!=='complete'&&st!=='hold')m.pipeline+=Number(j.value||0);
+    m.invoiced+=Number(j.invoiced||0);
+    m.collected+=Number(j.paid||0);
+  });
+  m.outstanding=m.invoiced-m.collected;
+  m.winRate=(m.won+m.lost)>0?(m.won/(m.won+m.lost))*100:0;
+  m.avg=m.won>0?m.revenue/m.won:0;
+  return m;
+}
+function adminCompareChart(title,rows,fmt){
+  const max=Math.max(1,...rows.map(r=>r.val));
+  return `<div class="report-section">
+    <div class="report-hd">${esc(title)}</div>
+    <div class="bar-chart">
+      ${rows.map(r=>`<div class="bar-row">
+        <div class="bar-row-label">${esc(r.label)}</div>
+        <div class="bar-row-track"><div class="bar-row-fill" style="width:${(r.val/max*100).toFixed(1)}%;background:${r.color}"></div></div>
+        <div class="bar-row-val" style="min-width:70px">${fmt(r.val)}</div>
+      </div>`).join('')}
+    </div>
+  </div>`;
+}
+// ── stats + owner helpers ──
+function pctStr(n,d){return d>0?((n/d)*100).toFixed(0)+'%':'—'}
+function fmtMoneyShort(v){v=Number(v||0);if(Math.abs(v)>=1000)return '$'+(v/1000).toFixed(Math.abs(v)>=10000?0:1)+'k';return '$'+Math.round(v)}
+const colorOf=co=>ADMIN_COLORS[co.id]||'var(--green-600)';
+const coLbl=co=>co.id.toUpperCase();
+function ownerList(){return Object.values(COMPANIES).map(co=>({co,jobs:ownerJobs(co.id),m:companyMetrics(ownerJobs(co.id))}))}
+function ownerGrand(list){const g={};['total','active','leads','complete','hold','value','pipeline','invoiced','collected','revenue','won','lost'].forEach(k=>g[k]=list.reduce((s,x)=>s+x.m[k],0));g.outstanding=g.invoiced-g.collected;g.winRate=(g.won+g.lost)>0?g.won/(g.won+g.lost)*100:0;return g}
+function monthlyRevenue(jobsArr){
+  const months=[];const now=new Date();
+  for(let i=5;i>=0;i--){const d=new Date(now.getFullYear(),now.getMonth()-i,1);months.push({label:d.toLocaleDateString(undefined,{month:'short'}),key:d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'),val:0});}
+  jobsArr.forEach(j=>{if(j.status!=='complete')return;const t=j.completedAt||j.created;if(!t)return;const d=new Date(t);const k=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');const m=months.find(x=>x.key===k);if(m)m.val+=Number(j.invoiced||j.value||0);});
+  return months;
+}
+function reportChart(series){
+  const max=Math.max(1,...series.map(m=>m.val));
+  return `<div class="report-chart">${series.map(m=>`<div class="report-bar" style="height:${(m.val/max*100).toFixed(1)}%">${m.val?`<span class="report-bar-val">${fmtMoneyShort(m.val)}</span>`:''}<span class="report-bar-label">${esc(m.label)}</span></div>`).join('')}</div><div class="report-x-pad"></div>`;
+}
+function ownerTitle(sub){
+  return `<div style="margin-bottom:14px">
+    <div style="font-size:11px;color:var(--text-3);text-transform:uppercase;letter-spacing:0.06em;font-weight:700">Owner · All Companies</div>
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">
+      <div style="font-size:20px;font-weight:700;margin-top:2px">${esc(sub)}</div>
+      <button class="btn-mini" id="owner-refresh">${adminFirebaseReady()?'↻ Refresh':'Reload local'}</button>
+    </div>
+  </div>`;
+}
+function renderOwner(c){
+  if(!String(S.view||'').startsWith('o_'))S.view='o_overview';
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.toggle('active',b.dataset.view===S.view));
+  const v=S.view;
+  c.innerHTML = v==='o_financials'?ownerFinancials()
+    : v==='o_pipeline'?ownerPipeline()
+    : v==='o_leads'?ownerLeads()
+    : v==='o_companies'?ownerCompanies()
+    : ownerOverview();
+  updateUserUI();
+  attachHandlers();
+}
+function ownerOverview(){
+  const list=ownerList(),g=ownerGrand(list);
+  const top=[...list].sort((a,b)=>b.m.collected-a.m.collected)[0];
+  const watch=[...list].sort((a,b)=>b.m.outstanding-a.m.outstanding)[0];
+  const allJobs=list.flatMap(x=>x.jobs);
+  const tableRows=list.map(x=>`<tr>
+    <td style="font-weight:700"><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:${colorOf(x.co)};margin-right:7px;vertical-align:middle"></span>${esc(x.co.label)}</td>
+    <td class="num">${x.m.total}</td><td class="num">${x.m.active}</td><td class="num">${x.m.leads}</td><td class="num">${x.m.complete}</td>
+    <td class="num">${money(x.m.pipeline)}</td><td class="num">${money(x.m.collected)}</td><td class="num">${money(x.m.outstanding)}</td><td class="num">${x.m.winRate.toFixed(0)}%</td>
+  </tr>`).join('');
+  return `
+    ${ownerTitle('Overview')}
+    <div class="kpi-grid">
+      <div class="kpi-card accent"><div class="kpi-label">Total Collected</div><div class="kpi-value">${money(g.collected)}</div><div class="kpi-sub">across ${list.length} companies</div></div>
+      <div class="kpi-card"><div class="kpi-label">Outstanding</div><div class="kpi-value">${money(g.outstanding)}</div><div class="kpi-sub">${money(g.invoiced)} invoiced</div></div>
+      <div class="kpi-card"><div class="kpi-label">Pipeline</div><div class="kpi-value">${money(g.pipeline)}</div><div class="kpi-sub">${g.active} active jobs</div></div>
+      <div class="kpi-card"><div class="kpi-label">Total Jobs</div><div class="kpi-value">${g.total}</div><div class="kpi-sub">${g.leads} leads · ${g.complete} done</div></div>
+    </div>
+    <div class="report-section" style="display:flex;gap:14px;flex-wrap:wrap">
+      <div style="flex:1;min-width:150px"><div class="kpi-label">Top performer</div><div style="font-size:16px;font-weight:800;color:${colorOf(top.co)};margin-top:3px">${esc(top.co.label)}</div><div class="kpi-sub">${money(top.m.collected)} collected</div></div>
+      <div style="flex:1;min-width:150px"><div class="kpi-label">Most outstanding</div><div style="font-size:16px;font-weight:800;color:${colorOf(watch.co)};margin-top:3px">${esc(watch.co.label)}</div><div class="kpi-sub">${money(watch.m.outstanding)} unpaid</div></div>
+    </div>
+    ${adminCompareChart('Revenue share — collected',list.map(x=>({label:coLbl(x.co),val:x.m.collected,color:colorOf(x.co)})),money)}
+    <div class="report-section"><div class="report-hd">Monthly revenue · all companies <span class="kpi-sub">last 6 months</span></div>${reportChart(monthlyRevenue(allJobs))}</div>
+    ${adminCompareChart('Outstanding balance',list.map(x=>({label:coLbl(x.co),val:x.m.outstanding,color:colorOf(x.co)})),money)}
+    ${adminCompareChart('Pipeline value',list.map(x=>({label:coLbl(x.co),val:x.m.pipeline,color:colorOf(x.co)})),money)}
+    <div class="report-section">
+      <div class="report-hd">Side-by-side</div>
+      <div style="overflow-x:auto;-webkit-overflow-scrolling:touch"><table class="admin-table">
+        <thead><tr><th>Company</th><th class="num">Jobs</th><th class="num">Active</th><th class="num">Leads</th><th class="num">Done</th><th class="num">Pipeline</th><th class="num">Collected</th><th class="num">Outstanding</th><th class="num">Win%</th></tr></thead>
+        <tbody>${tableRows}
+          <tr class="total-row"><td>All companies</td><td class="num">${g.total}</td><td class="num">${g.active}</td><td class="num">${g.leads}</td><td class="num">${g.complete}</td><td class="num">${money(g.pipeline)}</td><td class="num">${money(g.collected)}</td><td class="num">${money(g.outstanding)}</td><td class="num">${g.winRate.toFixed(0)}%</td></tr>
+        </tbody></table></div>
+    </div>
+  `;
+}
+function ownerFinancials(){
+  const list=ownerList(),g=ownerGrand(list);
+  const allJobs=list.flatMap(x=>x.jobs);
+  const collRate=pctStr(g.collected,g.invoiced);
+  const rows=list.map(x=>{const m=x.m;return `<tr>
+    <td style="font-weight:700"><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:${colorOf(x.co)};margin-right:7px;vertical-align:middle"></span>${esc(x.co.label)}</td>
+    <td class="num">${money(m.revenue)}</td><td class="num">${money(m.invoiced)}</td><td class="num">${money(m.collected)}</td><td class="num">${money(m.outstanding)}</td><td class="num">${pctStr(m.collected,m.invoiced)}</td><td class="num">${money(m.avg)}</td>
+  </tr>`}).join('');
+  return `
+    ${ownerTitle('Financials')}
+    <div class="kpi-grid">
+      <div class="kpi-card accent"><div class="kpi-label">Collected</div><div class="kpi-value">${money(g.collected)}</div><div class="kpi-sub">${collRate} of invoiced</div></div>
+      <div class="kpi-card"><div class="kpi-label">Invoiced</div><div class="kpi-value">${money(g.invoiced)}</div><div class="kpi-sub">${money(g.revenue)} won revenue</div></div>
+      <div class="kpi-card"><div class="kpi-label">Outstanding (A/R)</div><div class="kpi-value">${money(g.outstanding)}</div><div class="kpi-sub">to be collected</div></div>
+      <div class="kpi-card"><div class="kpi-label">Avg job size</div><div class="kpi-value">${money(g.won>0?g.revenue/g.won:0)}</div><div class="kpi-sub">across ${g.won} won</div></div>
+    </div>
+    <div class="report-section"><div class="report-hd">Monthly revenue · all companies <span class="kpi-sub">last 6 months</span></div>${reportChart(monthlyRevenue(allJobs))}</div>
+    ${adminCompareChart('Collected by company',list.map(x=>({label:coLbl(x.co),val:x.m.collected,color:colorOf(x.co)})),money)}
+    ${adminCompareChart('Outstanding by company',list.map(x=>({label:coLbl(x.co),val:x.m.outstanding,color:colorOf(x.co)})),money)}
+    <div class="report-section">
+      <div class="report-hd">Financial breakdown</div>
+      <div style="overflow-x:auto;-webkit-overflow-scrolling:touch"><table class="admin-table">
+        <thead><tr><th>Company</th><th class="num">Revenue</th><th class="num">Invoiced</th><th class="num">Collected</th><th class="num">Outstanding</th><th class="num">Collect%</th><th class="num">Avg job</th></tr></thead>
+        <tbody>${rows}
+          <tr class="total-row"><td>All companies</td><td class="num">${money(g.revenue)}</td><td class="num">${money(g.invoiced)}</td><td class="num">${money(g.collected)}</td><td class="num">${money(g.outstanding)}</td><td class="num">${collRate}</td><td class="num">${money(g.won>0?g.revenue/g.won:0)}</td></tr>
+        </tbody></table></div>
+    </div>
+  `;
+}
+function ownerPipeline(){
+  const list=ownerList(),g=ownerGrand(list);
+  const leadsN=g.leads,activeN=g.active,completeN=g.complete;
+  const funnelMax=Math.max(1,leadsN,activeN,completeN);
+  const funnel=[['Leads',leadsN,'#3ab5c8'],['Active',activeN,'#e8a830'],['Complete',completeN,'#2a9070']];
+  const conv=pctStr(completeN,leadsN+activeN+completeN);
+  const rows=list.map(x=>{const m=x.m;return `<tr>
+    <td style="font-weight:700"><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:${colorOf(x.co)};margin-right:7px;vertical-align:middle"></span>${esc(x.co.label)}</td>
+    <td class="num">${money(m.pipeline)}</td><td class="num">${m.leads}</td><td class="num">${m.active}</td><td class="num">${m.complete}</td><td class="num">${m.winRate.toFixed(0)}%</td>
+  </tr>`}).join('');
+  return `
+    ${ownerTitle('Pipeline')}
+    <div class="kpi-grid">
+      <div class="kpi-card accent"><div class="kpi-label">Open pipeline</div><div class="kpi-value">${money(g.pipeline)}</div><div class="kpi-sub">${g.active+g.leads} open jobs</div></div>
+      <div class="kpi-card"><div class="kpi-label">Win rate</div><div class="kpi-value">${g.winRate.toFixed(0)}%</div><div class="kpi-sub">${g.won} won · ${g.lost} lost</div></div>
+      <div class="kpi-card"><div class="kpi-label">Conversion</div><div class="kpi-value">${conv}</div><div class="kpi-sub">to completed</div></div>
+      <div class="kpi-card"><div class="kpi-label">Active jobs</div><div class="kpi-value">${g.active}</div><div class="kpi-sub">${g.leads} leads waiting</div></div>
+    </div>
+    <div class="report-section">
+      <div class="report-hd">Funnel · all companies</div>
+      <div class="bar-chart">${funnel.map(([lab,val,col])=>`<div class="bar-row"><div class="bar-row-label" style="flex-basis:80px">${lab}</div><div class="bar-row-track"><div class="bar-row-fill" style="width:${(val/funnelMax*100).toFixed(1)}%;background:${col}"></div></div><div class="bar-row-val">${val}</div></div>`).join('')}</div>
+    </div>
+    ${adminCompareChart('Pipeline value by company',list.map(x=>({label:coLbl(x.co),val:x.m.pipeline,color:colorOf(x.co)})),money)}
+    ${adminCompareChart('Active jobs by company',list.map(x=>({label:coLbl(x.co),val:x.m.active,color:colorOf(x.co)})),v=>String(v))}
+    <div class="report-section">
+      <div class="report-hd">Pipeline breakdown</div>
+      <div style="overflow-x:auto;-webkit-overflow-scrolling:touch"><table class="admin-table">
+        <thead><tr><th>Company</th><th class="num">Pipeline</th><th class="num">Leads</th><th class="num">Active</th><th class="num">Done</th><th class="num">Win%</th></tr></thead>
+        <tbody>${rows}
+          <tr class="total-row"><td>All companies</td><td class="num">${money(g.pipeline)}</td><td class="num">${g.leads}</td><td class="num">${g.active}</td><td class="num">${g.complete}</td><td class="num">${g.winRate.toFixed(0)}%</td></tr>
+        </tbody></table></div>
+    </div>
+  `;
+}
+function ownerLeads(){
+  const list=ownerList();
+  const allJobs=list.flatMap(x=>x.jobs);
+  const bySrc={};
+  allJobs.forEach(j=>{const s=j.leadSource||'Unknown';bySrc[s]=bySrc[s]||{src:s,total:0,won:0,revenue:0};bySrc[s].total++;if(j.status==='complete'){bySrc[s].won++;bySrc[s].revenue+=Number(j.invoiced||j.value||0)}});
+  const srcs=Object.values(bySrc).sort((a,b)=>b.revenue-a.revenue);
+  const best=srcs.find(s=>s.revenue>0)||srcs[0];
+  const maxRev=Math.max(1,...srcs.map(s=>s.revenue));
+  const rows=srcs.map(s=>`<tr><td style="font-weight:600">${esc(s.src)}</td><td class="num">${s.total}</td><td class="num">${s.won}</td><td class="num">${pctStr(s.won,s.total)}</td><td class="num">${money(s.revenue)}</td></tr>`).join('');
+  return `
+    ${ownerTitle('Leads & sources')}
+    ${best?`<div class="report-section"><div class="kpi-label">Best lead source</div><div style="font-size:17px;font-weight:800;color:var(--green-700);margin-top:3px">${esc(best.src)}</div><div class="kpi-sub">${money(best.revenue)} won revenue · ${pctStr(best.won,best.total)} conversion</div></div>`:''}
+    <div class="report-section">
+      <div class="report-hd">Revenue by lead source <span class="kpi-sub">all companies</span></div>
+      <div class="bar-chart">${srcs.slice(0,8).map(s=>`<div class="bar-row"><div class="bar-row-label" style="flex-basis:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(s.src)}</div><div class="bar-row-track"><div class="bar-row-fill" style="width:${(s.revenue/maxRev*100).toFixed(1)}%;background:var(--green-600)"></div></div><div class="bar-row-val" style="min-width:64px">${money(s.revenue)}</div></div>`).join('')||'<div class="kpi-sub">No lead-source data yet.</div>'}</div>
+    </div>
+    <div class="report-section">
+      <div class="report-hd">Lead source detail</div>
+      <div style="overflow-x:auto;-webkit-overflow-scrolling:touch"><table class="admin-table">
+        <thead><tr><th>Source</th><th class="num">Total</th><th class="num">Won</th><th class="num">Conv%</th><th class="num">Revenue</th></tr></thead>
+        <tbody>${rows||'<tr><td colspan="5" style="text-align:center;color:var(--text-3)">No data</td></tr>'}</tbody>
+      </table></div>
+    </div>
+  `;
+}
+function ownerCompanies(){
+  const list=ownerList();
+  const cards=list.map(x=>{const m=x.m,co=x.co;return `<div class="report-section">
+    <div class="report-hd" style="align-items:center"><span style="display:flex;align-items:center;gap:8px"><span style="width:11px;height:11px;border-radius:3px;background:${colorOf(co)}"></span>${esc(co.label)}</span><button class="btn-mini" data-view-company="${esc(co.id)}">Open →</button></div>
+    <div class="kpi-grid" style="margin-bottom:0">
+      <div class="kpi-card"><div class="kpi-label">Collected</div><div class="kpi-value">${money(m.collected)}</div><div class="kpi-sub">${money(m.outstanding)} outstanding</div></div>
+      <div class="kpi-card"><div class="kpi-label">Pipeline</div><div class="kpi-value">${money(m.pipeline)}</div><div class="kpi-sub">${m.active} active · ${m.leads} lead${m.leads!==1?'s':''}</div></div>
+      <div class="kpi-card"><div class="kpi-label">Jobs</div><div class="kpi-value">${m.total}</div><div class="kpi-sub">${m.complete} complete</div></div>
+      <div class="kpi-card"><div class="kpi-label">Win rate</div><div class="kpi-value">${m.winRate.toFixed(0)}%</div><div class="kpi-sub">avg ${money(m.avg)}</div></div>
+    </div></div>`}).join('');
+  return `${ownerTitle('Companies')}<div class="kpi-sub" style="margin:-6px 0 12px">Open any company to manage it in its own workspace.</div>${cards}<div class="report-x-pad"></div>`;
+}
+function applyOwnerChrome(){
+  if(!OWNER_MODE)return;
+  const bco=$('brand-co');if(bco)bco.textContent='All Companies';
+  const h1=document.querySelector('.brand-text h1');if(h1)h1.textContent='Owner';
+  const img=document.querySelector('.brand-logo');if(img){img.src='data:image/svg+xml;utf8,'+encodeURIComponent(OWNER_LOGO);img.alt='Owner';}
+  let s=document.getElementById('co-theme');if(!s){s=document.createElement('style');s.id='co-theme';document.head.appendChild(s);}
+  s.textContent='.header{background:linear-gradient(135deg,#1e1b2e 0%,#2b2440 60%,#3a2f55 100%)}.sync-bar{background:#1e1b2e}.nav-btn.active{color:#a99ce0;border-bottom-color:#a99ce0}';
+  const nav=document.querySelector('.nav');if(nav)nav.innerHTML=OWNER_NAV;
+  const fab=$('fab');if(fab)fab.style.display='none';
+}
+
 function renderReports(){
   const all=jobs();
   const range=parseInt(S.reportRange||'90',10);
@@ -2711,6 +3125,24 @@ function renderDetail(id){
   `;
 }
 
+function statCell(label,tab,value,addable,color){
+  const goArrow='<span class="stat-go"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5"/></svg></span>';
+  return `<div class="info-cell stat-cell" data-goto="${tab}" tabindex="0" role="button" aria-label="${esc(label)}: ${esc(String(value))}. Open ${esc(label)}">
+    ${addable?`<button class="stat-add" data-add="${tab}" title="Add to ${esc(label)}" aria-label="Add to ${esc(label)}">+</button>`:''}
+    <div class="info-label">${esc(label)}</div>
+    <div class="info-value"${color?` style="color:${color}"`:''}>${esc(String(value))}${goArrow}</div>
+  </div>`;
+}
+function triggerQuickAdd(tab){
+  setTimeout(()=>{
+    if(tab==='tasks')$('task-in')?.focus();
+    else if(tab==='notes')$('note-in')?.focus();
+    else if(tab==='photos')$('photo-upload')?.click();
+    else if(tab==='docs')$('doc-upload')?.click();
+    else if(tab==='invoices')$('btn-new-inv')?.click();
+    else if(tab==='log'||tab==='comms'){const f=document.querySelector('#tab-content input,#tab-content textarea,#tab-content select');if(f){f.focus();f.scrollIntoView({block:'center'});}}
+  },50);
+}
 function renderDetailTab(j,tab){
   const photos=j.photos||[];
   if(tab==='overview'){
@@ -2732,12 +3164,16 @@ function renderDetailTab(j,tab){
         ${desc}
       </div>
       <div class="section">
-        <div class="section-hd">Quick Stats</div>
+        <div class="section-hd">Quick Stats <span style="font-weight:500;font-size:11px;color:var(--text-3);text-transform:none;letter-spacing:0">tap a stat to open · + to add</span></div>
         <div class="info-grid">
-          <div class="info-cell"><div class="info-label">Photos</div><div class="info-value">${photos.length}</div></div>
-          <div class="info-cell"><div class="info-label">Open Tasks</div><div class="info-value">${(j.tasks||[]).filter(t=>!t.done).length}</div></div>
-          <div class="info-cell"><div class="info-label">Balance Due</div><div class="info-value" style="color:${balance>0?'var(--orange)':'var(--green-700)'}">${money(balance)}</div></div>
-          <div class="info-cell"><div class="info-label">Log Entries</div><div class="info-value">${(j.dailyLogs||[]).length}</div></div>
+          ${statCell('Photos','photos',photos.length,true)}
+          ${statCell('Open Tasks','tasks',(j.tasks||[]).filter(t=>!t.done).length,true)}
+          ${statCell('Daily Log','log',(j.dailyLogs||[]).length,true)}
+          ${statCell('Files','docs',(j.documents||[]).length,true)}
+          ${statCell('Invoices','invoices',(j.invoices||[]).length,true)}
+          ${statCell('Comms','comms',(j.comms||[]).length,true)}
+          ${statCell('Notes','notes',(j.notes||[]).length,true)}
+          ${statCell('Balance Due','financial',money(balance),false,balance>0?'var(--orange)':'var(--green-700)')}
         </div>
       </div>`;
   }
@@ -2990,6 +3426,119 @@ function renderActivity(){
   return'<div class="activity-feed">'+S.activity.map((a,i)=>'<div class="activity-item" style="animation-delay:'+( i*0.03)+'s">'+'<div class="activity-ava">'+initials(a.user)+'</div>'+'<div class="activity-body">'+'<div class="activity-text"><strong>'+esc(a.user)+'</strong> '+esc(a.action)+(a.job?' · <strong>'+esc(a.job)+'</strong>':'')+'</div><div class="activity-time">'+ago(a.time)+'</div></div></div>').join('')+'</div>';
 }
 
+// ══ Referrals — referred leads & payouts (per company) ══
+function refStatusMeta(s){
+  return ({new:{label:'New lead',pill:'sp-lead',col:'var(--gold)'},won:{label:'Won',pill:'sp-complete',col:'var(--green-600)'},lost:{label:'Lost',pill:'sp-hold',col:'var(--text-3)'}})[s]||{label:'New lead',pill:'sp-lead',col:'var(--gold)'};
+}
+function renderReferrals(){
+  const all=Object.values(S.referrals).sort((a,b)=>(b.created||0)-(a.created||0));
+  const total=all.length;
+  const won=all.filter(r=>r.status==='won').length;
+  const owed=all.filter(r=>r.payoutStatus!=='paid').reduce((s,r)=>s+Number(r.payout||0),0);
+  const paid=all.filter(r=>r.payoutStatus==='paid').reduce((s,r)=>s+Number(r.payout||0),0);
+  const f=S.refFilter||'all';
+  const isOwed=r=>r.payoutStatus!=='paid'&&Number(r.payout||0)>0;
+  const match=r=>f==='all'?true:f==='new'?r.status==='new':f==='won'?r.status==='won':f==='owed'?isOwed(r):f==='paid'?r.payoutStatus==='paid':true;
+  const shown=all.filter(match);
+  const cnt={all:total,new:all.filter(r=>r.status==='new').length,won:won,owed:all.filter(isOwed).length,paid:all.filter(r=>r.payoutStatus==='paid').length};
+  const chips=[['all','All'],['new','New'],['won','Won'],['owed','Owed'],['paid','Paid']];
+  const rows=shown.map(r=>{
+    const m=refStatusMeta(r.status);
+    const job=r.jobId&&S.jobs[r.jobId]?S.jobs[r.jobId]:null;
+    const meta=[r.dateReferred?fmtDate(r.dateReferred):'',job?'Job: '+esc(job.name):'',r.referrerPhone?esc(r.referrerPhone):'',r.dealValue?money(r.dealValue)+' deal':''].filter(Boolean).join(' · ');
+    const payoutCol=Number(r.payout||0)>0?(r.payoutStatus==='paid'?'var(--green-700)':'var(--orange)'):'var(--text-3)';
+    return `<div class="invoice-row" data-ref-open="${esc(r.id)}" style="border-left-color:${m.col}">
+      <div class="invoice-row-main">
+        <div class="invoice-num">${esc(r.referrer||'—')} <span style="color:var(--text-3);font-weight:500">referred</span> ${esc(r.lead||'—')}</div>
+        ${meta?`<div class="invoice-meta">${meta}</div>`:''}
+        <div style="margin-top:6px"><span class="status-pill ${m.pill}">${m.label}</span></div>
+      </div>
+      <div class="invoice-row-amt">
+        <div style="font-size:10px;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;font-weight:700">Payout</div>
+        <div style="font-weight:800;font-size:15px;color:${payoutCol}">${Number(r.payout||0)>0?money(r.payout):'—'}</div>
+        ${Number(r.payout||0)>0?`<span class="badge ${r.payoutStatus==='paid'?'':'danger'}" style="margin-top:4px">${r.payoutStatus==='paid'?'Paid'+(r.paidAt?' '+fmtShort(r.paidAt):''):'Owed'}</span>`:''}
+        ${isOwed(r)?`<div><button class="btn-mini" data-ref-paid="${esc(r.id)}" style="margin-top:7px">Mark paid</button></div>`:''}
+      </div>
+    </div>`;
+  }).join('');
+  const giftIcon='<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21 11.25v8.25a1.5 1.5 0 01-1.5 1.5H5.25a1.5 1.5 0 01-1.5-1.5v-8.25M12 4.875A2.625 2.625 0 109.375 7.5H12m0-2.625V7.5m0-2.625A2.625 2.625 0 1114.625 7.5H12m0 0V21m-8.625-9.75h18c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125h-18c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z"/></svg>';
+  return `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+      <div>
+        <div style="font-size:11px;color:var(--text-3);text-transform:uppercase;letter-spacing:0.06em;font-weight:700">Referrals</div>
+        <div style="font-size:20px;font-weight:700;margin-top:2px">Referred leads &amp; payouts</div>
+      </div>
+      <button class="btn-add" id="btn-add-ref"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>New Referral</button>
+    </div>
+    <div class="kpi-grid">
+      <div class="kpi-card accent"><div class="kpi-label">Payouts Owed</div><div class="kpi-value">${money(owed)}</div><div class="kpi-sub">to referrers</div></div>
+      <div class="kpi-card"><div class="kpi-label">Paid Out</div><div class="kpi-value">${money(paid)}</div><div class="kpi-sub">all-time</div></div>
+      <div class="kpi-card"><div class="kpi-label">Referrals</div><div class="kpi-value">${total}</div><div class="kpi-sub">${won} won</div></div>
+      <div class="kpi-card"><div class="kpi-label">Conversion</div><div class="kpi-value">${total>0?Math.round(won/total*100):0}%</div><div class="kpi-sub">leads → won</div></div>
+    </div>
+    <div class="filter-row" style="margin-bottom:14px">
+      ${chips.map(([k,l])=>`<div class="filter-chip ${f===k?'active':''}" data-ref-filter="${k}">${l} ${cnt[k]}</div>`).join('')}
+    </div>
+    ${shown.length===0?`<div class="empty"><div class="empty-icon">${giftIcon}</div><h3>${total===0?'No referrals yet':'No matches'}</h3><p>${total===0?'Track who sent you leads and what you owe them.':'Try a different filter.'}</p>${total===0?'<button class="btn-add" id="btn-add-ref2" style="margin:0 auto">+ Add Referral</button>':''}</div>`:`<div style="display:flex;flex-direction:column;gap:8px">${rows}</div>`}
+  `;
+}
+function showReferralModal(mode,ref){
+  const r=ref||{};
+  const sel=(v,cur)=>v===cur?'selected':'';
+  const jobOpts=Object.values(S.jobs).sort((a,b)=>(a.name||'').localeCompare(b.name||'')).map(j=>`<option value="${esc(j.id)}" ${r.jobId===j.id?'selected':''}>${esc(j.name)}</option>`).join('');
+  $('modal-root').innerHTML=`<div class="modal-bd" id="mbd" role="dialog" aria-modal="true" aria-label="Referral"><div class="modal"><div class="modal-handle"></div>
+    <div class="modal-head"><div class="modal-title">${mode==='add'?'New Referral':'Edit Referral'}</div><button class="modal-close" id="mc" aria-label="Close"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button></div>
+    <div class="modal-body">
+      <div class="form-group"><label class="form-label">Referred by (referrer)</label><input class="form-input" id="rf-referrer" value="${esc(r.referrer||'')}" placeholder="Who sent you this lead?"></div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Referrer phone</label><input class="form-input" type="tel" id="rf-phone" value="${esc(r.referrerPhone||'')}"></div>
+        <div class="form-group"><label class="form-label">Referrer email</label><input class="form-input" type="email" id="rf-email" value="${esc(r.referrerEmail||'')}"></div>
+      </div>
+      <div class="form-group"><label class="form-label">Referred lead / customer</label><input class="form-input" id="rf-lead" value="${esc(r.lead||'')}" placeholder="Name of the new lead"></div>
+      <div class="form-group"><label class="form-label">Linked job (optional)</label><select class="form-select" id="rf-job"><option value="">— None —</option>${jobOpts}</select></div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Status</label><select class="form-select" id="rf-status"><option value="new" ${sel('new',r.status||'new')}>New lead</option><option value="won" ${sel('won',r.status)}>Won</option><option value="lost" ${sel('lost',r.status)}>Lost</option></select></div>
+        <div class="form-group"><label class="form-label">Date referred</label><input class="form-input" type="date" id="rf-date" value="${esc(r.dateReferred||dateKey(new Date()))}"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Deal value</label><input class="form-input" type="number" step="0.01" id="rf-deal" value="${esc(r.dealValue||'')}" placeholder="0"></div>
+        <div class="form-group"><label class="form-label">Referral payout</label><input class="form-input" type="number" step="0.01" id="rf-payout" value="${esc(r.payout||'')}" placeholder="0"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Payout status</label><select class="form-select" id="rf-pstatus"><option value="pending" ${sel('pending',r.payoutStatus||'pending')}>Pending</option><option value="paid" ${sel('paid',r.payoutStatus)}>Paid</option></select></div>
+        <div class="form-group"><label class="form-label">Date paid</label><input class="form-input" type="date" id="rf-paid" value="${esc(r.paidAt||'')}"></div>
+      </div>
+      <div class="form-group"><label class="form-label">Notes</label><textarea class="form-textarea" id="rf-notes">${esc(r.notes||'')}</textarea></div>
+    </div>
+    <div class="modal-foot">${mode==='edit'?'<button class="btn-cancel" id="rf-del" style="color:var(--red);margin-right:auto">Delete</button>':''}<button class="btn-cancel" id="btn-cx">Cancel</button><button class="btn-save" id="rf-save">Save</button></div>
+  </div></div>`;
+  $('mc').onclick=$('btn-cx').onclick=closeModal;
+  $('mbd').onclick=e=>{if(e.target===e.currentTarget)closeModal()};
+  if(mode==='edit'){const d=$('rf-del');if(d)d.onclick=async()=>{if(confirm('Delete this referral?')){await deleteReferralDB(r.id);closeModal();render();toast('Referral deleted')}}}
+  $('rf-save').onclick=async()=>{
+    const rec={
+      id:r.id||('r_'+Date.now()+'_'+Math.random().toString(36).slice(2,6)),
+      created:r.created||Date.now(),
+      referrer:$('rf-referrer').value.trim(),
+      referrerPhone:$('rf-phone').value.trim(),
+      referrerEmail:$('rf-email').value.trim(),
+      lead:$('rf-lead').value.trim(),
+      jobId:$('rf-job').value||'',
+      status:$('rf-status').value,
+      dateReferred:$('rf-date').value,
+      dealValue:$('rf-deal').value,
+      payout:$('rf-payout').value,
+      payoutStatus:$('rf-pstatus').value,
+      paidAt:$('rf-paid').value,
+      notes:$('rf-notes').value.trim(),
+    };
+    if(!rec.referrer&&!rec.lead){toast('Add a referrer or lead name','');return}
+    if(rec.payoutStatus==='paid'&&!rec.paidAt)rec.paidAt=dateKey(new Date());
+    await writeReferral(rec);
+    await logAct((mode==='add'?'added a referral from ':'updated referral from ')+(rec.referrer||'someone'),rec.lead||'');
+    closeModal();render();toast(mode==='add'?'Referral added':'Referral saved');
+  };
+}
 function renderTeam(){
   return`<div class="member-add">
     <input id="member-in" placeholder="Add team member name…">
@@ -3002,10 +3551,131 @@ function renderTeam(){
   </div>`;
 }
 
+function renderTime(){
+  if(!S.members.length){
+    return `<div class="tt-empty" style="padding:44px 16px">
+      <p style="font-size:14px;color:var(--text-2);margin-bottom:18px;line-height:1.6">Add your team members first, then you can clock them in and out and track hours.</p>
+      <button class="btn-save" id="tt-goto-team">Go to Team →</button>
+    </div>`;
+  }
+  const all=timeList();
+  const active=all.filter(t=>!t.end).sort((a,b)=>a.start-b.start);
+  const today=dateKey(new Date());
+  const ws=weekStart();
+  const todayMs=all.filter(t=>dateKey(t.start)===today).reduce((s,t)=>s+entryDur(t),0);
+  const weekMs=all.filter(t=>t.start>=ws).reduce((s,t)=>s+entryDur(t),0);
+  const defMember=S.members.includes(S.user)?S.user:S.members[0];
+  const mOpts=S.members.map(m=>`<option value="${esc(m)}" ${m===defMember?'selected':''}>${esc(m)}</option>`).join('');
+  const jOpts=jobs().map(j=>`<option value="${esc(j.id)}">${esc(j.name)}</option>`).join('');
+
+  const completed=all.filter(t=>t.end).sort((a,b)=>b.start-a.start);
+  const groups={};
+  completed.forEach(t=>{const k=dateKey(t.start);(groups[k]=groups[k]||[]).push(t)});
+  const dayKeys=Object.keys(groups).sort((a,b)=>b.localeCompare(a)).slice(0,30);
+
+  const activeHtml=active.length?active.map(t=>{
+    const jn=t.job&&S.jobs[t.job]?S.jobs[t.job].name:'';
+    const meta=['Since '+fmtClockT(t.start),jn,t.note].filter(Boolean).join(' · ');
+    return `<div class="tt-active">
+      <div class="member-ava">${initials(t.member)}</div>
+      <div class="tt-active-body"><div class="tt-active-name">${esc(t.member)}</div><div class="tt-active-meta">${esc(meta)}</div></div>
+      <div class="tt-timer" data-tick-start="${t.start}">${fmtHMS(Date.now()-t.start)}</div>
+      <button class="tt-btn-out" data-clock-out="${esc(t.id)}">Clock Out</button>
+    </div>`;
+  }).join(''):`<div class="tt-empty">No one is on the clock right now.</div>`;
+
+  const logHtml=dayKeys.length?dayKeys.map(k=>{
+    const rows=groups[k];
+    const dayTotal=rows.reduce((s,t)=>s+entryDur(t),0);
+    const label=new Date(k+'T00:00:00').toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric'});
+    return `<div class="tt-day"><div class="tt-day-hd"><span class="tt-day-date">${k===today?'Today':esc(label)}</span><span class="tt-day-total">${fmtHM(dayTotal)}</span></div>${
+      rows.map(t=>{
+        const jn=t.job&&S.jobs[t.job]?S.jobs[t.job].name:'';
+        const meta=[fmtClockT(t.start)+' – '+fmtClockT(t.end),jn,t.note].filter(Boolean).join(' · ');
+        return `<div class="tt-row">
+          <div class="member-ava">${initials(t.member)}</div>
+          <div class="tt-row-body"><div class="tt-row-top"><span class="tt-row-name">${esc(t.member)}</span><span class="tt-row-dur">${fmtHM(entryDur(t))}</span></div><div class="tt-row-meta">${esc(meta)}</div></div>
+          <button class="tt-icon" data-time-edit="${esc(t.id)}" title="Edit" aria-label="Edit entry">✎</button>
+          <button class="tt-icon" data-time-del="${esc(t.id)}" title="Delete" aria-label="Delete entry">✕</button>
+        </div>`;
+      }).join('')
+    }</div>`;
+  }).join(''):`<div class="tt-empty">No completed time entries yet.</div>`;
+
+  return `
+    <div class="tt-kpis">
+      <div class="tt-kpi"><div class="tt-kpi-val">${active.length}</div><div class="tt-kpi-lbl">On the clock</div></div>
+      <div class="tt-kpi"><div class="tt-kpi-val">${fmtHM(todayMs)}</div><div class="tt-kpi-lbl">Today</div></div>
+      <div class="tt-kpi"><div class="tt-kpi-val">${fmtHM(weekMs)}</div><div class="tt-kpi-lbl">This week</div></div>
+    </div>
+    <div class="tt-card">
+      <div class="tt-card-hd">Clock in</div>
+      <div class="tt-field"><label>Team member</label><select id="tt-member">${mOpts}</select></div>
+      <div class="tt-field"><label>Job (optional)</label><select id="tt-job"><option value="">— No job / general —</option>${jOpts}</select></div>
+      <div class="tt-field"><label>Note (optional)</label><input id="tt-note" placeholder="e.g. framing the deck"></div>
+      <button class="tt-clockin-btn" id="tt-clockin">Clock In</button>
+    </div>
+    <div class="section-hd">On the clock now</div>
+    ${activeHtml}
+    <div class="section-hd" style="margin-top:20px">Time log <button class="btn-mini" id="tt-add-manual">+ Add entry</button></div>
+    ${logHtml}
+  `;
+}
+
+function showTimeModal(entry){
+  if(OWNER_MODE){toast('Open a company to edit time','');return}
+  if(!S.members.length){toast('Add team members first','');return}
+  const add=!entry;
+  const defMember=S.members.includes(S.user)?S.user:S.members[0];
+  const t=entry||{member:defMember,job:'',note:'',start:Date.now(),end:Date.now()};
+  const running=!add&&!t.end;
+  const mOpts=S.members.map(m=>`<option value="${esc(m)}" ${t.member===m?'selected':''}>${esc(m)}</option>`).join('');
+  const jOpts=jobs().map(j=>`<option value="${esc(j.id)}" ${t.job===j.id?'selected':''}>${esc(j.name)}</option>`).join('');
+  $('modal-root').innerHTML=`<div class="modal-bd" id="mbd"><div class="modal"><div class="modal-handle"></div>
+    <div class="modal-head"><div class="modal-title">${add?'Add Time Entry':'Edit Time Entry'}</div><button class="modal-close" id="mc"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button></div>
+    <div class="modal-body">
+      <div class="form-group"><label class="form-label">Team member</label><select class="form-select" id="tm-member">${mOpts}</select></div>
+      <div class="form-group"><label class="form-label">Job (optional)</label><select class="form-select" id="tm-job"><option value="">— No job / general —</option>${jOpts}</select></div>
+      <div class="form-group"><label class="form-label">Note (optional)</label><input class="form-input" id="tm-note" value="${esc(t.note||'')}" placeholder="What was worked on"></div>
+      <div class="form-group"><label class="form-label">Clock in</label><input class="form-input" type="datetime-local" id="tm-start" value="${dtLocalValue(t.start)}"></div>
+      <div class="form-group" style="display:flex;align-items:center;gap:8px"><input type="checkbox" id="tm-running" ${running?'checked':''} style="width:auto"><label class="form-label" for="tm-running" style="margin:0">Still on the clock</label></div>
+      <div class="form-group" id="tm-end-wrap" style="${running?'display:none':''}"><label class="form-label">Clock out</label><input class="form-input" type="datetime-local" id="tm-end" value="${dtLocalValue(t.end||Date.now())}"></div>
+    </div>
+    <div class="modal-foot">
+      ${add?'':`<button class="btn-delete" id="tm-del">Delete</button>`}
+      <button class="btn-cancel" id="btn-cx">Cancel</button>
+      <button class="btn-save" id="tm-save">${add?'Add':'Save'}</button>
+    </div>
+  </div></div>`;
+  $('mc').onclick=$('btn-cx').onclick=closeModal;
+  $('mbd').onclick=e=>{if(e.target===e.currentTarget)closeModal()};
+  $('tm-running').onchange=function(){$('tm-end-wrap').style.display=this.checked?'none':''};
+  $('tm-save').onclick=async()=>{
+    const member=$('tm-member').value;
+    if(!member){toast('Pick a team member','');return}
+    const start=dtLocalParse($('tm-start').value);
+    if(!start){toast('Enter a valid clock-in time','');return}
+    const stillRunning=$('tm-running').checked;
+    let end=stillRunning?null:dtLocalParse($('tm-end').value);
+    if(!stillRunning&&!end){toast('Enter a clock-out time','');return}
+    if(end&&end<start){toast('Clock out must be after clock in','');return}
+    const rec={id:t.id||tid(),member,job:$('tm-job').value||'',note:$('tm-note').value.trim(),start,end,by:t.by||S.user||'',created:t.created||Date.now()};
+    await writeTimeEntry(rec);closeModal();render();toast(add?'Time entry added':'Time entry saved');
+  };
+  if(!add)$('tm-del').onclick=async()=>{
+    if(!confirm('Delete this time entry?'))return;
+    const backup=JSON.parse(JSON.stringify(t));
+    await deleteTimeEntryDB(t.id);closeModal();render();
+    const restore=async()=>{await writeTimeEntry(backup);render();toast('Entry restored')};
+    UNDO.push(restore);toast('Entry deleted','undo',restore);
+  };
+}
+
 // ══ Modals ══
 function closeModal(){$('modal-root').innerHTML=''}
 
 function showJobModal(mode,job){
+  if(OWNER_MODE){toast('Open a company to add or edit jobs','');return}
   const j=job||{};
   const mOpts=S.members.map(m=>`<option value="${esc(m)}" ${j.assigned===m?'selected':''}>${esc(m)}</option>`).join('');
   $('modal-root').innerHTML=`<div class="modal-bd" id="mbd"><div class="modal"><div class="modal-handle"></div>
@@ -3388,6 +4058,8 @@ function printInvoice(j,inv){
   const c=calcInvoice(inv);
   const logoSrc=getBrandLogoSrc();
   const co=COMPANY;
+  const P=invTheme();
+  const logoFull=brandLogoFull();
   const itemsRows=(inv.items||[]).map(it=>{
     const amt=Number(it.qty||0)*Number(it.rate||0);
     return `<tr>
@@ -3404,15 +4076,16 @@ function printInvoice(j,inv){
     <style>
       *{box-sizing:border-box;margin:0;padding:0}
       body{font-family:Helvetica,Arial,sans-serif;color:#0a1f18;background:#fff;max-width:780px;margin:30px auto;padding:0 32px;font-size:13px;line-height:1.5}
-      .lh{display:flex;justify-content:space-between;align-items:flex-start;padding-bottom:18px;border-bottom:3px solid #0a3d2e;margin-bottom:24px;gap:20px}
+      .lh{display:flex;justify-content:space-between;align-items:flex-start;padding-bottom:18px;border-bottom:3px solid ${P.rule};margin-bottom:24px;gap:20px}
       .lh-l{display:flex;align-items:center;gap:14px;flex:1}
       .lh-l img{width:78px;height:78px;object-fit:contain}
+      .lh-l img.full{width:300px;height:auto;max-width:62%}
       .lh-co{flex:1}
-      .lh-co h1{font-family:Georgia,serif;font-size:24px;font-weight:600;color:#0a3d2e;letter-spacing:0.01em;line-height:1.1;margin-bottom:4px}
+      .lh-co h1{font-family:Georgia,serif;font-size:24px;font-weight:600;color:${P.primary};letter-spacing:0.01em;line-height:1.1;margin-bottom:4px}
       .lh-co .tag{font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#666}
       .lh-co .addr{font-size:11.5px;color:#555;margin-top:6px;line-height:1.5;white-space:pre-line}
       .lh-r{text-align:right}
-      .lh-r .title{font-size:36px;font-weight:800;color:#0a3d2e;letter-spacing:0.04em;line-height:1}
+      .lh-r .title{font-size:36px;font-weight:800;color:${P.primary};letter-spacing:0.04em;line-height:1}
       .lh-r .num{font-size:13px;color:#555;margin-top:6px}
       .lh-r .status{display:inline-block;margin-top:8px;font-size:10.5px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;padding:4px 12px;border-radius:20px;background:#fef3c7;color:#92400e}
       .lh-r .status.paid{background:#dcfce7;color:#166534}
@@ -3430,17 +4103,17 @@ function printInvoice(j,inv){
       .totals{margin-left:auto;width:300px;margin-bottom:20px}
       .totals .row{display:flex;justify-content:space-between;padding:5px 0;font-size:13px}
       .totals .row .v{font-variant-numeric:tabular-nums;font-weight:600}
-      .totals .grand{padding:10px 0;border-top:2px solid #0a3d2e;margin-top:6px;font-size:16px;font-weight:700;color:#0a3d2e}
+      .totals .grand{padding:10px 0;border-top:2px solid ${P.rule};margin-top:6px;font-size:16px;font-weight:700;color:${P.primary}}
       .totals .due{margin-top:8px;padding:10px 14px;background:#fef3c7;border-radius:6px;font-size:14px;font-weight:700;color:#92400e;display:flex;justify-content:space-between}
       .totals .due.zero{background:#dcfce7;color:#166534}
-      .notes{margin-top:16px;padding:14px;background:#f7f9f8;border-left:3px solid #0a3d2e;border-radius:6px;font-size:12px;color:#3d6358;line-height:1.6}
-      .notes .lbl{font-size:9.5px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#0a3d2e;margin-bottom:5px}
+      .notes{margin-top:16px;padding:14px;background:#f7f9f8;border-left:3px solid ${P.notesBar};border-radius:6px;font-size:12px;color:#3d6358;line-height:1.6}
+      .notes .lbl{font-size:9.5px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:${P.primary};margin-bottom:5px}
       .terms{margin-top:14px;font-size:11px;color:#777;line-height:1.6;white-space:pre-line}
       .ft{margin-top:28px;padding-top:14px;border-top:1px solid #ddd;text-align:center;font-size:10.5px;color:#888;letter-spacing:0.04em}
       @media print{body{margin:0;padding:18mm 16mm;max-width:none}.no-print{display:none}}
       .print-bar{position:fixed;top:12px;right:12px;display:flex;gap:8px}
-      .print-bar button{padding:8px 16px;background:#0a3d2e;color:#fff;border:none;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;font-family:Helvetica,sans-serif}
-      .print-bar button.alt{background:#fff;color:#0a3d2e;border:1.5px solid #0a3d2e}
+      .print-bar button{padding:8px 16px;background:${P.primary};color:#fff;border:none;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;font-family:Helvetica,sans-serif}
+      .print-bar button.alt{background:#fff;color:${P.primary};border:1.5px solid ${P.primary}}
     </style></head><body>
     <div class="no-print print-bar">
       <button class="alt" onclick="window.close()">Close</button>
@@ -3448,12 +4121,15 @@ function printInvoice(j,inv){
     </div>
     <header class="lh">
       <div class="lh-l">
-        ${logoSrc?`<img src="${logoSrc}" alt="">`:''}
+        ${logoFull
+          ?`<img class="full" src="${logoFull}" alt="${esc(co.name||'')}">
+        <div class="lh-co"><div class="addr">${esc(co.address||'')}${co.phone?'\n'+esc(co.phone):''}${co.email?' · '+esc(co.email):''}${co.website?'\n'+esc(co.website):''}</div></div>`
+          :`${logoSrc?`<img src="${logoSrc}" alt="">`:''}
         <div class="lh-co">
           <h1>${esc(co.name||'Waterfront Solutions')}</h1>
           <div class="tag">${esc(co.license?'Lic. '+co.license:'Construction & Waterfront Services')}</div>
           <div class="addr">${esc(co.address||'')}${co.phone?'\n'+esc(co.phone):''}${co.email?' · '+esc(co.email):''}${co.website?'\n'+esc(co.website):''}</div>
-        </div>
+        </div>`}
       </div>
       <div class="lh-r">
         <div class="title">INVOICE</div>
@@ -3534,18 +4210,68 @@ function showSettingsModal(){
   };
 }
 
+// ══ Company Switcher ══
+function showCompanySwitcher(){
+  const cur=OWNER_MODE?'owner':COMPANY_ID;
+  const rows=Object.values(COMPANIES).map(co=>`
+    <button class="co-pick${co.id===cur?' active':''}" data-co="${esc(co.id)}">
+      <div><div class="co-pick-name">${esc(co.label)}</div><div class="co-pick-tag">${esc(co.tag)}</div></div>
+      ${co.id===cur?'<span class="co-pick-badge">Current</span>':''}
+    </button>`).join('');
+  const ownerActive=cur==='owner';
+  $('modal-root').innerHTML=`<div class="modal-bd" id="mbd" role="dialog" aria-modal="true" aria-label="Choose workspace"><div class="modal"><div class="modal-handle"></div>
+    <div class="modal-head"><div class="modal-title">Choose workspace</div><button class="modal-close" id="mc" aria-label="Close"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button></div>
+    <div class="modal-body">
+      <p style="font-size:13px;color:var(--text-2);margin-bottom:16px;line-height:1.5">Each company keeps completely separate jobs, invoices, schedule, photos, and settings. Owner is a cross-company analytics workspace. Picking any one reloads the app.</p>
+      ${rows}
+      <button class="co-pick${ownerActive?' active':''}" data-co="owner" style="border-color:var(--gold);background:${ownerActive?'var(--gold-light)':'var(--surface)'}">
+        <div><div class="co-pick-name">Owner</div><div class="co-pick-tag">Analytics &amp; reports across all companies</div></div>
+        ${ownerActive?'<span class="co-pick-badge">Current</span>':'<span class="co-pick-badge">All</span>'}
+      </button>
+    </div>
+  </div></div>`;
+  $('mc').onclick=closeModal;
+  $('mbd').onclick=e=>{if(e.target===e.currentTarget)closeModal()};
+  document.querySelectorAll('[data-co]').forEach(b=>b.onclick=()=>{
+    const id=b.dataset.co;
+    if(id===cur){closeModal();return}
+    try{localStorage.setItem('jt_company',id)}catch(e){}
+    location.reload();
+  });
+}
+
+// Apply the active company's logo + color theme (logo/theme are optional;
+// Waterfront has none, so it keeps its original logo and green header).
+function applyCompanyBranding(){
+  if(ACTIVE_CO.logoSvg){
+    const img=document.querySelector('.brand-logo');
+    if(img){img.src='data:image/svg+xml;utf8,'+encodeURIComponent(ACTIVE_CO.logoSvg);img.alt=ACTIVE_CO.label;}
+  }
+  const t=ACTIVE_CO.theme;
+  if(t&&!document.getElementById('co-theme')){
+    let css='';
+    if(t.headerBg)css+='.header{background:'+t.headerBg+'}';
+    if(t.syncBg)css+='.sync-bar{background:'+t.syncBg+'}';
+    if(t.navActive)css+='.nav-btn.active{color:'+t.navActive+';border-bottom-color:'+t.navActive+'}';
+    if(css){const s=document.createElement('style');s.id='co-theme';s.textContent=css;document.head.appendChild(s);}
+  }
+}
+
 // ══ Command Palette ══
 let CMD={open:false,query:'',idx:0,items:[]};
 function cmdItems(){
   const out=[];
   // Views
-  [['dashboard','Home / Dashboard','home'],['jobs','Jobs','briefcase'],['schedule','Schedule','calendar'],['invoices','Invoices','invoice'],['map','Map','map'],['reports','Reports','chart'],['activity','Activity','list'],['team','Team','team']].forEach(([v,name,ico])=>{
+  [['dashboard','Home / Dashboard','home'],['jobs','Jobs','briefcase'],['schedule','Schedule','calendar'],['invoices','Invoices','invoice'],['referrals','Referrals','team'],['map','Map','map'],['reports','Reports','chart'],['activity','Activity','list'],['team','Team','team'],['time','Time','calendar']].forEach(([v,name,ico])=>{
     out.push({type:'view',name:'Go to '+name,sub:'View',ico,run:()=>{S.view=v;S.detail=null;render()}});
   });
   // Actions
   out.push({type:'action',name:'New Job',sub:'Create a job',ico:'plus',run:()=>showJobModal('add')});
   out.push({type:'action',name:'New Invoice',sub:'Pick a job, then create invoice',ico:'invoice',run:()=>showJobPickerModal(jobId=>showInvoiceModal(jobId))});
+  out.push({type:'action',name:'New Referral',sub:'Log a referred lead & payout',ico:'plus',run:()=>showReferralModal('add')});
   out.push({type:'action',name:'Settings & Company Info',sub:'Edit name, logo, invoice defaults',ico:'kbd',run:showSettingsModal});
+  out.push({type:'action',name:'Switch company / workspace',sub:'Waterfront · Manufactured Housing · Norris Lake · Owner',ico:'link',run:showCompanySwitcher});
+  if(!OWNER_MODE)out.push({type:'action',name:'Owner workspace',sub:'Analytics across all companies',ico:'chart',run:()=>{try{localStorage.setItem('jt_company','owner')}catch(e){};location.reload()}});
   out.push({type:'action',name:'Export to CSV',sub:'Download all jobs',ico:'download',run:exportCSV});
   out.push({type:'action',name:'Notifications',sub:'See your inbox',ico:'bell',run:showNotificationsModal});
   out.push({type:'action',name:'Connect Team (Firebase)',sub:'Live sync setup',ico:'link',run:showSetupModal});
@@ -3753,6 +4479,7 @@ function onKey(e){
   // Don't trigger single-letter shortcuts while typing
   if(isTyping(e))return;
   const k=e.key;
+  if(OWNER_MODE){if(k==='?'){e.preventDefault();showShortcutsModal()}return}
   if(k==='/'){e.preventDefault();const s=document.getElementById('search-in');if(s){s.focus();s.select()}else{showCommandPalette()};return}
   if(k==='n'||k==='N'){e.preventDefault();showJobModal('add');return}
   if(k==='?'){e.preventDefault();showShortcutsModal();return}
@@ -3786,9 +4513,22 @@ function attachHandlers(){
   });
   $('user-btn').onclick=showSettingsModal;
   $('setup-link').onclick=showSetupModal;
+  const _bco=$('brand-co');if(_bco)_bco.textContent=OWNER_MODE?'All Companies':ACTIVE_CO.label;
+  const _bsw=$('brand-switch');if(_bsw)_bsw.onclick=showCompanySwitcher;
+  $('owner-refresh')?.addEventListener('click',refreshOwnerData);
+  document.querySelectorAll('[data-view-company]').forEach(b=>b.onclick=()=>{
+    const id=b.dataset.viewCompany;
+    try{localStorage.setItem('jt_company',id)}catch(e){}
+    location.reload();
+  });
   $('bell-btn')?.addEventListener('click',showNotificationsModal);
   $('cmd-btn')?.addEventListener('click',showCommandPalette);
   $('fab')?.addEventListener('click',()=>showJobModal('add'));
+  $('btn-add-ref')?.addEventListener('click',()=>showReferralModal('add'));
+  $('btn-add-ref2')?.addEventListener('click',()=>showReferralModal('add'));
+  document.querySelectorAll('[data-ref-open]').forEach(el=>el.onclick=()=>showReferralModal('edit',S.referrals[el.dataset.refOpen]));
+  document.querySelectorAll('[data-ref-paid]').forEach(b=>b.onclick=async e=>{e.stopPropagation();const r=S.referrals[b.dataset.refPaid];if(!r)return;r.payoutStatus='paid';if(!r.paidAt)r.paidAt=dateKey(new Date());await writeReferral(r);render();toast('Marked paid')});
+  document.querySelectorAll('[data-ref-filter]').forEach(c=>c.onclick=()=>{S.refFilter=c.dataset.refFilter;render()});
 
   // Sort menu
   $('btn-sort')?.addEventListener('click',e=>{e.stopPropagation();S.sortOpen=!S.sortOpen;render()});
@@ -3958,6 +4698,14 @@ function attachHandlers(){
 
   // Detail tabs
   document.querySelectorAll('[data-tab]').forEach(t=>t.onclick=()=>{S.detailTab=t.dataset.tab;render()});
+  document.querySelectorAll('.stat-cell[data-goto]').forEach(el=>{
+    el.onclick=()=>{S.detailTab=el.dataset.goto;render()};
+    el.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();S.detailTab=el.dataset.goto;render()}};
+  });
+  document.querySelectorAll('.stat-add[data-add]').forEach(b=>{
+    b.onclick=e=>{e.stopPropagation();S.detailTab=b.dataset.add;S.quickAdd=b.dataset.add;render()};
+  });
+  if(S.quickAdd){const t=S.quickAdd;S.quickAdd=null;triggerQuickAdd(t)}
 
   // Stage pipeline
   document.querySelectorAll('[data-stage]').forEach(b=>b.onclick=async()=>{
@@ -4095,6 +4843,35 @@ function attachHandlers(){
     S.members.push(name);await saveMembers();inp.value='';render();toast(name+' added to team');
   });
   document.querySelectorAll('[data-rm]').forEach(b=>b.onclick=async()=>{S.members.splice(parseInt(b.dataset.rm),1);await saveMembers();render()});
+
+  // Time tracking
+  stopTimeTick();
+  $('tt-goto-team')?.addEventListener('click',()=>{S.view='team';render()});
+  $('tt-clockin')?.addEventListener('click',async()=>{
+    const member=$('tt-member')?.value;
+    if(!member){toast('Pick a team member','');return}
+    if(activeEntry(member)){toast(member+' is already clocked in','');return}
+    const job=$('tt-job')?.value||'';
+    const note=$('tt-note')?.value.trim()||'';
+    const t={id:tid(),member,job,note,start:Date.now(),end:null,by:S.user||'',created:Date.now()};
+    await writeTimeEntry(t);await logAct('clocked in '+member,job&&S.jobs[job]?S.jobs[job].name:'');render();toast(member+' clocked in');
+  });
+  document.querySelectorAll('[data-clock-out]').forEach(b=>b.onclick=async()=>{
+    const t=S.timeEntries[b.dataset.clockOut];if(!t||t.end)return;
+    t.end=Date.now();await writeTimeEntry(t);
+    await logAct('clocked out '+t.member+' ('+fmtHM(entryDur(t))+')',t.job&&S.jobs[t.job]?S.jobs[t.job].name:'');
+    render();toast(t.member+' clocked out · '+fmtHM(entryDur(t)));
+  });
+  $('tt-add-manual')?.addEventListener('click',()=>showTimeModal(null));
+  document.querySelectorAll('[data-time-edit]').forEach(b=>b.onclick=()=>{const t=S.timeEntries[b.dataset.timeEdit];if(t)showTimeModal(t)});
+  document.querySelectorAll('[data-time-del]').forEach(b=>b.onclick=async()=>{
+    const t=S.timeEntries[b.dataset.timeDel];if(!t)return;
+    const backup=JSON.parse(JSON.stringify(t));
+    await deleteTimeEntryDB(t.id);render();
+    const restore=async()=>{await writeTimeEntry(backup);render();toast('Entry restored')};
+    UNDO.push(restore);toast('Entry deleted','undo',restore);
+  });
+  if(S.view==='time'&&timeList().some(t=>!t.end))startTimeTick();
 }
 
 document.addEventListener('keydown',onKey);
@@ -4102,6 +4879,7 @@ document.addEventListener('keydown',onKey);
 // Service worker would require a same-origin .js file; manifest alone makes it installable.
 // Browsers prompt "Add to Home Screen" when the manifest + HTTPS + an icon are present.
 
+if(OWNER_MODE)applyOwnerChrome();else applyCompanyBranding();
 render();
 </script>
 </body>
