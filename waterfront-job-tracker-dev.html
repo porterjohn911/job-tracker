@@ -1553,10 +1553,13 @@ async function handleAuthUser(auth,user){
     let rec=null;
     try{const s=await uref.get();rec=s.exists()?s.val():null}catch(e){}
     if(!rec){
-      let isFirst=false;
-      try{const all=await db.ref('users').get();isFirst=!all.exists()}catch(e){}
-      rec={name:(user.displayName||(user.email||'').split('@')[0]||'User'),email:user.email||'',role:isFirst?'owner':'pending',company:isFirst?'all':''};
-      try{await uref.set(rec)}catch(e){rec.role='pending'}
+      const base={name:(user.displayName||(user.email||'').split('@')[0]||'User'),email:user.email||''};
+      // first user, OR /users unreadable under locked rules -> attempt owner; the DB rule is the real gatekeeper (only succeeds if /users is truly empty)
+      let firstish=false;
+      try{const all=await db.ref('users').get();firstish=!all.exists()}catch(e){firstish=true}
+      rec={...base,role:firstish?'owner':'pending',company:firstish?'all':''};
+      try{await uref.set(rec)}
+      catch(e){rec={...base,role:'pending',company:''};try{await uref.set(rec)}catch(e2){}}
     }
     FB_USER={uid:user.uid,...rec};
     SESSION={uid:user.uid,name:rec.name,role:rec.role,company:rec.company};
