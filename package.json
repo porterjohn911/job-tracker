@@ -1,0 +1,9 @@
+{
+  "name": "witport-job-tracker",
+  "private": true,
+  "description": "Serverless function deps for emailing invoices/estimates (the app itself is static).",
+  "dependencies": {
+    "nodemailer": "^6.9.14",
+    "pdf-lib": "^1.17.1"
+  }
+}
