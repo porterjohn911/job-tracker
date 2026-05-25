@@ -1,9 +1,17 @@
-# Netlify config — static single-page app, no build step.
+# Netlify config — static single-page app + one serverless function.
 # The app (index.html) talks to Firebase Auth + Realtime Database directly
-# from the browser via its baked-in config, so no server/build is needed.
+# from the browser. The function (netlify/functions/send-invoice) emails
+# invoices/estimates as a PDF via your Google Workspace SMTP.
 [build]
   publish = "."
   command = "echo 'No build needed — static site'"
+
+[build.environment]
+  NODE_VERSION = "18"
+
+[functions]
+  directory = "netlify/functions"
+  node_bundler = "esbuild"
 
 # Serve the app for any unknown path (SPA-style fallback). Real files that
 # exist (like the dev sandbox) are still served directly.
