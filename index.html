@@ -453,6 +453,15 @@ input[type=range]{width:100%;accent-color:var(--green-700);height:4px;cursor:poi
 .tt-payroll-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;margin-bottom:18px;background:var(--surface);border:1.5px solid var(--green-600);color:var(--green-700);padding:11px;border-radius:var(--r-sm);font-size:14px;font-weight:700;cursor:pointer;font-family:var(--font)}
 .tt-payroll-btn:active{opacity:.85}
 .tt-payroll-btn svg{width:16px;height:16px}
+.bank-list{display:flex;flex-direction:column;gap:6px}
+.bank-row{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);padding:9px 11px;flex-wrap:wrap}
+.bank-main{flex:1 1 150px;min-width:0}
+.bank-desc{font-size:13.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bank-meta{font-size:11px;color:var(--text-3);margin-top:1px}
+.bank-cat,.bank-job{font-size:12px;padding:5px 7px;border:1.5px solid var(--border-md);border-radius:var(--r-sm);background:var(--surface);color:var(--text);font-family:var(--font);max-width:150px}
+.bank-amt{font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap;min-width:70px;text-align:right}
+.bank-amt.in{color:var(--green-700)}
+.bank-amt.out{color:var(--orange)}
 
 /* ── MODAL (sheet) ── */
 .modal-bd{
@@ -1297,6 +1306,10 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25zM6.75 12h.008v.008H6.75V12zm0 3h.008v.008H6.75V15zm0 3h.008v.008H6.75V18z"/></svg>
     Invoices
   </button>
+  <button class="nav-btn" data-view="bank">
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-12 0h.008v.008H6V10.5z"/></svg>
+    Bank
+  </button>
   <button class="nav-btn" data-view="referrals">
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21 11.25v8.25a1.5 1.5 0 01-1.5 1.5H5.25a1.5 1.5 0 01-1.5-1.5v-8.25M12 4.875A2.625 2.625 0 109.375 7.5H12m0-2.625V7.5m0-2.625A2.625 2.625 0 1114.625 7.5H12m0 0V21m-8.625-9.75h18c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125h-18c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z"/></svg>
     Referrals
@@ -1604,7 +1617,7 @@ function renderFbUserList(users){
 // ══ State ══
 let DB=null;
 let MAP=null,MAP_MARKERS=[];
-const S={jobs:{},activity:[],members:[],view:'dashboard',detail:null,detailTab:'overview',filter:'all',search:'',photoCat:'all',calMonth:new Date().getMonth(),calYear:new Date().getFullYear(),calSelected:null,calMode:localStorage.getItem(LS('calmode'))||'month',reportRange:'90',sort:localStorage.getItem(LS('sort'))||'newest',sortOpen:false,bulkMode:false,bulkSel:new Set(),invFilter:'all',invSearch:'',invSort:'date',user:localStorage.getItem(LS('user'))||'',notifReadAt:parseInt(localStorage.getItem(LS('notif_read'))||'0',10),refFilter:'all',referrals:{},timeEntries:{},payRates:{},owner:{}};
+const S={jobs:{},activity:[],members:[],view:'dashboard',detail:null,detailTab:'overview',filter:'all',search:'',photoCat:'all',calMonth:new Date().getMonth(),calYear:new Date().getFullYear(),calSelected:null,calMode:localStorage.getItem(LS('calmode'))||'month',reportRange:'90',sort:localStorage.getItem(LS('sort'))||'newest',sortOpen:false,bulkMode:false,bulkSel:new Set(),invFilter:'all',invSearch:'',invSort:'date',user:localStorage.getItem(LS('user'))||'',notifReadAt:parseInt(localStorage.getItem(LS('notif_read'))||'0',10),refFilter:'all',referrals:{},timeEntries:{},payRates:{},transactions:{},owner:{}};
 const UNDO={stack:[],push(op){this.stack.push(op);if(this.stack.length>20)this.stack.shift()},pop(){return this.stack.pop()}};
 
 // ── Company info for invoice letterhead (editable via Settings)
@@ -1724,13 +1737,14 @@ function undoLast(){const op=UNDO.pop();if(!op){toast('Nothing to undo','');retu
 
 // ══ DB layer ══
 const LOCAL={
-  load(){try{S.jobs=JSON.parse(localStorage.getItem(LS('jobs'))||'{}')}catch(e){S.jobs={}}try{S.activity=JSON.parse(localStorage.getItem(LS('activity'))||'[]')}catch(e){S.activity=[]}try{S.members=JSON.parse(localStorage.getItem(LS('members'))||'[]')}catch(e){S.members=[]}try{S.referrals=JSON.parse(localStorage.getItem(LS('referrals'))||'{}')}catch(e){S.referrals={}}try{S.timeEntries=JSON.parse(localStorage.getItem(LS('time'))||'{}')}catch(e){S.timeEntries={}}try{S.payRates=JSON.parse(localStorage.getItem(LS('payrates'))||'{}')}catch(e){S.payRates={}}},
+  load(){try{S.jobs=JSON.parse(localStorage.getItem(LS('jobs'))||'{}')}catch(e){S.jobs={}}try{S.activity=JSON.parse(localStorage.getItem(LS('activity'))||'[]')}catch(e){S.activity=[]}try{S.members=JSON.parse(localStorage.getItem(LS('members'))||'[]')}catch(e){S.members=[]}try{S.referrals=JSON.parse(localStorage.getItem(LS('referrals'))||'{}')}catch(e){S.referrals={}}try{S.timeEntries=JSON.parse(localStorage.getItem(LS('time'))||'{}')}catch(e){S.timeEntries={}}try{S.payRates=JSON.parse(localStorage.getItem(LS('payrates'))||'{}')}catch(e){S.payRates={}}try{S.transactions=JSON.parse(localStorage.getItem(LS('transactions'))||'{}')}catch(e){S.transactions={}}},
   saveJobs(){try{localStorage.setItem(LS('jobs'),JSON.stringify(S.jobs))}catch(e){}},
   saveActivity(){try{localStorage.setItem(LS('activity'),JSON.stringify(S.activity.slice(0,300)))}catch(e){}},
   saveMembers(){try{localStorage.setItem(LS('members'),JSON.stringify(S.members))}catch(e){}},
   saveReferrals(){try{localStorage.setItem(LS('referrals'),JSON.stringify(S.referrals))}catch(e){}},
   saveTime(){try{localStorage.setItem(LS('time'),JSON.stringify(S.timeEntries))}catch(e){}},
-  savePayRates(){try{localStorage.setItem(LS('payrates'),JSON.stringify(S.payRates))}catch(e){}}
+  savePayRates(){try{localStorage.setItem(LS('payrates'),JSON.stringify(S.payRates))}catch(e){}},
+  saveTransactions(){try{localStorage.setItem(LS('transactions'),JSON.stringify(S.transactions))}catch(e){}}
 };
 function syncStatus(state,msg){const d=$('sync-dot'),t=$('sync-text');d.className='sync-dot '+state;t.textContent=msg}
 function initFB(cfg){
@@ -1744,6 +1758,7 @@ function initFB(cfg){
     DB.child('referrals').on('value',s=>{S.referrals=s.val()||{};LOCAL.saveReferrals();render()});
     DB.child('time').on('value',s=>{S.timeEntries=s.val()||{};LOCAL.saveTime();render()});
     DB.child('payrates').on('value',s=>{S.payRates=s.val()||{};LOCAL.savePayRates();render()});
+    DB.child('transactions').on('value',s=>{S.transactions=s.val()||{};LOCAL.saveTransactions();render()});
     DB.child('.info/connected').on('value',s=>{if(!s.val())syncStatus('err','Reconnecting…')});
     return true;
   }catch(e){syncStatus('err','Firebase error');return false}
@@ -1818,6 +1833,7 @@ function render(){
   else if(S.view==='activity')c.innerHTML=renderActivity();
   else if(S.view==='team')c.innerHTML=renderTeam();
   else if(S.view==='time')c.innerHTML=renderTime();
+  else if(S.view==='bank')c.innerHTML=renderBank();
   updateUserUI();
   updateBellBadge();
   attachHandlers();
@@ -4190,6 +4206,88 @@ function renderPayrollModal(fromKey,toKey){
   };
 }
 
+// ── Banking: CSV/OFX import, categorize, cash flow (per company) ──
+const BANK_CATS=['Income','Materials','Fuel / Travel','Subcontractor','Equipment','Payroll','Office / Admin','Insurance','Taxes / Fees','Bank / Transfer','Other'];
+function pad2(n){return String(n).padStart(2,'0')}
+function bankNormDate(s){s=String(s||'').trim();if(!s)return'';let m=s.match(/^(\d{4})[-\/.](\d{1,2})[-\/.](\d{1,2})/);if(m)return m[1]+'-'+pad2(m[2])+'-'+pad2(m[3]);m=s.match(/^(\d{1,2})[-\/.](\d{1,2})[-\/.](\d{2,4})/);if(m){let y=m[3];if(y.length===2)y='20'+y;return y+'-'+pad2(m[1])+'-'+pad2(m[2])}m=s.match(/^(\d{4})(\d{2})(\d{2})/);if(m)return m[1]+'-'+m[2]+'-'+m[3];const d=new Date(s);if(!isNaN(d))return d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate());return s}
+function bankParseAmt(s){if(s==null)return 0;let str=String(s).trim();if(!str)return 0;const neg=/^\(.*\)$/.test(str);str=str.replace(/[()$,\s]/g,'');let n=parseFloat(str);if(isNaN(n))return 0;return neg?-Math.abs(n):n}
+function bankParseCSV(text){const rows=[];let i=0,field='',row=[],inQ=false;text=String(text).replace(/\r\n/g,'\n').replace(/\r/g,'\n');while(i<text.length){const c=text[i];if(inQ){if(c==='"'){if(text[i+1]==='"'){field+='"';i+=2;continue}inQ=false;i++;continue}field+=c;i++;continue}if(c==='"'){inQ=true;i++;continue}if(c===','){row.push(field);field='';i++;continue}if(c==='\n'){row.push(field);rows.push(row);row=[];field='';i++;continue}field+=c;i++}if(field.length||row.length){row.push(field);rows.push(row)}return rows.filter(r=>r.some(x=>String(x).trim()!==''))}
+function bankCSVToTxns(text){const rows=bankParseCSV(text);if(rows.length<2)return[];const H=rows[0].map(h=>String(h).trim().toLowerCase());const find=(...names)=>{for(const n of names){const i=H.indexOf(n);if(i>=0)return i}for(const n of names){const i=H.findIndex(h=>h.includes(n));if(i>=0)return i}return -1};const di=find('date','posted date','transaction date','post date'),dsc=find('description','name','payee','memo','details','transaction'),amt=find('amount','amt'),deb=find('debit','withdrawal','withdrawals','money out','paid out'),cred=find('credit','deposit','deposits','money in','paid in');const out=[];for(let r=1;r<rows.length;r++){const cells=rows[r];const dateRaw=di>=0?cells[di]:'';let description=(dsc>=0?(cells[dsc]||''):'').trim();let amount=0;if(amt>=0)amount=bankParseAmt(cells[amt]);else{const d=Math.abs(bankParseAmt(cells[deb]||'')),c=Math.abs(bankParseAmt(cells[cred]||''));amount=c-d}if(!description&&!amount&&!dateRaw)continue;out.push({date:bankNormDate(dateRaw),description:description||'(no description)',amount})}return out}
+function bankOFXToTxns(text){const out=[];const blocks=String(text).split(/<STMTTRN>/i).slice(1);blocks.forEach(b=>{const get=t=>{const m=b.match(new RegExp('<'+t+'>([^<\\r\\n]*)','i'));return m?m[1].trim():''};const amount=parseFloat(get('TRNAMT'));if(isNaN(amount))return;out.push({date:bankNormDate(get('DTPOSTED')),description:(get('NAME')||get('MEMO')||'(no description)').trim(),amount})});return out}
+function bankParse(text){return (/<OFX>/i.test(text)||/<STMTTRN>/i.test(text))?bankOFXToTxns(text):bankCSVToTxns(text)}
+function bankAutoCat(desc,amount){const d=(desc||'').toLowerCase();if(amount>0)return'Income';const rules=[['Materials',/home ?depot|lowe'?s|menards|ace hardware|sherwin|84 lumber|ferguson|supply|building material|hardware|paint|concrete|lumber/],['Fuel / Travel',/shell|exxon|chevron|\bbp\b|marathon|fuel|gas station|speedway|circle k|pilot|love'?s|sunoco|valero|hotel|airline|uber|lyft/],['Subcontractor',/subcontract|\bsub\b|excavat|plumb|electric|drywall|roofing|hvac/],['Equipment',/rental|united rent|sunbelt|tool|equipment|caterpillar|bobcat|john deere/],['Payroll',/gusto|payroll|\badp\b|paychex|wage|direct dep/],['Insurance',/insurance|liberty mutual|state farm|geico|progressive|nationwide|policy|hiscox|next insurance/],['Taxes / Fees',/\birs\b|\btax\b|dept of revenue|franchise|permit|license fee|secretary of state|treasury/],['Bank / Transfer',/transfer|zelle|venmo|cash app|withdrawal|\batm\b|service charge|overdraft|interest charge|wire|bill pay/],['Office / Admin',/google|microsoft|adobe|verizon|at&t|comcast|t-mobile|office|staples|amazon|amzn|software|subscription|godaddy|dropbox|zoom/]];for(const[cat,re]of rules)if(re.test(d))return cat;return'Other'}
+function txnList(){return Object.values(S.transactions||{})}
+function bankKey(t){return (t.date||'')+'|'+(Number(t.amount)||0).toFixed(2)+'|'+String(t.description||'').slice(0,40).toLowerCase().replace(/\s+/g,' ').trim()}
+function bankTotals(){const all=txnList();const inSum=all.filter(t=>Number(t.amount)>0).reduce((s,t)=>s+Number(t.amount),0);const outSum=all.filter(t=>Number(t.amount)<0).reduce((s,t)=>s+Math.abs(Number(t.amount)),0);return{inSum,outSum,net:inSum-outSum,count:all.length}}
+async function writeTxn(t){S.transactions[t.id]=t;LOCAL.saveTransactions();if(DB)await DB.child('transactions/'+t.id).set(t).catch(()=>{})}
+async function deleteTxnDB(id){delete S.transactions[id];LOCAL.saveTransactions();if(DB)await DB.child('transactions/'+id).remove().catch(()=>{})}
+async function saveAllTxns(){LOCAL.saveTransactions();if(DB)await DB.child('transactions').set(S.transactions).catch(()=>{})}
+function renderBank(){
+  if(gateOn()&&!canSeeAll(SESSION)) return `<div class="tt-empty" style="padding:40px 16px"><p style="font-size:14px;color:var(--text-2);line-height:1.6">Bank &amp; cash flow is available to managers and owners.</p></div>`;
+  const t=bankTotals();
+  const all=txnList().slice().sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  const byCat={};all.forEach(x=>{if(Number(x.amount)<0){const c=x.category||'Other';byCat[c]=(byCat[c]||0)+Math.abs(Number(x.amount))}});
+  const cats=Object.entries(byCat).sort((a,b)=>b[1]-a[1]);
+  const catOpts=c=>BANK_CATS.map(x=>`<option value="${esc(x)}" ${c===x?'selected':''}>${esc(x)}</option>`).join('');
+  const jobOpts=jid=>`<option value="">— link job —</option>`+jobs().map(job=>`<option value="${esc(job.id)}" ${jid===job.id?'selected':''}>${esc(job.name)}</option>`).join('');
+  const rows=all.map(x=>{const out=Number(x.amount)<0;return `<div class="bank-row" data-bank="${esc(x.id)}">
+    <div class="bank-main"><div class="bank-desc">${esc(x.description||'')}</div><div class="bank-meta">${esc(fmtDate(x.date)||x.date||'')}${x.jobId&&S.jobs[x.jobId]?' · '+esc(S.jobs[x.jobId].name):''}</div></div>
+    <select class="bank-cat" data-bank-cat="${esc(x.id)}">${catOpts(x.category||'Other')}</select>
+    <select class="bank-job" data-bank-job="${esc(x.id)}">${jobOpts(x.jobId||'')}</select>
+    <div class="bank-amt ${out?'out':'in'}">${out?'−':'+'}${money2(Math.abs(Number(x.amount)))}</div>
+    <button class="tt-icon" data-bank-del="${esc(x.id)}" title="Delete" aria-label="Delete">✕</button>
+  </div>`}).join('');
+  return `
+    <div class="tt-kpis">
+      <div class="tt-kpi"><div class="tt-kpi-val" style="color:var(--green-700)">${money2(t.inSum)}</div><div class="tt-kpi-lbl">Money In</div></div>
+      <div class="tt-kpi"><div class="tt-kpi-val" style="color:var(--orange)">${money2(t.outSum)}</div><div class="tt-kpi-lbl">Money Out</div></div>
+      <div class="tt-kpi"><div class="tt-kpi-val" style="color:${t.net>=0?'var(--green-700)':'var(--red)'}">${money2(t.net)}</div><div class="tt-kpi-lbl">Net (profit)</div></div>
+    </div>
+    <div class="toolbar" style="margin-bottom:14px">
+      <button class="btn-add" id="bank-import"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"/></svg>Import CSV / OFX</button>
+      ${all.length?`<button class="btn-mini" id="bank-clear" style="margin-left:auto">Clear all</button>`:''}
+    </div>
+    ${cats.length?`<div class="section-hd">Spending by category</div><div class="rcpt-cats" style="margin-bottom:16px">${cats.map(([c,v])=>`<span class="rcpt-cat-chip">${esc(c)} · ${money2(v)}</span>`).join('')}</div>`:''}
+    <div class="section-hd">Transactions <span>${all.length}</span></div>
+    ${all.length?`<div class="bank-list">${rows}</div>`:`<div class="tt-empty">No transactions yet. Tap <strong>Import CSV / OFX</strong> and upload a transaction file from your bank.</div>`}
+  `;
+}
+function showBankImport(){
+  if(gateOn()&&!canSeeAll(SESSION)){toast('Managers and owners only','');return}
+  $('modal-root').innerHTML=`<div class="modal-bd" id="mbd" role="dialog" aria-modal="true" aria-label="Import transactions"><div class="modal"><div class="modal-handle"></div>
+    <div class="modal-head"><div class="modal-title">Import Bank Transactions</div><button class="modal-close" id="mc" aria-label="Close"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button></div>
+    <div class="modal-body">
+      <p style="font-size:12.5px;color:var(--text-2);line-height:1.5;margin-bottom:12px">Download a <strong>CSV</strong> or <strong>OFX/QFX</strong> file of transactions from your bank or card, then upload it (or paste CSV text). New transactions are added and auto-categorized; duplicates are skipped.</p>
+      <label class="photo-add-btn" style="aspect-ratio:auto;padding:14px;flex-direction:row;gap:8px;margin-bottom:10px">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>
+        <span id="bank-file-label">Choose CSV / OFX file</span>
+        <input type="file" accept=".csv,.ofx,.qfx,text/csv,text/plain,application/x-ofx" id="bank-file" style="display:none">
+      </label>
+      <div class="form-group"><label class="form-label">…or paste CSV here</label><textarea class="form-textarea" id="bank-paste" style="font-family:monospace;font-size:12px;min-height:90px" placeholder="Date,Description,Amount&#10;2026-05-01,Home Depot,-152.34&#10;2026-05-03,Customer payment,1500.00"></textarea></div>
+      <div id="bank-preview" style="font-size:12.5px;color:var(--text-3);min-height:18px"></div>
+    </div>
+    <div class="modal-foot"><button class="btn-cancel" id="btn-cx">Cancel</button><button class="btn-save" id="bank-do-import" disabled>Import</button></div>
+  </div></div>`;
+  $('mc').onclick=$('btn-cx').onclick=closeModal;$('mbd').onclick=e=>{if(e.target===e.currentTarget)closeModal()};
+  let fresh=[];
+  function preview(text){
+    const parsed=bankParse(text)||[];
+    const existing=new Set(txnList().map(bankKey));
+    const seen=new Set();
+    fresh=parsed.filter(p=>{const k=bankKey(p);if(existing.has(k)||seen.has(k))return false;seen.add(k);return true});
+    $('bank-preview').innerHTML=parsed.length?`Found <strong>${parsed.length}</strong> · <strong>${fresh.length}</strong> new (duplicates skipped).`:'No transactions detected — check the file or format.';
+    $('bank-do-import').disabled=fresh.length===0;
+  }
+  $('bank-file').onchange=function(){const f=this.files&&this.files[0];if(!f)return;$('bank-file-label').textContent=f.name;const r=new FileReader();r.onload=e=>{const ta=$('bank-paste');if(ta)ta.value='';preview(e.target.result)};r.readAsText(f)};
+  $('bank-paste').oninput=function(){preview(this.value)};
+  $('bank-do-import').onclick=async()=>{
+    if(!fresh.length)return;
+    S.transactions=S.transactions||{};
+    fresh.forEach(p=>{const id='b_'+Date.now()+'_'+Math.random().toString(36).slice(2,6);S.transactions[id]={id,date:p.date,description:p.description,amount:Number(p.amount)||0,category:bankAutoCat(p.description,Number(p.amount)||0),jobId:'',source:'import',key:bankKey(p),imported:Date.now()}});
+    await saveAllTxns();await logAct('imported '+fresh.length+' bank transaction(s)','');closeModal();render();toast('Imported '+fresh.length+' transaction'+(fresh.length!==1?'s':''));
+  };
+}
+
 // ══ Modals ══
 function closeModal(){$('modal-root').innerHTML=''}
 
@@ -4950,7 +5048,7 @@ let CMD={open:false,query:'',idx:0,items:[]};
 function cmdItems(){
   const out=[];
   // Views
-  [['dashboard','Home / Dashboard','home'],['jobs','Jobs','briefcase'],['schedule','Schedule','calendar'],['invoices','Invoices','invoice'],['referrals','Referrals','team'],['map','Map','map'],['reports','Reports','chart'],['activity','Activity','list'],['team','Team','team'],['time','Time','calendar']].forEach(([v,name,ico])=>{
+  [['dashboard','Home / Dashboard','home'],['jobs','Jobs','briefcase'],['schedule','Schedule','calendar'],['invoices','Invoices','invoice'],['referrals','Referrals','team'],['map','Map','map'],['reports','Reports','chart'],['activity','Activity','list'],['team','Team','team'],['time','Time','calendar'],['bank','Bank','chart']].forEach(([v,name,ico])=>{
     out.push({type:'view',name:'Go to '+name,sub:'View',ico,run:()=>{S.view=v;S.detail=null;render()}});
   });
   // Actions
@@ -5206,6 +5304,7 @@ function attachHandlers(){
   $('setup-link').onclick=showSetupModal;
   const _bco=$('brand-co');if(_bco)_bco.textContent=OWNER_MODE?'All Companies':ACTIVE_CO.label;
   const _bsw=$('brand-switch');if(_bsw){if(gateOn()&&!canSeeAll(SESSION)){_bsw.style.display='none';}else{_bsw.onclick=showCompanySwitcher;}}
+  const _bnk=document.querySelector('.nav-btn[data-view="bank"]');if(_bnk&&gateOn()&&!canSeeAll(SESSION))_bnk.style.display='none';
   $('owner-refresh')?.addEventListener('click',refreshOwnerData);
   document.querySelectorAll('[data-view-company]').forEach(b=>b.onclick=()=>{
     const id=b.dataset.viewCompany;
@@ -5571,6 +5670,13 @@ function attachHandlers(){
   // Time tracking
   stopTimeTick();
   $('tt-payroll')?.addEventListener('click',showPayrollModal);
+
+  // Bank / cash flow
+  $('bank-import')?.addEventListener('click',showBankImport);
+  $('bank-clear')?.addEventListener('click',async()=>{if(!confirm('Remove ALL imported transactions for this company? This cannot be undone.'))return;S.transactions={};await saveAllTxns();render();toast('Transactions cleared')});
+  document.querySelectorAll('[data-bank-cat]').forEach(sel=>sel.onchange=async()=>{const t=S.transactions[sel.dataset.bankCat];if(t){t.category=sel.value;await writeTxn(t)}});
+  document.querySelectorAll('[data-bank-job]').forEach(sel=>sel.onchange=async()=>{const t=S.transactions[sel.dataset.bankJob];if(t){t.jobId=sel.value;await writeTxn(t);render()}});
+  document.querySelectorAll('[data-bank-del]').forEach(b=>b.onclick=async()=>{const t=S.transactions[b.dataset.bankDel];if(!t)return;const backup=JSON.parse(JSON.stringify(t));await deleteTxnDB(t.id);render();const restore=async()=>{await writeTxn(backup);render();toast('Transaction restored')};UNDO.push(restore);toast('Transaction removed','undo',restore)});
   $('tt-goto-team')?.addEventListener('click',()=>{S.view='team';render()});
   $('tt-clockin')?.addEventListener('click',async()=>{
     const member=$('tt-member')?.value;
