@@ -2578,6 +2578,263 @@ function downloadFile(filename,content,mime){
   setTimeout(()=>URL.revokeObjectURL(a.href),1000);
 }
 
+// ── Gmail API: connect once, send branded HTML + PDF in true one click ──
+function GMAIL_LS_KEY(){return LS('gmail')}
+function gmailLoad(){try{return JSON.parse(localStorage.getItem(GMAIL_LS_KEY())||'null')||{}}catch(e){return {}}}
+function gmailSave(cfg){try{localStorage.setItem(GMAIL_LS_KEY(),JSON.stringify(cfg||{}))}catch(e){}}
+function gmailConnected(){const c=gmailLoad();return !!(c&&c.clientId&&c.accessToken&&Date.now()<(c.expiresAt||0)-30000)}
+function gmailEmail(){return gmailLoad().email||''}
+let _gisP=null;
+function loadGIS(){
+  if(_gisP)return _gisP;
+  _gisP=new Promise((res,rej)=>{
+    if(window.google&&window.google.accounts&&window.google.accounts.oauth2){res(window.google);return}
+    const s=document.createElement('script');s.src='https://accounts.google.com/gsi/client';s.async=true;s.defer=true;
+    s.onload=()=>res(window.google);s.onerror=()=>rej(new Error('Failed to load Google sign-in script'));
+    document.head.appendChild(s);
+  });
+  return _gisP;
+}
+async function gmailFetchProfile(token){
+  const r=await fetch('https://gmail.googleapis.com/gmail/v1/users/me/profile',{headers:{Authorization:'Bearer '+token}});
+  if(!r.ok)throw new Error('Profile lookup failed ('+r.status+')');
+  const j=await r.json();return j.emailAddress||'';
+}
+async function gmailRequestToken(clientId,silent){
+  const google=await loadGIS();
+  return new Promise((res,rej)=>{
+    const client=google.accounts.oauth2.initTokenClient({
+      client_id:clientId,
+      scope:'https://www.googleapis.com/auth/gmail.send',
+      callback:(resp)=>{if(resp&&resp.error){rej(new Error(resp.error_description||resp.error));return}res(resp)},
+      error_callback:(err)=>rej(new Error((err&&err.message)||'OAuth flow cancelled'))
+    });
+    client.requestAccessToken({prompt:silent?'':'consent'});
+  });
+}
+function gmailOriginOk(){
+  if(typeof window==='undefined')return false;
+  if(location.protocol==='file:')return false;
+  // Google's rule: HTTPS, or http://localhost / http://127.0.0.1 (any port).
+  if(location.protocol==='https:')return !!window.isSecureContext;
+  if(location.protocol==='http:'){
+    const h=location.hostname;return h==='localhost'||h==='127.0.0.1'||h==='[::1]';
+  }
+  return false;
+}
+function gmailOriginReason(){
+  if(location.protocol==='file:')return 'This page is opened from a local file (file://). Google blocks OAuth from file:// pages. Open the app via its hosted URL instead.';
+  if(location.protocol==='http:'){const h=location.hostname;if(h!=='localhost'&&h!=='127.0.0.1'&&h!=='[::1]')return 'This page is served over plain HTTP. Google requires HTTPS (except localhost). Use the HTTPS version of this URL.';}
+  if(!window.isSecureContext)return 'This page is not a secure context. Google requires HTTPS for OAuth.';
+  return '';
+}
+async function gmailConnect(clientId){
+  if(!clientId)throw new Error('Paste your OAuth Client ID first');
+  if(!gmailOriginOk())throw new Error(gmailOriginReason()||'OAuth requires a secure origin (HTTPS or localhost).');
+  const tok=await gmailRequestToken(clientId,false);
+  let email='';try{email=await gmailFetchProfile(tok.access_token)}catch(e){}
+  const cfg={clientId,accessToken:tok.access_token,expiresAt:Date.now()+(tok.expires_in||3500)*1000,email,connectedAt:Date.now()};
+  gmailSave(cfg);return cfg;
+}
+async function gmailEnsureToken(){
+  const cfg=gmailLoad();
+  if(!cfg.clientId)throw new Error('Gmail is not connected — open Settings → Email sending');
+  if(Date.now()<(cfg.expiresAt||0)-30000)return cfg.accessToken;
+  const tok=await gmailRequestToken(cfg.clientId,true);
+  cfg.accessToken=tok.access_token;cfg.expiresAt=Date.now()+(tok.expires_in||3500)*1000;gmailSave(cfg);
+  return cfg.accessToken;
+}
+function gmailDisconnect(){
+  const cfg=gmailLoad();
+  if(cfg.accessToken&&window.google&&window.google.accounts&&window.google.accounts.oauth2){
+    try{window.google.accounts.oauth2.revoke(cfg.accessToken,()=>{})}catch(e){}
+  }
+  gmailSave({});
+}
+function _u8b64(s){return btoa(unescape(encodeURIComponent(s)))}
+function _b64url(s){return s.replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'')}
+function _wrap76(s){return s.replace(/(.{76})/g,'$1\r\n')}
+async function _fileToB64(file){
+  const buf=await file.arrayBuffer();const bytes=new Uint8Array(buf);
+  let bin='',CHUNK=0x8000;for(let i=0;i<bytes.length;i+=CHUNK)bin+=String.fromCharCode.apply(null,bytes.subarray(i,i+CHUNK));
+  return btoa(bin);
+}
+function buildGmailMime(o){
+  const B1='ALT_'+Math.random().toString(36).slice(2);
+  const B2='MIX_'+Math.random().toString(36).slice(2);
+  const fromHdr=o.fromName?('"'+String(o.fromName).replace(/"/g,'')+'" <'+o.fromEmail+'>'):o.fromEmail;
+  const lines=[
+    'From: '+fromHdr,
+    'To: '+o.to,
+    'Subject: =?UTF-8?B?'+_u8b64(o.subject||'')+'?=',
+    'MIME-Version: 1.0',
+    'Content-Type: multipart/mixed; boundary="'+B2+'"',
+    '',
+    '--'+B2,
+    'Content-Type: multipart/alternative; boundary="'+B1+'"',
+    '',
+    '--'+B1,
+    'Content-Type: text/plain; charset="UTF-8"',
+    'Content-Transfer-Encoding: base64',
+    '',
+    _wrap76(_u8b64(o.textBody||'')),
+    '',
+    '--'+B1,
+    'Content-Type: text/html; charset="UTF-8"',
+    'Content-Transfer-Encoding: base64',
+    '',
+    _wrap76(_u8b64(o.htmlBody||'')),
+    '',
+    '--'+B1+'--'
+  ];
+  let mime=lines.join('\r\n');
+  for(const a of (o.attachments||[])){
+    const name=String(a.name||'attachment').replace(/"/g,'');
+    mime+='\r\n\r\n--'+B2+'\r\n';
+    mime+='Content-Type: '+(a.mime||'application/octet-stream')+'; name="'+name+'"\r\n';
+    mime+='Content-Disposition: attachment; filename="'+name+'"\r\n';
+    mime+='Content-Transfer-Encoding: base64\r\n\r\n';
+    mime+=_wrap76(a.base64);
+  }
+  mime+='\r\n--'+B2+'--';
+  return mime;
+}
+async function gmailApiSend(o){
+  const token=await gmailEnsureToken();
+  const fromEmail=gmailEmail();
+  const atts=[];
+  for(const f of (o.attachments||[])){
+    atts.push({name:f.name,mime:f.type||'application/octet-stream',base64:await _fileToB64(f)});
+  }
+  const mime=buildGmailMime({fromName:o.fromName,fromEmail,to:o.to,subject:o.subject,htmlBody:o.htmlBody,textBody:o.textBody,attachments:atts});
+  const raw=_b64url(btoa(mime));
+  const r=await fetch('https://gmail.googleapis.com/gmail/v1/users/me/messages/send',{
+    method:'POST',
+    headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},
+    body:JSON.stringify({raw})
+  });
+  if(!r.ok){let m='Gmail API error '+r.status;try{const j=await r.json();if(j&&j.error&&j.error.message)m=j.error.message}catch(e){}throw new Error(m)}
+  return r.json();
+}
+
+// ── Send PDF: jsPDF + html2canvas → Web Share on mobile, Download + Gmail draft on desktop ──
+let _pdfLibsP=null;
+function loadPDFLibs(){
+  if(_pdfLibsP)return _pdfLibsP;
+  function add(src){return new Promise((r,j)=>{const s=document.createElement('script');s.src=src;s.onload=r;s.onerror=()=>j(new Error('Failed to load '+src));document.head.appendChild(s)})}
+  _pdfLibsP=Promise.all([
+    window.html2canvas?Promise.resolve():add('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js'),
+    (window.jspdf&&window.jspdf.jsPDF)?Promise.resolve():add('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js')
+  ]).then(()=>({html2canvas:window.html2canvas,jsPDF:window.jspdf.jsPDF}));
+  return _pdfLibsP;
+}
+async function urlToDataURL(url){
+  if(!url)return null;if(/^data:/.test(url))return url;
+  try{const r=await fetch(url,{mode:'cors'});const b=await r.blob();return await new Promise(res=>{const fr=new FileReader();fr.onload=()=>res(fr.result);fr.readAsDataURL(b)})}catch(e){return null}
+}
+async function buildInvoicePDFFile(j,inv,kind){
+  kind=kind||'invoice';
+  const {html2canvas,jsPDF}=await loadPDFLibs();
+  const html=buildInvoiceEmailHTML(j,inv,'',kind);
+  const ifr=document.createElement('iframe');
+  ifr.setAttribute('aria-hidden','true');
+  ifr.style.cssText='position:fixed;left:-9999px;top:0;width:816px;height:1100px;border:0;background:#fff;';
+  document.body.appendChild(ifr);
+  const idoc=ifr.contentDocument||ifr.contentWindow.document;
+  idoc.open();idoc.write(html);idoc.close();
+  await new Promise(r=>setTimeout(r,200));
+  const imgs=Array.from(idoc.images||[]);
+  await Promise.all(imgs.map(im=>im.complete?Promise.resolve():new Promise(r=>{im.onload=im.onerror=r;setTimeout(r,3000)})));
+  const body=idoc.body;body.style.background='#fff';
+  ifr.style.height=Math.max(1100,body.scrollHeight+40)+'px';
+  await new Promise(r=>setTimeout(r,60));
+  const canvas=await html2canvas(body,{scale:2,backgroundColor:'#ffffff',useCORS:true,logging:false,windowWidth:816,windowHeight:body.scrollHeight});
+  document.body.removeChild(ifr);
+  const pdf=new jsPDF({unit:'pt',format:'letter',orientation:'portrait'});
+  const pageW=pdf.internal.pageSize.getWidth(),pageH=pdf.internal.pageSize.getHeight();
+  const margin=18,imgW=pageW-margin*2,ratio=canvas.height/canvas.width,fullImgH=imgW*ratio;
+  let remH=fullImgH,off=0,pageIdx=0;
+  while(remH>0){
+    const usable=pageH-margin*2,sliceH=Math.min(remH,usable);
+    const sliceCanvasH=Math.round(sliceH/fullImgH*canvas.height);
+    const sc=document.createElement('canvas');sc.width=canvas.width;sc.height=sliceCanvasH;
+    sc.getContext('2d').drawImage(canvas,0,Math.round(off/fullImgH*canvas.height),canvas.width,sliceCanvasH,0,0,canvas.width,sliceCanvasH);
+    if(pageIdx>0)pdf.addPage();
+    pdf.addImage(sc.toDataURL('image/jpeg',0.92),'JPEG',margin,margin,imgW,sliceH);
+    off+=sliceH;remH-=sliceH;pageIdx++;
+  }
+  const photos=(inv.photos||[]).filter(p=>p&&p.url);
+  for(const ph of photos){
+    const du=await urlToDataURL(ph.url);if(!du)continue;
+    const img=new Image();await new Promise(r=>{img.onload=img.onerror=r;img.src=du;setTimeout(r,3000)});
+    if(!img.width)continue;
+    const maxW=pageW-72,maxH=pageH-120;let w=img.width,h=img.height;const k=Math.min(maxW/w,maxH/h,1);w*=k;h*=k;
+    pdf.addPage();
+    pdf.setFont('helvetica','bold');pdf.setFontSize(11);pdf.setTextColor(60);
+    pdf.text((kind==='estimate'?'Estimate':'Invoice')+' '+(inv.number||'')+' — Photos',36,40);
+    pdf.addImage(du,'JPEG',(pageW-w)/2,60,w,h);
+    if(ph.caption){pdf.setFont('helvetica','normal');pdf.setFontSize(10);pdf.setTextColor(90);pdf.text(String(ph.caption).slice(0,200),36,60+h+22,{maxWidth:pageW-72})}
+  }
+  const blob=pdf.output('blob');
+  const filename=(kind==='estimate'?'Estimate':'Invoice')+'-'+(inv.number||'draft')+'.pdf';
+  return new File([blob],filename,{type:'application/pdf'});
+}
+async function sendInvoicePDF(j,inv,kind,opts){
+  opts=opts||{};kind=kind||'invoice';const EST=kind==='estimate';
+  const to=opts.to||j.customerEmail||'';
+  const subject=opts.subject||((EST?'Estimate':'Invoice')+' '+(inv.number||'')+' from '+(COMPANY.name||'')).trim();
+  const message=opts.message||'';
+  const text=buildInvoiceEmailText(j,inv,message,kind);
+  toast('Building PDF…','');
+  let file;
+  try{const _builder=window.buildInvoicePDFFile||buildInvoicePDFFile;file=await _builder(j,inv,kind)}
+  catch(e){toast('PDF build failed: '+((e&&e.message)||e),'');return}
+  if((window.gmailConnected||gmailConnected)()){
+    try{
+      toast('Sending via Gmail…','');
+      const htmlBody=buildInvoiceEmailHTML(j,inv,message,kind);
+      const _send=window.gmailApiSend||gmailApiSend;
+      await _send({to,subject,htmlBody,textBody:text,fromName:COMPANY.name||'',attachments:[file]});
+      if(!inv.sent){inv.sent=Date.now();if(inv.status==='draft')inv.status='sent';await writeJob(j)}
+      await logAct((EST?'emailed estimate ':'emailed invoice ')+(inv.number||'')+' (Gmail) to '+to+' for',j.name);
+      toast('Sent · check your Gmail Sent folder');
+      return;
+    }catch(e){toast('Gmail send failed: '+((e&&e.message)||e)+' — using fallback','')}
+  }
+  // Skip navigator.share on desktop — Chrome's desktop share sheet IS the OS
+  // "Open with" picker the user wants to avoid. Only use it on real mobile.
+  const _isMobile=(function(){
+    const ua=(typeof navigator!=='undefined'&&navigator.userAgent)||'';
+    if(/Mobi|Android|iPhone|iPad|iPod/i.test(ua))return true;
+    if(navigator.userAgentData&&navigator.userAgentData.mobile)return true;
+    // iPadOS Safari reports as Mac with touch:
+    if(navigator.platform==='MacIntel'&&(navigator.maxTouchPoints||0)>1)return true;
+    return false;
+  })();
+  if(_isMobile&&navigator.canShare&&typeof navigator.share==='function'){
+    try{
+      if(navigator.canShare({files:[file]})){
+        await navigator.share({files:[file],title:subject,text:text});
+        if(!inv.sent){inv.sent=Date.now();if(inv.status==='draft')inv.status='sent';await writeJob(j)}
+        await logAct((EST?'shared estimate ':'shared invoice ')+(inv.number||'')+' (PDF) for',j.name);
+        toast('Shared — pick Mail or Gmail and tap Send');
+        return;
+      }
+    }catch(e){if(e&&e.name==='AbortError')return;}
+  }
+  // Desktop: download the PDF, then go straight to Gmail Web compose (no OS picker, no mailto handoff).
+  try{
+    const a=document.createElement('a');a.href=URL.createObjectURL(file);a.download=file.name;a.rel='noopener';document.body.appendChild(a);a.click();
+    setTimeout(()=>{try{URL.revokeObjectURL(a.href)}catch(e){}a.remove()},2000);
+  }catch(e){toast('Download failed: '+((e&&e.message)||e),'');return}
+  const enc=encodeURIComponent;
+  const gmailUrl='https://mail.google.com/mail/?view=cm&fs=1&to='+enc(to)+'&su='+enc(subject)+'&body='+enc(text);
+  try{window.open(gmailUrl,'_blank','noopener')}catch(e){}
+  if(!inv.sent){inv.sent=Date.now();if(inv.status==='draft')inv.status='sent';await writeJob(j)}
+  await logAct((EST?'emailed estimate ':'emailed invoice ')+(inv.number||'')+' (PDF) for',j.name);
+  toast('PDF downloaded — drag it into the Gmail tab to attach');
+}
+
 function emailInvoice(j,inv,kind){showSendInvoiceModal(j,inv,kind)}
 
 function showSendInvoiceModal(j,inv,kind){
@@ -2598,7 +2855,7 @@ function showSendInvoiceModal(j,inv,kind){
       <div class="email-preview-wrap"><iframe class="email-preview-frame" id="em-iframe" title="Email preview" style="height:560px"></iframe></div>
       <button class="email-send-btn primary" id="em-send-now" type="button" style="width:100%;margin-bottom:8px">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5"/></svg>
-        <span>Email it now — PDF to the client<span class="email-send-sub">Sends from your business email · nothing to attach</span></span>
+        <span>Email PDF — one tap<span class="email-send-sub">Branded PDF + photos · sends via Gmail when connected · opens Gmail Web on desktop, share sheet on mobile</span></span>
       </button>
       <div class="email-send-grid">
         <a class="email-send-btn primary" id="em-mailto" href="#">
@@ -2692,33 +2949,12 @@ function showSendInvoiceModal(j,inv,kind){
     const to=currentTo();
     if(!to){toast('Add a recipient email first','');return}
     const btn=$('em-send-now'),lbl=btn.querySelector('span');const old=lbl?lbl.innerHTML:'';
-    btn.disabled=true;if(lbl)lbl.textContent='Sending…';
+    btn.disabled=true;if(lbl)lbl.textContent='Building PDF…';
     try{
-      let idToken='';
-      try{if(typeof firebase!=='undefined'&&firebase.auth&&firebase.auth().currentUser)idToken=await firebase.auth().currentUser.getIdToken();}catch(e){}
-      const payload={idToken,to,subject:currentSubject(),message:currentMsg(),doc:{
-        kind,number:inv.number||'',date:fmtDate(inv.date)||'',dueDate:inv.dueDate?fmtDate(inv.dueDate):'',
-        taxRate:Number(inv.taxRate||0),paid:Number(inv.paid||0),
-        items:(inv.items||[]).map(it=>({desc:it.desc||'',qty:it.qty,rate:Number(it.rate||0)})),
-        notes:inv.notes||'',terms:inv.terms||'',
-        company:{name:COMPANY.name,address:COMPANY.address,phone:COMPANY.phone,email:COMPANY.email,website:COMPANY.website,license:COMPANY.license},
-        customer:{name:j.customerName||'',address:j.billingAddress||j.address||'',phone:j.customerPhone||'',email:j.customerEmail||''},
-        project:{name:j.name||'',address:j.address||''}
-      }};
-      const res=await fetch('/.netlify/functions/send-invoice',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
-      const out=await res.json().catch(()=>({}));
-      if(res.ok&&out.ok){
-        if(!inv.sent){inv.sent=Date.now();if(inv.status==='draft')inv.status='sent';await writeJob(j);}
-        await logAct('emailed '+(EST?'estimate':'invoice')+' '+(inv.number||'')+' (PDF) to '+to,j.name);
-        toast('Sent to '+to);closeModal();render();
-      }else{
-        toast('Could not send: '+((out&&out.error)||('error '+res.status)),'');
-        btn.disabled=false;if(lbl)lbl.innerHTML=old;
-      }
-    }catch(e){
-      toast('Could not reach the email service (is the site deployed on Netlify?)','');
-      btn.disabled=false;if(lbl)lbl.innerHTML=old;
-    }
+      await sendInvoicePDF(j,inv,kind,{to,subject:currentSubject(),message:currentMsg()});
+      closeModal();render();
+    }catch(e){toast('Send failed: '+((e&&e.message)||e),'')}
+    finally{btn.disabled=false;if(lbl)lbl.innerHTML=old}
   };
 }
 
@@ -4876,6 +5112,8 @@ function showSettingsModal(){
       </div>
       <div class="form-group"><label class="form-label">Default Tax Rate (%)</label><input class="form-input" type="number" step="0.01" id="set-co-tax" value="${esc(c.taxRate||'')}"></div>
       <div class="form-group"><label class="form-label">Default Invoice Terms</label><textarea class="form-textarea" id="set-co-terms">${esc(c.terms||'')}</textarea></div>
+      <div style="margin:14px 0 10px;padding-top:14px;border-top:1px solid var(--border)"><div class="form-label" style="font-size:12px">Email sending (Gmail API)</div></div>
+      <div id="gm-panel" style="margin-bottom:6px"></div>
       <div style="margin:14px 0 10px;padding-top:14px;border-top:1px solid var(--border)"><div class="form-label" style="font-size:12px">Team Access &amp; Roles</div></div>
       ${(FB_AUTH_ON||accessEnabled())
         ? `<div class="tt-hint" style="margin-bottom:10px">Signed in as <strong>${esc(SESSION?SESSION.name:'?')}</strong> · ${esc(SESSION?SESSION.role:'')}${SESSION&&!canSeeAll(SESSION)?' · '+esc((COMPANIES[SESSION.company]||{}).label||SESSION.company):' · all companies'}</div>
@@ -4889,6 +5127,34 @@ function showSettingsModal(){
   $('mbd').onclick=e=>{if(e.target===e.currentTarget)closeModal()};
   $('set-access')?.addEventListener('click',()=>{closeModal();showAccessModal()});
   $('set-signout')?.addEventListener('click',()=>{if(confirm('Sign out of this device?'))signOut()});
+  function renderGmailPanel(){
+    const cfg=gmailLoad();const connected=gmailConnected();
+    const okOrigin=gmailOriginOk();const reason=gmailOriginReason();
+    const originBlock=okOrigin
+      ? `<div class="tt-hint" style="margin:8px 0;padding:8px 10px;background:var(--surface-2,#f5f5f5);border-radius:8px;font-size:12px">Authorized JavaScript origin to paste into Google Cloud Console:<br><strong style="font-family:monospace;font-size:12.5px;user-select:all">${esc(location.origin)}</strong></div>`
+      : `<div class="tt-hint" style="margin:8px 0;padding:10px;background:#fff4e5;border-left:3px solid #d97706;border-radius:6px;font-size:12px;color:#7c2d12"><strong>Can't connect from this URL.</strong><br>${esc(reason)}<br><br>Current origin: <span style="font-family:monospace">${esc(location.origin)}</span></div>`;
+    $('gm-panel').innerHTML=connected
+      ? `<div class="tt-hint" style="margin-bottom:8px">Connected as <strong>${esc(cfg.email||'(unknown account)')}</strong>. "Email PDF" sends the branded invoice/estimate + PDF in one click from this account's Sent folder.</div>
+         ${originBlock}
+         <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn-sm" id="gm-reconnect" type="button"${okOrigin?'':' disabled'}>Reconnect</button><button class="btn-sm" id="gm-disconnect" type="button">Disconnect</button></div>`
+      : `<div class="tt-hint" style="margin-bottom:10px">Connect a Gmail account once and "Email PDF" becomes true one-click for this company.<br><a href="#" id="gm-help" style="color:var(--green-700);text-decoration:underline">Setup steps (~10 min, one-time)</a></div>
+         ${originBlock}
+         <div class="form-group"><label class="form-label">OAuth Client ID</label><input class="form-input" id="gm-clientid" value="${esc(cfg.clientId||'')}" placeholder="123456789-abc.apps.googleusercontent.com" spellcheck="false" autocapitalize="off" style="font-family:monospace;font-size:12.5px"${okOrigin?'':' disabled'}></div>
+         <button class="btn-sm" id="gm-connect" type="button"${okOrigin?'':' disabled title="Open this app over HTTPS (or localhost) to connect Gmail"'}>Connect Gmail</button>`;
+    $('gm-connect')?.addEventListener('click',async()=>{
+      const id=($('gm-clientid')?.value||'').trim();if(!id){toast('Paste your OAuth Client ID first','');return}
+      const btn=$('gm-connect');btn.disabled=true;const oldT=btn.textContent;btn.textContent='Opening Google…';
+      try{await gmailConnect(id);toast('Gmail connected');renderGmailPanel()}
+      catch(e){toast('Connect failed: '+((e&&e.message)||e),'');btn.disabled=false;btn.textContent=oldT}
+    });
+    $('gm-reconnect')?.addEventListener('click',async()=>{
+      const cfg=gmailLoad();if(!cfg.clientId)return;
+      try{await gmailConnect(cfg.clientId);toast('Reconnected');renderGmailPanel()}catch(e){toast('Reconnect failed: '+((e&&e.message)||e),'')}
+    });
+    $('gm-disconnect')?.addEventListener('click',()=>{if(!confirm('Disconnect Gmail from this company? Sending will fall back to the share/download flow.'))return;gmailDisconnect();toast('Disconnected');renderGmailPanel()});
+    $('gm-help')?.addEventListener('click',(e)=>{e.preventDefault();alert('One-time Gmail setup (~10 min):\n\n1. Open console.cloud.google.com and create a project (or reuse one).\n2. APIs & Services → Library → enable "Gmail API".\n3. APIs & Services → OAuth consent screen → External → fill app name + your email → add scope https://www.googleapis.com/auth/gmail.send → add your gmail address as a Test user → save. (Stay in Testing mode; no Google verification needed for personal use.)\n4. APIs & Services → Credentials → Create Credentials → OAuth client ID → Web application.\n   Authorized JavaScript origins: paste EXACTLY this (HTTPS, no trailing slash, no path):\n   '+location.origin+'\n   Google requires HTTPS or localhost. file:// and plain http:// (non-localhost) will be rejected.\n5. Copy the Client ID and paste it here, then click Connect Gmail.')});
+  }
+  renderGmailPanel();
   $('btn-set-save').onclick=()=>{
     const newUser=$('set-user').value.trim();
     if(newUser!==S.user){S.user=newUser;localStorage.setItem(LS('user'),S.user)}
