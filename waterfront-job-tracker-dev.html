@@ -4437,7 +4437,7 @@ async function writeTxn(t){S.transactions[t.id]=t;LOCAL.saveTransactions();if(DB
 async function deleteTxnDB(id){delete S.transactions[id];LOCAL.saveTransactions();if(DB)await DB.child('transactions/'+id).remove().catch(()=>{})}
 async function saveAllTxns(){LOCAL.saveTransactions();if(DB)await DB.child('transactions').set(S.transactions).catch(()=>{})}
 function renderBank(){
-  if(gateOn()&&!canSeeAll(SESSION)) return `<div class="tt-empty" style="padding:40px 16px"><p style="font-size:14px;color:var(--text-2);line-height:1.6">Bank &amp; cash flow is available to managers and owners.</p></div>`;
+  if(gateOn()&&!isOwnerRole(SESSION)) return `<div class="tt-empty" style="padding:40px 16px"><p style="font-size:14px;color:var(--text-2);line-height:1.6">Bank &amp; cash flow is owner-only.</p></div>`;
   const t=bankTotals();
   const all=txnList().slice().sort((a,b)=>(b.date||'').localeCompare(a.date||''));
   const byCat={};all.forEach(x=>{if(Number(x.amount)<0){const c=x.category||'Other';byCat[c]=(byCat[c]||0)+Math.abs(Number(x.amount))}});
@@ -4467,7 +4467,7 @@ function renderBank(){
   `;
 }
 function showBankImport(){
-  if(gateOn()&&!canSeeAll(SESSION)){toast('Managers and owners only','');return}
+  if(gateOn()&&!isOwnerRole(SESSION)){toast('Owner-only','');return}
   $('modal-root').innerHTML=`<div class="modal-bd" id="mbd" role="dialog" aria-modal="true" aria-label="Import transactions"><div class="modal"><div class="modal-handle"></div>
     <div class="modal-head"><div class="modal-title">Import Bank Transactions</div><button class="modal-close" id="mc" aria-label="Close"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button></div>
     <div class="modal-body">
@@ -5518,7 +5518,7 @@ function attachHandlers(){
   $('setup-link').onclick=showSetupModal;
   const _bco=$('brand-co');if(_bco)_bco.textContent=OWNER_MODE?'All Companies':ACTIVE_CO.label;
   const _bsw=$('brand-switch');if(_bsw){if(gateOn()&&!canSeeAll(SESSION)){_bsw.style.display='none';}else{_bsw.onclick=showCompanySwitcher;}}
-  const _bnk=document.querySelector('.nav-btn[data-view="bank"]');if(_bnk&&gateOn()&&!canSeeAll(SESSION))_bnk.style.display='none';
+  const _bnk=document.querySelector('.nav-btn[data-view="bank"]');if(_bnk&&gateOn()&&!isOwnerRole(SESSION))_bnk.style.display='none';
   $('owner-refresh')?.addEventListener('click',refreshOwnerData);
   document.querySelectorAll('[data-view-company]').forEach(b=>b.onclick=()=>{
     const id=b.dataset.viewCompany;
