@@ -2578,6 +2578,101 @@ function downloadFile(filename,content,mime){
   setTimeout(()=>URL.revokeObjectURL(a.href),1000);
 }
 
+// ── Send PDF: jsPDF + html2canvas → Web Share on mobile, Download + Gmail draft on desktop ──
+let _pdfLibsP=null;
+function loadPDFLibs(){
+  if(_pdfLibsP)return _pdfLibsP;
+  function add(src){return new Promise((r,j)=>{const s=document.createElement('script');s.src=src;s.onload=r;s.onerror=()=>j(new Error('Failed to load '+src));document.head.appendChild(s)})}
+  _pdfLibsP=Promise.all([
+    window.html2canvas?Promise.resolve():add('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js'),
+    (window.jspdf&&window.jspdf.jsPDF)?Promise.resolve():add('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js')
+  ]).then(()=>({html2canvas:window.html2canvas,jsPDF:window.jspdf.jsPDF}));
+  return _pdfLibsP;
+}
+async function urlToDataURL(url){
+  if(!url)return null;if(/^data:/.test(url))return url;
+  try{const r=await fetch(url,{mode:'cors'});const b=await r.blob();return await new Promise(res=>{const fr=new FileReader();fr.onload=()=>res(fr.result);fr.readAsDataURL(b)})}catch(e){return null}
+}
+async function buildInvoicePDFFile(j,inv,kind){
+  kind=kind||'invoice';
+  const {html2canvas,jsPDF}=await loadPDFLibs();
+  const html=buildInvoiceEmailHTML(j,inv,'',kind);
+  const ifr=document.createElement('iframe');
+  ifr.setAttribute('aria-hidden','true');
+  ifr.style.cssText='position:fixed;left:-9999px;top:0;width:816px;height:1100px;border:0;background:#fff;';
+  document.body.appendChild(ifr);
+  const idoc=ifr.contentDocument||ifr.contentWindow.document;
+  idoc.open();idoc.write(html);idoc.close();
+  await new Promise(r=>setTimeout(r,200));
+  const imgs=Array.from(idoc.images||[]);
+  await Promise.all(imgs.map(im=>im.complete?Promise.resolve():new Promise(r=>{im.onload=im.onerror=r;setTimeout(r,3000)})));
+  const body=idoc.body;body.style.background='#fff';
+  ifr.style.height=Math.max(1100,body.scrollHeight+40)+'px';
+  await new Promise(r=>setTimeout(r,60));
+  const canvas=await html2canvas(body,{scale:2,backgroundColor:'#ffffff',useCORS:true,logging:false,windowWidth:816,windowHeight:body.scrollHeight});
+  document.body.removeChild(ifr);
+  const pdf=new jsPDF({unit:'pt',format:'letter',orientation:'portrait'});
+  const pageW=pdf.internal.pageSize.getWidth(),pageH=pdf.internal.pageSize.getHeight();
+  const margin=18,imgW=pageW-margin*2,ratio=canvas.height/canvas.width,fullImgH=imgW*ratio;
+  let remH=fullImgH,off=0,pageIdx=0;
+  while(remH>0){
+    const usable=pageH-margin*2,sliceH=Math.min(remH,usable);
+    const sliceCanvasH=Math.round(sliceH/fullImgH*canvas.height);
+    const sc=document.createElement('canvas');sc.width=canvas.width;sc.height=sliceCanvasH;
+    sc.getContext('2d').drawImage(canvas,0,Math.round(off/fullImgH*canvas.height),canvas.width,sliceCanvasH,0,0,canvas.width,sliceCanvasH);
+    if(pageIdx>0)pdf.addPage();
+    pdf.addImage(sc.toDataURL('image/jpeg',0.92),'JPEG',margin,margin,imgW,sliceH);
+    off+=sliceH;remH-=sliceH;pageIdx++;
+  }
+  const photos=(inv.photos||[]).filter(p=>p&&p.url);
+  for(const ph of photos){
+    const du=await urlToDataURL(ph.url);if(!du)continue;
+    const img=new Image();await new Promise(r=>{img.onload=img.onerror=r;img.src=du;setTimeout(r,3000)});
+    if(!img.width)continue;
+    const maxW=pageW-72,maxH=pageH-120;let w=img.width,h=img.height;const k=Math.min(maxW/w,maxH/h,1);w*=k;h*=k;
+    pdf.addPage();
+    pdf.setFont('helvetica','bold');pdf.setFontSize(11);pdf.setTextColor(60);
+    pdf.text((kind==='estimate'?'Estimate':'Invoice')+' '+(inv.number||'')+' — Photos',36,40);
+    pdf.addImage(du,'JPEG',(pageW-w)/2,60,w,h);
+    if(ph.caption){pdf.setFont('helvetica','normal');pdf.setFontSize(10);pdf.setTextColor(90);pdf.text(String(ph.caption).slice(0,200),36,60+h+22,{maxWidth:pageW-72})}
+  }
+  const blob=pdf.output('blob');
+  const filename=(kind==='estimate'?'Estimate':'Invoice')+'-'+(inv.number||'draft')+'.pdf';
+  return new File([blob],filename,{type:'application/pdf'});
+}
+async function sendInvoicePDF(j,inv,kind,opts){
+  opts=opts||{};kind=kind||'invoice';const EST=kind==='estimate';
+  const to=opts.to||j.customerEmail||'';
+  const subject=opts.subject||((EST?'Estimate':'Invoice')+' '+(inv.number||'')+' from '+(COMPANY.name||'')).trim();
+  const message=opts.message||'';
+  const text=buildInvoiceEmailText(j,inv,message,kind);
+  toast('Building PDF…','');
+  let file;
+  try{const _builder=window.buildInvoicePDFFile||buildInvoicePDFFile;file=await _builder(j,inv,kind)}
+  catch(e){toast('PDF build failed: '+((e&&e.message)||e),'');return}
+  if(navigator.canShare&&typeof navigator.share==='function'){
+    try{
+      if(navigator.canShare({files:[file]})){
+        await navigator.share({files:[file],title:subject,text:text});
+        if(!inv.sent){inv.sent=Date.now();if(inv.status==='draft')inv.status='sent';await writeJob(j)}
+        await logAct((EST?'shared estimate ':'shared invoice ')+(inv.number||'')+' (PDF) for',j.name);
+        toast('Shared — pick Mail or Gmail and tap Send');
+        return;
+      }
+    }catch(e){if(e&&e.name==='AbortError')return;}
+  }
+  try{
+    const a=document.createElement('a');a.href=URL.createObjectURL(file);a.download=file.name;a.rel='noopener';document.body.appendChild(a);a.click();
+    setTimeout(()=>{try{URL.revokeObjectURL(a.href)}catch(e){}a.remove()},2000);
+  }catch(e){toast('Download failed: '+((e&&e.message)||e),'');return}
+  const enc=encodeURIComponent;
+  const gmailUrl='https://mail.google.com/mail/?view=cm&fs=1&to='+enc(to)+'&su='+enc(subject)+'&body='+enc(text);
+  try{window.open(gmailUrl,'_blank','noopener')}catch(e){}
+  if(!inv.sent){inv.sent=Date.now();if(inv.status==='draft')inv.status='sent';await writeJob(j)}
+  await logAct((EST?'emailed estimate ':'emailed invoice ')+(inv.number||'')+' (PDF) for',j.name);
+  toast('PDF downloaded — drag it into the Gmail tab to attach');
+}
+
 function emailInvoice(j,inv,kind){showSendInvoiceModal(j,inv,kind)}
 
 function showSendInvoiceModal(j,inv,kind){
@@ -2598,7 +2693,7 @@ function showSendInvoiceModal(j,inv,kind){
       <div class="email-preview-wrap"><iframe class="email-preview-frame" id="em-iframe" title="Email preview" style="height:560px"></iframe></div>
       <button class="email-send-btn primary" id="em-send-now" type="button" style="width:100%;margin-bottom:8px">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5"/></svg>
-        <span>Email it now — PDF to the client<span class="email-send-sub">Sends from your business email · nothing to attach</span></span>
+        <span>Email PDF — one tap<span class="email-send-sub">Branded PDF + photos · mobile share sheet, or download + Gmail draft on desktop</span></span>
       </button>
       <div class="email-send-grid">
         <a class="email-send-btn primary" id="em-mailto" href="#">
@@ -2692,33 +2787,12 @@ function showSendInvoiceModal(j,inv,kind){
     const to=currentTo();
     if(!to){toast('Add a recipient email first','');return}
     const btn=$('em-send-now'),lbl=btn.querySelector('span');const old=lbl?lbl.innerHTML:'';
-    btn.disabled=true;if(lbl)lbl.textContent='Sending…';
+    btn.disabled=true;if(lbl)lbl.textContent='Building PDF…';
     try{
-      let idToken='';
-      try{if(typeof firebase!=='undefined'&&firebase.auth&&firebase.auth().currentUser)idToken=await firebase.auth().currentUser.getIdToken();}catch(e){}
-      const payload={idToken,to,subject:currentSubject(),message:currentMsg(),doc:{
-        kind,number:inv.number||'',date:fmtDate(inv.date)||'',dueDate:inv.dueDate?fmtDate(inv.dueDate):'',
-        taxRate:Number(inv.taxRate||0),paid:Number(inv.paid||0),
-        items:(inv.items||[]).map(it=>({desc:it.desc||'',qty:it.qty,rate:Number(it.rate||0)})),
-        notes:inv.notes||'',terms:inv.terms||'',
-        company:{name:COMPANY.name,address:COMPANY.address,phone:COMPANY.phone,email:COMPANY.email,website:COMPANY.website,license:COMPANY.license},
-        customer:{name:j.customerName||'',address:j.billingAddress||j.address||'',phone:j.customerPhone||'',email:j.customerEmail||''},
-        project:{name:j.name||'',address:j.address||''}
-      }};
-      const res=await fetch('/.netlify/functions/send-invoice',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
-      const out=await res.json().catch(()=>({}));
-      if(res.ok&&out.ok){
-        if(!inv.sent){inv.sent=Date.now();if(inv.status==='draft')inv.status='sent';await writeJob(j);}
-        await logAct('emailed '+(EST?'estimate':'invoice')+' '+(inv.number||'')+' (PDF) to '+to,j.name);
-        toast('Sent to '+to);closeModal();render();
-      }else{
-        toast('Could not send: '+((out&&out.error)||('error '+res.status)),'');
-        btn.disabled=false;if(lbl)lbl.innerHTML=old;
-      }
-    }catch(e){
-      toast('Could not reach the email service (is the site deployed on Netlify?)','');
-      btn.disabled=false;if(lbl)lbl.innerHTML=old;
-    }
+      await sendInvoicePDF(j,inv,kind,{to,subject:currentSubject(),message:currentMsg()});
+      closeModal();render();
+    }catch(e){toast('Send failed: '+((e&&e.message)||e),'')}
+    finally{btn.disabled=false;if(lbl)lbl.innerHTML=old}
   };
 }
 
