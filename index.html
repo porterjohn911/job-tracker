@@ -2578,6 +2578,128 @@ function downloadFile(filename,content,mime){
   setTimeout(()=>URL.revokeObjectURL(a.href),1000);
 }
 
+// ── Gmail API: connect once, send branded HTML + PDF in true one click ──
+function GMAIL_LS_KEY(){return LS('gmail')}
+function gmailLoad(){try{return JSON.parse(localStorage.getItem(GMAIL_LS_KEY())||'null')||{}}catch(e){return {}}}
+function gmailSave(cfg){try{localStorage.setItem(GMAIL_LS_KEY(),JSON.stringify(cfg||{}))}catch(e){}}
+function gmailConnected(){const c=gmailLoad();return !!(c&&c.clientId&&c.accessToken&&Date.now()<(c.expiresAt||0)-30000)}
+function gmailEmail(){return gmailLoad().email||''}
+let _gisP=null;
+function loadGIS(){
+  if(_gisP)return _gisP;
+  _gisP=new Promise((res,rej)=>{
+    if(window.google&&window.google.accounts&&window.google.accounts.oauth2){res(window.google);return}
+    const s=document.createElement('script');s.src='https://accounts.google.com/gsi/client';s.async=true;s.defer=true;
+    s.onload=()=>res(window.google);s.onerror=()=>rej(new Error('Failed to load Google sign-in script'));
+    document.head.appendChild(s);
+  });
+  return _gisP;
+}
+async function gmailFetchProfile(token){
+  const r=await fetch('https://gmail.googleapis.com/gmail/v1/users/me/profile',{headers:{Authorization:'Bearer '+token}});
+  if(!r.ok)throw new Error('Profile lookup failed ('+r.status+')');
+  const j=await r.json();return j.emailAddress||'';
+}
+async function gmailRequestToken(clientId,silent){
+  const google=await loadGIS();
+  return new Promise((res,rej)=>{
+    const client=google.accounts.oauth2.initTokenClient({
+      client_id:clientId,
+      scope:'https://www.googleapis.com/auth/gmail.send',
+      callback:(resp)=>{if(resp&&resp.error){rej(new Error(resp.error_description||resp.error));return}res(resp)},
+      error_callback:(err)=>rej(new Error((err&&err.message)||'OAuth flow cancelled'))
+    });
+    client.requestAccessToken({prompt:silent?'':'consent'});
+  });
+}
+async function gmailConnect(clientId){
+  if(!clientId)throw new Error('Paste your OAuth Client ID first');
+  const tok=await gmailRequestToken(clientId,false);
+  let email='';try{email=await gmailFetchProfile(tok.access_token)}catch(e){}
+  const cfg={clientId,accessToken:tok.access_token,expiresAt:Date.now()+(tok.expires_in||3500)*1000,email,connectedAt:Date.now()};
+  gmailSave(cfg);return cfg;
+}
+async function gmailEnsureToken(){
+  const cfg=gmailLoad();
+  if(!cfg.clientId)throw new Error('Gmail is not connected — open Settings → Email sending');
+  if(Date.now()<(cfg.expiresAt||0)-30000)return cfg.accessToken;
+  const tok=await gmailRequestToken(cfg.clientId,true);
+  cfg.accessToken=tok.access_token;cfg.expiresAt=Date.now()+(tok.expires_in||3500)*1000;gmailSave(cfg);
+  return cfg.accessToken;
+}
+function gmailDisconnect(){
+  const cfg=gmailLoad();
+  if(cfg.accessToken&&window.google&&window.google.accounts&&window.google.accounts.oauth2){
+    try{window.google.accounts.oauth2.revoke(cfg.accessToken,()=>{})}catch(e){}
+  }
+  gmailSave({});
+}
+function _u8b64(s){return btoa(unescape(encodeURIComponent(s)))}
+function _b64url(s){return s.replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'')}
+function _wrap76(s){return s.replace(/(.{76})/g,'$1\r\n')}
+async function _fileToB64(file){
+  const buf=await file.arrayBuffer();const bytes=new Uint8Array(buf);
+  let bin='',CHUNK=0x8000;for(let i=0;i<bytes.length;i+=CHUNK)bin+=String.fromCharCode.apply(null,bytes.subarray(i,i+CHUNK));
+  return btoa(bin);
+}
+function buildGmailMime(o){
+  const B1='ALT_'+Math.random().toString(36).slice(2);
+  const B2='MIX_'+Math.random().toString(36).slice(2);
+  const fromHdr=o.fromName?('"'+String(o.fromName).replace(/"/g,'')+'" <'+o.fromEmail+'>'):o.fromEmail;
+  const lines=[
+    'From: '+fromHdr,
+    'To: '+o.to,
+    'Subject: =?UTF-8?B?'+_u8b64(o.subject||'')+'?=',
+    'MIME-Version: 1.0',
+    'Content-Type: multipart/mixed; boundary="'+B2+'"',
+    '',
+    '--'+B2,
+    'Content-Type: multipart/alternative; boundary="'+B1+'"',
+    '',
+    '--'+B1,
+    'Content-Type: text/plain; charset="UTF-8"',
+    'Content-Transfer-Encoding: base64',
+    '',
+    _wrap76(_u8b64(o.textBody||'')),
+    '',
+    '--'+B1,
+    'Content-Type: text/html; charset="UTF-8"',
+    'Content-Transfer-Encoding: base64',
+    '',
+    _wrap76(_u8b64(o.htmlBody||'')),
+    '',
+    '--'+B1+'--'
+  ];
+  let mime=lines.join('\r\n');
+  for(const a of (o.attachments||[])){
+    const name=String(a.name||'attachment').replace(/"/g,'');
+    mime+='\r\n\r\n--'+B2+'\r\n';
+    mime+='Content-Type: '+(a.mime||'application/octet-stream')+'; name="'+name+'"\r\n';
+    mime+='Content-Disposition: attachment; filename="'+name+'"\r\n';
+    mime+='Content-Transfer-Encoding: base64\r\n\r\n';
+    mime+=_wrap76(a.base64);
+  }
+  mime+='\r\n--'+B2+'--';
+  return mime;
+}
+async function gmailApiSend(o){
+  const token=await gmailEnsureToken();
+  const fromEmail=gmailEmail();
+  const atts=[];
+  for(const f of (o.attachments||[])){
+    atts.push({name:f.name,mime:f.type||'application/octet-stream',base64:await _fileToB64(f)});
+  }
+  const mime=buildGmailMime({fromName:o.fromName,fromEmail,to:o.to,subject:o.subject,htmlBody:o.htmlBody,textBody:o.textBody,attachments:atts});
+  const raw=_b64url(btoa(mime));
+  const r=await fetch('https://gmail.googleapis.com/gmail/v1/users/me/messages/send',{
+    method:'POST',
+    headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},
+    body:JSON.stringify({raw})
+  });
+  if(!r.ok){let m='Gmail API error '+r.status;try{const j=await r.json();if(j&&j.error&&j.error.message)m=j.error.message}catch(e){}throw new Error(m)}
+  return r.json();
+}
+
 // ── Send PDF: jsPDF + html2canvas → Web Share on mobile, Download + Gmail draft on desktop ──
 let _pdfLibsP=null;
 function loadPDFLibs(){
@@ -2650,6 +2772,18 @@ async function sendInvoicePDF(j,inv,kind,opts){
   let file;
   try{const _builder=window.buildInvoicePDFFile||buildInvoicePDFFile;file=await _builder(j,inv,kind)}
   catch(e){toast('PDF build failed: '+((e&&e.message)||e),'');return}
+  if((window.gmailConnected||gmailConnected)()){
+    try{
+      toast('Sending via Gmail…','');
+      const htmlBody=buildInvoiceEmailHTML(j,inv,message,kind);
+      const _send=window.gmailApiSend||gmailApiSend;
+      await _send({to,subject,htmlBody,textBody:text,fromName:COMPANY.name||'',attachments:[file]});
+      if(!inv.sent){inv.sent=Date.now();if(inv.status==='draft')inv.status='sent';await writeJob(j)}
+      await logAct((EST?'emailed estimate ':'emailed invoice ')+(inv.number||'')+' (Gmail) to '+to+' for',j.name);
+      toast('Sent · check your Gmail Sent folder');
+      return;
+    }catch(e){toast('Gmail send failed: '+((e&&e.message)||e)+' — using fallback','')}
+  }
   if(navigator.canShare&&typeof navigator.share==='function'){
     try{
       if(navigator.canShare({files:[file]})){
@@ -4950,6 +5084,8 @@ function showSettingsModal(){
       </div>
       <div class="form-group"><label class="form-label">Default Tax Rate (%)</label><input class="form-input" type="number" step="0.01" id="set-co-tax" value="${esc(c.taxRate||'')}"></div>
       <div class="form-group"><label class="form-label">Default Invoice Terms</label><textarea class="form-textarea" id="set-co-terms">${esc(c.terms||'')}</textarea></div>
+      <div style="margin:14px 0 10px;padding-top:14px;border-top:1px solid var(--border)"><div class="form-label" style="font-size:12px">Email sending (Gmail API)</div></div>
+      <div id="gm-panel" style="margin-bottom:6px"></div>
       <div style="margin:14px 0 10px;padding-top:14px;border-top:1px solid var(--border)"><div class="form-label" style="font-size:12px">Team Access &amp; Roles</div></div>
       ${(FB_AUTH_ON||accessEnabled())
         ? `<div class="tt-hint" style="margin-bottom:10px">Signed in as <strong>${esc(SESSION?SESSION.name:'?')}</strong> · ${esc(SESSION?SESSION.role:'')}${SESSION&&!canSeeAll(SESSION)?' · '+esc((COMPANIES[SESSION.company]||{}).label||SESSION.company):' · all companies'}</div>
@@ -4963,6 +5099,28 @@ function showSettingsModal(){
   $('mbd').onclick=e=>{if(e.target===e.currentTarget)closeModal()};
   $('set-access')?.addEventListener('click',()=>{closeModal();showAccessModal()});
   $('set-signout')?.addEventListener('click',()=>{if(confirm('Sign out of this device?'))signOut()});
+  function renderGmailPanel(){
+    const cfg=gmailLoad();const connected=gmailConnected();
+    $('gm-panel').innerHTML=connected
+      ? `<div class="tt-hint" style="margin-bottom:8px">Connected as <strong>${esc(cfg.email||'(unknown account)')}</strong>. "Email PDF" sends the branded invoice/estimate + PDF in one click from this account's Sent folder.</div>
+         <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn-sm" id="gm-reconnect" type="button">Reconnect</button><button class="btn-sm" id="gm-disconnect" type="button">Disconnect</button></div>`
+      : `<div class="tt-hint" style="margin-bottom:10px">Connect a Gmail account once and "Email PDF" becomes true one-click for this company.<br><a href="#" id="gm-help" style="color:var(--green-700);text-decoration:underline">Setup steps (~10 min, one-time)</a></div>
+         <div class="form-group"><label class="form-label">OAuth Client ID</label><input class="form-input" id="gm-clientid" value="${esc(cfg.clientId||'')}" placeholder="123456789-abc.apps.googleusercontent.com" spellcheck="false" autocapitalize="off" style="font-family:monospace;font-size:12.5px"></div>
+         <button class="btn-sm" id="gm-connect" type="button">Connect Gmail</button>`;
+    $('gm-connect')?.addEventListener('click',async()=>{
+      const id=($('gm-clientid')?.value||'').trim();if(!id){toast('Paste your OAuth Client ID first','');return}
+      const btn=$('gm-connect');btn.disabled=true;const oldT=btn.textContent;btn.textContent='Opening Google…';
+      try{await gmailConnect(id);toast('Gmail connected');renderGmailPanel()}
+      catch(e){toast('Connect failed: '+((e&&e.message)||e),'');btn.disabled=false;btn.textContent=oldT}
+    });
+    $('gm-reconnect')?.addEventListener('click',async()=>{
+      const cfg=gmailLoad();if(!cfg.clientId)return;
+      try{await gmailConnect(cfg.clientId);toast('Reconnected');renderGmailPanel()}catch(e){toast('Reconnect failed: '+((e&&e.message)||e),'')}
+    });
+    $('gm-disconnect')?.addEventListener('click',()=>{if(!confirm('Disconnect Gmail from this company? Sending will fall back to the share/download flow.'))return;gmailDisconnect();toast('Disconnected');renderGmailPanel()});
+    $('gm-help')?.addEventListener('click',(e)=>{e.preventDefault();alert('One-time Gmail setup (~10 min):\n\n1. Open console.cloud.google.com and create a project (or reuse one).\n2. APIs & Services → Library → enable "Gmail API".\n3. APIs & Services → OAuth consent screen → External → fill app name + your email → add scope https://www.googleapis.com/auth/gmail.send → add your gmail address as a Test user → save. (Stay in Testing mode; no Google verification needed for personal use.)\n4. APIs & Services → Credentials → Create Credentials → OAuth client ID → Web application.\n   Authorized JavaScript origins: paste this site\u2019s URL ('+location.origin+').\n5. Copy the Client ID and paste it here, then click Connect Gmail.')});
+  }
+  renderGmailPanel();
   $('btn-set-save').onclick=()=>{
     const newUser=$('set-user').value.trim();
     if(newUser!==S.user){S.user=newUser;localStorage.setItem(LS('user'),S.user)}
