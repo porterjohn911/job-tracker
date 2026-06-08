@@ -15,6 +15,7 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin="" defer></script>
 <style>
@@ -1747,6 +1748,30 @@ const LOCAL={
   saveTransactions(){try{localStorage.setItem(LS('transactions'),JSON.stringify(S.transactions))}catch(e){}}
 };
 function syncStatus(state,msg){const d=$('sync-dot'),t=$('sync-text');d.className='sync-dot '+state;t.textContent=msg}
+
+// ══ Cloud file storage (Firebase Storage) ══
+// Photos, receipts and documents upload to Firebase Storage and we keep only
+// the short https download URL in the job record — instead of a base64 string
+// that can be hundreds of KB each. That frees localStorage + the Realtime DB,
+// letting the app hold far more photos (Storage gives gigabytes vs the ~5MB
+// localStorage cap). If Storage is unavailable (offline, not enabled yet, or
+// upload fails) we fall back to embedding base64 inline, exactly as before, so
+// nothing is ever lost.
+function storageReady(){try{return !!(FIREBASE_CONFIG&&typeof firebase!=='undefined'&&firebase.storage&&firebase.apps.length)}catch(e){return false}}
+function canvasToBlob(canvas,type,quality){return new Promise(res=>{try{canvas.toBlob(b=>res(b),type,quality)}catch(e){res(null)}})}
+async function uploadToStorage(blobOrFile,subpath,ext){
+  if(!storageReady()||!blobOrFile)return null;
+  try{
+    const ns=(DB_NS||'data').replace(/[^a-zA-Z0-9_-]/g,'');
+    const safeExt=(ext||'').replace(/[^a-zA-Z0-9]/g,'').slice(0,8);
+    const path=ns+'/'+subpath+'/'+Date.now()+'_'+Math.random().toString(36).slice(2,8)+(safeExt?'.'+safeExt:'');
+    const ref=firebase.storage().ref(path);
+    const snap=await ref.put(blobOrFile);
+    const url=await snap.ref.getDownloadURL();
+    return {url,path};
+  }catch(e){return null}
+}
+async function deleteStoragePath(path){if(!path||!storageReady())return;try{await firebase.storage().ref(path).delete()}catch(e){}}
 function initFB(cfg){
   try{
     if(!firebase.apps.length)firebase.initializeApp(cfg);
@@ -5788,21 +5813,29 @@ function attachHandlers(){
     const j=S.jobs[S.detail];if(!j)return;j.photos=j.photos||[];
     const files=Array.from(this.files);if(!files.length)return;
     const cat=S.photoCat&&S.photoCat!=='all'?S.photoCat:'';
-    let done=0;
+    const total=files.length;let done=0;
+    const finishOne=()=>{if(++done===total){writeJob(j).then(()=>{logAct('added '+total+' photo(s) to',j.name);render();toast(total+' photo'+(total>1?'s':'')+' added','photo')})}};
+    if(storageReady())toast('Uploading '+total+' photo'+(total>1?'s':'')+'…','photo');
     files.forEach(file=>{const r=new FileReader();r.onload=e=>{
-      const img=new Image();img.onload=()=>{
+      const img=new Image();img.onload=async()=>{
         const c=document.createElement('canvas');const MAX=1400;
         let w=img.width,h=img.height;
         if(w>MAX||h>MAX){if(w>h){h=Math.round(h*MAX/w);w=MAX}else{w=Math.round(w*MAX/h);h=MAX}}
         c.width=w;c.height=h;c.getContext('2d').drawImage(img,0,0,w,h);
-        j.photos.push({url:c.toDataURL('image/jpeg',0.78),cat:cat,user:S.user,time:Date.now()});
-        if(++done===files.length){writeJob(j).then(()=>{logAct('added '+files.length+' photo(s) to',j.name);render();toast(files.length+' photo'+(files.length>1?'s':'')+' added','photo')})}
+        const blob=await canvasToBlob(c,'image/jpeg',0.78);
+        const up=blob?await uploadToStorage(blob,'jobs/'+j.id+'/photos','jpg'):null;
+        const rec={cat:cat,user:S.user,time:Date.now()};
+        if(up){rec.url=up.url;rec.storagePath=up.path}
+        else{rec.url=c.toDataURL('image/jpeg',0.78)}
+        j.photos.push(rec);
+        finishOne();
       };img.src=e.target.result
     };r.readAsDataURL(file)});
   });
   document.querySelectorAll('[data-del-photo]').forEach(b=>b.onclick=async e=>{
     e.stopPropagation();const j=S.jobs[S.detail];if(!j)return;
-    j.photos.splice(parseInt(b.dataset.delPhoto),1);await writeJob(j);render();toast('Photo removed');
+    const removed=j.photos.splice(parseInt(b.dataset.delPhoto),1)[0];await writeJob(j);render();toast('Photo removed');
+    if(removed&&removed.storagePath)deleteStoragePath(removed.storagePath);
   });
   document.querySelectorAll('[data-view-photo]').forEach(img=>img.onclick=e=>{
     e.stopPropagation();const j=S.jobs[S.detail];if(!j)return;
@@ -5858,13 +5891,17 @@ function attachHandlers(){
   $('doc-upload')?.addEventListener('change',function(){
     const j=S.jobs[S.detail];if(!j)return;j.documents=j.documents||[];
     const file=this.files[0];if(!file)return;
-    if(file.size>5*1024*1024){toast('File too large (max 5MB)','');return}
-    const r=new FileReader();
-    r.onload=async e=>{
-      j.documents.push({name:file.name,url:e.target.result,size:(file.size/1024).toFixed(0)+' KB',type:file.type,uploaded:Date.now(),user:S.user});
-      await writeJob(j);await logAct('uploaded '+file.name+' to',j.name);render();toast('File uploaded');
-    };
-    r.readAsDataURL(file);
+    const cap=storageReady()?25*1024*1024:5*1024*1024;
+    if(file.size>cap){toast('File too large (max '+(cap/1024/1024)+'MB)','');return}
+    const meta={name:file.name,size:(file.size/1024).toFixed(0)+' KB',type:file.type,uploaded:Date.now(),user:S.user};
+    const finishDoc=async(extra)=>{j.documents.push({...meta,...extra});await writeJob(j);await logAct('uploaded '+file.name+' to',j.name);render();toast('File uploaded')};
+    if(storageReady())toast('Uploading…');
+    (async()=>{
+      const ext=(file.name.split('.').pop()||'').toLowerCase();
+      const up=await uploadToStorage(file,'jobs/'+j.id+'/docs',ext);
+      if(up){await finishDoc({url:up.url,storagePath:up.path})}
+      else{const r=new FileReader();r.onload=async e=>{await finishDoc({url:e.target.result})};r.readAsDataURL(file)}
+    })();
   });
   document.querySelectorAll('[data-doc-del]').forEach(b=>b.onclick=async e=>{
     e.preventDefault();e.stopPropagation();
@@ -5887,11 +5924,13 @@ function attachHandlers(){
     const fileInput=$('rcpt-upload');const file=fileInput&&fileInput.files&&fileInput.files[0];
     const finish=async(extra)=>{j.receipts=j.receipts||[];j.receipts.push({...base,...extra});await writeJob(j);await logAct('added a receipt ('+money2(amount)+') to',j.name);render();toast('Receipt added')};
     if(file){
-      if(!file.type.startsWith('image/')&&file.size>6*1024*1024){toast('File too large (max 6MB)','');return}
+      const cap=storageReady()?25*1024*1024:6*1024*1024;
+      if(!file.type.startsWith('image/')&&file.size>cap){toast('File too large (max '+(cap/1024/1024)+'MB)','');return}
+      if(storageReady())toast('Uploading…');
       if(file.type.startsWith('image/')){
-        const r=new FileReader();r.onload=e=>{const img=new Image();img.onload=()=>{const c=document.createElement('canvas');const MAX=1400;let w=img.width,h=img.height;if(w>MAX||h>MAX){if(w>h){h=Math.round(h*MAX/w);w=MAX}else{w=Math.round(w*MAX/h);h=MAX}}c.width=w;c.height=h;c.getContext('2d').drawImage(img,0,0,w,h);finish({name:file.name,type:file.type,url:c.toDataURL('image/jpeg',0.8)})};img.src=e.target.result};r.readAsDataURL(file);
+        const r=new FileReader();r.onload=e=>{const img=new Image();img.onload=async()=>{const c=document.createElement('canvas');const MAX=1400;let w=img.width,h=img.height;if(w>MAX||h>MAX){if(w>h){h=Math.round(h*MAX/w);w=MAX}else{w=Math.round(w*MAX/h);h=MAX}}c.width=w;c.height=h;c.getContext('2d').drawImage(img,0,0,w,h);const blob=await canvasToBlob(c,'image/jpeg',0.8);const up=blob?await uploadToStorage(blob,'jobs/'+j.id+'/receipts','jpg'):null;if(up){finish({name:file.name,type:file.type,url:up.url,storagePath:up.path})}else{finish({name:file.name,type:file.type,url:c.toDataURL('image/jpeg',0.8)})}};img.src=e.target.result};r.readAsDataURL(file);
       }else{
-        const r=new FileReader();r.onload=e=>finish({name:file.name,type:file.type,url:e.target.result,size:(file.size/1024).toFixed(0)+' KB'});r.readAsDataURL(file);
+        (async()=>{const ext=(file.name.split('.').pop()||'').toLowerCase();const up=await uploadToStorage(file,'jobs/'+j.id+'/receipts',ext);if(up){finish({name:file.name,type:file.type,url:up.url,storagePath:up.path,size:(file.size/1024).toFixed(0)+' KB'})}else{const r=new FileReader();r.onload=e=>finish({name:file.name,type:file.type,url:e.target.result,size:(file.size/1024).toFixed(0)+' KB'});r.readAsDataURL(file)}})();
       }
     }else{finish({})}
   });
