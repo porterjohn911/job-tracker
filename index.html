@@ -1622,6 +1622,9 @@ const S={jobs:{},activity:[],members:[],view:'dashboard',detail:null,detailTab:'
 const UNDO={stack:[],push(op){this.stack.push(op);if(this.stack.length>20)this.stack.shift()},pop(){return this.stack.pop()}};
 
 // ── Company info for invoice letterhead (editable via Settings)
+// Shared business mailing address — the same for every company, shown on all
+// invoice & estimate templates.
+const BIZ_ADDRESS='189 Ross Estates Rd. Kingston, TN 37763';
 const COMPANY_DEFAULT={
   name:ACTIVE_CO.label,
   address:'LaFollette, TN',
@@ -2437,7 +2440,7 @@ function buildInvoiceEmailHTML(j,inv,customMsg,kind){
           ?`<img src="${logoFull}" alt="${esc(co.name||'')}" width="380" style="display:inline-block;width:100%;max-width:380px;height:auto">`
           :`${logoSrc?`<img src="${logoSrc}" alt="${esc(co.name||'Waterfront Solutions')}" width="84" height="84" style="display:inline-block;width:84px;height:84px;object-fit:contain;filter:drop-shadow(0 2px 6px rgba(0,0,0,0.25))">`:''}
         <div style="font-family:Georgia,'Times New Roman',serif;font-size:22px;font-weight:600;color:#ffffff;letter-spacing:0.01em;margin-top:10px">${esc(co.name||'Waterfront Solutions')}</div>`}
-        ${co.address?`<div style="font-size:11.5px;color:rgba(255,255,255,0.75);margin-top:${logoFull?'12':'4'}px;letter-spacing:0.02em">${esc(co.address.replace(/\n/g,' · '))}</div>`:''}
+        ${BIZ_ADDRESS?`<div style="font-size:11.5px;color:rgba(255,255,255,0.75);margin-top:${logoFull?'12':'4'}px;letter-spacing:0.02em">${esc(BIZ_ADDRESS.replace(/\n/g,' · '))}</div>`:''}
       </td></tr>
       <tr><td style="padding:28px 32px 8px">
         <div style="font-size:11px;font-weight:700;color:#7aa898;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:6px">${EST?'Estimate':'Invoice'} ${esc(inv.number||'')}</div>
@@ -5070,12 +5073,12 @@ function printInvoice(j,inv,kind){
       <div class="lh-l">
         ${logoFull
           ?`<img class="full" src="${logoFull}" alt="${esc(co.name||'')}">
-        <div class="lh-co"><div class="addr">${esc(co.address||'')}${co.phone?'\n'+esc(co.phone):''}${co.email?' · '+esc(co.email):''}${co.website?'\n'+esc(co.website):''}</div></div>`
+        <div class="lh-co"><div class="addr">${esc(BIZ_ADDRESS)}${co.phone?'\n'+esc(co.phone):''}${co.email?' · '+esc(co.email):''}${co.website?'\n'+esc(co.website):''}</div></div>`
           :`${logoSrc?`<img src="${logoSrc}" alt="">`:''}
         <div class="lh-co">
           <h1>${esc(co.name||'Waterfront Solutions')}</h1>
           <div class="tag">${esc(co.license?'Lic. '+co.license:'Construction & Waterfront Services')}</div>
-          <div class="addr">${esc(co.address||'')}${co.phone?'\n'+esc(co.phone):''}${co.email?' · '+esc(co.email):''}${co.website?'\n'+esc(co.website):''}</div>
+          <div class="addr">${esc(BIZ_ADDRESS)}${co.phone?'\n'+esc(co.phone):''}${co.email?' · '+esc(co.email):''}${co.website?'\n'+esc(co.website):''}</div>
         </div>`}
       </div>
       <div class="lh-r">
