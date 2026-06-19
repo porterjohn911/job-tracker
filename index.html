@@ -2745,66 +2745,197 @@ async function gmailApiSend(o){
   return r.json();
 }
 
-// ── Send PDF: jsPDF + html2canvas → Web Share on mobile, Download + Gmail draft on desktop ──
+// ── Send PDF: jsPDF (real selectable text) → Web Share on mobile, Download + Gmail draft on desktop ──
+// NOTE: We build the PDF as real text/vectors, NOT a flattened html2canvas screenshot.
+// Image-only "invoice" PDFs are a classic phishing/malware signature and get the whole
+// email flagged as dangerous by Gmail (red banner + blocked attachment). Real text avoids that.
 let _pdfLibsP=null;
 function loadPDFLibs(){
   if(_pdfLibsP)return _pdfLibsP;
   function add(src){return new Promise((r,j)=>{const s=document.createElement('script');s.src=src;s.onload=r;s.onerror=()=>j(new Error('Failed to load '+src));document.head.appendChild(s)})}
-  _pdfLibsP=Promise.all([
-    window.html2canvas?Promise.resolve():add('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js'),
-    (window.jspdf&&window.jspdf.jsPDF)?Promise.resolve():add('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js')
-  ]).then(()=>({html2canvas:window.html2canvas,jsPDF:window.jspdf.jsPDF}));
+  _pdfLibsP=Promise.resolve()
+    .then(()=>(window.jspdf&&window.jspdf.jsPDF)?null:add('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js'))
+    .then(()=>({jsPDF:window.jspdf.jsPDF}));
   return _pdfLibsP;
 }
 async function urlToDataURL(url){
   if(!url)return null;if(/^data:/.test(url))return url;
   try{const r=await fetch(url,{mode:'cors'});const b=await r.blob();return await new Promise(res=>{const fr=new FileReader();fr.onload=()=>res(fr.result);fr.readAsDataURL(b)})}catch(e){return null}
 }
+function _hex2rgb(h){h=String(h||'').replace('#','');if(h.length===3)h=h.split('').map(c=>c+c).join('');const n=parseInt(h||'0',16);return [(n>>16)&255,(n>>8)&255,n&255]}
+function _imgFmt(du){return /^data:image\/png/i.test(du)?'PNG':'JPEG'}
+// Build the invoice/estimate PDF with REAL selectable text + vectors (no screenshot).
 async function buildInvoicePDFFile(j,inv,kind){
   kind=kind||'invoice';
-  const {html2canvas,jsPDF}=await loadPDFLibs();
-  const html=buildInvoiceEmailHTML(j,inv,'',kind);
-  const ifr=document.createElement('iframe');
-  ifr.setAttribute('aria-hidden','true');
-  ifr.style.cssText='position:fixed;left:-9999px;top:0;width:816px;height:1100px;border:0;background:#fff;';
-  document.body.appendChild(ifr);
-  const idoc=ifr.contentDocument||ifr.contentWindow.document;
-  idoc.open();idoc.write(html);idoc.close();
-  await new Promise(r=>setTimeout(r,200));
-  const imgs=Array.from(idoc.images||[]);
-  await Promise.all(imgs.map(im=>im.complete?Promise.resolve():new Promise(r=>{im.onload=im.onerror=r;setTimeout(r,3000)})));
-  const body=idoc.body;body.style.background='#fff';
-  ifr.style.height=Math.max(1100,body.scrollHeight+40)+'px';
-  await new Promise(r=>setTimeout(r,60));
-  const canvas=await html2canvas(body,{scale:2,backgroundColor:'#ffffff',useCORS:true,logging:false,windowWidth:816,windowHeight:body.scrollHeight});
-  document.body.removeChild(ifr);
-  const pdf=new jsPDF({unit:'pt',format:'letter',orientation:'portrait'});
-  const pageW=pdf.internal.pageSize.getWidth(),pageH=pdf.internal.pageSize.getHeight();
-  const margin=18,imgW=pageW-margin*2,ratio=canvas.height/canvas.width,fullImgH=imgW*ratio;
-  let remH=fullImgH,off=0,pageIdx=0;
-  while(remH>0){
-    const usable=pageH-margin*2,sliceH=Math.min(remH,usable);
-    const sliceCanvasH=Math.round(sliceH/fullImgH*canvas.height);
-    const sc=document.createElement('canvas');sc.width=canvas.width;sc.height=sliceCanvasH;
-    sc.getContext('2d').drawImage(canvas,0,Math.round(off/fullImgH*canvas.height),canvas.width,sliceCanvasH,0,0,canvas.width,sliceCanvasH);
-    if(pageIdx>0)pdf.addPage();
-    pdf.addImage(sc.toDataURL('image/jpeg',0.92),'JPEG',margin,margin,imgW,sliceH);
-    off+=sliceH;remH-=sliceH;pageIdx++;
+  const EST=kind==='estimate';
+  const {jsPDF}=await loadPDFLibs();
+  const c=calcInvoice(inv);
+  const co=COMPANY;
+  const P=invTheme();
+  const primary=_hex2rgb(P.primary), link=_hex2rgb(P.link), rule=_hex2rgb(P.rule);
+  const dark=[10,31,24], mid=[61,99,88], muted=[122,168,152];
+  const pdf=new jsPDF({unit:'pt',format:'letter',orientation:'portrait',compress:true});
+  const pageW=pdf.internal.pageSize.getWidth(), pageH=pdf.internal.pageSize.getHeight();
+  const ML=48, MR=48, contentW=pageW-ML-MR, bottom=pageH-56;
+  const amtX=pageW-MR, qtyX=pageW-MR-118, descRight=qtyX-92;
+  const setColor=rgb=>pdf.setTextColor(rgb[0],rgb[1],rgb[2]);
+  let y=0;
+  const ensure=h=>{ if(y+h>bottom){ pdf.addPage(); y=56; } };
+
+  // ── Header band ──
+  const bandH=92;
+  pdf.setFillColor(primary[0],primary[1],primary[2]);
+  pdf.rect(0,0,pageW,bandH,'F');
+  let logoW=0;
+  try{
+    const src=getBrandLogoSrc();
+    if(src && !/svg/i.test(src)){
+      const du=/^data:/.test(src)?src:await urlToDataURL(src);
+      if(du && !/svg/i.test(du)){
+        const im=new Image(); await new Promise(r=>{im.onload=im.onerror=r;im.src=du;setTimeout(r,2500)});
+        if(im.width){ const lh=52, lw=lh*(im.width/im.height); pdf.addImage(du,_imgFmt(du),ML,(bandH-lh)/2,lw,lh); logoW=lw+16; }
+      }
+    }
+  }catch(e){}
+  pdf.setTextColor(255,255,255);
+  pdf.setFont('helvetica','bold'); pdf.setFontSize(20);
+  pdf.text(co.name||'Waterfront Solutions', ML+logoW, 42);
+  let hy=60;
+  if(co.address){ pdf.setFont('helvetica','normal'); pdf.setFontSize(9.5);
+    pdf.text(String(co.address).replace(/\n/g,'  ·  '), ML+logoW, hy); hy+=14; }
+  const contactBits=[co.phone,co.email,co.website].filter(Boolean).join('   ·   ');
+  if(contactBits){ pdf.setFont('helvetica','normal'); pdf.setFontSize(9);
+    pdf.text(contactBits, ML+logoW, hy); }
+  y=bandH+30;
+
+  // ── Doc title + meta (right) ──
+  pdf.setFont('helvetica','bold'); pdf.setFontSize(22); setColor(primary);
+  pdf.text(EST?'ESTIMATE':'INVOICE', amtX, y, {align:'right'});
+  pdf.setFont('helvetica','normal'); pdf.setFontSize(10.5); setColor(mid);
+  let metaY=y+18;
+  if(inv.number){ pdf.text('# '+inv.number, amtX, metaY, {align:'right'}); metaY+=15; }
+  if(inv.date){ pdf.text('Date: '+fmtDate(inv.date), amtX, metaY, {align:'right'}); metaY+=15; }
+  if(inv.dueDate){ pdf.text((EST?'Valid until: ':'Due: ')+fmtDate(inv.dueDate), amtX, metaY, {align:'right'}); metaY+=15; }
+
+  // ── Bill To (left) ──
+  pdf.setFont('helvetica','bold'); pdf.setFontSize(9); setColor(muted);
+  pdf.text(EST?'PREPARED FOR':'BILL TO', ML, y);
+  let billY=y+16;
+  if(j.customerName){ pdf.setFont('helvetica','bold'); pdf.setFontSize(12); setColor(dark);
+    pdf.text(String(j.customerName), ML, billY); billY+=15; }
+  pdf.setFont('helvetica','normal'); pdf.setFontSize(10); setColor(mid);
+  [j.address, j.customerPhone, j.customerEmail].filter(Boolean).forEach(l=>{
+    pdf.splitTextToSize(String(l),250).forEach(ln=>{pdf.text(ln,ML,billY);billY+=14}); });
+  if(j.name){ pdf.setFont('helvetica','italic'); pdf.text('Project: '+String(j.name), ML, billY); billY+=14; }
+
+  y=Math.max(metaY,billY)+18;
+
+  // ── Items table header ──
+  pdf.setFillColor(primary[0],primary[1],primary[2]);
+  pdf.rect(ML,y,contentW,24,'F');
+  pdf.setTextColor(255,255,255); pdf.setFont('helvetica','bold'); pdf.setFontSize(9.5);
+  pdf.text('DESCRIPTION', ML+10, y+16);
+  pdf.text('QTY × RATE', qtyX, y+16, {align:'right'});
+  pdf.text('AMOUNT', amtX-10, y+16, {align:'right'});
+  y+=24;
+
+  // ── Items ──
+  pdf.setFont('helvetica','normal'); pdf.setFontSize(10.5);
+  const items=inv.items||[];
+  items.forEach((it,idx)=>{
+    const amt=Number(it.qty||0)*Number(it.rate||0);
+    const descLines=pdf.splitTextToSize(String(it.desc||''), descRight-(ML+10));
+    const rowH=Math.max(22, descLines.length*13+9);
+    ensure(rowH);
+    if(idx%2===1){ pdf.setFillColor(247,250,249); pdf.rect(ML,y,contentW,rowH,'F'); }
+    setColor(dark);
+    descLines.forEach((ln,i)=>pdf.text(ln, ML+10, y+15+i*13));
+    setColor(mid);
+    pdf.text((it.qty??'')+' × '+money2(Number(it.rate||0)), qtyX, y+15, {align:'right'});
+    pdf.setFont('helvetica','bold'); setColor(dark);
+    pdf.text(money2(amt), amtX-10, y+15, {align:'right'});
+    pdf.setFont('helvetica','normal');
+    y+=rowH;
+    pdf.setDrawColor(238,243,241); pdf.setLineWidth(0.5); pdf.line(ML,y,ML+contentW,y);
+  });
+  if(!items.length){ ensure(22); setColor(muted); pdf.text('No line items', ML+10, y+15); y+=22; }
+
+  // ── Totals (right) ──
+  ensure(120);
+  y+=18;
+  const totLabelX=amtX-160, totValX=amtX-10;
+  const totRow=(label,val,o)=>{ o=o||{};
+    pdf.setFont('helvetica',o.bold?'bold':'normal'); pdf.setFontSize(o.size||10.5);
+    setColor(o.color||mid); pdf.text(label, totLabelX, y);
+    setColor(o.valColor||o.color||dark); pdf.text(val, totValX, y, {align:'right'});
+    y+=o.gap||16;
+  };
+  totRow('Subtotal', money2(c.sub));
+  totRow('Tax ('+Number(inv.taxRate||0)+'%)', money2(c.tax));
+  pdf.setDrawColor(rule[0],rule[1],rule[2]); pdf.setLineWidth(1.2); pdf.line(totLabelX,y-4,totValX,y-4); y+=8;
+  totRow('Total', money2(c.total), {bold:true,size:12,color:primary,valColor:primary});
+  if(c.paid>0) totRow('Paid', '-'+money2(c.paid));
+
+  // ── Balance / Estimated total highlight ──
+  y+=8; ensure(52);
+  const boxH=40, boxY=y;
+  let boxLabel, boxVal, boxFill, boxText;
+  if(EST){ boxLabel='ESTIMATED TOTAL'; boxVal=money2(c.total); boxFill=[230,247,241]; boxText=[10,61,46]; }
+  else if(c.balance<=0.005){ boxLabel='PAID IN FULL — THANK YOU'; boxVal=''; boxFill=[220,252,231]; boxText=[22,101,52]; }
+  else { boxLabel='BALANCE DUE'+(inv.dueDate?' BY '+fmtDate(inv.dueDate).toUpperCase():''); boxVal=money2(c.balance); boxFill=[254,243,199]; boxText=[146,64,14]; }
+  pdf.setFillColor(boxFill[0],boxFill[1],boxFill[2]);
+  pdf.roundedRect(ML,boxY,contentW,boxH,6,6,'F');
+  pdf.setTextColor(boxText[0],boxText[1],boxText[2]);
+  pdf.setFont('helvetica','bold'); pdf.setFontSize(9.5);
+  pdf.text(boxLabel, ML+16, boxY+24);
+  if(boxVal){ pdf.setFontSize(18); pdf.text(boxVal, amtX-16, boxY+26, {align:'right'}); }
+  y=boxY+boxH+20;
+
+  // ── Notes ──
+  if(inv.notes){ ensure(28);
+    pdf.setFont('helvetica','bold'); pdf.setFontSize(9); setColor(link); pdf.text('NOTES', ML, y); y+=14;
+    pdf.setFont('helvetica','normal'); pdf.setFontSize(10); setColor(mid);
+    pdf.splitTextToSize(String(inv.notes), contentW).forEach(ln=>{ ensure(13); pdf.text(ln,ML,y); y+=13; });
+    y+=8;
   }
+
+  // ── Terms ──
+  if(inv.terms){ ensure(24);
+    pdf.setDrawColor(230,240,235); pdf.setLineWidth(0.5); pdf.line(ML,y,ML+contentW,y); y+=12;
+    pdf.setFont('helvetica','italic'); pdf.setFontSize(8.5); setColor(muted);
+    pdf.splitTextToSize(String(inv.terms), contentW).forEach(ln=>{ ensure(11); pdf.text(ln,ML,y); y+=11; });
+  }
+
+  // ── Photos (one per page) ──
   const photos=(inv.photos||[]).filter(p=>p&&p.url);
   for(const ph of photos){
-    const du=await urlToDataURL(ph.url);if(!du)continue;
-    const img=new Image();await new Promise(r=>{img.onload=img.onerror=r;img.src=du;setTimeout(r,3000)});
-    if(!img.width)continue;
-    const maxW=pageW-72,maxH=pageH-120;let w=img.width,h=img.height;const k=Math.min(maxW/w,maxH/h,1);w*=k;h*=k;
+    const du=await urlToDataURL(ph.url); if(!du) continue;
+    const im=new Image(); await new Promise(r=>{im.onload=im.onerror=r;im.src=du;setTimeout(r,3000)});
+    if(!im.width) continue;
     pdf.addPage();
-    pdf.setFont('helvetica','bold');pdf.setFontSize(11);pdf.setTextColor(60);
-    pdf.text((kind==='estimate'?'Estimate':'Invoice')+' '+(inv.number||'')+' — Photos',36,40);
-    pdf.addImage(du,'JPEG',(pageW-w)/2,60,w,h);
-    if(ph.caption){pdf.setFont('helvetica','normal');pdf.setFontSize(10);pdf.setTextColor(90);pdf.text(String(ph.caption).slice(0,200),36,60+h+22,{maxWidth:pageW-72})}
+    pdf.setFont('helvetica','bold'); pdf.setFontSize(11); setColor(primary);
+    pdf.text((EST?'Estimate':'Invoice')+' '+(inv.number||'')+' — Photos', ML, 54);
+    const maxW=pageW-96, maxH=pageH-170; let w=im.width,h=im.height; const k=Math.min(maxW/w,maxH/h,1); w*=k; h*=k;
+    pdf.addImage(du,_imgFmt(du),(pageW-w)/2,72,w,h);
+    if(ph.caption){ pdf.setFont('helvetica','normal'); pdf.setFontSize(9.5); setColor(mid);
+      pdf.splitTextToSize(String(ph.caption),contentW).forEach((ln,i)=>pdf.text(ln,ML,72+h+18+i*12)); }
   }
+
+  // ── Footer on every page ──
+  const pageCount=pdf.internal.getNumberOfPages();
+  for(let p=1;p<=pageCount;p++){
+    pdf.setPage(p);
+    const fy=pageH-30;
+    pdf.setDrawColor(230,240,235); pdf.setLineWidth(0.5); pdf.line(ML,fy-14,ML+contentW,fy-14);
+    pdf.setFont('helvetica','normal'); pdf.setFontSize(8.5); setColor(muted);
+    const bits=[co.name,co.phone,co.email,co.website].filter(Boolean).join('  ·  ');
+    if(bits) pdf.text(bits, pageW/2, fy, {align:'center'});
+    if(co.license) pdf.text('License #'+co.license, pageW/2, fy+11, {align:'center'});
+    if(pageCount>1) pdf.text(p+' / '+pageCount, amtX, fy, {align:'right'});
+  }
+
   const blob=pdf.output('blob');
-  const filename=(kind==='estimate'?'Estimate':'Invoice')+'-'+(inv.number||'draft')+'.pdf';
+  const filename=(EST?'Estimate':'Invoice')+'-'+(inv.number||'draft')+'.pdf';
   return new File([blob],filename,{type:'application/pdf'});
 }
 async function sendInvoicePDF(j,inv,kind,opts){
