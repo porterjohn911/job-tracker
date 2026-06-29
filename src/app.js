@@ -1,0 +1,4681 @@
+// ══════════════════════════════════════════════════════════════════
+// ENVIRONMENT SWITCH — this is the ONLY line that differs between the
+// production file (your team uses this) and the dev file (you work here).
+//   'prod' → live team data    |    'dev' → isolated sandbox data
+// ══════════════════════════════════════════════════════════════════
+const ENV = 'prod';
+
+// All data (localStorage + the Firebase node) is namespaced by ENV, so
+// the dev copy reads/writes a completely separate sandbox and can never
+// affect what the team sees in production.
+// ── Multi-company support ───────────────────────────────────────────
+// Each company keeps completely isolated data (its own Firebase node +
+// localStorage namespace). Waterfront keeps the original 'wfs' namespace
+// so every bit of existing data is preserved untouched. The chosen
+// company is remembered in one global key shared across all companies.
+// Square brand emblem for Manufactured Housing Solutions, styled to match
+// the supplied logo (dark field, gold corner brackets + accent line, white
+// MHS wordmark, steel-blue detail).
+const MHS_LOGO = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192">
+<rect width="192" height="192" rx="40" fill="#0b0f17"/>
+<g fill="none" stroke="#e8a830" stroke-width="5" stroke-linecap="square">
+<path d="M30 50V30H50"/><path d="M142 30H162V50"/><path d="M162 142V162H142"/><path d="M50 162H30V142"/>
+</g>
+<text x="96" y="103" text-anchor="middle" font-family="'DM Sans',Arial,sans-serif" font-weight="700" font-size="56" letter-spacing="1" fill="#ffffff">MHS</text>
+<line x1="60" y1="123" x2="132" y2="123" stroke="#e8a830" stroke-width="3.5"/>
+<circle cx="60" cy="123" r="4.5" fill="#e8a830"/><circle cx="132" cy="123" r="4.5" fill="#e8a830"/>
+<text x="96" y="146" text-anchor="middle" font-family="'DM Sans',Arial,sans-serif" font-weight="600" font-size="12.5" letter-spacing="4" fill="#9fb1c4">SOLUTIONS</text>
+</svg>`;
+
+// Full horizontal MHS lockup with its own dark panel, so it reads on any
+// surface (used on invoice letterheads — email and printed/PDF).
+const MHS_LOGO_FULL = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 280">
+<rect width="720" height="280" rx="22" fill="#0b0f17"/>
+<g fill="none" stroke="#e8a830" stroke-width="2.5" stroke-linecap="square">
+<path d="M40 60V38H78"/><path d="M642 38H680V60"/><path d="M680 220V242H642"/><path d="M78 242H40V220"/>
+<line x1="92" y1="38" x2="628" y2="38"/><line x1="92" y1="242" x2="628" y2="242"/>
+</g>
+<text x="360" y="116" text-anchor="middle" font-family="'DM Sans',Arial,sans-serif" font-weight="800" font-size="54" letter-spacing="1" fill="#ffffff">MANUFACTURED</text>
+<line x1="170" y1="134" x2="550" y2="134" stroke="#e8a830" stroke-width="2.5"/>
+<circle cx="170" cy="134" r="5" fill="#e8a830"/><circle cx="550" cy="134" r="5" fill="#e8a830"/>
+<g fill="none" stroke="#e8a830" stroke-width="2.5"><path d="M150 100H132V168H150"/><path d="M570 100H588V168H570"/></g>
+<text x="360" y="178" text-anchor="middle" font-family="'DM Sans',Arial,sans-serif" font-weight="600" font-size="38" letter-spacing="16" fill="#9fb1c4">HOUSING</text>
+<line x1="210" y1="196" x2="510" y2="196" stroke="#2a3850" stroke-width="1"/>
+<text x="360" y="224" text-anchor="middle" font-family="'DM Sans',Arial,sans-serif" font-weight="700" font-size="21" letter-spacing="10" fill="#e8a830">SOLUTIONS</text>
+<text x="360" y="250" text-anchor="middle" font-family="'DM Sans',Arial,sans-serif" font-weight="500" font-size="11.5" letter-spacing="5" fill="#5a7088">FULL SERVICE CONSTRUCTION</text>
+</svg>`;
+
+// Owner-mode emblem (growth chart) — signals the cross-company workspace.
+const OWNER_LOGO = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192">
+<rect width="192" height="192" rx="40" fill="#1e1b2e"/>
+<rect x="46" y="106" width="22" height="44" rx="3" fill="#7c6cc4"/>
+<rect x="85" y="80" width="22" height="70" rx="3" fill="#a99ce0"/>
+<rect x="124" y="58" width="22" height="92" rx="3" fill="#e8a830"/>
+<path d="M57 96 L96 68 L135 48" fill="none" stroke="#ffffff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.9"/>
+<circle cx="57" cy="96" r="5.5" fill="#a99ce0"/><circle cx="96" cy="68" r="5.5" fill="#e8a830"/><circle cx="135" cy="48" r="5.5" fill="#ffffff"/>
+</svg>`;
+const _navIcon=d=>`<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="${d}"/></svg>`;
+const OWNER_NAV = `
+  <button class="nav-btn" data-view="o_overview">${_navIcon('M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z')}Overview</button>
+  <button class="nav-btn" data-view="o_financials">${_navIcon('M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z')}Financials</button>
+  <button class="nav-btn" data-view="o_pipeline">${_navIcon('M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 01-.659 1.591l-5.432 5.432a2.25 2.25 0 00-.659 1.591v2.927a2.25 2.25 0 01-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 00-.659-1.591L3.659 7.409A2.25 2.25 0 013 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0112 3z')}Pipeline</button>
+  <button class="nav-btn" data-view="o_leads">${_navIcon('M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 01.865-.501 48.172 48.172 0 003.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z')}Leads</button>
+  <button class="nav-btn" data-view="o_companies">${_navIcon('M3.75 21h16.5M4.5 3h15M5.25 3v18m13.5-18v18M9 6.75h1.5m-1.5 3h1.5m-1.5 3h1.5m3-6H15m-1.5 3H15m-1.5 3H15M9 21v-3.375c0-.621.504-1.125 1.125-1.125h3.75c.621 0 1.125.504 1.125 1.125V21')}Companies</button>
+  <button class="nav-btn" data-view="o_hours">${_navIcon('M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z')}Hours</button>
+`;
+
+const COMPANIES = {
+  wfs: { id:'wfs', ns:'wfs', label:'Waterfront Solutions',           tag:'Construction & Waterfront Services',
+         inv:{ band:'linear-gradient(135deg,#0a3d2e 0%,#1a6e55 100%)', primary:'#0a3d2e', link:'#0f5040', notesBar:'#1a6e55', rule:'#0a3d2e' } },
+  mhs: { id:'mhs', ns:'mhs', label:'Manufactured Housing Solutions', tag:'Full Service Construction', logoSvg:MHS_LOGO, logoFull:MHS_LOGO_FULL,
+         theme:{ headerBg:'linear-gradient(135deg,#0a0e16 0%,#141a26 55%,#202c3d 100%)', syncBg:'#0a0e16', navActive:'#33506f' },
+         inv:{ band:'linear-gradient(135deg,#0a0e16 0%,#202c3d 100%)', primary:'#1f2a3a', link:'#33506f', notesBar:'#e8a830', rule:'#e8a830' } },
+  nlr: { id:'nlr', ns:'nlr', label:'Norris Lake Roofing',            tag:'Roofing & Exteriors' },
+};
+// Invoice palette helpers — default matches Waterfront so other companies
+// (and any without an override) keep the original green invoice styling.
+const INV_DEFAULT={ band:'linear-gradient(135deg,#0a3d2e 0%,#1a6e55 100%)', primary:'#0a3d2e', link:'#0f5040', notesBar:'#1a6e55', rule:'#0a3d2e' };
+function invTheme(){ return ACTIVE_CO.inv||INV_DEFAULT }
+function brandLogoFull(){ return ACTIVE_CO.logoFull?'data:image/svg+xml;utf8,'+encodeURIComponent(ACTIVE_CO.logoFull):'' }
+const _stored = (() => { try { return localStorage.getItem('jt_company'); } catch (e) { return null; } })();
+
+// ── Access control (passcode gate; per-user roles) ──────────────────
+// Soft, client-side gate until Firebase Auth lands next. A global access
+// list (jt_access) defines members with a role + home company + PIN.
+// Workers are pinned to their own company; managers and owners can view
+// every company and the Owner workspace. Roles carry over to real logins.
+const ACCESS_KEY='jt_access'+(ENV==='dev'?'_dev':'');
+const SESSION_KEY='jt_session'+(ENV==='dev'?'_dev':'');
+function loadAccess(){try{const a=JSON.parse(localStorage.getItem(ACCESS_KEY)||'null');if(a&&Array.isArray(a.members))return a}catch(e){}return null}
+let ACCESS=loadAccess();
+function accessEnabled(){return !!(ACCESS&&ACCESS.enabled&&ACCESS.members&&ACCESS.members.length)}
+function findMember(id){return (ACCESS&&ACCESS.members||[]).find(m=>m.id===id)||null}
+function canSeeAll(m){return !!(m&&(m.role==='owner'||m.role==='manager'))}
+function isOwnerRole(m){return !!(m&&m.role==='owner')}
+let SESSION=accessEnabled()?(()=>{try{return findMember(localStorage.getItem(SESSION_KEY))}catch(e){return null}})():null;
+const LOCKED=accessEnabled()&&!SESSION;
+
+// Resolve workspace, honoring the signed-in member's permissions.
+let _want=_stored;
+if(SESSION&&!canSeeAll(SESSION))_want=SESSION.company; // workers are pinned to their company
+const OWNER_MODE = _want==='owner' && (!accessEnabled()||canSeeAll(SESSION));
+const COMPANY_ID = (_want && COMPANIES[_want]) ? _want : (SESSION&&!canSeeAll(SESSION)&&COMPANIES[SESSION.company]?SESSION.company:'wfs');
+const ACTIVE_CO = COMPANIES[COMPANY_ID];
+document.title = OWNER_MODE ? 'Job Tracker — Owner' : ('Job Tracker — ' + ACTIVE_CO.label);
+
+// Data (localStorage + the Firebase node) is namespaced by company AND by
+// ENV, so each company's prod and dev sandboxes stay completely separate.
+const DB_NS = ACTIVE_CO.ns + (ENV === 'dev' ? '_dev' : '');
+const LS = k => ACTIVE_CO.ns + (ENV === 'dev' ? '_dev_' : '_') + k;
+
+// The Firebase connection config is shared (key 'wfs_fb'), so once you
+// set up Firebase in either file the other auto-connects to the same
+// project — just a different data node, so the data stays isolated.
+if (ENV === 'dev') {
+  document.addEventListener('DOMContentLoaded', () => {
+    document.title = '[DEV] ' + document.title;
+    const b = document.createElement('div');
+    b.textContent = 'DEV SANDBOX — separate data, safe to experiment. Team production is unaffected.';
+    b.style.cssText = 'position:fixed;bottom:0;left:0;right:0;z-index:99999;background:#b45309;color:#fff;font:600 12px/1.4 \'DM Sans\',sans-serif;text-align:center;padding:7px 12px;letter-spacing:.4px';
+    document.body.appendChild(b);
+  });
+}
+
+// ══ Firebase config ══
+// Baked-in config: paste your project's firebaseConfig object below to make
+// every device auto-connect with no per-device "Connect Team" step. The
+// Firebase web config is NOT a secret — it's designed to ship in client code
+// (security comes from the database rules + Auth). Leave null to fall back to
+// the localStorage config set via the in-app "Connect Team" screen.
+const FIREBASE_CONFIG_BAKED = {
+  apiKey: "AIzaSyDCE0Yo6YkYtSkibUx9T7Q5XEkgmEsSKRc",
+  authDomain: "witport-constructionservices.firebaseapp.com",
+  // Realtime Database URL — assumes the default (us-central1) instance.
+  // If you created the database in another region, replace this with the
+  // exact databaseURL shown in the Firebase console.
+  databaseURL: "https://witport-constructionservices-default-rtdb.firebaseio.com",
+  projectId: "witport-constructionservices",
+  storageBucket: "witport-constructionservices.firebasestorage.app",
+  messagingSenderId: "85892975744",
+  appId: "1:85892975744:web:1140f8a3a577225b4a6a65",
+  measurementId: "G-9GYZ4K28V5"
+};
+let FIREBASE_CONFIG = FIREBASE_CONFIG_BAKED;
+try{const s=localStorage.getItem('wfs_fb');if(!FIREBASE_CONFIG&&s)FIREBASE_CONFIG=JSON.parse(s)}catch(e){}
+
+// ── Firebase Authentication gate (real logins + roles) ───────────────
+// Active whenever a Firebase config is present and the Auth SDK loaded.
+// Each signed-in user maps to /users/{uid} = {name,email,role,company}.
+// Roles: worker (one company) · manager/owner (all). The first account to
+// sign in (empty /users) is auto-promoted to owner; later sign-ups start
+// "pending" until an owner assigns them. Database rules enforce all of this
+// server-side — these client checks only shape the UI.
+const FB_AUTH_ON = !!(FIREBASE_CONFIG && typeof firebase!=='undefined' && firebase.auth);
+function gateOn(){return FB_AUTH_ON||accessEnabled()}
+function canSeeAllRec(r){return !!(r&&(r.role==='owner'||r.role==='manager'))}
+let FB_USER=null;
+function ensureLockRoot(){let r=document.getElementById('lock-root');if(!r){r=document.createElement('div');r.id='lock-root';document.body.appendChild(r)}return r}
+function authLockIcon(){return '<div class="lock-ico"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"/></svg></div>'}
+function startAuthGate(){
+  try{if(!firebase.apps.length)firebase.initializeApp(FIREBASE_CONFIG)}catch(e){}
+  let auth;try{auth=firebase.auth()}catch(e){bootApp();return}
+  try{auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)}catch(e){}
+  showAuthLoading();
+  auth.onAuthStateChanged(u=>handleAuthUser(auth,u));
+}
+async function handleAuthUser(auth,user){
+  if(!user){showAuthScreen(auth,'');return}
+  showAuthLoading();
+  try{
+    const db=firebase.database();
+    const uref=db.ref('users/'+user.uid);
+    let rec=null;
+    try{const s=await uref.get();rec=s.exists()?s.val():null}catch(e){}
+    if(!rec){
+      const base={name:(user.displayName||(user.email||'').split('@')[0]||'User'),email:user.email||''};
+      // first user, OR /users unreadable under locked rules -> attempt owner; the DB rule is the real gatekeeper (only succeeds if /users is truly empty)
+      let firstish=false;
+      try{const all=await db.ref('users').get();firstish=!all.exists()}catch(e){firstish=true}
+      rec={...base,role:firstish?'owner':'pending',company:firstish?'all':''};
+      try{await uref.set(rec)}
+      catch(e){rec={...base,role:'pending',company:''};try{await uref.set(rec)}catch(e2){}}
+    }
+    FB_USER={uid:user.uid,...rec};
+    SESSION={uid:user.uid,name:rec.name,role:rec.role,company:rec.company};
+    if(rec.role==='pending'||!rec.role){showPendingScreen(auth,rec);return}
+    if(!canSeeAllRec(rec)){
+      let cur=null;try{cur=localStorage.getItem('jt_company')}catch(e){}
+      if(rec.company&&cur!==rec.company){try{localStorage.setItem('jt_company',rec.company)}catch(e){}location.reload();return}
+    }
+    hideAuthScreen();
+    bootApp();
+  }catch(e){showAuthScreen(auth,(e&&e.message)||'Sign-in error')}
+}
+function showAuthLoading(){ensureLockRoot().innerHTML=`<div class="lock-bd"><div class="lock-card">${authLockIcon()}<div class="lock-sub" style="margin-top:10px">Loading…</div></div></div>`}
+function showAuthScreen(auth,errMsg){
+  const root=ensureLockRoot();
+  root.innerHTML=`<div class="lock-bd"><div class="lock-card">
+    ${authLockIcon()}
+    <div class="lock-title">Sign in</div>
+    <div class="lock-sub" id="auth-sub">Use your work email and password</div>
+    <input id="auth-email" class="auth-in" type="email" placeholder="you@company.com" autocomplete="username">
+    <input id="auth-pass" class="auth-in" type="password" placeholder="Password" autocomplete="current-password">
+    <div class="lock-err" id="auth-err">${errMsg?esc(errMsg):''}</div>
+    <button class="lock-btn" id="auth-go" type="button">Sign In</button>
+    <div style="display:flex;justify-content:space-between;margin-top:12px;font-size:12px">
+      <a href="#" id="auth-signup" style="color:var(--green-700);text-decoration:none">Create account</a>
+      <a href="#" id="auth-reset" style="color:var(--text-3);text-decoration:none">Forgot password?</a>
+    </div>
+  </div></div>`;
+  let mode='signin';
+  const setErr=t=>{const e=document.getElementById('auth-err');if(e)e.textContent=t};
+  document.getElementById('auth-signup').onclick=e=>{e.preventDefault();mode=mode==='signup'?'signin':'signup';document.getElementById('auth-go').textContent=mode==='signup'?'Create Account':'Sign In';document.getElementById('auth-sub').textContent=mode==='signup'?'Create your account — an owner grants access after':'Use your work email and password';document.getElementById('auth-signup').textContent=mode==='signup'?'Have an account? Sign in':'Create account';setErr('')};
+  document.getElementById('auth-reset').onclick=async e=>{e.preventDefault();const em=(document.getElementById('auth-email').value||'').trim();if(!em){setErr('Enter your email first');return}try{await auth.sendPasswordResetEmail(em);setErr('Password reset email sent.')}catch(err){setErr((err&&err.message)||'Could not send reset')}};
+  async function go(){
+    const em=(document.getElementById('auth-email').value||'').trim();const pw=document.getElementById('auth-pass').value||'';
+    if(!em||!pw){setErr('Enter email and password');return}
+    setErr('');const btn=document.getElementById('auth-go');btn.textContent='…';
+    try{if(mode==='signup')await auth.createUserWithEmailAndPassword(em,pw);else await auth.signInWithEmailAndPassword(em,pw);}
+    catch(err){setErr((err&&err.message)||'Sign-in failed');btn.textContent=mode==='signup'?'Create Account':'Sign In'}
+  }
+  document.getElementById('auth-go').onclick=go;
+  document.getElementById('auth-pass').onkeydown=e=>{if(e.key==='Enter')go()};
+  setTimeout(()=>{try{document.getElementById('auth-email').focus()}catch(e){}},60);
+}
+function showPendingScreen(auth,rec){
+  ensureLockRoot().innerHTML=`<div class="lock-bd"><div class="lock-card">
+    ${authLockIcon()}
+    <div class="lock-title">Awaiting access</div>
+    <div class="lock-sub">You're signed in as ${esc(rec.email||rec.name||'')}, but an owner hasn't granted you a company yet. You'll get in as soon as they assign you.</div>
+    <button class="lock-btn" id="auth-out" type="button" style="margin-top:16px">Sign out</button>
+  </div></div>`;
+  document.getElementById('auth-out').onclick=()=>{try{auth.signOut()}catch(e){}};
+}
+function hideAuthScreen(){const r=document.getElementById('lock-root');if(r)r.innerHTML=''}
+async function showFbUserAdmin(){
+  if(!(FB_USER&&FB_USER.role==='owner')){toast('Only owners can manage access','');return}
+  $('modal-root').innerHTML=`<div class="modal-bd" id="mbd" role="dialog" aria-modal="true" aria-label="Team access"><div class="modal"><div class="modal-handle"></div>
+    <div class="modal-head"><div class="modal-title">Team Access &amp; Roles</div><button class="modal-close" id="mc" aria-label="Close"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button></div>
+    <div class="modal-body" id="fbu-body"><p style="font-size:13px;color:var(--text-3)">Loading team…</p></div>
+  </div></div>`;
+  $('mc').onclick=closeModal;$('mbd').onclick=e=>{if(e.target===e.currentTarget)closeModal()};
+  try{const snap=await firebase.database().ref('users').get();renderFbUserList(snap.exists()?snap.val():{});}
+  catch(e){const b=$('fbu-body');if(b)b.innerHTML='<p style="color:var(--red);font-size:13px">Could not load users: '+esc(e.message||'')+'</p>'}
+}
+function renderFbUserList(users){
+  const b=$('fbu-body');if(!b)return;
+  const ids=Object.keys(users);
+  const coOpts=c=>Object.values(COMPANIES).map(co=>`<option value="${esc(co.id)}" ${c===co.id?'selected':''}>${esc(co.label)}</option>`).join('');
+  const roleOpts=r=>['worker','manager','owner'].map(x=>`<option value="${x}" ${r===x?'selected':''}>${x[0].toUpperCase()+x.slice(1)}</option>`).join('');
+  b.innerHTML=`
+    <p style="font-size:12px;color:var(--text-2);line-height:1.5;margin-bottom:12px">People who sign in appear here as <strong>pending</strong>. Set each person's role and company, then Save. Workers see only their company; managers &amp; owners see all.</p>
+    ${ids.length?ids.map(uid=>{const u=users[uid]||{};const pend=(u.role==='pending'||!u.role);return `<div class="acc-row" data-fbu="${esc(uid)}" style="flex-wrap:wrap;gap:8px">
+      <div class="acc-info" style="flex:1 1 100%"><div class="acc-name">${esc(u.name||u.email||uid)}${pend?' <span class="acc-role" style="background:var(--gold-light);color:#92400e">pending</span>':''}</div><div class="acc-meta">${esc(u.email||'')}</div></div>
+      <select class="form-select" style="flex:1;min-width:110px" data-fbu-role>${roleOpts(pend?'worker':u.role)}</select>
+      <select class="form-select" style="flex:1;min-width:130px" data-fbu-co>${coOpts(u.company)}</select>
+      <button class="btn-sm" data-fbu-save type="button">Save</button>
+    </div>`}).join(''):'<p style="font-size:13px;color:var(--text-3)">No one has signed in yet. Share the app link — people sign in and show up here to assign.</p>'}
+  `;
+  b.querySelectorAll('[data-fbu]').forEach(row=>{
+    const roleSel=row.querySelector('[data-fbu-role]'),coSel=row.querySelector('[data-fbu-co]');
+    const sync=()=>{coSel.style.display=roleSel.value==='worker'?'':'none'};roleSel.onchange=sync;sync();
+    row.querySelector('[data-fbu-save]').onclick=async()=>{
+      const uid=row.dataset.fbu,role=roleSel.value,company=role==='worker'?coSel.value:'all',u=users[uid]||{};
+      try{await firebase.database().ref('users/'+uid).update({role,company,name:u.name||'',email:u.email||''});u.role=role;u.company=company;toast('Saved')}catch(e){toast('Save failed: '+(e.message||''),'')}
+    };
+  });
+}
+
+// ══ State ══
+let DB=null;
+let MAP=null,MAP_MARKERS=[];
+const S={jobs:{},activity:[],members:[],view:'dashboard',detail:null,detailTab:'overview',filter:'all',search:'',photoCat:'all',calMonth:new Date().getMonth(),calYear:new Date().getFullYear(),calSelected:null,calMode:localStorage.getItem(LS('calmode'))||'month',reportRange:'90',sort:localStorage.getItem(LS('sort'))||'newest',sortOpen:false,bulkMode:false,bulkSel:new Set(),invFilter:'all',invSearch:'',invSort:'date',user:localStorage.getItem(LS('user'))||'',notifReadAt:parseInt(localStorage.getItem(LS('notif_read'))||'0',10),refFilter:'all',referrals:{},timeEntries:{},payRates:{},transactions:{},owner:{}};
+const UNDO={stack:[],push(op){this.stack.push(op);if(this.stack.length>20)this.stack.shift()},pop(){return this.stack.pop()}};
+
+// ── Company info for invoice letterhead (editable via Settings)
+// Shared business mailing address — the same for every company, shown on all
+// invoice & estimate templates.
+const BIZ_ADDRESS='189 Ross Estates Rd. Kingston, TN 37763';
+const COMPANY_DEFAULT={
+  name:ACTIVE_CO.label,
+  address:'LaFollette, TN',
+  phone:'',
+  email:'',
+  website:'',
+  license:'',
+  taxRate:'',
+  terms:'Payment due upon receipt unless otherwise noted. Thank you for your business.',
+};
+function loadCompany(){try{const s=localStorage.getItem(LS('company'));return s?{...COMPANY_DEFAULT,...JSON.parse(s)}:{...COMPANY_DEFAULT}}catch(e){return{...COMPANY_DEFAULT}}}
+function saveCompany(c){localStorage.setItem(LS('company'),JSON.stringify(c))}
+let COMPANY=loadCompany();
+
+// ── Workflow stages (BuilderTrend / AccuLynx style)
+const STAGES=['Lead','Estimate','Approved','Scheduled','In Progress','Punch List','Complete'];
+const STAGE_TO_STATUS={'Lead':'lead','Estimate':'lead','Approved':'active','Scheduled':'active','In Progress':'active','Punch List':'active','Complete':'complete'};
+const PHOTO_CATS=['all','before','during','after','damage','docs'];
+const LEAD_SOURCES=['Referral','Repeat Customer','Google Search','Facebook / Social','Yard Sign','Drive-By','Website','Phone Call','Walk-In','Other'];
+const RECEIPT_CATS=['Materials','Tools / Equipment','Fuel / Travel','Subcontractor','Permits / Fees','Labor','Meals','Other'];
+function receiptTotal(j){return (j.receipts||[]).reduce((s,r)=>s+Number(r.amount||0),0)}
+
+// ══ Helpers ══
+const $=id=>document.getElementById(id);
+const esc=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+function ago(ts){const s=Math.floor((Date.now()-ts)/1000);if(s<60)return'just now';if(s<3600)return Math.floor(s/60)+'m ago';if(s<86400)return Math.floor(s/3600)+'h ago';return new Date(ts).toLocaleDateString()}
+function uid(){return'j_'+Date.now()+'_'+Math.random().toString(36).slice(2,6)}
+function jobs(){
+  const all=Object.values(S.jobs);
+  const cmp={
+    newest:(a,b)=>(b.created||0)-(a.created||0),
+    oldest:(a,b)=>(a.created||0)-(b.created||0),
+    name:(a,b)=>(a.name||'').localeCompare(b.name||''),
+    value:(a,b)=>Number(b.value||0)-Number(a.value||0),
+    due:(a,b)=>{const ad=a.dueDate||'9999',bd=b.dueDate||'9999';return ad.localeCompare(bd)},
+    progress:(a,b)=>(b.progress||0)-(a.progress||0),
+  };
+  const fn=cmp[S.sort]||cmp.newest;
+  return all.sort((a,b)=>{
+    const af=a.favorite?1:0,bf=b.favorite?1:0;
+    if(af!==bf)return bf-af;
+    return fn(a,b);
+  });
+}
+function initials(name){return(name||'?')[0].toUpperCase()}
+function money(n){const v=Number(n||0);return '$'+v.toLocaleString(undefined,{maximumFractionDigits:0})}
+function money2(n){const v=Number(n||0);return '$'+v.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}
+function dateKey(d){const x=d instanceof Date?d:new Date(d);return x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0')}
+function fmtDate(s){if(!s)return'';try{const d=new Date(s+(s.length===10?'T00:00:00':''));return d.toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'})}catch(e){return s}}
+function fmtShort(s){if(!s)return'';try{const d=new Date(s+(s.length===10?'T00:00:00':''));return d.toLocaleDateString(undefined,{month:'short',day:'numeric'})}catch(e){return s}}
+function daysUntil(s){if(!s)return null;try{const d=new Date(s+(s.length===10?'T00:00:00':''));const t=new Date();t.setHours(0,0,0,0);return Math.round((d-t)/(1000*60*60*24))}catch(e){return null}}
+function jobBalance(j){const inv=Number(j.invoiced||0),paid=Number(j.paid||0);return inv-paid}
+function jobStage(j){return j.stage||(j.status==='complete'?'Complete':j.status==='lead'?'Lead':'In Progress')}
+
+// ── Invoice helpers ──
+function calcInvoice(inv){
+  const items=inv.items||[];
+  const sub=items.reduce((s,i)=>s+(Number(i.qty||0)*Number(i.rate||0)),0);
+  const tax=sub*(Number(inv.taxRate||0)/100);
+  const total=sub+tax;
+  const deposit=Number(inv.deposit||0);
+  const paid=Number(inv.paid||0);
+  const balance=total-paid;
+  return {sub,tax,total,deposit,paid,balance};
+}
+function nextInvoiceNumber(){
+  let max=1000;
+  Object.values(S.jobs).forEach(j=>{
+    (j.invoices||[]).forEach(inv=>{
+      const m=String(inv.number||'').match(/(\d+)/);
+      if(m){const n=parseInt(m[1],10);if(n>max)max=n}
+    });
+  });
+  return 'INV-'+(max+1);
+}
+function nextEstimateNumber(){
+  let max=1000;
+  Object.values(S.jobs).forEach(j=>{(j.estimates||[]).forEach(e=>{const m=String(e.number||'').match(/(\d+)/);if(m){const n=parseInt(m[1],10);if(n>max)max=n}})});
+  return 'EST-'+(max+1);
+}
+function invoiceTotals(j){
+  const invs=j.invoices||[];
+  if(!invs.length)return null;
+  const inv=invs.reduce((s,i)=>{const c=calcInvoice(i);return{total:s.total+c.total,paid:s.paid+c.paid,balance:s.balance+c.balance}},{total:0,paid:0,balance:0});
+  return inv;
+}
+function invoiceStatus(inv){
+  const c=calcInvoice(inv);
+  if(c.total>0&&c.balance<=0.005)return'paid';
+  if(inv.status==='sent'){
+    if(inv.dueDate){const d=daysUntil(inv.dueDate);if(d!==null&&d<0)return'overdue'}
+    return'sent';
+  }
+  return inv.status||'draft';
+}
+function getBrandLogoSrc(){
+  const el=document.querySelector('.brand-logo');
+  return el?el.src:'';
+}
+
+function toast(msg,icon='check',undoFn){
+  const t=$('toast');
+  const icons={check:'<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>',photo:'📷',note:'💬',undo:'↩'};
+  t.classList.toggle('undo',!!undoFn);
+  t.innerHTML=(icons[icon]||'')+'<span>'+esc(msg)+'</span>'+(undoFn?'<button class="toast-action" id="toast-undo">Undo</button>':'');
+  t.classList.add('show');
+  clearTimeout(t._t);t._t=setTimeout(()=>{t.classList.remove('show','undo')},undoFn?6000:2600);
+  if(undoFn){
+    const btn=document.getElementById('toast-undo');
+    if(btn)btn.onclick=()=>{clearTimeout(t._t);t.classList.remove('show','undo');undoFn()};
+  }
+}
+function undoLast(){const op=UNDO.pop();if(!op){toast('Nothing to undo','');return}op();}
+
+// ══ DB layer ══
+const LOCAL={
+  load(){try{S.jobs=JSON.parse(localStorage.getItem(LS('jobs'))||'{}')}catch(e){S.jobs={}}try{S.activity=JSON.parse(localStorage.getItem(LS('activity'))||'[]')}catch(e){S.activity=[]}try{S.members=JSON.parse(localStorage.getItem(LS('members'))||'[]')}catch(e){S.members=[]}try{S.referrals=JSON.parse(localStorage.getItem(LS('referrals'))||'{}')}catch(e){S.referrals={}}try{S.timeEntries=JSON.parse(localStorage.getItem(LS('time'))||'{}')}catch(e){S.timeEntries={}}try{S.payRates=JSON.parse(localStorage.getItem(LS('payrates'))||'{}')}catch(e){S.payRates={}}try{S.transactions=JSON.parse(localStorage.getItem(LS('transactions'))||'{}')}catch(e){S.transactions={}}},
+  saveJobs(){try{localStorage.setItem(LS('jobs'),JSON.stringify(S.jobs))}catch(e){}},
+  saveActivity(){try{localStorage.setItem(LS('activity'),JSON.stringify(S.activity.slice(0,300)))}catch(e){}},
+  saveMembers(){try{localStorage.setItem(LS('members'),JSON.stringify(S.members))}catch(e){}},
+  saveReferrals(){try{localStorage.setItem(LS('referrals'),JSON.stringify(S.referrals))}catch(e){}},
+  saveTime(){try{localStorage.setItem(LS('time'),JSON.stringify(S.timeEntries))}catch(e){}},
+  savePayRates(){try{localStorage.setItem(LS('payrates'),JSON.stringify(S.payRates))}catch(e){}},
+  saveTransactions(){try{localStorage.setItem(LS('transactions'),JSON.stringify(S.transactions))}catch(e){}}
+};
+function syncStatus(state,msg){const d=$('sync-dot'),t=$('sync-text');d.className='sync-dot '+state;t.textContent=msg}
+
+// ══ Cloud file storage (Firebase Storage) ══
+// Photos, receipts and documents upload to Firebase Storage and we keep only
+// the short https download URL in the job record — instead of a base64 string
+// that can be hundreds of KB each. That frees localStorage + the Realtime DB,
+// letting the app hold far more photos (Storage gives gigabytes vs the ~5MB
+// localStorage cap). If Storage is unavailable (offline, not enabled yet, or
+// upload fails) we fall back to embedding base64 inline, exactly as before, so
+// nothing is ever lost.
+function storageReady(){try{return !!(FIREBASE_CONFIG&&typeof firebase!=='undefined'&&firebase.storage&&firebase.apps.length)}catch(e){return false}}
+function canvasToBlob(canvas,type,quality){return new Promise(res=>{try{canvas.toBlob(b=>res(b),type,quality)}catch(e){res(null)}})}
+async function uploadToStorage(blobOrFile,subpath,ext){
+  if(!storageReady()||!blobOrFile)return null;
+  try{
+    const ns=(DB_NS||'data').replace(/[^a-zA-Z0-9_-]/g,'');
+    const safeExt=(ext||'').replace(/[^a-zA-Z0-9]/g,'').slice(0,8);
+    const path=ns+'/'+subpath+'/'+Date.now()+'_'+Math.random().toString(36).slice(2,8)+(safeExt?'.'+safeExt:'');
+    const ref=firebase.storage().ref(path);
+    const snap=await ref.put(blobOrFile);
+    const url=await snap.ref.getDownloadURL();
+    return {url,path};
+  }catch(e){return null}
+}
+async function deleteStoragePath(path){if(!path||!storageReady())return;try{await firebase.storage().ref(path).delete()}catch(e){}}
+function initFB(cfg){
+  try{
+    if(!firebase.apps.length)firebase.initializeApp(cfg);
+    DB=firebase.database().ref(DB_NS);
+    syncStatus('pulse','Connecting…');
+    DB.child('jobs').on('value',s=>{S.jobs=s.val()||{};LOCAL.saveJobs();syncStatus('ok','Team sync live');render()});
+    DB.child('activity').on('value',s=>{const r=s.val();S.activity=r?Object.values(r).sort((a,b)=>b.time-a.time):[];LOCAL.saveActivity()});
+    DB.child('members').on('value',s=>{S.members=s.val()||[];LOCAL.saveMembers();render()});
+    DB.child('referrals').on('value',s=>{S.referrals=s.val()||{};LOCAL.saveReferrals();render()});
+    DB.child('time').on('value',s=>{S.timeEntries=s.val()||{};LOCAL.saveTime();render()});
+    DB.child('payrates').on('value',s=>{S.payRates=s.val()||{};LOCAL.savePayRates();render()});
+    DB.child('transactions').on('value',s=>{S.transactions=s.val()||{};LOCAL.saveTransactions();render()});
+    DB.child('.info/connected').on('value',s=>{if(!s.val())syncStatus('err','Reconnecting…')});
+    return true;
+  }catch(e){syncStatus('err','Firebase error');return false}
+}
+async function writeJob(j){S.jobs[j.id]=j;LOCAL.saveJobs();if(DB)await DB.child('jobs/'+j.id).set(j).catch(()=>{})}
+async function deleteJobDB(id){delete S.jobs[id];LOCAL.saveJobs();if(DB)await DB.child('jobs/'+id).remove().catch(()=>{})}
+async function logAct(action,job){const e={user:S.user||'Someone',action,job:job||'',time:Date.now()};S.activity.unshift(e);LOCAL.saveActivity();if(DB)await DB.child('activity').push(e).catch(()=>{})}
+async function saveMembers(){LOCAL.saveMembers();if(DB)await DB.child('members').set(S.members).catch(()=>{})}
+async function writeReferral(r){S.referrals[r.id]=r;LOCAL.saveReferrals();if(DB)await DB.child('referrals/'+r.id).set(r).catch(()=>{})}
+async function deleteReferralDB(id){delete S.referrals[id];LOCAL.saveReferrals();if(DB)await DB.child('referrals/'+id).remove().catch(()=>{})}
+
+// ── Time tracking (clock in / clock out) ──
+async function writeTimeEntry(t){S.timeEntries[t.id]=t;LOCAL.saveTime();if(DB)await DB.child('time/'+t.id).set(t).catch(()=>{})}
+async function deleteTimeEntryDB(id){delete S.timeEntries[id];LOCAL.saveTime();if(DB)await DB.child('time/'+id).remove().catch(()=>{})}
+function tid(){return't_'+Date.now()+'_'+Math.random().toString(36).slice(2,6)}
+function timeList(){return Object.values(S.timeEntries||{})}
+function activeEntry(member){return timeList().find(t=>t.member===member&&!t.end)}
+function entryDur(t){return Math.max(0,(t.end||Date.now())-t.start)}
+function fmtHM(ms){const m=Math.floor(Math.max(0,ms)/60000);const h=Math.floor(m/60);return (h?h+'h ':'')+(m%60)+'m'}
+function fmtHMS(ms){const s=Math.floor(Math.max(0,ms)/1000);const h=Math.floor(s/3600),m=Math.floor((s%3600)/60),ss=s%60;const p=n=>String(n).padStart(2,'0');return (h?h+':':'')+p(m)+':'+p(ss)}
+function fmtClockT(ts){try{return new Date(ts).toLocaleTimeString(undefined,{hour:'numeric',minute:'2-digit'})}catch(e){return''}}
+function dtLocalValue(ts){const d=new Date(ts);const p=n=>String(n).padStart(2,'0');return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())+'T'+p(d.getHours())+':'+p(d.getMinutes())}
+function dtLocalParse(v){if(!v)return null;const t=new Date(v).getTime();return isNaN(t)?null:t}
+function weekStart(){const d=new Date();d.setHours(0,0,0,0);d.setDate(d.getDate()-d.getDay());return d.getTime()}
+let TIME_TICK=null;
+function stopTimeTick(){if(TIME_TICK){clearInterval(TIME_TICK);TIME_TICK=null}}
+function startTimeTick(){stopTimeTick();TIME_TICK=setInterval(()=>{document.querySelectorAll('[data-tick-start]').forEach(el=>{const s=parseInt(el.getAttribute('data-tick-start'),10);if(s)el.textContent=fmtHMS(Date.now()-s)})},1000)}
+// ── Labor cost roll-ups ──
+async function savePayRates(){LOCAL.savePayRates();if(DB)await DB.child('payrates').set(S.payRates).catch(()=>{})}
+function rateOf(m){return Number((S.payRates||{})[m]||0)}
+function hoursOf(ms){return ms/3600000}
+function jobLaborStats(jobId){let ms=0,cost=0,active=0;timeList().forEach(t=>{if((t.job||'')!==jobId)return;const d=entryDur(t);ms+=d;cost+=hoursOf(d)*rateOf(t.member);if(!t.end)active++});return{ms,hours:hoursOf(ms),cost,active}}
+function laborByJob(){const map={};timeList().forEach(t=>{const k=t.job||'';const e=map[k]||(map[k]={ms:0,cost:0,active:0});const d=entryDur(t);e.ms+=d;e.cost+=hoursOf(d)*rateOf(t.member);if(!t.end)e.active++});return map}
+
+// ── Owner mode: read every company's jobs (read-only, all nodes) ──
+function ownerPrefix(co){return co.ns+(ENV==='dev'?'_dev_':'_')}
+function ownerNode(co){return co.ns+(ENV==='dev'?'_dev':'')}
+function ownerLoadLocal(){S.owner=S.owner||{};S.ownerTime=S.ownerTime||{};S.ownerRates=S.ownerRates||{};Object.values(COMPANIES).forEach(co=>{try{S.owner[co.id]=Object.values(JSON.parse(localStorage.getItem(ownerPrefix(co)+'jobs')||'{}')||{})}catch(e){S.owner[co.id]=[]}try{S.ownerTime[co.id]=Object.values(JSON.parse(localStorage.getItem(ownerPrefix(co)+'time')||'{}')||{})}catch(e){S.ownerTime[co.id]=[]}try{S.ownerRates[co.id]=JSON.parse(localStorage.getItem(ownerPrefix(co)+'payrates')||'{}')||{}}catch(e){S.ownerRates[co.id]={}}})}
+function ownerInitFB(cfg){
+  try{
+    if(!firebase.apps.length)firebase.initializeApp(cfg);
+    syncStatus('pulse','Connecting…');
+    Object.values(COMPANIES).forEach(co=>{
+      firebase.database().ref(ownerNode(co)).child('jobs').on('value',s=>{S.owner=S.owner||{};S.owner[co.id]=Object.values(s.val()||{});syncStatus('ok','Live · all companies');render()});
+      firebase.database().ref(ownerNode(co)).child('time').on('value',s=>{S.ownerTime=S.ownerTime||{};S.ownerTime[co.id]=Object.values(s.val()||{});render()});
+      firebase.database().ref(ownerNode(co)).child('payrates').on('value',s=>{S.ownerRates=S.ownerRates||{};S.ownerRates[co.id]=s.val()||{};render()});
+    });
+    firebase.database().ref('.info/connected').on('value',s=>{if(!s.val())syncStatus('err','Reconnecting…')});
+    return true;
+  }catch(e){syncStatus('err','Firebase error');return false}
+}
+function ownerJobs(id){return (S.owner&&S.owner[id])||[]}
+
+function loadAndConnect(){
+  if(OWNER_MODE){ownerLoadLocal();if(FIREBASE_CONFIG)ownerInitFB(FIREBASE_CONFIG);}
+  else{LOCAL.load();if(FIREBASE_CONFIG)initFB(FIREBASE_CONFIG);}
+}
+
+// ══ Render ══
+function render(){
+  const c=$('content');
+  if(OWNER_MODE){renderOwner(c);return}
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.toggle('active',b.dataset.view===S.view));
+  if(S.view==='jobs'&&S.detail)c.innerHTML=renderDetail(S.detail);
+  else if(S.view==='jobs')c.innerHTML=renderJobs();
+  else if(S.view==='dashboard')c.innerHTML=renderDashboard();
+  else if(S.view==='schedule')c.innerHTML=renderSchedule();
+  else if(S.view==='invoices')c.innerHTML=renderInvoicesView();
+  else if(S.view==='referrals')c.innerHTML=renderReferrals();
+  else if(S.view==='map')c.innerHTML=renderMap();
+  else if(S.view==='reports')c.innerHTML=renderReports();
+  else if(S.view==='activity')c.innerHTML=renderActivity();
+  else if(S.view==='team')c.innerHTML=renderTeam();
+  else if(S.view==='time')c.innerHTML=renderTime();
+  else if(S.view==='bank')c.innerHTML=renderBank();
+  updateUserUI();
+  updateBellBadge();
+  attachHandlers();
+  if(S.view==='map')mountMap();
+}
+
+function updateUserUI(){
+  const u=$('user-label'),a=$('user-avatar');
+  u.textContent=S.user||'Set name';
+  a.textContent=S.user?initials(S.user):'?';
+}
+
+function sdClass(s){return{lead:'sd-lead',active:'sd-active',complete:'sd-complete',hold:'sd-hold'}[s]||'sd-hold'}
+function spClass(s){return{lead:'sp-lead',active:'sp-active',complete:'sp-complete',hold:'sp-hold'}[s]||'sp-hold'}
+function spLabel(s){return{lead:'Lead',active:'Active',complete:'Complete',hold:'On Hold'}[s]||s}
+
+function renderDashboard(){
+  const all=jobs();
+  const active=all.filter(j=>j.status==='active');
+  const leads=all.filter(j=>j.status==='lead');
+  const done=all.filter(j=>j.status==='complete');
+  const totalValue=all.reduce((s,j)=>s+Number(j.value||0),0);
+  const totalInvoiced=all.reduce((s,j)=>{const t=invoiceTotals(j);return s+(t?t.total:Number(j.invoiced||0))},0);
+  const totalPaid=all.reduce((s,j)=>{const t=invoiceTotals(j);return s+(t?t.paid:Number(j.paid||0))},0);
+  const outstanding=totalInvoiced-totalPaid;
+  const pipeline=leads.reduce((s,j)=>s+Number(j.value||0),0);
+  // Upcoming: jobs with start date in next 14 days, or not yet started
+  const upcoming=all.filter(j=>{
+    if(j.status==='complete')return false;
+    const d=daysUntil(j.startDate);
+    return d!==null&&d>=-1&&d<=14;
+  }).sort((a,b)=>(new Date(a.startDate))-(new Date(b.startDate))).slice(0,5);
+  // Open tasks across all jobs
+  const openTasks=[];
+  all.forEach(j=>(j.tasks||[]).forEach((t,i)=>{if(!t.done)openTasks.push({...t,jobId:j.id,jobName:j.name})}));
+  openTasks.sort((a,b)=>(a.due||'9999')>(b.due||'9999')?1:-1);
+  // Status distribution for chart
+  const cntStatus={lead:leads.length,active:active.length,complete:done.length,hold:all.filter(j=>j.status==='hold').length};
+  const maxCnt=Math.max(1,...Object.values(cntStatus));
+  const colors={lead:'var(--gold)',active:'#4ade80',complete:'var(--sky)',hold:'#94a3b8'};
+  const recent=S.activity.slice(0,5);
+
+  return `
+    <div style="margin-bottom:14px">
+      <div style="font-size:11px;color:var(--text-3);text-transform:uppercase;letter-spacing:0.06em;font-weight:700">${new Date().toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'})}</div>
+      <div style="font-size:20px;font-weight:700;margin-top:2px">${S.user?'Hi, '+esc(S.user.split(' ')[0])+' 👋':'Welcome'}</div>
+    </div>
+    <div class="kpi-grid">
+      <div class="kpi-card accent">
+        <div class="kpi-label">Active Jobs</div>
+        <div class="kpi-value">${active.length}</div>
+        <div class="kpi-sub">${leads.length} lead${leads.length!==1?'s':''} · ${done.length} done</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Job Value</div>
+        <div class="kpi-value">${money(totalValue)}</div>
+        <div class="kpi-sub">${money(pipeline)} in pipeline</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Invoiced</div>
+        <div class="kpi-value">${money(totalInvoiced)}</div>
+        <div class="kpi-sub">${money(totalPaid)} collected</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Outstanding</div>
+        <div class="kpi-value" style="color:${outstanding>0?'var(--orange)':'var(--green-700)'}">${money(outstanding)}</div>
+        <div class="kpi-sub">${outstanding>0?'awaiting payment':'all paid up'}</div>
+      </div>
+    </div>
+
+    <div class="dash-section">
+      <div class="dash-section-hd">Upcoming <span class="kpi-sub" style="font-size:11px">Next 14 days</span></div>
+      ${upcoming.length===0?'<p style="font-size:12.5px;color:var(--text-3);padding:4px 0">Nothing scheduled. Add start dates to jobs to plan your week.</p>'
+        :upcoming.map(j=>{
+          const d=daysUntil(j.startDate);
+          const lbl=d===0?'Today':d===1?'Tomorrow':d<0?Math.abs(d)+'d ago':'in '+d+'d';
+          const pillCls=d<=1?'sp-lead':'sp-active';
+          return `<div class="dash-row" data-open="${j.id}" style="cursor:pointer">
+            <span style="font-size:16px">📅</span>
+            <div style="flex:1;min-width:0">
+              <div style="font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(j.name)}</div>
+              <div style="font-size:11.5px;color:var(--text-3)">${fmtShort(j.startDate)} · ${esc(j.assigned||'Unassigned')}</div>
+            </div>
+            <span class="dash-row-pill status-pill ${pillCls}">${lbl}</span>
+          </div>`;
+        }).join('')}
+    </div>
+
+    <div class="dash-section">
+      <div class="dash-section-hd">Open Tasks <span class="kpi-sub" style="font-size:11px">${openTasks.length} total</span></div>
+      ${openTasks.length===0?'<p style="font-size:12.5px;color:var(--text-3);padding:4px 0">No open tasks. Add tasks inside a job’s Tasks tab.</p>'
+        :openTasks.slice(0,6).map(t=>{
+          const d=daysUntil(t.due);
+          const overdue=d!==null&&d<0;
+          const dueLbl=t.due?(overdue?'<span class="badge danger">'+Math.abs(d)+'d overdue</span>':d===0?'<span class="badge">Today</span>':d<=3?'<span class="badge">in '+d+'d</span>':fmtShort(t.due)):'';
+          return `<div class="dash-row" data-open="${t.jobId}" style="cursor:pointer">
+            <span style="font-size:14px">○</span>
+            <div style="flex:1;min-width:0">
+              <div style="font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(t.text)}</div>
+              <div style="font-size:11.5px;color:var(--text-3)">${esc(t.jobName)}${t.assigned?' · '+esc(t.assigned):''}</div>
+            </div>
+            ${dueLbl}
+          </div>`;
+        }).join('')}
+    </div>
+
+    <div class="dash-section">
+      <div class="dash-section-hd">Jobs by Status</div>
+      <div class="bar-chart">
+        ${['lead','active','hold','complete'].map(s=>`
+          <div class="bar-row">
+            <div class="bar-row-label">${spLabel(s)}</div>
+            <div class="bar-row-track"><div class="bar-row-fill" style="width:${(cntStatus[s]/maxCnt)*100}%;background:${colors[s]}"></div></div>
+            <div class="bar-row-val">${cntStatus[s]}</div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+
+    ${recent.length?`<div class="dash-section">
+      <div class="dash-section-hd">Recent Activity <button class="btn-sm" id="btn-view-all-act" style="padding:5px 10px;font-size:11px">View all</button></div>
+      ${recent.map(a=>`<div class="dash-row" style="cursor:default">
+        <div class="activity-ava" style="width:28px;height:28px;font-size:11px">${initials(a.user)}</div>
+        <div style="flex:1;min-width:0;font-size:12.5px">
+          <strong>${esc(a.user)}</strong> ${esc(a.action)}${a.job?' · <strong>'+esc(a.job)+'</strong>':''}
+          <div style="font-size:11px;color:var(--text-3)">${ago(a.time)}</div>
+        </div>
+      </div>`).join('')}
+    </div>`:''}
+  `;
+}
+
+// Returns the date range a job covers (inclusive) as 'YYYY-MM-DD' keys.
+function jobDateRange(j){
+  if(!j.startDate)return[];
+  const start=j.startDate.slice(0,10);
+  const end=(j.dueDate||j.startDate).slice(0,10);
+  // Guard against invalid dates / due before start
+  if(end<start)return[start];
+  const out=[];
+  const s=new Date(start+'T00:00:00');
+  const e=new Date(end+'T00:00:00');
+  for(let d=new Date(s);d<=e;d.setDate(d.getDate()+1)){
+    out.push(dateKey(d));
+  }
+  // Cap at 365 days to avoid runaway iterations on bad data
+  return out.slice(0,365);
+}
+
+function chipClass(status){return{lead:'cs-lead',active:'cs-active',complete:'cs-complete',hold:'cs-hold'}[status]||'cs-active'}
+function chipBarColor(status){return{lead:'#d97706',active:'#16a34a',complete:'#0284c7',hold:'#64748b'}[status]||'#16a34a'}
+
+function renderSchedule(){
+  const y=S.calYear,m=S.calMonth;
+  const first=new Date(y,m,1);
+  const daysInMonth=new Date(y,m+1,0).getDate();
+  const startDow=first.getDay();
+  const monthName=first.toLocaleDateString(undefined,{month:'long',year:'numeric'});
+  const today=dateKey(new Date());
+  // Build map: dateKey -> [{job, dayIdx, totalDays}]
+  const byDay={};
+  jobs().forEach(j=>{
+    const range=jobDateRange(j);
+    range.forEach((k,i)=>{
+      (byDay[k]=byDay[k]||[]).push({job:j,dayIdx:i,totalDays:range.length,firstDay:range[0],lastDay:range[range.length-1]});
+    });
+  });
+  // Sort each day's chips so multi-day jobs come first and stay in stable order
+  Object.values(byDay).forEach(arr=>arr.sort((a,b)=>{
+    if(b.totalDays!==a.totalDays)return b.totalDays-a.totalDays;
+    return a.job.name.localeCompare(b.job.name);
+  }));
+
+  const sel=S.calSelected||today;
+  const isMonth=S.calMode!=='agenda';
+
+  return `
+    <div class="cal-head">
+      <div class="cal-title">${isMonth?monthName:'Upcoming'}</div>
+      <div class="cal-nav">
+        <button id="cal-prev" aria-label="Previous"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5"/></svg></button>
+        <button id="cal-today" style="width:auto;padding:0 12px;font-size:12px;font-weight:600">Today</button>
+        <button id="cal-next" aria-label="Next"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5"/></svg></button>
+      </div>
+    </div>
+    <div class="cal-view-toggle" role="tablist">
+      <button class="${isMonth?'active':''}" data-cal-mode="month" role="tab" aria-selected="${isMonth}">Month</button>
+      <button class="${!isMonth?'active':''}" data-cal-mode="agenda" role="tab" aria-selected="${!isMonth}">Agenda</button>
+    </div>
+    <div class="cal-legend">
+      <div class="cal-legend-item"><div class="cal-legend-sw" style="background:#dcfce7;border-left:3px solid #16a34a"></div>Active</div>
+      <div class="cal-legend-item"><div class="cal-legend-sw" style="background:var(--gold-light);border-left:3px solid #d97706"></div>Lead</div>
+      <div class="cal-legend-item"><div class="cal-legend-sw" style="background:#e0f2fe;border-left:3px solid #0284c7"></div>Complete</div>
+      <div class="cal-legend-item"><div class="cal-legend-sw" style="background:var(--surface-3);border-left:3px solid #64748b"></div>On Hold</div>
+    </div>
+    ${isMonth?renderCalMonth(y,m,daysInMonth,startDow,byDay,today,sel):renderCalAgenda(byDay,today)}
+    ${isMonth?renderSelectedDay(byDay,sel,today):''}
+  `;
+}
+
+function renderCalMonth(y,m,daysInMonth,startDow,byDay,today,sel){
+  const MAX_CHIPS=3;
+  let cells='';
+  const DOW=['S','M','T','W','T','F','S'];
+  DOW.forEach(d=>cells+=`<div class="cal-dow">${d}</div>`);
+  // Leading days from previous month
+  const prevDays=new Date(y,m,0).getDate();
+  for(let i=startDow-1;i>=0;i--){
+    const d=prevDays-i;
+    const prevM=m===0?11:m-1;
+    const prevY=m===0?y-1:y;
+    const k=`${prevY}-${String(prevM+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    cells+=renderCalCell(k,d,byDay,today,sel,true,MAX_CHIPS);
+  }
+  // Current month
+  for(let d=1;d<=daysInMonth;d++){
+    const k=`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    cells+=renderCalCell(k,d,byDay,today,sel,false,MAX_CHIPS);
+  }
+  // Trailing days to fill final week
+  const filled=startDow+daysInMonth;
+  const trailing=(7-filled%7)%7;
+  for(let i=1;i<=trailing;i++){
+    const nextM=m===11?0:m+1;
+    const nextY=m===11?y+1:y;
+    const k=`${nextY}-${String(nextM+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
+    cells+=renderCalCell(k,i,byDay,today,sel,true,MAX_CHIPS);
+  }
+  return `<div class="cal-grid">${cells}</div>`;
+}
+
+function renderCalCell(k,dayNum,byDay,today,sel,otherMonth,maxChips){
+  const list=byDay[k]||[];
+  const isToday=k===today;
+  const isSel=k===sel;
+  const cls='cal-day'+(isToday?' today':'')+(isSel?' selected':'')+(otherMonth?' other-month':'');
+  const visible=list.slice(0,maxChips);
+  const overflow=list.length-visible.length;
+  const chips=visible.map(({job,dayIdx,totalDays})=>{
+    const contLeft=dayIdx>0;
+    const contRight=dayIdx<totalDays-1;
+    const isWeekStart=new Date(k+'T00:00:00').getDay()===0;
+    const isWeekEnd=new Date(k+'T00:00:00').getDay()===6;
+    let contCls='';
+    if(contLeft&&contRight)contCls=isWeekStart?'continues-right':(isWeekEnd?'continues-left':'continues-both');
+    else if(contLeft)contCls=isWeekStart?'':'continues-left';
+    else if(contRight)contCls=isWeekEnd?'':'continues-right';
+    // On wrap to a new week, restart the chip with a left border
+    const label=(!contLeft||isWeekStart)?esc(job.name):'';
+    return `<div class="cal-chip ${chipClass(job.status)} ${contCls}" data-open="${job.id}" title="${esc(job.name)} · ${spLabel(job.status)}${totalDays>1?' · day '+(dayIdx+1)+'/'+totalDays:''}">${label||'&nbsp;'}</div>`;
+  }).join('');
+  const more=overflow>0?`<div class="cal-day-more" data-cal-day="${k}">+${overflow} more</div>`:'';
+  return `<div class="${cls}" data-cal-day="${k}"><div class="cal-day-num"><span>${dayNum}</span></div><div class="cal-day-chips">${chips}${more}</div></div>`;
+}
+
+function renderSelectedDay(byDay,sel,today){
+  const selList=(byDay[sel]||[]).slice();
+  // Sort: leads first? Or by status priority. Use status order: lead, active, complete, hold
+  const order={lead:0,active:1,complete:2,hold:3};
+  selList.sort((a,b)=>(order[a.job.status]??9)-(order[b.job.status]??9));
+  const dt=new Date(sel+'T00:00:00');
+  const lbl=dt.toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'});
+  const isToday=sel===today;
+  return `<div class="cal-day-list">
+    <div class="cal-day-list-hd"><span>${esc(lbl)}${isToday?' <span class="kpi-sub" style="color:var(--green-700);font-weight:700;margin-left:6px">Today</span>':''}</span><span class="kpi-sub">${selList.length} job${selList.length!==1?'s':''}</span></div>
+    ${selList.length===0?'<p style="font-size:12.5px;color:var(--text-3);padding:4px 0">Nothing scheduled. Tap a date above with jobs to see what\'s on the books.</p>'
+      :selList.map(({job,dayIdx,totalDays})=>`<div class="cal-job-row" data-open="${job.id}">
+        <div class="cal-job-row-bar" style="background:${chipBarColor(job.status)}"></div>
+        <div style="flex:1;min-width:0">
+          <div style="font-weight:600">${esc(job.name)}${totalDays>1?` <span class="cal-job-row-day">Day ${dayIdx+1}/${totalDays}</span>`:''}</div>
+          <div class="cal-job-row-meta">${esc(job.address||'No address')}${job.assigned?' · '+esc(job.assigned):''}${job.customerName?' · '+esc(job.customerName):''}</div>
+        </div>
+        <span class="status-pill ${spClass(job.status)}">${spLabel(job.status)}</span>
+      </div>`).join('')}
+  </div>`;
+}
+
+function renderCalAgenda(byDay,today){
+  // Show today plus next 14 days that have anything scheduled
+  const days=[];
+  const start=new Date(today+'T00:00:00');
+  for(let i=0;i<21;i++){
+    const d=new Date(start);d.setDate(start.getDate()+i);
+    const k=dateKey(d);
+    if(byDay[k]&&byDay[k].length){
+      days.push({k,date:d,list:byDay[k]});
+    }
+  }
+  if(days.length===0){
+    return `<div class="cal-day-list" style="text-align:center;padding:40px 24px">
+      <p style="font-size:14px;color:var(--text-2);margin-bottom:6px">Nothing scheduled in the next 3 weeks.</p>
+      <p style="font-size:12.5px;color:var(--text-3)">Add a start date (and optional due date) to a job to see it here.</p>
+    </div>`;
+  }
+  return days.map(({k,date,list})=>{
+    const isToday=k===today;
+    const lbl=date.toLocaleDateString(undefined,{weekday:'long',month:'short',day:'numeric'});
+    const order={lead:0,active:1,complete:2,hold:3};
+    const sorted=list.slice().sort((a,b)=>(order[a.job.status]??9)-(order[b.job.status]??9));
+    return `<div class="agenda-day">
+      <div class="agenda-day-hd">${esc(lbl)} ${isToday?'<span class="today-pill">TODAY</span>':''}<span style="margin-left:auto;color:var(--text-3);font-weight:600">${sorted.length} job${sorted.length!==1?'s':''}</span></div>
+      ${sorted.map(({job,dayIdx,totalDays})=>`<div class="cal-job-row" data-open="${job.id}">
+        <div class="cal-job-row-bar" style="background:${chipBarColor(job.status)}"></div>
+        <div style="flex:1;min-width:0">
+          <div style="font-weight:600">${esc(job.name)}${totalDays>1?` <span class="cal-job-row-day">Day ${dayIdx+1}/${totalDays}</span>`:''}</div>
+          <div class="cal-job-row-meta">${esc(job.address||'No address')}${job.assigned?' · '+esc(job.assigned):''}</div>
+        </div>
+        <span class="status-pill ${spClass(job.status)}">${spLabel(job.status)}</span>
+      </div>`).join('')}
+    </div>`;
+  }).join('');
+}
+
+// ══ Invoices view (all invoices across all jobs) ══
+function getAllInvoices(){
+  const out=[];
+  Object.values(S.jobs).forEach(j=>{
+    (j.invoices||[]).forEach(inv=>out.push({inv,job:j}));
+  });
+  return out;
+}
+
+function agingBucket(days){
+  // days = number of days OVERDUE (positive means past due)
+  if(days<=0)return 0; // current / not yet due
+  if(days<=30)return 1;
+  if(days<=60)return 2;
+  if(days<=90)return 3;
+  return 4;
+}
+
+function renderInvoicesView(){
+  const all=getAllInvoices();
+  // Stats
+  let totalInvoiced=0,totalPaid=0,outstanding=0,overdueAmt=0,overdueCount=0;
+  const statusCounts={draft:0,sent:0,paid:0,overdue:0};
+  // Aging buckets: 0=current, 1=1-30, 2=31-60, 3=61-90, 4=90+
+  const aging=[0,0,0,0,0];
+  const agingCounts=[0,0,0,0,0];
+  // Top outstanding customers
+  const byCustomer={};
+
+  all.forEach(({inv,job})=>{
+    const c=calcInvoice(inv);
+    const st=invoiceStatus(inv);
+    totalInvoiced+=c.total;
+    totalPaid+=c.paid;
+    outstanding+=c.balance;
+    statusCounts[st]=(statusCounts[st]||0)+1;
+    // Aging — only on unpaid balances
+    if(c.balance>0.005){
+      const due=inv.dueDate||inv.date;
+      const daysOver=due?-(daysUntil(due)||0):0;
+      const b=agingBucket(daysOver);
+      aging[b]+=c.balance;
+      agingCounts[b]++;
+      if(st==='overdue'){overdueAmt+=c.balance;overdueCount++}
+      // Customer aggregation
+      const key=job.customerName||'(no name)';
+      byCustomer[key]=byCustomer[key]||{name:key,jobs:new Set(),outstanding:0,overdue:0};
+      byCustomer[key].jobs.add(job.id);
+      byCustomer[key].outstanding+=c.balance;
+      if(st==='overdue')byCustomer[key].overdue+=c.balance;
+    }
+  });
+  const topCustomers=Object.values(byCustomer).sort((a,b)=>b.outstanding-a.outstanding).slice(0,5);
+
+  // Filter + search + sort
+  const q=S.invSearch.toLowerCase();
+  let shown=all.filter(({inv,job})=>{
+    if(S.invFilter!=='all'&&invoiceStatus(inv)!==S.invFilter)return false;
+    if(!q)return true;
+    const hay=((inv.number||'')+' '+(job.name||'')+' '+(job.customerName||'')+' '+(job.address||'')).toLowerCase();
+    return hay.includes(q);
+  });
+  const sortFn={
+    date:(a,b)=>(b.inv.date||'').localeCompare(a.inv.date||''),
+    due:(a,b)=>(a.inv.dueDate||'9999').localeCompare(b.inv.dueDate||'9999'),
+    amount:(a,b)=>calcInvoice(b.inv).total-calcInvoice(a.inv).total,
+    balance:(a,b)=>calcInvoice(b.inv).balance-calcInvoice(a.inv).balance,
+    number:(a,b)=>(b.inv.number||'').localeCompare(a.inv.number||''),
+  }[S.invSort]||sortFn?.date;
+  shown.sort(sortFn);
+
+  const collectionRate=totalInvoiced>0?(totalPaid/totalInvoiced)*100:0;
+  const statusChips=[
+    ['all','All',all.length],
+    ['draft','Draft',statusCounts.draft||0],
+    ['sent','Sent',statusCounts.sent||0],
+    ['overdue','Overdue',statusCounts.overdue||0],
+    ['paid','Paid',statusCounts.paid||0],
+  ];
+
+  const agingLabels=['Current','1-30 days','31-60 days','61-90 days','90+ days'];
+
+  return `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+      <div>
+        <div style="font-size:11px;color:var(--text-3);text-transform:uppercase;letter-spacing:0.06em;font-weight:700">Accounts Receivable</div>
+        <div style="font-size:20px;font-weight:700;margin-top:2px">Invoices</div>
+      </div>
+      <button class="btn-add" id="btn-new-inv-global" aria-label="Create new invoice">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+        New Invoice
+      </button>
+    </div>
+
+    <div class="kpi-grid">
+      <div class="kpi-card accent"><div class="kpi-label">Outstanding</div><div class="kpi-value">${money(outstanding)}</div><div class="kpi-sub">${all.filter(({inv})=>calcInvoice(inv).balance>0.005).length} unpaid</div></div>
+      <div class="kpi-card"><div class="kpi-label">Overdue</div><div class="kpi-value" style="color:${overdueCount>0?'var(--red)':'var(--text)'}">${money(overdueAmt)}</div><div class="kpi-sub">${overdueCount} invoice${overdueCount!==1?'s':''}</div></div>
+      <div class="kpi-card"><div class="kpi-label">Collected</div><div class="kpi-value">${money(totalPaid)}</div><div class="kpi-sub">${collectionRate.toFixed(0)}% of invoiced</div></div>
+      <div class="kpi-card"><div class="kpi-label">Total Invoiced</div><div class="kpi-value">${money(totalInvoiced)}</div><div class="kpi-sub">${all.length} invoice${all.length!==1?'s':''}</div></div>
+    </div>
+
+    <div class="report-section">
+      <div class="report-hd">Aging Report <span class="kpi-sub">Outstanding balances by age</span></div>
+      <div class="aging-grid">
+        ${agingLabels.map((lbl,i)=>`<div class="aging-cell bucket-${i}">
+          <div class="aging-lbl">${lbl}</div>
+          <div class="aging-val">${money(aging[i])}</div>
+          <div class="aging-cnt">${agingCounts[i]} invoice${agingCounts[i]!==1?'s':''}</div>
+        </div>`).join('')}
+      </div>
+    </div>
+
+    ${topCustomers.length?`<div class="report-section">
+      <div class="report-hd">Top Outstanding Customers</div>
+      <div class="leaderboard top-customers">
+        ${topCustomers.map((c,i)=>{
+          const rankCls=i===0?'gold':i===1?'silver':i===2?'bronze':'';
+          return `<div class="lb-row">
+            <div class="lb-rank ${rankCls}">${i+1}</div>
+            <div class="member-ava" style="width:30px;height:30px;font-size:12px">${initials(c.name)}</div>
+            <div class="lb-name">${esc(c.name)}<div style="font-size:11px;color:var(--text-3);font-weight:500">${c.jobs.size} job${c.jobs.size!==1?'s':''}${c.overdue>0?' · '+money(c.overdue)+' overdue':''}</div></div>
+            <div class="lb-stats"><strong>${money(c.outstanding)}</strong><div>balance</div></div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`:''}
+
+    <div class="toolbar" style="margin-top:8px">
+      <div class="search-wrap">
+        <div class="search-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 15.803a7.5 7.5 0 0010.607 0z"/></svg></div>
+        <input class="search" id="inv-search" placeholder="Search invoice #, job, customer…" value="${esc(S.invSearch)}" aria-label="Search invoices">
+      </div>
+      <select class="form-select" id="inv-sort" style="max-width:160px;font-size:13px;padding:8px 10px" aria-label="Sort invoices">
+        <option value="date" ${S.invSort==='date'?'selected':''}>Newest first</option>
+        <option value="due" ${S.invSort==='due'?'selected':''}>Due soonest</option>
+        <option value="amount" ${S.invSort==='amount'?'selected':''}>Largest total</option>
+        <option value="balance" ${S.invSort==='balance'?'selected':''}>Largest balance</option>
+        <option value="number" ${S.invSort==='number'?'selected':''}>Invoice #</option>
+      </select>
+    </div>
+
+    <div class="filter-row" style="margin-bottom:14px">
+      ${statusChips.map(([k,lbl,n])=>`<div class="filter-chip ${S.invFilter===k?'active':''}" data-inv-filter="${k}">${lbl} ${n}</div>`).join('')}
+    </div>
+
+    <div class="invoice-list">
+      ${shown.length===0?`<div class="empty" style="padding:40px 20px">
+        <div class="empty-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75M3.75 9.75h16.5m-16.5 3.75h16.5"/></svg></div>
+        <h3>${all.length===0?'No invoices yet':'No matches'}</h3>
+        <p>${all.length===0?'Create your first invoice. It will use your company letterhead and pull from job line items.':'Try a different search or filter.'}</p>
+      </div>`
+        :shown.map(({inv,job})=>{
+          const c=calcInvoice(inv);
+          const st=invoiceStatus(inv);
+          const daysOver=inv.dueDate?-(daysUntil(inv.dueDate)||0):0;
+          const overInfo=st==='overdue'&&daysOver>0?` · <span style="color:var(--red);font-weight:700">${daysOver}d late</span>`:'';
+          return `<div class="invoice-row ${st}">
+            <div class="invoice-row-main" data-open-inv="${esc(job.id)}|${esc(inv.id)}" style="cursor:pointer">
+              <div class="invoice-num">${esc(inv.number||'')} <span class="invoice-status ${st}">${st}</span></div>
+              <div class="invoice-meta">${esc(job.customerName||'(no customer)')} · ${fmtDate(inv.date)}${inv.dueDate?' · due '+fmtDate(inv.dueDate):''}${overInfo}</div>
+              <div class="inv-row-job">${esc(job.name||'')}</div>
+            </div>
+            <div class="invoice-row-amt" style="margin-right:8px">
+              <div class="invoice-row-total">${money(c.total)}</div>
+              <div class="invoice-row-bal" style="color:${c.balance>0.005?'var(--orange)':'var(--green-700)'};font-weight:600">${c.balance>0.005?money(c.balance)+' due':'Paid'}</div>
+            </div>
+            <div class="inv-quick-actions">
+              <button class="inv-quick-btn" data-inv-print="${esc(job.id)}|${esc(inv.id)}" title="Print" aria-label="Print invoice ${esc(inv.number||'')}">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.72 13.829c-.24.03-.48.062-.72.096m.72-.096a42.415 42.415 0 0110.56 0m-10.56 0L6.34 18m10.94-4.171c.24.03.48.062.72.096m-.72-.096L17.66 18m0 0l.229 2.523a1.125 1.125 0 01-1.12 1.227H7.231c-.662 0-1.18-.568-1.12-1.227L6.34 18m11.318 0h1.091A2.25 2.25 0 0021 15.75V9.456c0-1.081-.768-2.015-1.837-2.175a48.055 48.055 0 00-1.913-.247M6.34 18H5.25A2.25 2.25 0 013 15.75V9.456c0-1.081.768-2.015 1.837-2.175a48.041 48.041 0 011.913-.247m10.5 0a48.536 48.536 0 00-10.5 0m10.5 0V3.375c0-.621-.504-1.125-1.125-1.125h-8.25c-.621 0-1.125.504-1.125 1.125v3.659"/></svg>
+              </button>
+              ${c.balance>0.005?`<button class="inv-quick-btn" data-inv-paid="${esc(job.id)}|${esc(inv.id)}" title="Mark paid in full" aria-label="Mark invoice ${esc(inv.number||'')} as paid">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
+              </button>`:''}
+              <button class="inv-quick-btn" data-inv-email="${esc(job.id)}|${esc(inv.id)}" title="Send invoice via email" aria-label="Send invoice ${esc(inv.number||'')}">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5"/></svg>
+              </button>
+            </div>
+          </div>`;
+        }).join('')}
+    </div>
+  `;
+}
+
+// Pick a job, then open invoice editor for it
+function showJobPickerModal(onPick){
+  const all=jobs();
+  if(all.length===0){toast('Add a job first','');return}
+  $('modal-root').innerHTML=`<div class="modal-bd" id="mbd" role="dialog" aria-modal="true" aria-label="Pick a job"><div class="modal"><div class="modal-handle"></div>
+    <div class="modal-head"><div class="modal-title">Pick a Job</div><button class="modal-close" id="mc" aria-label="Close"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button></div>
+    <div class="modal-body">
+      <p style="font-size:12.5px;color:var(--text-2);margin-bottom:10px">Invoices are attached to a job so the customer info and project details pull through automatically.</p>
+      <div class="search-wrap" style="margin-bottom:12px"><div class="search-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 15.803a7.5 7.5 0 0010.607 0z"/></svg></div>
+        <input class="search" id="picker-search" placeholder="Search jobs…" aria-label="Search jobs" autofocus>
+      </div>
+      <div id="picker-list" style="display:flex;flex-direction:column;gap:6px;max-height:50vh;overflow-y:auto">
+        ${all.map(j=>`<div class="invoice-row" data-pick="${esc(j.id)}" style="cursor:pointer;border-left-color:${j.status==='complete'?'#0284c7':j.status==='active'?'#16a34a':j.status==='lead'?'#d97706':'#94a3b8'}">
+          <div class="invoice-row-main">
+            <div class="invoice-num">${esc(j.name)}</div>
+            <div class="invoice-meta">${esc(j.customerName||'No customer')}${j.address?' · '+esc(j.address):''}</div>
+          </div>
+          <span class="status-pill ${spClass(j.status)}">${spLabel(j.status)}</span>
+        </div>`).join('')}
+      </div>
+    </div>
+  </div></div>`;
+  $('mc').onclick=closeModal;
+  $('mbd').onclick=e=>{if(e.target===e.currentTarget)closeModal()};
+  const filterList=q=>{
+    const ql=q.toLowerCase();
+    document.querySelectorAll('[data-pick]').forEach(r=>{
+      const hay=r.textContent.toLowerCase();
+      r.style.display=!ql||hay.includes(ql)?'':'none';
+    });
+  };
+  $('picker-search').oninput=e=>filterList(e.target.value);
+  document.querySelectorAll('[data-pick]').forEach(r=>r.onclick=()=>{
+    closeModal();onPick(r.dataset.pick);
+  });
+}
+
+// ── Build polished HTML email body for an invoice ──
+function buildInvoiceEmailHTML(j,inv,customMsg,kind){
+  kind=kind||'invoice';const EST=kind==='estimate';
+  const c=calcInvoice(inv);
+  const co=COMPANY;
+  const logoSrc=getBrandLogoSrc();
+  const P=invTheme();
+  const logoFull=brandLogoFull();
+  const firstName=((j.customerName||'').trim().split(/\s+/)[0])||'there';
+  const itemsRows=(inv.items||[]).map(it=>{
+    const amt=Number(it.qty||0)*Number(it.rate||0);
+    return `<tr><td style="padding:10px 8px;border-bottom:1px solid #eef3f1;font-size:13px;color:#0a1f18">${esc(it.desc||'')}</td>
+      <td style="padding:10px 8px;border-bottom:1px solid #eef3f1;font-size:13px;color:#3d6358;text-align:right;white-space:nowrap">${esc(String(it.qty??''))} × ${money(Number(it.rate||0))}</td>
+      <td style="padding:10px 8px;border-bottom:1px solid #eef3f1;font-size:13px;color:#0a1f18;text-align:right;font-weight:600;white-space:nowrap">${money(amt)}</td></tr>`;
+  }).join('');
+  const greeting=`Hi ${esc(firstName)},`;
+  const intro=customMsg?esc(customMsg).replace(/\n/g,'<br>'):(EST
+    ?`Thank you for considering <strong>${esc(co.name||'us')}</strong> for <strong>${esc(j.name||'your project')}</strong>. Here is your estimate — the details are below. Let us know if you'd like to move forward.`
+    :`Thank you for letting <strong>${esc(co.name||'us')}</strong> work with you on <strong>${esc(j.name||'your project')}</strong>. Your invoice is ready and the details are below.`);
+  const balanceLine=EST
+    ?`<div style="background:#e6f7f1;color:#0a3d2e;padding:16px 18px;border-radius:10px;margin:18px 0;text-align:center">
+        <div style="font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;opacity:0.85">Estimated Total${inv.dueDate?' · valid until '+fmtDate(inv.dueDate):''}</div>
+        <div style="font-size:26px;font-weight:800;margin-top:4px;font-variant-numeric:tabular-nums">${money(c.total)}</div>
+      </div>`
+    :(c.balance<=0.005
+    ?`<div style="background:#dcfce7;color:#166534;padding:14px 18px;border-radius:10px;margin:18px 0;font-size:15px;font-weight:700;text-align:center">✓ Paid in Full — Thank you!</div>`
+    :`<div style="background:#fef3c7;color:#92400e;padding:16px 18px;border-radius:10px;margin:18px 0;text-align:center">
+        <div style="font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#92400e;opacity:0.85">Balance Due${inv.dueDate?' by '+fmtDate(inv.dueDate):''}</div>
+        <div style="font-size:26px;font-weight:800;color:#92400e;margin-top:4px;font-variant-numeric:tabular-nums">${money(c.balance)}</div>
+      </div>`);
+  const contactLine=[co.phone?`<a href="tel:${esc(co.phone)}" style="color:${P.link};text-decoration:none">${esc(co.phone)}</a>`:'',
+    co.email?`<a href="mailto:${esc(co.email)}" style="color:${P.link};text-decoration:none">${esc(co.email)}</a>`:'',
+    co.website?`<a href="${esc(co.website)}" style="color:${P.link};text-decoration:none">${esc(co.website)}</a>`:''
+  ].filter(Boolean).join(' &nbsp;·&nbsp; ');
+
+  return `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${EST?'Estimate':'Invoice'} ${esc(inv.number||'')}</title></head>
+<body style="margin:0;padding:0;background:#f0faf6;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#0a1f18">
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:#f0faf6">
+  <tr><td align="center" style="padding:24px 12px">
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="600" style="max-width:600px;background:#ffffff;border-radius:14px;overflow:hidden;box-shadow:0 4px 24px rgba(10,61,46,0.08)">
+      <tr><td style="background:${P.band};padding:28px 32px;text-align:center">
+        ${logoFull
+          ?`<img src="${logoFull}" alt="${esc(co.name||'')}" width="380" style="display:inline-block;width:100%;max-width:380px;height:auto">`
+          :`${logoSrc?`<img src="${logoSrc}" alt="${esc(co.name||'Waterfront Solutions')}" width="84" height="84" style="display:inline-block;width:84px;height:84px;object-fit:contain;filter:drop-shadow(0 2px 6px rgba(0,0,0,0.25))">`:''}
+        <div style="font-family:Georgia,'Times New Roman',serif;font-size:22px;font-weight:600;color:#ffffff;letter-spacing:0.01em;margin-top:10px">${esc(co.name||'Waterfront Solutions')}</div>`}
+        ${BIZ_ADDRESS?`<div style="font-size:11.5px;color:rgba(255,255,255,0.75);margin-top:${logoFull?'12':'4'}px;letter-spacing:0.02em">${esc(BIZ_ADDRESS.replace(/\n/g,' · '))}</div>`:''}
+      </td></tr>
+      <tr><td style="padding:28px 32px 8px">
+        <div style="font-size:11px;font-weight:700;color:#7aa898;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:6px">${EST?'Estimate':'Invoice'} ${esc(inv.number||'')}</div>
+        <h1 style="font-size:22px;font-weight:700;color:${P.primary};margin:0 0 18px;line-height:1.25">${greeting}</h1>
+        <p style="font-size:14.5px;color:#3d6358;line-height:1.65;margin:0 0 8px">${intro}</p>
+      </td></tr>
+      <tr><td style="padding:8px 32px">
+        ${balanceLine}
+      </td></tr>
+      <tr><td style="padding:0 32px">
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border:1px solid #e6f0eb;border-radius:10px;overflow:hidden;background:#fafdfb">
+          <tr><td style="padding:14px 16px;background:#f0faf6;border-bottom:1px solid #e6f0eb">
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+              <tr>
+                <td style="font-size:11px;font-weight:700;color:#7aa898;text-transform:uppercase;letter-spacing:0.06em">${EST?'Estimate Date':'Invoice Date'}</td>
+                <td style="font-size:11px;font-weight:700;color:#7aa898;text-transform:uppercase;letter-spacing:0.06em;text-align:right">${inv.dueDate?(EST?'Valid Until':'Due Date'):''}</td>
+              </tr>
+              <tr>
+                <td style="font-size:13.5px;color:#0a1f18;font-weight:600;padding-top:2px">${fmtDate(inv.date)||'—'}</td>
+                <td style="font-size:13.5px;color:#0a1f18;font-weight:600;text-align:right;padding-top:2px">${inv.dueDate?fmtDate(inv.dueDate):''}</td>
+              </tr>
+            </table>
+          </td></tr>
+          <tr><td style="padding:4px 8px 8px">
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+              ${itemsRows||'<tr><td style="padding:14px;text-align:center;color:#7aa898;font-size:12px">No line items</td></tr>'}
+            </table>
+          </td></tr>
+          <tr><td style="padding:6px 16px 14px">
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="font-size:13px">
+              <tr><td style="padding:3px 0;color:#3d6358">Subtotal</td><td style="padding:3px 0;text-align:right;font-variant-numeric:tabular-nums;font-weight:600;color:#0a1f18">${money(c.sub)}</td></tr>
+              <tr><td style="padding:3px 0;color:#3d6358">Tax (${Number(inv.taxRate||0)}%)</td><td style="padding:3px 0;text-align:right;font-variant-numeric:tabular-nums;font-weight:600;color:#0a1f18">${money(c.tax)}</td></tr>
+              <tr><td style="padding:9px 0 3px;color:${P.primary};font-size:14px;font-weight:700;border-top:2px solid ${P.rule}">Total</td><td style="padding:9px 0 3px;text-align:right;font-variant-numeric:tabular-nums;font-weight:800;color:${P.primary};font-size:15px;border-top:2px solid ${P.rule}">${money(c.total)}</td></tr>
+              ${c.paid>0?`<tr><td style="padding:3px 0;color:#3d6358">Paid</td><td style="padding:3px 0;text-align:right;font-variant-numeric:tabular-nums;color:#3d6358">-${money(c.paid)}</td></tr>`:''}
+            </table>
+          </td></tr>
+        </table>
+      </td></tr>
+      ${inv.notes?`<tr><td style="padding:18px 32px 0">
+        <div style="padding:14px 16px;background:#f7f9f8;border-left:3px solid ${P.notesBar};border-radius:8px">
+          <div style="font-size:10px;font-weight:700;color:${P.link};text-transform:uppercase;letter-spacing:0.08em;margin-bottom:5px">Notes</div>
+          <div style="font-size:13px;color:#3d6358;line-height:1.6">${esc(inv.notes).replace(/\n/g,'<br>')}</div>
+        </div>
+      </td></tr>`:''}
+      ${co.phone||co.email?`<tr><td style="padding:24px 32px 0">
+        <p style="font-size:14px;color:#3d6358;line-height:1.65;margin:0">
+          Questions? Just reply to this email${co.phone?` or give us a call at <a href="tel:${esc(co.phone)}" style="color:${P.link};font-weight:600;text-decoration:none">${esc(co.phone)}</a>`:''}. We appreciate your business!
+        </p>
+      </td></tr>`:''}
+      <tr><td style="padding:24px 32px 8px">
+        <p style="font-size:14.5px;color:#0a1f18;margin:0;line-height:1.5">Thanks,<br><strong style="color:${P.primary}">${esc(S.user||co.name||'The Waterfront Solutions Team')}</strong></p>
+      </td></tr>
+      ${inv.terms?`<tr><td style="padding:14px 32px 0">
+        <div style="font-size:11px;color:#7aa898;line-height:1.6;border-top:1px solid #e6f0eb;padding-top:14px;font-style:italic">${esc(inv.terms).replace(/\n/g,'<br>')}</div>
+      </td></tr>`:''}
+      <tr><td style="background:#f0faf6;padding:18px 32px;text-align:center;border-top:1px solid #e6f0eb;margin-top:24px">
+        <div style="font-family:Georgia,serif;font-size:13px;font-weight:600;color:${P.primary}">${esc(co.name||'Waterfront Solutions')}</div>
+        ${contactLine?`<div style="font-size:11.5px;color:#7aa898;margin-top:4px">${contactLine}</div>`:''}
+        ${co.license?`<div style="font-size:10.5px;color:#7aa898;margin-top:3px;letter-spacing:0.04em">License #${esc(co.license)}</div>`:''}
+      </td></tr>
+    </table>
+    <div style="font-size:11px;color:#7aa898;text-align:center;margin-top:14px">This ${EST?'estimate':'invoice'} was sent from your ${esc(co.name||'Waterfront Solutions')} job tracker.</div>
+  </td></tr>
+</table>
+</body></html>`;
+}
+
+function buildInvoiceEmailText(j,inv,customMsg,kind){
+  kind=kind||'invoice';const EST=kind==='estimate';
+  const c=calcInvoice(inv);
+  const co=COMPANY;
+  const firstName=((j.customerName||'').trim().split(/\s+/)[0])||'there';
+  const intro=customMsg||(EST?`Thanks for considering ${co.name||'us'} for ${j.name||'your project'}. Your estimate is ready — details below. Let us know if you'd like to move forward.`:`Thanks for letting ${co.name||'us'} work with you on ${j.name||'your project'}. Your invoice is ready — details below.`);
+  const items=(inv.items||[]).map(it=>{
+    const amt=Number(it.qty||0)*Number(it.rate||0);
+    return `  • ${(it.desc||'').padEnd(40)} ${(it.qty??'')+' × '+money(Number(it.rate||0))}   ${money(amt)}`;
+  }).join('\n');
+  const lines=[
+    `Hi ${firstName},`,'',
+    intro,'',
+    `${EST?'ESTIMATE':'INVOICE'} ${inv.number||''}`,
+    `Date: ${fmtDate(inv.date)||''}`,
+    inv.dueDate?`${EST?'Valid until':'Due'}:  ${fmtDate(inv.dueDate)}`:'',
+    '','Line Items:',items||'  (none)','',
+    `Subtotal:   ${money(c.sub)}`,
+    `Tax (${Number(inv.taxRate||0)}%):  ${money(c.tax)}`,
+    `Total:      ${money(c.total)}`,
+    EST?'':(c.paid>0?`Paid:      -${money(c.paid)}`:''),
+    EST?`ESTIMATED TOTAL: ${money(c.total)}`:(c.balance<=0.005?`PAID IN FULL — Thank you!`:`Balance Due: ${money(c.balance)}`),
+    '',
+    inv.notes?'Notes:\n'+inv.notes+'\n':'',
+    `Questions? Just reply to this email${co.phone?' or call '+co.phone:''}. We appreciate your business!`,'',
+    `Thanks,`,S.user||co.name||'The Waterfront Solutions Team','',
+    [co.name,co.phone,co.email,co.website].filter(Boolean).join(' · '),
+    co.license?`License #${co.license}`:'',
+    inv.terms?'\n'+inv.terms:''
+  ].filter(l=>l!==undefined);
+  return lines.join('\n').replace(/\n{3,}/g,'\n\n');
+}
+
+function buildInvoiceEml(j,inv,customMsg,kind){
+  kind=kind||'invoice';const EST=kind==='estimate';
+  const co=COMPANY;
+  const subject=`${EST?'Estimate':'Invoice'} ${inv.number||''} from ${co.name||'Waterfront Solutions'}`;
+  const fromName=co.name||'Waterfront Solutions';
+  const fromEmail=co.email||'noreply@example.com';
+  const toName=j.customerName||'';
+  const toEmail=j.customerEmail||'';
+  const html=buildInvoiceEmailHTML(j,inv,customMsg,kind);
+  const text=buildInvoiceEmailText(j,inv,customMsg,kind);
+  const bnd='----=_Boundary_'+Date.now().toString(36);
+  // Use base64 encoding to safely handle Unicode & long lines
+  const enc=s=>{
+    try{const b=typeof btoa==='function'?btoa(unescape(encodeURIComponent(s))):Buffer.from(s,'utf8').toString('base64');
+      // Wrap to 76-char lines per RFC
+      return b.replace(/(.{76})/g,'$1\r\n');
+    }catch(e){return s}
+  };
+  const headers=[
+    'MIME-Version: 1.0',
+    `From: "${fromName}" <${fromEmail}>`,
+    toEmail?`To: "${toName}" <${toEmail}>`:'',
+    `Subject: ${subject}`,
+    'X-Unsent: 1',
+    `Content-Type: multipart/alternative; boundary="${bnd}"`,
+  ].filter(Boolean).join('\r\n');
+  const body=[
+    '',
+    `--${bnd}`,
+    'Content-Type: text/plain; charset="UTF-8"',
+    'Content-Transfer-Encoding: base64','',
+    enc(text),
+    `--${bnd}`,
+    'Content-Type: text/html; charset="UTF-8"',
+    'Content-Transfer-Encoding: base64','',
+    enc(html),
+    `--${bnd}--`,'',
+  ].join('\r\n');
+  return headers+'\r\n'+body;
+}
+
+async function copyHtmlToClipboard(html,text){
+  try{
+    if(window.ClipboardItem&&navigator.clipboard&&navigator.clipboard.write){
+      const item=new ClipboardItem({
+        'text/html':new Blob([html],{type:'text/html'}),
+        'text/plain':new Blob([text],{type:'text/plain'}),
+      });
+      await navigator.clipboard.write([item]);
+      return true;
+    }
+  }catch(e){}
+  try{await navigator.clipboard.writeText(text);return true}catch(e){}
+  return false;
+}
+
+function downloadFile(filename,content,mime){
+  const blob=new Blob([content],{type:mime||'text/plain;charset=utf-8'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=filename;
+  document.body.appendChild(a);a.click();a.remove();
+  setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+}
+
+// ── Gmail API: connect once, send branded HTML + PDF in true one click ──
+function GMAIL_LS_KEY(){return LS('gmail')}
+function gmailLoad(){try{return JSON.parse(localStorage.getItem(GMAIL_LS_KEY())||'null')||{}}catch(e){return {}}}
+function gmailSave(cfg){try{localStorage.setItem(GMAIL_LS_KEY(),JSON.stringify(cfg||{}))}catch(e){}}
+function gmailConnected(){const c=gmailLoad();return !!(c&&c.clientId&&c.accessToken&&Date.now()<(c.expiresAt||0)-30000)}
+function gmailEmail(){return gmailLoad().email||''}
+let _gisP=null;
+function loadGIS(){
+  if(_gisP)return _gisP;
+  _gisP=new Promise((res,rej)=>{
+    if(window.google&&window.google.accounts&&window.google.accounts.oauth2){res(window.google);return}
+    const s=document.createElement('script');s.src='https://accounts.google.com/gsi/client';s.async=true;s.defer=true;
+    s.onload=()=>res(window.google);s.onerror=()=>rej(new Error('Failed to load Google sign-in script'));
+    document.head.appendChild(s);
+  });
+  return _gisP;
+}
+async function gmailFetchProfile(token){
+  const r=await fetch('https://gmail.googleapis.com/gmail/v1/users/me/profile',{headers:{Authorization:'Bearer '+token}});
+  if(!r.ok)throw new Error('Profile lookup failed ('+r.status+')');
+  const j=await r.json();return j.emailAddress||'';
+}
+async function gmailRequestToken(clientId,silent){
+  const google=await loadGIS();
+  return new Promise((res,rej)=>{
+    const client=google.accounts.oauth2.initTokenClient({
+      client_id:clientId,
+      scope:'https://www.googleapis.com/auth/gmail.send',
+      callback:(resp)=>{if(resp&&resp.error){rej(new Error(resp.error_description||resp.error));return}res(resp)},
+      error_callback:(err)=>rej(new Error((err&&err.message)||'OAuth flow cancelled'))
+    });
+    client.requestAccessToken({prompt:silent?'':'consent'});
+  });
+}
+function gmailOriginOk(){
+  if(typeof window==='undefined')return false;
+  if(location.protocol==='file:')return false;
+  // Google's rule: HTTPS, or http://localhost / http://127.0.0.1 (any port).
+  if(location.protocol==='https:')return !!window.isSecureContext;
+  if(location.protocol==='http:'){
+    const h=location.hostname;return h==='localhost'||h==='127.0.0.1'||h==='[::1]';
+  }
+  return false;
+}
+function gmailOriginReason(){
+  if(location.protocol==='file:')return 'This page is opened from a local file (file://). Google blocks OAuth from file:// pages. Open the app via its hosted URL instead.';
+  if(location.protocol==='http:'){const h=location.hostname;if(h!=='localhost'&&h!=='127.0.0.1'&&h!=='[::1]')return 'This page is served over plain HTTP. Google requires HTTPS (except localhost). Use the HTTPS version of this URL.';}
+  if(!window.isSecureContext)return 'This page is not a secure context. Google requires HTTPS for OAuth.';
+  return '';
+}
+async function gmailConnect(clientId){
+  if(!clientId)throw new Error('Paste your OAuth Client ID first');
+  if(!gmailOriginOk())throw new Error(gmailOriginReason()||'OAuth requires a secure origin (HTTPS or localhost).');
+  const tok=await gmailRequestToken(clientId,false);
+  let email='';try{email=await gmailFetchProfile(tok.access_token)}catch(e){}
+  const cfg={clientId,accessToken:tok.access_token,expiresAt:Date.now()+(tok.expires_in||3500)*1000,email,connectedAt:Date.now()};
+  gmailSave(cfg);return cfg;
+}
+async function gmailEnsureToken(){
+  const cfg=gmailLoad();
+  if(!cfg.clientId)throw new Error('Gmail is not connected — open Settings → Email sending');
+  if(Date.now()<(cfg.expiresAt||0)-30000)return cfg.accessToken;
+  const tok=await gmailRequestToken(cfg.clientId,true);
+  cfg.accessToken=tok.access_token;cfg.expiresAt=Date.now()+(tok.expires_in||3500)*1000;gmailSave(cfg);
+  return cfg.accessToken;
+}
+function gmailDisconnect(){
+  const cfg=gmailLoad();
+  if(cfg.accessToken&&window.google&&window.google.accounts&&window.google.accounts.oauth2){
+    try{window.google.accounts.oauth2.revoke(cfg.accessToken,()=>{})}catch(e){}
+  }
+  gmailSave({});
+}
+function _u8b64(s){return btoa(unescape(encodeURIComponent(s)))}
+function _b64url(s){return s.replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'')}
+function _wrap76(s){return s.replace(/(.{76})/g,'$1\r\n')}
+async function _fileToB64(file){
+  const buf=await file.arrayBuffer();const bytes=new Uint8Array(buf);
+  let bin='',CHUNK=0x8000;for(let i=0;i<bytes.length;i+=CHUNK)bin+=String.fromCharCode.apply(null,bytes.subarray(i,i+CHUNK));
+  return btoa(bin);
+}
+function buildGmailMime(o){
+  const B1='ALT_'+Math.random().toString(36).slice(2);
+  const B2='MIX_'+Math.random().toString(36).slice(2);
+  const fromHdr=o.fromName?('"'+String(o.fromName).replace(/"/g,'')+'" <'+o.fromEmail+'>'):o.fromEmail;
+  const lines=[
+    'From: '+fromHdr,
+    'To: '+o.to,
+    'Subject: =?UTF-8?B?'+_u8b64(o.subject||'')+'?=',
+    'MIME-Version: 1.0',
+    'Content-Type: multipart/mixed; boundary="'+B2+'"',
+    '',
+    '--'+B2,
+    'Content-Type: multipart/alternative; boundary="'+B1+'"',
+    '',
+    '--'+B1,
+    'Content-Type: text/plain; charset="UTF-8"',
+    'Content-Transfer-Encoding: base64',
+    '',
+    _wrap76(_u8b64(o.textBody||'')),
+    '',
+    '--'+B1,
+    'Content-Type: text/html; charset="UTF-8"',
+    'Content-Transfer-Encoding: base64',
+    '',
+    _wrap76(_u8b64(o.htmlBody||'')),
+    '',
+    '--'+B1+'--'
+  ];
+  let mime=lines.join('\r\n');
+  for(const a of (o.attachments||[])){
+    const name=String(a.name||'attachment').replace(/"/g,'');
+    mime+='\r\n\r\n--'+B2+'\r\n';
+    mime+='Content-Type: '+(a.mime||'application/octet-stream')+'; name="'+name+'"\r\n';
+    mime+='Content-Disposition: attachment; filename="'+name+'"\r\n';
+    mime+='Content-Transfer-Encoding: base64\r\n\r\n';
+    mime+=_wrap76(a.base64);
+  }
+  mime+='\r\n--'+B2+'--';
+  return mime;
+}
+async function gmailApiSend(o){
+  const token=await gmailEnsureToken();
+  const fromEmail=gmailEmail();
+  const atts=[];
+  for(const f of (o.attachments||[])){
+    atts.push({name:f.name,mime:f.type||'application/octet-stream',base64:await _fileToB64(f)});
+  }
+  const mime=buildGmailMime({fromName:o.fromName,fromEmail,to:o.to,subject:o.subject,htmlBody:o.htmlBody,textBody:o.textBody,attachments:atts});
+  const raw=_b64url(btoa(mime));
+  const r=await fetch('https://gmail.googleapis.com/gmail/v1/users/me/messages/send',{
+    method:'POST',
+    headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},
+    body:JSON.stringify({raw})
+  });
+  if(!r.ok){let m='Gmail API error '+r.status;try{const j=await r.json();if(j&&j.error&&j.error.message)m=j.error.message}catch(e){}throw new Error(m)}
+  return r.json();
+}
+
+// ── Send PDF: jsPDF + html2canvas → Web Share on mobile, Download + Gmail draft on desktop ──
+let _pdfLibsP=null;
+function loadPDFLibs(){
+  if(_pdfLibsP)return _pdfLibsP;
+  function add(src){return new Promise((r,j)=>{const s=document.createElement('script');s.src=src;s.onload=r;s.onerror=()=>j(new Error('Failed to load '+src));document.head.appendChild(s)})}
+  _pdfLibsP=Promise.all([
+    window.html2canvas?Promise.resolve():add('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js'),
+    (window.jspdf&&window.jspdf.jsPDF)?Promise.resolve():add('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js')
+  ]).then(()=>({html2canvas:window.html2canvas,jsPDF:window.jspdf.jsPDF}));
+  return _pdfLibsP;
+}
+async function urlToDataURL(url){
+  if(!url)return null;if(/^data:/.test(url))return url;
+  try{const r=await fetch(url,{mode:'cors'});const b=await r.blob();return await new Promise(res=>{const fr=new FileReader();fr.onload=()=>res(fr.result);fr.readAsDataURL(b)})}catch(e){return null}
+}
+async function buildInvoicePDFFile(j,inv,kind){
+  kind=kind||'invoice';
+  const {html2canvas,jsPDF}=await loadPDFLibs();
+  const html=buildInvoiceEmailHTML(j,inv,'',kind);
+  const ifr=document.createElement('iframe');
+  ifr.setAttribute('aria-hidden','true');
+  ifr.style.cssText='position:fixed;left:-9999px;top:0;width:816px;height:1100px;border:0;background:#fff;';
+  document.body.appendChild(ifr);
+  const idoc=ifr.contentDocument||ifr.contentWindow.document;
+  idoc.open();idoc.write(html);idoc.close();
+  await new Promise(r=>setTimeout(r,200));
+  const imgs=Array.from(idoc.images||[]);
+  await Promise.all(imgs.map(im=>im.complete?Promise.resolve():new Promise(r=>{im.onload=im.onerror=r;setTimeout(r,3000)})));
+  const body=idoc.body;body.style.background='#fff';
+  ifr.style.height=Math.max(1100,body.scrollHeight+40)+'px';
+  await new Promise(r=>setTimeout(r,60));
+  const canvas=await html2canvas(body,{scale:2,backgroundColor:'#ffffff',useCORS:true,logging:false,windowWidth:816,windowHeight:body.scrollHeight});
+  document.body.removeChild(ifr);
+  const pdf=new jsPDF({unit:'pt',format:'letter',orientation:'portrait'});
+  const pageW=pdf.internal.pageSize.getWidth(),pageH=pdf.internal.pageSize.getHeight();
+  const margin=18,imgW=pageW-margin*2,ratio=canvas.height/canvas.width,fullImgH=imgW*ratio;
+  let remH=fullImgH,off=0,pageIdx=0;
+  while(remH>0){
+    const usable=pageH-margin*2,sliceH=Math.min(remH,usable);
+    const sliceCanvasH=Math.round(sliceH/fullImgH*canvas.height);
+    const sc=document.createElement('canvas');sc.width=canvas.width;sc.height=sliceCanvasH;
+    sc.getContext('2d').drawImage(canvas,0,Math.round(off/fullImgH*canvas.height),canvas.width,sliceCanvasH,0,0,canvas.width,sliceCanvasH);
+    if(pageIdx>0)pdf.addPage();
+    pdf.addImage(sc.toDataURL('image/jpeg',0.92),'JPEG',margin,margin,imgW,sliceH);
+    off+=sliceH;remH-=sliceH;pageIdx++;
+  }
+  const photos=(inv.photos||[]).filter(p=>p&&p.url);
+  for(const ph of photos){
+    const du=await urlToDataURL(ph.url);if(!du)continue;
+    const img=new Image();await new Promise(r=>{img.onload=img.onerror=r;img.src=du;setTimeout(r,3000)});
+    if(!img.width)continue;
+    const maxW=pageW-72,maxH=pageH-120;let w=img.width,h=img.height;const k=Math.min(maxW/w,maxH/h,1);w*=k;h*=k;
+    pdf.addPage();
+    pdf.setFont('helvetica','bold');pdf.setFontSize(11);pdf.setTextColor(60);
+    pdf.text((kind==='estimate'?'Estimate':'Invoice')+' '+(inv.number||'')+' — Photos',36,40);
+    pdf.addImage(du,'JPEG',(pageW-w)/2,60,w,h);
+    if(ph.caption){pdf.setFont('helvetica','normal');pdf.setFontSize(10);pdf.setTextColor(90);pdf.text(String(ph.caption).slice(0,200),36,60+h+22,{maxWidth:pageW-72})}
+  }
+  const blob=pdf.output('blob');
+  const filename=(kind==='estimate'?'Estimate':'Invoice')+'-'+(inv.number||'draft')+'.pdf';
+  return new File([blob],filename,{type:'application/pdf'});
+}
+async function sendInvoicePDF(j,inv,kind,opts){
+  opts=opts||{};kind=kind||'invoice';const EST=kind==='estimate';
+  const to=opts.to||j.customerEmail||'';
+  const subject=opts.subject||((EST?'Estimate':'Invoice')+' '+(inv.number||'')+' from '+(COMPANY.name||'')).trim();
+  const message=opts.message||'';
+  const text=buildInvoiceEmailText(j,inv,message,kind);
+  toast('Building PDF…','');
+  let file;
+  try{const _builder=window.buildInvoicePDFFile||buildInvoicePDFFile;file=await _builder(j,inv,kind)}
+  catch(e){toast('PDF build failed: '+((e&&e.message)||e),'');return}
+  if((window.gmailConnected||gmailConnected)()){
+    try{
+      toast('Sending via Gmail…','');
+      const htmlBody=buildInvoiceEmailHTML(j,inv,message,kind);
+      const _send=window.gmailApiSend||gmailApiSend;
+      await _send({to,subject,htmlBody,textBody:text,fromName:COMPANY.name||'',attachments:[file]});
+      if(!inv.sent){inv.sent=Date.now();if(inv.status==='draft')inv.status='sent';await writeJob(j)}
+      await logAct((EST?'emailed estimate ':'emailed invoice ')+(inv.number||'')+' (Gmail) to '+to+' for',j.name);
+      toast('Sent · check your Gmail Sent folder');
+      return;
+    }catch(e){toast('Gmail send failed: '+((e&&e.message)||e)+' — using fallback','')}
+  }
+  // Skip navigator.share on desktop — Chrome's desktop share sheet IS the OS
+  // "Open with" picker the user wants to avoid. Only use it on real mobile.
+  const _isMobile=(function(){
+    const ua=(typeof navigator!=='undefined'&&navigator.userAgent)||'';
+    if(/Mobi|Android|iPhone|iPad|iPod/i.test(ua))return true;
+    if(navigator.userAgentData&&navigator.userAgentData.mobile)return true;
+    // iPadOS Safari reports as Mac with touch:
+    if(navigator.platform==='MacIntel'&&(navigator.maxTouchPoints||0)>1)return true;
+    return false;
+  })();
+  if(_isMobile&&navigator.canShare&&typeof navigator.share==='function'){
+    try{
+      if(navigator.canShare({files:[file]})){
+        await navigator.share({files:[file],title:subject,text:text});
+        if(!inv.sent){inv.sent=Date.now();if(inv.status==='draft')inv.status='sent';await writeJob(j)}
+        await logAct((EST?'shared estimate ':'shared invoice ')+(inv.number||'')+' (PDF) for',j.name);
+        toast('Shared — pick Mail or Gmail and tap Send');
+        return;
+      }
+    }catch(e){if(e&&e.name==='AbortError')return;}
+  }
+  // Desktop: download the PDF, then go straight to Gmail Web compose (no OS picker, no mailto handoff).
+  try{
+    const a=document.createElement('a');a.href=URL.createObjectURL(file);a.download=file.name;a.rel='noopener';document.body.appendChild(a);a.click();
+    setTimeout(()=>{try{URL.revokeObjectURL(a.href)}catch(e){}a.remove()},2000);
+  }catch(e){toast('Download failed: '+((e&&e.message)||e),'');return}
+  const enc=encodeURIComponent;
+  const gmailUrl='https://mail.google.com/mail/?view=cm&fs=1&to='+enc(to)+'&su='+enc(subject)+'&body='+enc(text);
+  try{window.open(gmailUrl,'_blank','noopener')}catch(e){}
+  if(!inv.sent){inv.sent=Date.now();if(inv.status==='draft')inv.status='sent';await writeJob(j)}
+  await logAct((EST?'emailed estimate ':'emailed invoice ')+(inv.number||'')+' (PDF) for',j.name);
+  toast('PDF downloaded — drag it into the Gmail tab to attach');
+}
+
+function emailInvoice(j,inv,kind){showSendInvoiceModal(j,inv,kind)}
+
+function showSendInvoiceModal(j,inv,kind){
+  kind=kind||'invoice';const EST=kind==='estimate';
+  const co=COMPANY;
+  const defaultSubject=`${EST?'Estimate':'Invoice'} ${inv.number||''} from ${co.name||'Waterfront Solutions'}`;
+  $('modal-root').innerHTML=`<div class="modal-bd" id="mbd" role="dialog" aria-modal="true" aria-label="Send ${EST?'estimate':'invoice'}"><div class="modal" style="max-width:680px"><div class="modal-handle"></div>
+    <div class="modal-head"><div class="modal-title">Send ${EST?'Estimate':'Invoice'} ${esc(inv.number||'')}</div><button class="modal-close" id="mc" aria-label="Close"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button></div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">To</label><input class="form-input" id="em-to" value="${esc(j.customerEmail||'')}" placeholder="customer@example.com"></div>
+        <div class="form-group"><label class="form-label">Subject</label><input class="form-input" id="em-subject" value="${esc(defaultSubject)}"></div>
+      </div>
+      <div class="form-group"><label class="form-label">Personal Message <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text-3)">(optional — replaces the default intro)</span></label>
+        <div class="textarea-with-mic"><textarea class="form-textarea" id="em-msg" placeholder="Add a personal note for the customer (optional)…" style="min-height:64px"></textarea>${micButton('#em-msg')}</div>
+      </div>
+      <label class="form-label" style="display:block;margin-bottom:6px">Preview</label>
+      <div class="email-preview-wrap"><iframe class="email-preview-frame" id="em-iframe" title="Email preview" style="height:560px"></iframe></div>
+      <button class="email-send-btn primary" id="em-send-now" type="button" style="width:100%;margin-bottom:8px">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5"/></svg>
+        <span>Email PDF — one tap<span class="email-send-sub">Branded PDF + photos · sends via Gmail when connected · opens Gmail Web on desktop, share sheet on mobile</span></span>
+      </button>
+      <div class="email-send-grid">
+        <a class="email-send-btn primary" id="em-mailto" href="#">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25"/></svg>
+          <span>Open in Email App<span class="email-send-sub">Default mail client (plain text)</span></span>
+        </a>
+        <a class="email-send-btn" id="em-gmail" href="#" target="_blank" rel="noopener">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 6.75c0-.414.336-.75.75-.75h18c.414 0 .75.336.75.75v10.5a.75.75 0 01-.75.75H3a.75.75 0 01-.75-.75V6.75z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 7l9.75 7.5L21.75 7"/></svg>
+          <span>Compose in Gmail Web<span class="email-send-sub">Opens gmail.com compose</span></span>
+        </a>
+        <button class="email-send-btn" id="em-gmail-pdf" type="button">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/></svg>
+          <span>PDF via Gmail<span class="email-send-sub">Opens the PDF to save + a Gmail draft to attach it</span></span>
+        </button>
+        <button class="email-send-btn" id="em-copy" type="button">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 01-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9 9 0 011.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 00-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5"/></svg>
+          <span>Copy Rich Email<span class="email-send-sub">Paste into any webmail</span></span>
+        </button>
+        <button class="email-send-btn" id="em-eml" type="button">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>
+          <span>Download .eml<span class="email-send-sub">Opens as draft in Outlook / Apple Mail</span></span>
+        </button>
+      </div>
+      <p style="font-size:11.5px;color:var(--text-3);margin-top:14px;line-height:1.55">
+        <strong>Tip:</strong> "Copy Rich Email" pastes the styled invoice (with logo) directly into Gmail or Outlook web compose windows. ".eml" preserves the formatting in Outlook desktop, Apple Mail, and Thunderbird.
+      </p>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-cancel" id="btn-cx">Close</button>
+      <button class="btn-sm" id="em-print" style="background:var(--surface);border:1.5px solid var(--border-md);font-weight:600">Also Print PDF</button>
+    </div>
+  </div></div>`;
+
+  function currentMsg(){return $('em-msg')?.value.trim()||''}
+  function currentSubject(){return $('em-subject')?.value||''}
+  function currentTo(){return $('em-to')?.value.trim()||''}
+  function refreshPreview(){
+    const html=buildInvoiceEmailHTML(j,inv,currentMsg(),kind);
+    const f=$('em-iframe');if(!f)return;
+    const d=f.contentDocument||f.contentWindow.document;
+    d.open();d.write(html);d.close();
+  }
+  function refreshSendLinks(){
+    const to=currentTo();
+    const subject=currentSubject();
+    const text=buildInvoiceEmailText(j,inv,currentMsg(),kind);
+    const enc=encodeURIComponent;
+    const mailto=`mailto:${enc(to)}?subject=${enc(subject)}&body=${enc(text)}`;
+    const gmail=`https://mail.google.com/mail/?view=cm&fs=1&to=${enc(to)}&su=${enc(subject)}&body=${enc(text)}`;
+    $('em-mailto').href=mailto;
+    $('em-gmail').href=gmail;
+  }
+
+  $('em-msg').oninput=()=>{refreshPreview();refreshSendLinks()};
+  $('em-subject').oninput=refreshSendLinks;
+  $('em-to').oninput=refreshSendLinks;
+  refreshPreview();refreshSendLinks();wireMicButtons();
+
+  $('mc').onclick=$('btn-cx').onclick=closeModal;
+  $('mbd').onclick=e=>{if(e.target===e.currentTarget)closeModal()};
+  $('em-mailto').onclick=async()=>{
+    if(!inv.sent){inv.sent=Date.now();if(inv.status==='draft')inv.status='sent';await writeJob(j);await logAct('emailed '+(EST?'estimate':'invoice')+' '+(inv.number||'')+' for',j.name)}
+  };
+  $('em-gmail').onclick=async()=>{
+    if(!inv.sent){inv.sent=Date.now();if(inv.status==='draft')inv.status='sent';await writeJob(j);await logAct('emailed '+(EST?'estimate':'invoice')+' '+(inv.number||'')+' for',j.name)}
+  };
+  $('em-gmail-pdf').onclick=async()=>{
+    // Open the print/PDF view (Save as PDF) + a Gmail compose draft so the
+    // PDF can be attached. Gmail compose URLs can't carry an attachment, so
+    // the PDF is opened alongside for the user to attach.
+    try{window.open($('em-gmail').href,'_blank','noopener')}catch(e){}
+    printInvoice(j,inv,kind);
+    if(!inv.sent){inv.sent=Date.now();if(inv.status==='draft')inv.status='sent';await writeJob(j);await logAct('emailed '+(EST?'estimate':'invoice')+' '+(inv.number||'')+' (PDF) for',j.name)}
+    toast('Save the PDF, then attach it in the Gmail window');
+  };
+  $('em-copy').onclick=async()=>{
+    const ok=await copyHtmlToClipboard(buildInvoiceEmailHTML(j,inv,currentMsg(),kind),buildInvoiceEmailText(j,inv,currentMsg(),kind));
+    if(ok){
+      if(!inv.sent){inv.sent=Date.now();if(inv.status==='draft')inv.status='sent';await writeJob(j);await logAct('prepared '+(EST?'estimate':'invoice')+' '+(inv.number||'')+' to send for',j.name)}
+      toast('Copied — paste into your email');
+    }else{toast('Copy failed','')}
+  };
+  $('em-eml').onclick=async()=>{
+    const eml=buildInvoiceEml(j,inv,currentMsg(),kind);
+    downloadFile(`${EST?'Estimate':'Invoice'}-${inv.number||'draft'}.eml`,eml,'message/rfc822');
+    if(!inv.sent){inv.sent=Date.now();if(inv.status==='draft')inv.status='sent';await writeJob(j);await logAct('downloaded '+(EST?'estimate':'invoice')+' '+(inv.number||'')+' draft for',j.name)}
+    toast('.eml downloaded — open it to send');
+  };
+  $('em-print').onclick=()=>printInvoice(j,inv,kind);
+  $('em-send-now').onclick=async()=>{
+    const to=currentTo();
+    if(!to){toast('Add a recipient email first','');return}
+    const btn=$('em-send-now'),lbl=btn.querySelector('span');const old=lbl?lbl.innerHTML:'';
+    btn.disabled=true;if(lbl)lbl.textContent='Building PDF…';
+    try{
+      await sendInvoicePDF(j,inv,kind,{to,subject:currentSubject(),message:currentMsg()});
+      closeModal();render();
+    }catch(e){toast('Send failed: '+((e&&e.message)||e),'')}
+    finally{btn.disabled=false;if(lbl)lbl.innerHTML=old}
+  };
+}
+
+// ══ Reports ══
+// ══ Owner / Admin — cross-company dashboard ══
+const ADMIN_COLORS={wfs:'#2a9070',mhs:'#e8a830',nlr:'#3ab5c8'};
+function adminFirebaseReady(){return typeof firebase!=='undefined'&&firebase.apps&&firebase.apps.length}
+function refreshOwnerData(){ownerLoadLocal();render();toast('Refreshed');}
+function companyMetrics(arr){
+  const m={total:arr.length,active:0,leads:0,complete:0,hold:0,value:0,pipeline:0,invoiced:0,collected:0,revenue:0,won:0,lost:0};
+  arr.forEach(j=>{
+    const st=j.status;
+    // Invoiced/collected come from the job's actual invoices when present
+    // (source of truth), falling back to the saved aggregate fields. This
+    // keeps the owner rollup correct even if j.invoiced/j.paid weren't synced
+    // — otherwise both Collected and Outstanding can read 0 (the same number).
+    const t=invoiceTotals(j);
+    const invd=t?t.total:Number(j.invoiced||0);
+    const pd=t?t.paid:Number(j.paid||0);
+    if(st==='active')m.active++;
+    else if(st==='lead')m.leads++;
+    else if(st==='complete'){m.complete++;m.won++;m.revenue+=invd||Number(j.value||0);}
+    else if(st==='hold'){m.hold++;m.lost++;}
+    m.value+=Number(j.value||0);
+    if(st!=='complete'&&st!=='hold')m.pipeline+=Number(j.value||0);
+    m.invoiced+=invd;
+    m.collected+=pd;
+  });
+  m.outstanding=m.invoiced-m.collected;
+  m.winRate=(m.won+m.lost)>0?(m.won/(m.won+m.lost))*100:0;
+  m.avg=m.won>0?m.revenue/m.won:0;
+  return m;
+}
+function adminCompareChart(title,rows,fmt){
+  const max=Math.max(1,...rows.map(r=>r.val));
+  return `<div class="report-section">
+    <div class="report-hd">${esc(title)}</div>
+    <div class="bar-chart">
+      ${rows.map(r=>`<div class="bar-row">
+        <div class="bar-row-label">${esc(r.label)}</div>
+        <div class="bar-row-track"><div class="bar-row-fill" style="width:${(r.val/max*100).toFixed(1)}%;background:${r.color}"></div></div>
+        <div class="bar-row-val" style="min-width:70px">${fmt(r.val)}</div>
+      </div>`).join('')}
+    </div>
+  </div>`;
+}
+// ── stats + owner helpers ──
+function pctStr(n,d){return d>0?((n/d)*100).toFixed(0)+'%':'—'}
+function fmtMoneyShort(v){v=Number(v||0);if(Math.abs(v)>=1000)return '$'+(v/1000).toFixed(Math.abs(v)>=10000?0:1)+'k';return '$'+Math.round(v)}
+const colorOf=co=>ADMIN_COLORS[co.id]||'var(--green-600)';
+const coLbl=co=>co.id.toUpperCase();
+function ownerList(){return Object.values(COMPANIES).map(co=>({co,jobs:ownerJobs(co.id),m:companyMetrics(ownerJobs(co.id))}))}
+function ownerGrand(list){const g={};['total','active','leads','complete','hold','value','pipeline','invoiced','collected','revenue','won','lost'].forEach(k=>g[k]=list.reduce((s,x)=>s+x.m[k],0));g.outstanding=g.invoiced-g.collected;g.winRate=(g.won+g.lost)>0?g.won/(g.won+g.lost)*100:0;return g}
+function monthlyRevenue(jobsArr){
+  const months=[];const now=new Date();
+  for(let i=5;i>=0;i--){const d=new Date(now.getFullYear(),now.getMonth()-i,1);months.push({label:d.toLocaleDateString(undefined,{month:'short'}),key:d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'),val:0});}
+  jobsArr.forEach(j=>{if(j.status!=='complete')return;const t=j.completedAt||j.created;if(!t)return;const d=new Date(t);const k=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');const m=months.find(x=>x.key===k);if(m)m.val+=Number(j.invoiced||j.value||0);});
+  return months;
+}
+function reportChart(series){
+  const max=Math.max(1,...series.map(m=>m.val));
+  return `<div class="report-chart">${series.map(m=>`<div class="report-bar" style="height:${(m.val/max*100).toFixed(1)}%">${m.val?`<span class="report-bar-val">${fmtMoneyShort(m.val)}</span>`:''}<span class="report-bar-label">${esc(m.label)}</span></div>`).join('')}</div><div class="report-x-pad"></div>`;
+}
+function ownerTitle(sub){
+  return `<div style="margin-bottom:14px">
+    <div style="font-size:11px;color:var(--text-3);text-transform:uppercase;letter-spacing:0.06em;font-weight:700">Owner · All Companies</div>
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">
+      <div style="font-size:20px;font-weight:700;margin-top:2px">${esc(sub)}</div>
+      <button class="btn-mini" id="owner-refresh">${adminFirebaseReady()?'↻ Refresh':'Reload local'}</button>
+    </div>
+  </div>`;
+}
+function renderOwner(c){
+  if(!String(S.view||'').startsWith('o_'))S.view='o_overview';
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.toggle('active',b.dataset.view===S.view));
+  const v=S.view;
+  c.innerHTML = v==='o_financials'?ownerFinancials()
+    : v==='o_pipeline'?ownerPipeline()
+    : v==='o_leads'?ownerLeads()
+    : v==='o_companies'?ownerCompanies()
+    : v==='o_hours'?ownerHours()
+    : ownerOverview();
+  updateUserUI();
+  attachHandlers();
+}
+function ownerOverview(){
+  const list=ownerList(),g=ownerGrand(list);
+  const top=[...list].sort((a,b)=>b.m.collected-a.m.collected)[0];
+  const watch=[...list].sort((a,b)=>b.m.outstanding-a.m.outstanding)[0];
+  const allJobs=list.flatMap(x=>x.jobs);
+  const tableRows=list.map(x=>`<tr>
+    <td style="font-weight:700"><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:${colorOf(x.co)};margin-right:7px;vertical-align:middle"></span>${esc(x.co.label)}</td>
+    <td class="num">${x.m.total}</td><td class="num">${x.m.active}</td><td class="num">${x.m.leads}</td><td class="num">${x.m.complete}</td>
+    <td class="num">${money(x.m.pipeline)}</td><td class="num">${money(x.m.collected)}</td><td class="num">${money(x.m.outstanding)}</td><td class="num">${x.m.winRate.toFixed(0)}%</td>
+  </tr>`).join('');
+  return `
+    ${ownerTitle('Overview')}
+    <div class="kpi-grid">
+      <div class="kpi-card accent"><div class="kpi-label">Total Collected</div><div class="kpi-value">${money(g.collected)}</div><div class="kpi-sub">across ${list.length} companies</div></div>
+      <div class="kpi-card"><div class="kpi-label">Outstanding</div><div class="kpi-value">${money(g.outstanding)}</div><div class="kpi-sub">${money(g.invoiced)} invoiced</div></div>
+      <div class="kpi-card"><div class="kpi-label">Pipeline</div><div class="kpi-value">${money(g.pipeline)}</div><div class="kpi-sub">${g.active} active jobs</div></div>
+      <div class="kpi-card"><div class="kpi-label">Total Jobs</div><div class="kpi-value">${g.total}</div><div class="kpi-sub">${g.leads} leads · ${g.complete} done</div></div>
+    </div>
+    <div class="report-section" style="display:flex;gap:14px;flex-wrap:wrap">
+      <div style="flex:1;min-width:150px"><div class="kpi-label">Top performer</div><div style="font-size:16px;font-weight:800;color:${colorOf(top.co)};margin-top:3px">${esc(top.co.label)}</div><div class="kpi-sub">${money(top.m.collected)} collected</div></div>
+      <div style="flex:1;min-width:150px"><div class="kpi-label">Most outstanding</div><div style="font-size:16px;font-weight:800;color:${colorOf(watch.co)};margin-top:3px">${esc(watch.co.label)}</div><div class="kpi-sub">${money(watch.m.outstanding)} unpaid</div></div>
+    </div>
+    ${adminCompareChart('Revenue share — collected',list.map(x=>({label:coLbl(x.co),val:x.m.collected,color:colorOf(x.co)})),money)}
+    <div class="report-section"><div class="report-hd">Monthly revenue · all companies <span class="kpi-sub">last 6 months</span></div>${reportChart(monthlyRevenue(allJobs))}</div>
+    ${adminCompareChart('Outstanding balance',list.map(x=>({label:coLbl(x.co),val:x.m.outstanding,color:colorOf(x.co)})),money)}
+    ${adminCompareChart('Pipeline value',list.map(x=>({label:coLbl(x.co),val:x.m.pipeline,color:colorOf(x.co)})),money)}
+    <div class="report-section">
+      <div class="report-hd">Side-by-side</div>
+      <div style="overflow-x:auto;-webkit-overflow-scrolling:touch"><table class="admin-table">
+        <thead><tr><th>Company</th><th class="num">Jobs</th><th class="num">Active</th><th class="num">Leads</th><th class="num">Done</th><th class="num">Pipeline</th><th class="num">Collected</th><th class="num">Outstanding</th><th class="num">Win%</th></tr></thead>
+        <tbody>${tableRows}
+          <tr class="total-row"><td>All companies</td><td class="num">${g.total}</td><td class="num">${g.active}</td><td class="num">${g.leads}</td><td class="num">${g.complete}</td><td class="num">${money(g.pipeline)}</td><td class="num">${money(g.collected)}</td><td class="num">${money(g.outstanding)}</td><td class="num">${g.winRate.toFixed(0)}%</td></tr>
+        </tbody></table></div>
+    </div>
+  `;
+}
+function ownerFinancials(){
+  const list=ownerList(),g=ownerGrand(list);
+  const allJobs=list.flatMap(x=>x.jobs);
+  const collRate=pctStr(g.collected,g.invoiced);
+  const rows=list.map(x=>{const m=x.m;return `<tr>
+    <td style="font-weight:700"><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:${colorOf(x.co)};margin-right:7px;vertical-align:middle"></span>${esc(x.co.label)}</td>
+    <td class="num">${money(m.revenue)}</td><td class="num">${money(m.invoiced)}</td><td class="num">${money(m.collected)}</td><td class="num">${money(m.outstanding)}</td><td class="num">${pctStr(m.collected,m.invoiced)}</td><td class="num">${money(m.avg)}</td>
+  </tr>`}).join('');
+  return `
+    ${ownerTitle('Financials')}
+    <div class="kpi-grid">
+      <div class="kpi-card accent"><div class="kpi-label">Collected</div><div class="kpi-value">${money(g.collected)}</div><div class="kpi-sub">${collRate} of invoiced</div></div>
+      <div class="kpi-card"><div class="kpi-label">Invoiced</div><div class="kpi-value">${money(g.invoiced)}</div><div class="kpi-sub">${money(g.revenue)} won revenue</div></div>
+      <div class="kpi-card"><div class="kpi-label">Outstanding (A/R)</div><div class="kpi-value">${money(g.outstanding)}</div><div class="kpi-sub">to be collected</div></div>
+      <div class="kpi-card"><div class="kpi-label">Avg job size</div><div class="kpi-value">${money(g.won>0?g.revenue/g.won:0)}</div><div class="kpi-sub">across ${g.won} won</div></div>
+    </div>
+    <div class="report-section"><div class="report-hd">Monthly revenue · all companies <span class="kpi-sub">last 6 months</span></div>${reportChart(monthlyRevenue(allJobs))}</div>
+    ${adminCompareChart('Collected by company',list.map(x=>({label:coLbl(x.co),val:x.m.collected,color:colorOf(x.co)})),money)}
+    ${adminCompareChart('Outstanding by company',list.map(x=>({label:coLbl(x.co),val:x.m.outstanding,color:colorOf(x.co)})),money)}
+    <div class="report-section">
+      <div class="report-hd">Financial breakdown</div>
+      <div style="overflow-x:auto;-webkit-overflow-scrolling:touch"><table class="admin-table">
+        <thead><tr><th>Company</th><th class="num">Revenue</th><th class="num">Invoiced</th><th class="num">Collected</th><th class="num">Outstanding</th><th class="num">Collect%</th><th class="num">Avg job</th></tr></thead>
+        <tbody>${rows}
+          <tr class="total-row"><td>All companies</td><td class="num">${money(g.revenue)}</td><td class="num">${money(g.invoiced)}</td><td class="num">${money(g.collected)}</td><td class="num">${money(g.outstanding)}</td><td class="num">${collRate}</td><td class="num">${money(g.won>0?g.revenue/g.won:0)}</td></tr>
+        </tbody></table></div>
+    </div>
+  `;
+}
+function ownerHours(){
+  const cos=Object.values(COMPANIES);
+  const rows=cos.map(co=>{
+    const entries=(S.ownerTime&&S.ownerTime[co.id])||[];
+    const rates=(S.ownerRates&&S.ownerRates[co.id])||{};
+    let ms=0,cost=0,active=0;
+    entries.forEach(t=>{const d=Math.max(0,(t.end||Date.now())-t.start);ms+=d;cost+=(d/3600000)*Number(rates[t.member]||0);if(!t.end)active++});
+    return {co,ms,cost,active,count:entries.length};
+  });
+  const gMs=rows.reduce((s,r)=>s+r.ms,0),gCost=rows.reduce((s,r)=>s+r.cost,0),gActive=rows.reduce((s,r)=>s+r.active,0),gCount=rows.reduce((s,r)=>s+r.count,0);
+  const anyRates=rows.some(r=>r.cost>0);
+  const maxMs=Math.max(1,...rows.map(r=>r.ms));
+  const cards=rows.map(r=>`
+    <div class="report-section">
+      <div class="report-hd" style="align-items:center"><span style="display:flex;align-items:center;gap:8px"><span style="width:11px;height:11px;border-radius:3px;background:${colorOf(r.co)}"></span>${esc(r.co.label)}</span>${r.active?`<span class="tt-live">● ${r.active} on the clock</span>`:''}</div>
+      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-top:4px"><div style="font-size:22px;font-weight:700;font-family:var(--font-display)">${fmtHM(r.ms)}</div><div style="font-size:15px;font-weight:700;color:var(--green-700)">${anyRates?money(r.cost):'—'}</div></div>
+      <div class="bar-row-track" style="margin-top:8px"><div class="bar-row-fill" style="width:${(r.ms/maxMs*100).toFixed(1)}%;background:${colorOf(r.co)}"></div></div>
+    </div>`).join('');
+  const tableRows=rows.map(r=>`<tr><td style="font-weight:700"><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:${colorOf(r.co)};margin-right:7px;vertical-align:middle"></span>${esc(r.co.label)}</td><td class="num">${fmtHM(r.ms)}</td><td class="num">${r.active}</td><td class="num">${anyRates?money(r.cost):'—'}</td></tr>`).join('');
+  return `
+    ${ownerTitle('Labor Hours')}
+    <div class="kpi-grid">
+      <div class="kpi-card accent"><div class="kpi-label">Total hours</div><div class="kpi-value">${fmtHM(gMs)}</div><div class="kpi-sub">across ${rows.length} companies</div></div>
+      <div class="kpi-card"><div class="kpi-label">Labor cost</div><div class="kpi-value">${anyRates?money(gCost):'—'}</div><div class="kpi-sub">${anyRates?'from tracked time':'set rates per company'}</div></div>
+      <div class="kpi-card"><div class="kpi-label">On the clock</div><div class="kpi-value">${gActive}</div><div class="kpi-sub">right now</div></div>
+      <div class="kpi-card"><div class="kpi-label">Sessions</div><div class="kpi-value">${gCount}</div><div class="kpi-sub">total time entries</div></div>
+    </div>
+    ${cards}
+    <div class="report-section">
+      <div class="report-hd">Hours by company</div>
+      <div style="overflow-x:auto;-webkit-overflow-scrolling:touch"><table class="admin-table">
+        <thead><tr><th>Company</th><th class="num">Hours</th><th class="num">On clock</th><th class="num">Labor $</th></tr></thead>
+        <tbody>${tableRows}
+          <tr class="total-row"><td>All companies</td><td class="num">${fmtHM(gMs)}</td><td class="num">${gActive}</td><td class="num">${anyRates?money(gCost):'—'}</td></tr>
+        </tbody></table></div>
+    </div>
+  `;
+}
+function ownerPipeline(){
+  const list=ownerList(),g=ownerGrand(list);
+  const leadsN=g.leads,activeN=g.active,completeN=g.complete;
+  const funnelMax=Math.max(1,leadsN,activeN,completeN);
+  const funnel=[['Leads',leadsN,'#3ab5c8'],['Active',activeN,'#e8a830'],['Complete',completeN,'#2a9070']];
+  const conv=pctStr(completeN,leadsN+activeN+completeN);
+  const rows=list.map(x=>{const m=x.m;return `<tr>
+    <td style="font-weight:700"><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:${colorOf(x.co)};margin-right:7px;vertical-align:middle"></span>${esc(x.co.label)}</td>
+    <td class="num">${money(m.pipeline)}</td><td class="num">${m.leads}</td><td class="num">${m.active}</td><td class="num">${m.complete}</td><td class="num">${m.winRate.toFixed(0)}%</td>
+  </tr>`}).join('');
+  return `
+    ${ownerTitle('Pipeline')}
+    <div class="kpi-grid">
+      <div class="kpi-card accent"><div class="kpi-label">Open pipeline</div><div class="kpi-value">${money(g.pipeline)}</div><div class="kpi-sub">${g.active+g.leads} open jobs</div></div>
+      <div class="kpi-card"><div class="kpi-label">Win rate</div><div class="kpi-value">${g.winRate.toFixed(0)}%</div><div class="kpi-sub">${g.won} won · ${g.lost} lost</div></div>
+      <div class="kpi-card"><div class="kpi-label">Conversion</div><div class="kpi-value">${conv}</div><div class="kpi-sub">to completed</div></div>
+      <div class="kpi-card"><div class="kpi-label">Active jobs</div><div class="kpi-value">${g.active}</div><div class="kpi-sub">${g.leads} leads waiting</div></div>
+    </div>
+    <div class="report-section">
+      <div class="report-hd">Funnel · all companies</div>
+      <div class="bar-chart">${funnel.map(([lab,val,col])=>`<div class="bar-row"><div class="bar-row-label" style="flex-basis:80px">${lab}</div><div class="bar-row-track"><div class="bar-row-fill" style="width:${(val/funnelMax*100).toFixed(1)}%;background:${col}"></div></div><div class="bar-row-val">${val}</div></div>`).join('')}</div>
+    </div>
+    ${adminCompareChart('Pipeline value by company',list.map(x=>({label:coLbl(x.co),val:x.m.pipeline,color:colorOf(x.co)})),money)}
+    ${adminCompareChart('Active jobs by company',list.map(x=>({label:coLbl(x.co),val:x.m.active,color:colorOf(x.co)})),v=>String(v))}
+    <div class="report-section">
+      <div class="report-hd">Pipeline breakdown</div>
+      <div style="overflow-x:auto;-webkit-overflow-scrolling:touch"><table class="admin-table">
+        <thead><tr><th>Company</th><th class="num">Pipeline</th><th class="num">Leads</th><th class="num">Active</th><th class="num">Done</th><th class="num">Win%</th></tr></thead>
+        <tbody>${rows}
+          <tr class="total-row"><td>All companies</td><td class="num">${money(g.pipeline)}</td><td class="num">${g.leads}</td><td class="num">${g.active}</td><td class="num">${g.complete}</td><td class="num">${g.winRate.toFixed(0)}%</td></tr>
+        </tbody></table></div>
+    </div>
+  `;
+}
+function ownerLeads(){
+  const list=ownerList();
+  const allJobs=list.flatMap(x=>x.jobs);
+  const bySrc={};
+  allJobs.forEach(j=>{const s=j.leadSource||'Unknown';bySrc[s]=bySrc[s]||{src:s,total:0,won:0,revenue:0};bySrc[s].total++;if(j.status==='complete'){bySrc[s].won++;bySrc[s].revenue+=Number(j.invoiced||j.value||0)}});
+  const srcs=Object.values(bySrc).sort((a,b)=>b.revenue-a.revenue);
+  const best=srcs.find(s=>s.revenue>0)||srcs[0];
+  const maxRev=Math.max(1,...srcs.map(s=>s.revenue));
+  const rows=srcs.map(s=>`<tr><td style="font-weight:600">${esc(s.src)}</td><td class="num">${s.total}</td><td class="num">${s.won}</td><td class="num">${pctStr(s.won,s.total)}</td><td class="num">${money(s.revenue)}</td></tr>`).join('');
+  return `
+    ${ownerTitle('Leads & sources')}
+    ${best?`<div class="report-section"><div class="kpi-label">Best lead source</div><div style="font-size:17px;font-weight:800;color:var(--green-700);margin-top:3px">${esc(best.src)}</div><div class="kpi-sub">${money(best.revenue)} won revenue · ${pctStr(best.won,best.total)} conversion</div></div>`:''}
+    <div class="report-section">
+      <div class="report-hd">Revenue by lead source <span class="kpi-sub">all companies</span></div>
+      <div class="bar-chart">${srcs.slice(0,8).map(s=>`<div class="bar-row"><div class="bar-row-label" style="flex-basis:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(s.src)}</div><div class="bar-row-track"><div class="bar-row-fill" style="width:${(s.revenue/maxRev*100).toFixed(1)}%;background:var(--green-600)"></div></div><div class="bar-row-val" style="min-width:64px">${money(s.revenue)}</div></div>`).join('')||'<div class="kpi-sub">No lead-source data yet.</div>'}</div>
+    </div>
+    <div class="report-section">
+      <div class="report-hd">Lead source detail</div>
+      <div style="overflow-x:auto;-webkit-overflow-scrolling:touch"><table class="admin-table">
+        <thead><tr><th>Source</th><th class="num">Total</th><th class="num">Won</th><th class="num">Conv%</th><th class="num">Revenue</th></tr></thead>
+        <tbody>${rows||'<tr><td colspan="5" style="text-align:center;color:var(--text-3)">No data</td></tr>'}</tbody>
+      </table></div>
+    </div>
+  `;
+}
+function ownerCompanies(){
+  const list=ownerList();
+  const cards=list.map(x=>{const m=x.m,co=x.co;return `<div class="report-section">
+    <div class="report-hd" style="align-items:center"><span style="display:flex;align-items:center;gap:8px"><span style="width:11px;height:11px;border-radius:3px;background:${colorOf(co)}"></span>${esc(co.label)}</span><button class="btn-mini" data-view-company="${esc(co.id)}">Open →</button></div>
+    <div class="kpi-grid" style="margin-bottom:0">
+      <div class="kpi-card"><div class="kpi-label">Collected</div><div class="kpi-value">${money(m.collected)}</div><div class="kpi-sub">${money(m.outstanding)} outstanding</div></div>
+      <div class="kpi-card"><div class="kpi-label">Pipeline</div><div class="kpi-value">${money(m.pipeline)}</div><div class="kpi-sub">${m.active} active · ${m.leads} lead${m.leads!==1?'s':''}</div></div>
+      <div class="kpi-card"><div class="kpi-label">Jobs</div><div class="kpi-value">${m.total}</div><div class="kpi-sub">${m.complete} complete</div></div>
+      <div class="kpi-card"><div class="kpi-label">Win rate</div><div class="kpi-value">${m.winRate.toFixed(0)}%</div><div class="kpi-sub">avg ${money(m.avg)}</div></div>
+    </div></div>`}).join('');
+  return `${ownerTitle('Companies')}<div class="kpi-sub" style="margin:-6px 0 12px">Open any company to manage it in its own workspace.</div>${cards}<div class="report-x-pad"></div>`;
+}
+function applyOwnerChrome(){
+  if(!OWNER_MODE)return;
+  const bco=$('brand-co');if(bco)bco.textContent='All Companies';
+  const h1=document.querySelector('.brand-text h1');if(h1)h1.textContent='Owner';
+  const img=document.querySelector('.brand-logo');if(img){img.src='data:image/svg+xml;utf8,'+encodeURIComponent(OWNER_LOGO);img.alt='Owner';}
+  let s=document.getElementById('co-theme');if(!s){s=document.createElement('style');s.id='co-theme';document.head.appendChild(s);}
+  s.textContent='.header{background:linear-gradient(135deg,#1e1b2e 0%,#2b2440 60%,#3a2f55 100%)}.sync-bar{background:#1e1b2e}.nav-btn.active{color:#a99ce0;border-bottom-color:#a99ce0}';
+  const nav=document.querySelector('.nav');if(nav)nav.innerHTML=OWNER_NAV;
+  const fab=$('fab');if(fab)fab.style.display='none';
+}
+
+function renderReports(){
+  const all=jobs();
+  const range=parseInt(S.reportRange||'90',10);
+  const cutoff=range>0?Date.now()-range*86400000:0;
+  const inRange=all.filter(j=>(j.created||0)>=cutoff);
+  // Win rate: complete vs (complete + lead-but-not-converted-and-not-on-hold-recently). Simpler: of jobs that left "lead" stage, how many became "complete"?
+  const totalLeads=all.filter(j=>j.created>=cutoff).length;
+  const won=all.filter(j=>j.status==='complete'&&(j.created||0)>=cutoff).length;
+  const lost=all.filter(j=>j.status==='hold'&&(j.created||0)>=cutoff).length;
+  const open=all.filter(j=>(j.status==='lead'||j.status==='active')&&(j.created||0)>=cutoff).length;
+  const decided=won+lost;
+  const winRate=decided>0?(won/decided)*100:0;
+  const conversionRate=totalLeads>0?(won/totalLeads)*100:0;
+
+  // Financial
+  const totalValue=inRange.reduce((s,j)=>s+Number(j.value||0),0);
+  const revenue=inRange.filter(j=>j.status==='complete').reduce((s,j)=>{const t=invoiceTotals(j);return s+(t?t.total:Number(j.invoiced||j.value||0))},0);
+  const collected=inRange.reduce((s,j)=>{const t=invoiceTotals(j);return s+(t?t.paid:Number(j.paid||0))},0);
+  const avgDeal=won>0?revenue/won:0;
+  const pipeline=inRange.filter(j=>j.status!=='complete'&&j.status!=='hold').reduce((s,j)=>s+Number(j.value||0),0);
+
+  // Monthly revenue chart — last 6 months
+  const months=[];
+  const now=new Date();
+  for(let i=5;i>=0;i--){
+    const d=new Date(now.getFullYear(),now.getMonth()-i,1);
+    months.push({label:d.toLocaleDateString(undefined,{month:'short'}),key:d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'),val:0});
+  }
+  all.forEach(j=>{
+    if(j.status!=='complete')return;
+    const t=j.completedAt||j.created;
+    if(!t)return;
+    const d=new Date(t);
+    const k=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+    const m=months.find(x=>x.key===k);
+    if(m)m.val+=Number(j.invoiced||j.value||0);
+  });
+  const maxMonth=Math.max(1,...months.map(m=>m.val));
+
+  // Lead source ROI
+  const bySource={};
+  all.forEach(j=>{
+    if((j.created||0)<cutoff)return;
+    const s=j.leadSource||'Unknown';
+    bySource[s]=bySource[s]||{total:0,won:0,value:0,revenue:0};
+    bySource[s].total++;
+    bySource[s].value+=Number(j.value||0);
+    if(j.status==='complete'){bySource[s].won++;bySource[s].revenue+=Number(j.invoiced||j.value||0)}
+  });
+  const sources=Object.entries(bySource).sort((a,b)=>b[1].revenue-a[1].revenue);
+
+  // Team leaderboard
+  const byMember={};
+  all.forEach(j=>{
+    if((j.created||0)<cutoff)return;
+    const m=j.assigned||'Unassigned';
+    byMember[m]=byMember[m]||{name:m,jobs:0,won:0,revenue:0};
+    byMember[m].jobs++;
+    if(j.status==='complete'){byMember[m].won++;byMember[m].revenue+=Number(j.invoiced||j.value||0)}
+  });
+  const leaderboard=Object.values(byMember).sort((a,b)=>b.revenue-a.revenue).slice(0,8);
+
+  // Donut chart for win rate
+  const circumference=2*Math.PI*52;
+  const donutDash=(winRate/100)*circumference;
+
+  return `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+      <div>
+        <div style="font-size:11px;color:var(--text-3);text-transform:uppercase;letter-spacing:0.06em;font-weight:700">Performance</div>
+        <div style="font-size:20px;font-weight:700;margin-top:2px">Reports</div>
+      </div>
+      <div class="filter-row" style="margin-bottom:0">
+        ${[['30','30 days'],['90','90 days'],['365','1 year'],['0','All time']].map(([v,l])=>`<div class="filter-chip ${S.reportRange===v?'active':''}" data-range="${v}">${l}</div>`).join('')}
+      </div>
+    </div>
+
+    <div class="kpi-grid">
+      <div class="kpi-card accent"><div class="kpi-label">Won Revenue</div><div class="kpi-value">${money(revenue)}</div><div class="kpi-sub">${won} job${won!==1?'s':''} completed</div></div>
+      <div class="kpi-card"><div class="kpi-label">Pipeline Value</div><div class="kpi-value">${money(pipeline)}</div><div class="kpi-sub">${open} open</div></div>
+      <div class="kpi-card"><div class="kpi-label">Avg Job Size</div><div class="kpi-value">${money(avgDeal)}</div><div class="kpi-sub">across won jobs</div></div>
+      <div class="kpi-card"><div class="kpi-label">Collected</div><div class="kpi-value">${money(collected)}</div><div class="kpi-sub">${revenue>0?((collected/revenue)*100).toFixed(0):0}% of revenue</div></div>
+    </div>
+
+    <div class="report-section">
+      <div class="report-hd">Win Rate <span class="kpi-sub">${won} won · ${lost} lost · ${open} open</span></div>
+      <div class="donut-wrap">
+        <div class="donut">
+          <svg viewBox="0 0 120 120">
+            <circle cx="60" cy="60" r="52" fill="none" stroke="var(--surface-3)" stroke-width="14"/>
+            <circle cx="60" cy="60" r="52" fill="none" stroke="var(--green-600)" stroke-width="14"
+              stroke-dasharray="${donutDash} ${circumference}" stroke-linecap="round"/>
+          </svg>
+          <div class="donut-center"><div class="donut-pct">${winRate.toFixed(0)}%</div><div class="donut-lbl">Win Rate</div></div>
+        </div>
+        <div class="donut-legend">
+          <div class="donut-leg-row"><div class="donut-leg-dot" style="background:var(--green-600)"></div>Won <strong style="margin-left:auto">${won}</strong></div>
+          <div class="donut-leg-row"><div class="donut-leg-dot" style="background:#94a3b8"></div>Lost <strong style="margin-left:auto">${lost}</strong></div>
+          <div class="donut-leg-row"><div class="donut-leg-dot" style="background:var(--gold)"></div>Open <strong style="margin-left:auto">${open}</strong></div>
+          <div class="donut-leg-row" style="margin-top:6px;padding-top:6px;border-top:1px solid var(--border)"><span style="color:var(--text-3);font-size:11px">Conversion</span><strong style="margin-left:auto">${conversionRate.toFixed(0)}%</strong></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="report-section">
+      <div class="report-hd">Monthly Revenue <span class="kpi-sub">Last 6 months</span></div>
+      <div class="report-chart">
+        ${months.map(m=>{
+          const h=(m.val/maxMonth)*100;
+          return `<div class="report-bar" style="height:${Math.max(2,h)}%" title="${money(m.val)}">
+            <div class="report-bar-val">${m.val>0?'$'+(m.val>=1000?(m.val/1000).toFixed(0)+'k':m.val):''}</div>
+            <div class="report-bar-label">${m.label}</div>
+          </div>`;
+        }).join('')}
+      </div>
+      <div class="report-x-pad"></div>
+    </div>
+
+    <div class="report-section">
+      <div class="report-hd">Lead Source ROI <span class="kpi-sub">${sources.length} source${sources.length!==1?'s':''}</span></div>
+      ${sources.length===0?'<p style="font-size:13px;color:var(--text-3);padding:4px 0">Set the Lead Source on jobs to see where your best work comes from.</p>'
+        :`<div style="display:flex;flex-direction:column;gap:8px">
+          ${sources.map(([name,s])=>{
+            const rate=s.total>0?(s.won/s.total)*100:0;
+            return `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)">
+              <div style="flex:1;min-width:0">
+                <div style="font-weight:600;font-size:13.5px">${esc(name)}</div>
+                <div style="font-size:11.5px;color:var(--text-3)">${s.total} lead${s.total!==1?'s':''} · ${s.won} won · ${rate.toFixed(0)}% conversion</div>
+              </div>
+              <div style="text-align:right">
+                <div style="font-weight:700;font-size:14px">${money(s.revenue)}</div>
+                <div style="font-size:11px;color:var(--text-3)">${money(s.value)} pipeline</div>
+              </div>
+            </div>`;
+          }).join('')}
+        </div>`}
+    </div>
+
+    <div class="report-section">
+      <div class="report-hd">Team Leaderboard <span class="kpi-sub">By revenue</span></div>
+      ${leaderboard.length===0?'<p style="font-size:13px;color:var(--text-3);padding:4px 0">Assign jobs to team members to see rankings.</p>'
+        :`<div class="leaderboard">
+          ${leaderboard.map((m,i)=>{
+            const rankCls=i===0?'gold':i===1?'silver':i===2?'bronze':'';
+            return `<div class="lb-row">
+              <div class="lb-rank ${rankCls}">${i+1}</div>
+              <div class="member-ava" style="width:30px;height:30px;font-size:12px">${initials(m.name)}</div>
+              <div class="lb-name">${esc(m.name)}<div style="font-size:11px;color:var(--text-3);font-weight:500">${m.won}/${m.jobs} won</div></div>
+              <div class="lb-stats"><strong>${money(m.revenue)}</strong><div>revenue</div></div>
+            </div>`;
+          }).join('')}
+        </div>`}
+    </div>
+  `;
+}
+
+// ══ Map ══
+function renderMap(){
+  const all=jobs();
+  const withCoords=all.filter(j=>j.lat&&j.lng);
+  const needGeo=all.filter(j=>j.address&&(!j.lat||!j.lng));
+  return `
+    <div class="map-controls">
+      <div class="map-stats">${withCoords.length} of ${all.filter(j=>j.address).length} jobs pinned</div>
+      ${needGeo.length>0?`<button class="btn-sm" id="btn-geocode">Locate ${needGeo.length} address${needGeo.length!==1?'es':''}</button>`:''}
+      <span class="geocode-status" id="geo-status" style="display:none"></span>
+    </div>
+    ${withCoords.length===0?`<div class="map-empty">
+      <p style="margin-bottom:10px">No jobs pinned to the map yet.</p>
+      <p style="font-size:12.5px">${needGeo.length>0?'Click "Locate" above to find addresses on the map.':'Add a job with an address to get started.'}</p>
+    </div>`:''}
+    <div class="map-wrap" id="map-wrap" style="${withCoords.length===0?'display:none':''}">
+      <div id="leaflet-map"></div>
+    </div>
+  `;
+}
+
+function mountMap(){
+  if(typeof L==='undefined'){
+    setTimeout(mountMap,200);
+    return;
+  }
+  const el=document.getElementById('leaflet-map');
+  if(!el)return;
+  if(MAP){MAP.remove();MAP=null;MAP_MARKERS=[]}
+  const all=jobs().filter(j=>j.lat&&j.lng);
+  if(all.length===0)return;
+  MAP=L.map(el,{scrollWheelZoom:true});
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+    maxZoom:19,attribution:'© OpenStreetMap'
+  }).addTo(MAP);
+  const group=[];
+  all.forEach(j=>{
+    const color=j.status==='complete'?'#3ab5c8':j.status==='active'?'#4ade80':j.status==='hold'?'#94a3b8':'#e8a830';
+    const icon=L.divIcon({
+      className:'',
+      html:`<div style="background:${color};width:24px;height:24px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center"><div style="transform:rotate(45deg);color:#fff;font-size:11px;font-weight:700">${initials(j.name)}</div></div>`,
+      iconSize:[24,24],iconAnchor:[12,24]
+    });
+    const m=L.marker([j.lat,j.lng],{icon}).addTo(MAP);
+    m.bindPopup(`<strong>${esc(j.name)}</strong>${esc(j.address||'')}<br><br>${j.customerName?esc(j.customerName)+'<br>':''}${j.customerPhone?'📞 '+esc(j.customerPhone)+'<br>':''}<a href="#" data-open-job="${j.id}">Open job →</a>`);
+    m.on('popupopen',()=>{
+      const lnk=document.querySelector('[data-open-job="'+j.id+'"]');
+      if(lnk)lnk.onclick=e=>{e.preventDefault();S.detail=j.id;S.view='jobs';S.detailTab='overview';render()};
+    });
+    group.push([j.lat,j.lng]);
+  });
+  if(group.length===1){MAP.setView(group[0],13)}
+  else{MAP.fitBounds(group,{padding:[40,40]})}
+  setTimeout(()=>MAP&&MAP.invalidateSize(),100);
+}
+
+// Nominatim geocoder (rate limited 1/sec by their TOS)
+async function geocodeOne(addr){
+  try{
+    const r=await fetch('https://nominatim.openstreetmap.org/search?format=json&limit=1&q='+encodeURIComponent(addr),{headers:{'Accept':'application/json'}});
+    if(!r.ok)return null;
+    const data=await r.json();
+    if(data&&data.length>0)return{lat:parseFloat(data[0].lat),lng:parseFloat(data[0].lon)};
+  }catch(e){}
+  return null;
+}
+async function geocodeAll(){
+  const queue=jobs().filter(j=>j.address&&(!j.lat||!j.lng));
+  const status=$('geo-status');
+  if(status)status.style.display='inline-block';
+  for(let i=0;i<queue.length;i++){
+    const j=queue[i];
+    if(status)status.textContent=`Locating ${i+1} of ${queue.length}: ${j.name}…`;
+    const coords=await geocodeOne(j.address);
+    if(coords){j.lat=coords.lat;j.lng=coords.lng;await writeJob(j)}
+    await new Promise(r=>setTimeout(r,1100));
+  }
+  if(status)status.textContent='Done.';
+  toast('Locations updated');
+  render();
+}
+
+// ══ Notifications ══
+function buildNotifications(){
+  const out=[];
+  const me=(S.user||'').toLowerCase();
+  const all=jobs();
+  // Tasks due / overdue assigned to me (or unassigned that I created)
+  all.forEach(j=>{
+    (j.tasks||[]).forEach((t,i)=>{
+      if(t.done||!t.due)return;
+      const d=daysUntil(t.due);
+      if(d===null)return;
+      const owner=(t.assigned||'').toLowerCase();
+      const mine=me&&(owner===me||owner==='');
+      if(!mine)return;
+      if(d<0)out.push({type:'overdue',time:new Date(t.due+'T00:00:00').getTime(),text:`Task overdue: <strong>${esc(t.text)}</strong>`,sub:esc(j.name)+' · '+Math.abs(d)+'d late',jobId:j.id});
+      else if(d<=2)out.push({type:'task',time:new Date(t.due+'T00:00:00').getTime(),text:`Task due ${d===0?'today':d===1?'tomorrow':'in '+d+' days'}: <strong>${esc(t.text)}</strong>`,sub:esc(j.name),jobId:j.id});
+    });
+  });
+  // Recent activity on jobs assigned to me
+  S.activity.slice(0,40).forEach(a=>{
+    const job=Object.values(S.jobs).find(j=>j.name===a.job);
+    if(!job)return;
+    const mine=me&&(job.assigned||'').toLowerCase()===me;
+    if(mine&&a.user&&a.user.toLowerCase()!==me){
+      out.push({type:'activity',time:a.time,text:`<strong>${esc(a.user)}</strong> ${esc(a.action)}`,sub:esc(a.job||''),jobId:job.id});
+    }
+  });
+  // Recent notes that mention me by name (case-insensitive substring)
+  if(me){
+    all.forEach(j=>{
+      (j.notes||[]).forEach(n=>{
+        if(!n.text||!n.user)return;
+        if(n.user.toLowerCase()===me)return;
+        if(n.text.toLowerCase().includes('@'+me)||n.text.toLowerCase().includes(me)&&n.text.includes('@')){
+          out.push({type:'mention',time:n.time,text:`<strong>${esc(n.user)}</strong> mentioned you`,sub:esc(j.name)+' · '+esc(n.text).slice(0,60),jobId:j.id});
+        }
+      });
+    });
+  }
+  return out.sort((a,b)=>b.time-a.time).slice(0,30);
+}
+function unreadCount(){return buildNotifications().filter(n=>n.time>S.notifReadAt).length}
+function updateBellBadge(){
+  const b=$('bell-badge');if(!b)return;
+  const n=unreadCount();
+  b.textContent=n>9?'9+':n;
+  b.style.display=n>0?'flex':'none';
+}
+function showNotificationsModal(){
+  const notifs=buildNotifications();
+  const ICONS={overdue:'!',task:'○',activity:'•',mention:'@'};
+  const body=notifs.length===0
+    ? `<div class="notif-empty">🔕<br><br>You're all caught up.<br><span style="font-size:12px">Tasks assigned to you, mentions, and activity on your jobs will appear here.</span></div>`
+    : '<div class="notif-list">'+notifs.map(n=>`<div class="notif-item ${n.time>S.notifReadAt?'unread':''}" data-open="${n.jobId}">
+        <div class="notif-icon ${n.type}">${ICONS[n.type]||'•'}</div>
+        <div class="notif-body"><div class="notif-text">${n.text}</div><div class="notif-meta">${n.sub} · ${ago(n.time)}</div></div>
+        ${n.time>S.notifReadAt?'<div class="notif-dot"></div>':''}
+      </div>`).join('')+'</div>';
+  $('modal-root').innerHTML=`<div class="modal-bd" id="mbd"><div class="modal"><div class="modal-handle"></div>
+    <div class="modal-head"><div class="modal-title">Notifications ${notifs.length?'<span style="font-weight:400;color:var(--text-3);font-size:13px">· '+notifs.length+'</span>':''}</div>
+      <div style="display:flex;gap:4px;align-items:center">${notifs.length?'<button class="notif-clear" id="notif-mark">Mark all read</button>':''}<button class="modal-close" id="mc"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button></div>
+    </div>
+    <div class="modal-body" style="padding:0 20px 20px">${body}</div>
+  </div></div>`;
+  $('mc').onclick=closeModal;
+  $('mbd').onclick=e=>{if(e.target===e.currentTarget)closeModal()};
+  $('notif-mark')?.addEventListener('click',()=>{
+    S.notifReadAt=Date.now();
+    localStorage.setItem(LS('notif_read'),String(S.notifReadAt));
+    closeModal();render();toast('Marked all as read');
+  });
+  document.querySelectorAll('.notif-item[data-open]').forEach(el=>el.onclick=()=>{
+    S.notifReadAt=Math.max(S.notifReadAt,Date.now());
+    localStorage.setItem(LS('notif_read'),String(S.notifReadAt));
+    S.detail=el.dataset.open;S.view='jobs';S.detailTab='overview';closeModal();render();
+  });
+}
+
+function renderJobs(){
+  const all=jobs();
+  const cnt={all:all.length,lead:0,active:0,complete:0,hold:0};
+  all.forEach(j=>{if(cnt[j.status]!==undefined)cnt[j.status]++});
+  const q=S.search.toLowerCase();
+  const shown=all.filter(j=>{
+    const mf=S.filter==='all'||j.status===S.filter;
+    const hay=(j.name+' '+(j.address||'')+' '+(j.customerName||'')+' '+(j.customerPhone||'')+' '+(j.customerEmail||'')+' '+(j.assigned||'')).toLowerCase();
+    const ms=!S.search||hay.includes(q);
+    return mf&&ms;
+  });
+  const sortLabels={newest:'Newest',oldest:'Oldest',name:'A–Z',value:'Highest value',due:'Due soonest',progress:'Most complete'};
+  const sortCheckSvg='<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>';
+  return`<div class="toolbar">
+    <button class="btn-add" id="btn-add-job" aria-label="Create new job">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+      New Job
+    </button>
+    <div class="search-wrap">
+      <div class="search-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 15.803a7.5 7.5 0 0010.607 0z"/></svg></div>
+      <input class="search" id="search-in" placeholder="Search jobs, address, customer…" value="${esc(S.search)}" aria-label="Search jobs">
+    </div>
+    <div class="sort-wrap">
+      <button class="btn-sm" id="btn-sort" aria-label="Sort jobs" aria-haspopup="true" aria-expanded="${S.sortOpen?'true':'false'}">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 4.5h14.25M3 9h9.75M3 13.5h5.25m5.25-.75L17.25 9m0 0L21 12.75M17.25 9v12"/></svg>
+        ${sortLabels[S.sort]||'Sort'}
+      </button>
+      <div class="sort-menu ${S.sortOpen?'open':''}" role="menu">
+        ${Object.entries(sortLabels).map(([k,v])=>`<div class="sort-opt ${S.sort===k?'active':''}" data-sort="${k}" role="menuitem" tabindex="0">${sortCheckSvg}<span>${v}</span></div>`).join('')}
+      </div>
+    </div>
+    <button class="btn-sm" id="btn-bulk" aria-label="${S.bulkMode?'Exit selection':'Select multiple jobs'}" aria-pressed="${S.bulkMode?'true':'false'}">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      ${S.bulkMode?'Done':'Select'}
+    </button>
+    <button class="btn-sm" id="btn-export-csv" title="Export to CSV" aria-label="Export all jobs to CSV">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>
+      Export
+    </button>
+  </div>
+  <div class="filter-row" style="margin-bottom:14px">
+    <div class="filter-chip ${S.filter==='all'?'active':''}" data-filter="all">All ${cnt.all}</div>
+    <div class="filter-chip ${S.filter==='lead'?'active':''}" data-filter="lead">Lead ${cnt.lead}</div>
+    <div class="filter-chip ${S.filter==='active'?'active':''}" data-filter="active">Active ${cnt.active}</div>
+    <div class="filter-chip ${S.filter==='complete'?'active':''}" data-filter="complete">Done ${cnt.complete}</div>
+    <div class="filter-chip ${S.filter==='hold'?'active':''}" data-filter="hold">On Hold ${cnt.hold}</div>
+  </div>
+  ${S.bulkMode&&S.bulkSel.size>0?`<div class="bulk-bar">
+    <div class="bulk-bar-count">${S.bulkSel.size} selected</div>
+    <button id="bulk-status">Set Status</button>
+    <button id="bulk-assign">Assign</button>
+    <button id="bulk-star">Pin/Unpin</button>
+    <button class="danger" id="bulk-delete">Delete</button>
+  </div>`:''}
+  ${shown.length===0?renderEmpty(all.length):'<div class="jobs-grid">'+shown.map(renderCard).join('')+'</div>'}` ;
+}
+
+function renderEmpty(total){
+  return`<div class="empty">
+    <div class="empty-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75"/></svg></div>
+    <h3>${total===0?'No jobs yet':'No matches'}</h3>
+    <p>${total===0?'Add your first job to start tracking your team’s work.':'Try a different search or filter.'}</p>
+    ${total===0?'<button class="btn-add" id="btn-add-job2" style="margin:0 auto">+ Add First Job</button>':''}
+  </div>`;
+}
+
+function renderCard(j){
+  const photos=j.photos||[];
+  const pct=j.progress||0;
+  const photoBadge=photos.length>1?'<div class="photo-badge"><svg xmlns=\"http://www.w3.org/2000/svg\" fill=\"none\" viewBox=\"0 0 24 24\" stroke=\"currentColor\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z\"/><path stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zM18.75 10.5h.008v.008h-.008V10.5z\"/></svg>'+photos.length+'</div>':'';
+  const firstPhoto=photos.length>0?(typeof photos[0]==='string'?photos[0]:photos[0].url):'';
+  const thumb=photos.length>0?'<img src="'+firstPhoto+'" alt="" loading="lazy"><div class="status-dot '+sdClass(j.status)+'"></div>'+photoBadge:'<div class="status-dot '+sdClass(j.status)+'" style="top:10px;left:10px;position:absolute"></div><div class="card-thumb-icon">🏠</div>';
+
+  const tasks=(j.tasks||[]);
+  const openTasks=tasks.filter(t=>!t.done).length;
+  const bal=jobBalance(j);
+  const meta=[];
+  if(j.customerName)meta.push(esc(j.customerName));
+  if(openTasks)meta.push(openTasks+' open task'+(openTasks>1?'s':''));
+  if(bal>0)meta.push('<span style="color:var(--orange);font-weight:600">'+money(bal)+' due</span>');
+
+  const selected=S.bulkSel.has(j.id);
+  const starSvg='<svg xmlns="http://www.w3.org/2000/svg" fill="'+(j.favorite?'currentColor':'none')+'" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z"/></svg>';
+  return`<div class="job-card ${selected?'selected':''} ${S.bulkMode?'selectable':''}" data-open="${j.id}" data-card-id="${j.id}" style="animation-delay:${Math.random()*0.1}s" tabindex="0" role="link" aria-label="${esc(j.name)}${j.favorite?', pinned':''}">
+    <div class="job-card-check" aria-hidden="true"></div>
+    <button class="star-btn card-star ${j.favorite?'starred':''}" data-fav="${j.id}" title="${j.favorite?'Unpin':'Pin to top'}" aria-label="${j.favorite?'Unpin':'Pin'} ${esc(j.name)}" aria-pressed="${j.favorite?'true':'false'}">${starSvg}</button>
+    <div class="card-thumb">${thumb}</div>
+    <div class="card-body">
+      <div class="card-name">${esc(j.name)}</div>
+      <div class="card-addr"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z"/></svg>${esc(j.address||'No address')}</div>
+      ${meta.length?`<div style="font-size:11.5px;color:var(--text-3);margin-bottom:8px;display:flex;gap:8px;flex-wrap:wrap">${meta.join(' · ')}</div>`:''}
+      <div class="prog-track"><div class="prog-fill" style="width:${pct}%"></div></div>
+      <div class="card-footer"><span class="status-pill ${spClass(j.status)}">${spLabel(j.status)}</span><span class="card-pct">${pct}%</span></div>
+    </div>
+  </div>`;
+}
+
+function renderDetail(id){
+  const j=S.jobs[id];
+  if(!j)return`<button class="detail-back" id="btn-back"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"/></svg>Back</button><p style="color:var(--text-2)">Job not found.</p>`;
+  const photos=j.photos||[];
+  const pct=j.progress||0;
+  const thumbHtml=photos.length>0?`<img src="${photos[0].url||photos[0]}" alt="">`:null;
+  const stage=jobStage(j);
+  const stageIdx=STAGES.indexOf(stage);
+  const tab=S.detailTab||'overview';
+  const tabs=[
+    {id:'overview',label:'Overview'},
+    {id:'customer',label:'Customer'},
+    {id:'tasks',label:'Tasks',count:(j.tasks||[]).filter(t=>!t.done).length},
+    {id:'log',label:'Daily Log',count:(j.dailyLogs||[]).length},
+    {id:'photos',label:'Photos',count:photos.length},
+    {id:'docs',label:'Files',count:(j.documents||[]).length},
+    {id:'receipts',label:'Receipts',count:(j.receipts||[]).length},
+    {id:'invoices',label:'Invoices',count:(j.invoices||[]).length},
+    {id:'estimates',label:'Estimates',count:(j.estimates||[]).length},
+    {id:'financial',label:'Financials'},
+    {id:'comms',label:'Comms',count:(j.comms||[]).length},
+    {id:'notes',label:'Notes',count:(j.notes||[]).length},
+  ];
+
+  return`
+    <button class="detail-back" id="btn-back"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"/></svg>All Jobs</button>
+    <div class="detail-hero">${thumbHtml?thumbHtml:'🏠'}
+      ${photos.length>0?`<div class="hero-overlay"><div class="hero-photo-count"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z"/><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zM18.75 10.5h.008v.008h-.008V10.5z"/></svg>${photos.length} photo${photos.length>1?'s':''}</div><span class="status-pill ${spClass(j.status)}">${spLabel(j.status)}</span></div>`:''}
+    </div>
+    <div class="detail-name">${esc(j.name)}</div>
+    <div class="detail-addr"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z"/></svg>${esc(j.address||'No address set')}</div>
+
+    <div class="quick-actions">
+      <a class="qa-btn ${j.customerPhone?'':'disabled'}" ${j.customerPhone?`href="tel:${encodeURIComponent(j.customerPhone)}"`:''}>
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 01-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z"/></svg>
+        Call
+      </a>
+      <a class="qa-btn ${j.customerPhone?'':'disabled'}" ${j.customerPhone?`href="sms:${encodeURIComponent(j.customerPhone)}"`:''}>
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12.76c0 1.6 1.123 2.994 2.707 3.227 1.068.157 2.148.279 3.238.364.466.037.893.281 1.153.671L12 21l2.652-3.978c.26-.39.687-.634 1.153-.67 1.09-.086 2.17-.208 3.238-.365 1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z"/></svg>
+        Text
+      </a>
+      <a class="qa-btn ${j.customerEmail?'':'disabled'}" ${j.customerEmail?`href="mailto:${encodeURIComponent(j.customerEmail)}"`:''}>
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"/></svg>
+        Email
+      </a>
+      <a class="qa-btn ${j.address?'':'disabled'}" ${j.address?`href="https://maps.google.com/?q=${encodeURIComponent(j.address)}" target="_blank" rel="noopener"`:''}>
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 6.75V15m6-6v8.25m.503 3.498l4.875-2.437c.381-.19.622-.58.622-1.006V4.82c0-.836-.88-1.38-1.628-1.006l-3.869 1.934c-.317.159-.69.159-1.006 0L9.503 3.252a1.125 1.125 0 00-1.006 0L3.622 5.689C3.24 5.88 3 6.27 3 6.695V19.18c0 .836.88 1.38 1.628 1.006l3.869-1.934c.317-.159.69-.159 1.006 0l4.994 2.497c.317.158.69.158 1.006 0z"/></svg>
+        Map
+      </a>
+    </div>
+
+    <div class="stage-pipeline">
+      ${STAGES.map((s,i)=>{
+        const cls=i<stageIdx?'done':i===stageIdx?'current':'';
+        return `<button class="stage-step ${cls}" data-stage="${esc(s)}" title="${esc(s)}">${esc(s)}</button>`;
+      }).join('')}
+    </div>
+
+    <div class="detail-actions">
+      <button class="btn-sm" id="btn-edit-job"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125"/></svg>Edit Job</button>
+      <button class="btn-sm" id="btn-print-job"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.72 13.829c-.24.03-.48.062-.72.096m.72-.096a42.415 42.415 0 0110.56 0m-10.56 0L6.34 18m10.94-4.171c.24.03.48.062.72.096m-.72-.096L17.66 18m0 0l.229 2.523a1.125 1.125 0 01-1.12 1.227H7.231c-.662 0-1.18-.568-1.12-1.227L6.34 18m11.318 0h1.091A2.25 2.25 0 0021 15.75V9.456c0-1.081-.768-2.015-1.837-2.175a48.055 48.055 0 00-1.913-.247M6.34 18H5.25A2.25 2.25 0 013 15.75V9.456c0-1.081.768-2.015 1.837-2.175a48.041 48.041 0 011.913-.247m10.5 0a48.536 48.536 0 00-10.5 0m10.5 0V3.375c0-.621-.504-1.125-1.125-1.125h-8.25c-.621 0-1.125.504-1.125 1.125v3.659M18 10.5h.008v.008H18V10.5zm-3 0h.008v.008H15V10.5z"/></svg>Print</button>
+      <button class="btn-sm" id="btn-share-job"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M7.217 10.907a2.25 2.25 0 100 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186l9.566-5.314m-9.566 7.5l9.566 5.314m0 0a2.25 2.25 0 103.935 2.186 2.25 2.25 0 00-3.935-2.186zm0-12.814a2.25 2.25 0 103.933-2.185 2.25 2.25 0 00-3.933 2.185z"/></svg>Share</button>
+    </div>
+
+    <div class="prog-section">
+      <div class="prog-top"><span class="prog-label-text">Completion</span><span class="prog-pct" id="prog-pct">${pct}%</span></div>
+      <div class="prog-track-lg"><div class="prog-fill-lg" id="prog-fill-lg" style="width:${pct}%"></div></div>
+      <input type="range" id="prog-slider" min="0" max="100" value="${pct}">
+    </div>
+
+    <div class="detail-tabs">
+      ${tabs.map(t=>`<button class="detail-tab ${tab===t.id?'active':''}" data-tab="${t.id}">${t.label}${t.count?' <span style="opacity:0.6">·'+t.count+'</span>':''}</button>`).join('')}
+    </div>
+
+    <div id="tab-content">${renderDetailTab(j,tab)}</div>
+  `;
+}
+
+function statCell(label,tab,value,addable,color){
+  const goArrow='<span class="stat-go"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5"/></svg></span>';
+  return `<div class="info-cell stat-cell" data-goto="${tab}" tabindex="0" role="button" aria-label="${esc(label)}: ${esc(String(value))}. Open ${esc(label)}">
+    ${addable?`<button class="stat-add" data-add="${tab}" title="Add to ${esc(label)}" aria-label="Add to ${esc(label)}">+</button>`:''}
+    <div class="info-label">${esc(label)}</div>
+    <div class="info-value"${color?` style="color:${color}"`:''}>${esc(String(value))}${goArrow}</div>
+  </div>`;
+}
+function triggerQuickAdd(tab){
+  setTimeout(()=>{
+    if(tab==='tasks')$('task-in')?.focus();
+    else if(tab==='notes')$('note-in')?.focus();
+    else if(tab==='photos')$('photo-upload')?.click();
+    else if(tab==='docs')$('doc-upload')?.click();
+    else if(tab==='receipts')$('rcpt-amount')?.focus();
+    else if(tab==='invoices')$('btn-new-inv')?.click();
+    else if(tab==='estimates')$('btn-new-est')?.click();
+    else if(tab==='log'||tab==='comms'){const f=document.querySelector('#tab-content input,#tab-content textarea,#tab-content select');if(f){f.focus();f.scrollIntoView({block:'center'});}}
+  },50);
+}
+function renderDetailTab(j,tab){
+  const photos=j.photos||[];
+  if(tab==='overview'){
+    const desc=j.description?`<p style="font-size:13.5px;margin-top:10px;line-height:1.65;color:var(--text)">${esc(j.description)}</p>`:'';
+    const due=daysUntil(j.dueDate);
+    const dueBadge=j.dueDate?(due<0?`<span class="badge danger">${Math.abs(due)}d overdue</span>`:due===0?'<span class="badge">Due today</span>':due<=7?'<span class="badge">in '+due+'d</span>':''):'';
+    const balance=jobBalance(j);
+    return `
+      <div class="section">
+        <div class="section-hd">Details</div>
+        <div class="info-grid">
+          <div class="info-cell"><div class="info-label">Type</div><div class="info-value">${esc(j.type||'—')}</div></div>
+          <div class="info-cell"><div class="info-label">Assigned to</div><div class="info-value">${esc(j.assigned||'—')}</div></div>
+          <div class="info-cell"><div class="info-label">Start date</div><div class="info-value">${j.startDate?fmtDate(j.startDate):'—'}</div></div>
+          <div class="info-cell"><div class="info-label">Due date</div><div class="info-value">${j.dueDate?fmtDate(j.dueDate):'—'} ${dueBadge}</div></div>
+          <div class="info-cell"><div class="info-label">Stage</div><div class="info-value">${esc(jobStage(j))}</div></div>
+          <div class="info-cell"><div class="info-label">Est. value</div><div class="info-value">${j.value?money(j.value):'—'}</div></div>
+        </div>
+        ${desc}
+      </div>
+      <div class="section">
+        <div class="section-hd">Quick Stats <span style="font-weight:500;font-size:11px;color:var(--text-3);text-transform:none;letter-spacing:0">tap a stat to open · + to add</span></div>
+        <div class="info-grid">
+          ${statCell('Photos','photos',photos.length,true)}
+          ${statCell('Open Tasks','tasks',(j.tasks||[]).filter(t=>!t.done).length,true)}
+          ${statCell('Daily Log','log',(j.dailyLogs||[]).length,true)}
+          ${statCell('Files','docs',(j.documents||[]).length,true)}
+          ${statCell('Receipts','receipts',money2(receiptTotal(j)),true)}
+          ${statCell('Invoices','invoices',(j.invoices||[]).length,true)}
+          ${statCell('Estimates','estimates',(j.estimates||[]).length,true)}
+          ${statCell('Comms','comms',(j.comms||[]).length,true)}
+          ${statCell('Notes','notes',(j.notes||[]).length,true)}
+          ${statCell('Balance Due','financial',money(balance),false,balance>0?'var(--orange)':'var(--green-700)')}
+        </div>
+      </div>`;
+  }
+  if(tab==='customer'){
+    return `
+      <div class="section">
+        <div class="section-hd">Customer Information <button class="btn-sm" id="btn-edit-customer" style="padding:5px 10px;font-size:11px">Edit</button></div>
+        <div class="info-grid">
+          <div class="info-cell" style="grid-column:1/-1"><div class="info-label">Name</div><div class="info-value">${esc(j.customerName||'—')}</div></div>
+          <div class="info-cell"><div class="info-label">Phone</div><div class="info-value">${j.customerPhone?`<a href="tel:${encodeURIComponent(j.customerPhone)}" style="color:var(--green-700);text-decoration:none">${esc(j.customerPhone)}</a>`:'—'}</div></div>
+          <div class="info-cell"><div class="info-label">Email</div><div class="info-value" style="font-size:12px;word-break:break-all">${j.customerEmail?`<a href="mailto:${encodeURIComponent(j.customerEmail)}" style="color:var(--green-700);text-decoration:none">${esc(j.customerEmail)}</a>`:'—'}</div></div>
+          <div class="info-cell" style="grid-column:1/-1"><div class="info-label">Job Site Address</div><div class="info-value" style="font-size:13px">${esc(j.address||'—')}</div></div>
+          <div class="info-cell" style="grid-column:1/-1"><div class="info-label">Billing Address</div><div class="info-value" style="font-size:13px">${esc(j.billingAddress||j.address||'—')}</div></div>
+          <div class="info-cell" style="grid-column:1/-1"><div class="info-label">Lead Source</div><div class="info-value">${esc(j.leadSource||'—')}</div></div>
+        </div>
+        ${j.customerNotes?`<div style="background:var(--surface-3);border-radius:var(--r-sm);padding:11px 13px;margin-top:10px"><div class="info-label">Customer Notes</div><p style="font-size:13px;margin-top:4px;line-height:1.55">${esc(j.customerNotes)}</p></div>`:''}
+      </div>`;
+  }
+  if(tab==='tasks'){
+    const tasks=j.tasks||[];
+    const open=tasks.filter(t=>!t.done);
+    const done=tasks.filter(t=>t.done);
+    const render=(t,i)=>{
+      const due=daysUntil(t.due);
+      const overdue=due!==null&&due<0&&!t.done;
+      const dueLbl=t.due?(overdue?'<span class="badge danger">'+Math.abs(due)+'d late</span>':' · '+fmtShort(t.due)):'';
+      const assignMeta=t.assigned?' · '+esc(t.assigned):'';
+      return `<div class="task-item ${t.done?'done':''}">
+        <div class="task-check ${t.done?'checked':''}" data-task-toggle="${i}"></div>
+        <div style="flex:1;min-width:0">
+          <div class="task-text">${esc(t.text)}</div>
+          ${(t.due||t.assigned)?`<div class="task-meta">${dueLbl}${assignMeta}</div>`:''}
+        </div>
+        <button class="task-del" data-task-del="${i}">✕</button>
+      </div>`;
+    };
+    return `
+      <div class="section">
+        <div class="section-hd">Open Tasks <span>${open.length}</span></div>
+        <div class="task-list">${open.length?tasks.map((t,i)=>!t.done?render(t,i):'').join(''):'<p style="font-size:13px;color:var(--text-3);padding:4px 0">No open tasks.</p>'}</div>
+        <div class="task-add">
+          <input class="form-input" id="task-in" placeholder="New task…" style="flex:1">
+          <input class="form-input" id="task-due" type="date" style="max-width:140px" title="Due date">
+          <button class="btn-post" id="btn-add-task">Add</button>
+        </div>
+      </div>
+      ${done.length?`<div class="section">
+        <div class="section-hd">Completed <span>${done.length}</span></div>
+        <div class="task-list">${tasks.map((t,i)=>t.done?render(t,i):'').join('')}</div>
+      </div>`:''}`;
+  }
+  if(tab==='log'){
+    const logs=(j.dailyLogs||[]).slice().sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+    return `
+      <div class="section">
+        <div class="section-hd">Daily Log <span>${logs.length} entr${logs.length===1?'y':'ies'}</span></div>
+        <div class="log-list">
+          ${logs.length===0?'<p style="font-size:13px;color:var(--text-3);padding:4px 0">No log entries yet. Use the form below to record on-site work.</p>':logs.map(l=>`<div class="log-entry">
+            <div class="log-date">${fmtDate(l.date)} ${l.weather?`<span class="log-weather">· ${esc(l.weather)}</span>`:''} ${l.user?`<span class="log-weather">· by ${esc(l.user)}</span>`:''}</div>
+            <div class="log-text">${esc(l.text)}</div>
+            ${l.hours?`<div class="log-hours">⏱ ${esc(l.hours)} hrs</div>`:''}
+          </div>`).join('')}
+        </div>
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);padding:12px 14px">
+          <div class="form-row">
+            <div class="form-group" style="margin-bottom:8px"><label class="form-label">Date</label><input class="form-input" type="date" id="log-date" value="${dateKey(new Date())}"></div>
+            <div class="form-group" style="margin-bottom:8px"><label class="form-label">Hours</label><input class="form-input" type="number" step="0.5" id="log-hours" placeholder="0"></div>
+          </div>
+          <div class="form-group" style="margin-bottom:8px"><label class="form-label">Weather / Conditions</label><input class="form-input" id="log-weather" placeholder="Sunny 72°F, calm winds…"></div>
+          <div class="form-group" style="margin-bottom:8px"><label class="form-label">Work Performed</label>
+            <div class="textarea-with-mic"><textarea class="form-textarea" id="log-text" placeholder="Describe today’s work, crew on site, materials used, issues…"></textarea>${micButton('#log-text')}</div>
+          </div>
+          <button class="btn-post" id="btn-add-log">Add Log Entry</button>
+        </div>
+      </div>`;
+  }
+  if(tab==='photos'){
+    const cat=S.photoCat||'all';
+    const filtered=cat==='all'?photos:photos.filter(p=>(p.cat||'')===cat);
+    const photosHtml=filtered.map((p,i)=>{
+      const idx=photos.indexOf(p);
+      const url=p.url||p;
+      return `<div class="photo-wrap">
+        ${p.cat?`<span class="photo-cat-label">${esc(p.cat)}</span>`:''}
+        <img src="${url}" alt="" data-view-photo="${idx}" loading="lazy">
+        <button class="photo-del" data-del-photo="${idx}">×</button>
+      </div>`;
+    }).join('');
+    return `
+      <div class="section">
+        <div class="section-hd">Photos <span>${photos.length} total</span></div>
+        <div class="photo-cat-tabs">
+          ${PHOTO_CATS.map(c=>`<div class="photo-cat-chip ${cat===c?'active':''}" data-photo-cat="${c}">${c==='all'?'All':c.charAt(0).toUpperCase()+c.slice(1)} ${c==='all'?photos.length:photos.filter(p=>(p.cat||'')===c).length}</div>`).join('')}
+        </div>
+        <div class="photos-grid">
+          ${photosHtml}
+          <label class="photo-add-btn">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z"/><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zM18.75 10.5h.008v.008h-.008V10.5z"/></svg>
+            <span>Add Photos</span>
+            <input type="file" accept="image/*" multiple id="photo-upload" style="display:none">
+          </label>
+        </div>
+        <p style="font-size:11.5px;color:var(--text-3);margin-top:10px">Tip: Upload tags photos as “${cat==='all'?'before':cat}”. Switch tabs first to choose a category.</p>
+      </div>`;
+  }
+  if(tab==='docs'){
+    const docs=j.documents||[];
+    const fileIcon=`<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/></svg>`;
+    return `
+      <div class="section">
+        <div class="section-hd">Files & Documents <span>${docs.length}</span></div>
+        <div class="doc-list">
+          ${docs.length===0?'<p style="font-size:13px;color:var(--text-3);padding:4px 0">No files yet. Contracts, permits, plans, receipts — keep them all here.</p>'
+            :docs.map((d,i)=>`<a class="doc-item" href="${d.url}" download="${esc(d.name)}" target="_blank">
+              <div class="doc-icon">${fileIcon}</div>
+              <div class="doc-info"><div class="doc-name">${esc(d.name)}</div><div class="doc-meta">${esc(d.size||'')}${d.uploaded?' · '+ago(d.uploaded):''}${d.user?' · '+esc(d.user):''}</div></div>
+              <button class="doc-del" data-doc-del="${i}" onclick="event.preventDefault();event.stopPropagation()">✕</button>
+            </a>`).join('')}
+        </div>
+        <label class="photo-add-btn" style="aspect-ratio:auto;padding:14px;flex-direction:row;gap:8px">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v6m3-3H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          <span>Upload File (PDF, DOC, IMG)</span>
+          <input type="file" accept="*/*" id="doc-upload" style="display:none">
+        </label>
+      </div>`;
+  }
+  if(tab==='receipts'){
+    const receipts=j.receipts||[];
+    const total=receiptTotal(j);
+    const fileIcon=`<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 14.25l6-6m4.5-3.493V21.75l-3.75-1.5-3.75 1.5-3.75-1.5-3.75 1.5V4.757c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0c1.1.128 1.907 1.077 1.907 2.185zM9.75 9h.008v.008H9.75V9zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm4.125 4.5h.008v.008h-.008V13.5zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"/></svg>`;
+    const byCat={};receipts.forEach(r=>{const c=r.category||'Other';byCat[c]=(byCat[c]||0)+Number(r.amount||0)});
+    return `
+      <div class="section">
+        <div class="section-hd">Receipts & Expenses <span>${receipts.length}</span></div>
+        <div class="rcpt-total"><div><div class="info-label">Total Expenses</div><div class="rcpt-total-val">${money2(total)}</div></div>${receipts.length?`<div class="rcpt-total-sub">${receipts.length} receipt${receipts.length>1?'s':''}</div>`:''}</div>
+        ${Object.keys(byCat).length?`<div class="rcpt-cats">${Object.entries(byCat).sort((a,b)=>b[1]-a[1]).map(([c,v])=>`<span class="rcpt-cat-chip">${esc(c)} · ${money2(v)}</span>`).join('')}</div>`:''}
+        <div class="doc-list">
+          ${receipts.length===0?'<p style="font-size:13px;color:var(--text-3);padding:4px 0">No receipts yet. Snap a photo or upload a receipt and log the amount to keep all job expenses in one spot.</p>'
+            :receipts.map((r,i)=>{
+              const isImg=(r.type||'').startsWith('image/')||/^data:image\//.test(r.url||'');
+              const thumb=isImg&&r.url?`<div class="doc-icon" style="overflow:hidden;padding:0"><img src="${r.url}" alt="" style="width:100%;height:100%;object-fit:cover"></div>`:`<div class="doc-icon">${fileIcon}</div>`;
+              const meta=[r.vendor,r.category,r.date?fmtDate(r.date):'',r.user].filter(Boolean).join(' · ');
+              const open=r.url?`href="${r.url}" download="${esc(r.name||'receipt')}" target="_blank"`:'';
+              return `<a class="doc-item" ${open}>
+                ${thumb}
+                <div class="doc-info"><div class="doc-name">${esc(r.vendor||r.name||'Receipt')} <span class="rcpt-amt">${money2(r.amount||0)}</span></div><div class="doc-meta">${esc(meta)||(r.note?esc(r.note):(r.uploaded?ago(r.uploaded):''))}</div></div>
+                <button class="doc-del" data-receipt-del="${i}" onclick="event.preventDefault();event.stopPropagation()">✕</button>
+              </a>`;
+            }).join('')}
+        </div>
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);padding:12px 14px;margin-top:10px">
+          <div class="form-row">
+            <div class="form-group"><label class="form-label">Amount ($) *</label><input class="form-input" type="number" inputmode="decimal" min="0" step="0.01" id="rcpt-amount" placeholder="0.00"></div>
+            <div class="form-group"><label class="form-label">Date</label><input class="form-input" type="date" id="rcpt-date" value="${dateKey(new Date())}"></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label class="form-label">Vendor / Store</label><input class="form-input" id="rcpt-vendor" placeholder="e.g. Home Depot"></div>
+            <div class="form-group"><label class="form-label">Category</label><select class="form-select" id="rcpt-cat">${RECEIPT_CATS.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join('')}</select></div>
+          </div>
+          <div class="form-group"><label class="form-label">Note (optional)</label><input class="form-input" id="rcpt-note" placeholder="What was purchased"></div>
+          <label class="photo-add-btn" style="aspect-ratio:auto;padding:12px;flex-direction:row;gap:8px;margin-bottom:10px">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z"/><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zM18.75 10.5h.008v.008h-.008V10.5z"/></svg>
+            <span id="rcpt-file-label">Attach receipt photo or PDF (optional)</span>
+            <input type="file" accept="image/*,application/pdf" id="rcpt-upload" style="display:none">
+          </label>
+          <button class="btn-post" id="btn-add-receipt">Add Receipt</button>
+        </div>
+      </div>`;
+  }
+  if(tab==='financial'){
+    const est=Number(j.value||0);
+    const lab=jobLaborStats(j.id);const anyRates=S.members.some(m=>rateOf(m)>0);
+    const exp=receiptTotal(j);const rcptN=(j.receipts||[]).length;
+    const invTot=invoiceTotals(j);
+    const inv=invTot?invTot.total:Number(j.invoiced||0);
+    const paid=invTot?invTot.paid:Number(j.paid||0);
+    const bal=inv-paid;
+    const pctPaid=inv>0?(paid/inv)*100:0;
+    const margin=est-Number(j.costs||0);
+    const lockedByInv=!!invTot;
+    return `
+      <div class="section">
+        <div class="section-hd">Financial Summary${lockedByInv?' <span style="font-weight:400;text-transform:none;letter-spacing:0">From '+((j.invoices||[]).length)+' invoice'+((j.invoices||[]).length===1?'':'s')+'</span>':''}</div>
+        <div class="fin-grid">
+          <div class="fin-cell"><div class="fin-label">Estimate</div><div class="fin-value">${money(est)}</div></div>
+          <div class="fin-cell"><div class="fin-label">Costs / Materials</div><div class="fin-value">${money(j.costs||0)}</div></div>
+          <div class="fin-cell"><div class="fin-label">Invoiced</div><div class="fin-value">${money(inv)}</div></div>
+          <div class="fin-cell"><div class="fin-label">Paid</div><div class="fin-value">${money(paid)}</div></div>
+          <div class="fin-cell ${bal>0?'bal-neg':'bal-pos'}" style="grid-column:1/-1"><div class="fin-label">Balance Due</div><div class="fin-value">${money(bal)}</div>
+            <div class="fin-bar"><div class="fin-bar-fill" style="width:${Math.min(100,pctPaid)}%"></div></div>
+            <div style="font-size:11.5px;color:var(--text-3)">${pctPaid.toFixed(0)}% collected</div>
+          </div>
+          <div class="fin-cell" style="grid-column:1/-1"><div class="fin-label">Projected Margin</div><div class="fin-value" style="color:${margin>=0?'var(--green-700)':'var(--orange)'}">${money(margin)} <span style="font-size:12px;color:var(--text-3);font-weight:500">${est>0?'('+((margin/est)*100).toFixed(0)+'%)':''}</span></div></div>
+          <div class="fin-cell" style="grid-column:1/-1"><div class="fin-label">Actual Labor (tracked)${lab.active?' · <span style="color:var(--green-700);text-transform:none;letter-spacing:0;font-weight:600">'+lab.active+' on the clock</span>':''}</div><div class="fin-value">${anyRates?money(lab.cost):'—'} <span style="font-size:12px;color:var(--text-3);font-weight:500">${fmtHM(lab.ms)}${anyRates?'':' · set rates on Team'}</span></div></div>
+          <div class="fin-cell" style="grid-column:1/-1"><div class="fin-label">Receipt Expenses</div><div class="fin-value">${money2(exp)} <span style="font-size:12px;color:var(--text-3);font-weight:500">${rcptN?rcptN+' receipt'+(rcptN>1?'s':''):'none logged'}</span></div></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">Estimate ($)</label><input class="form-input" type="number" id="fin-est" value="${esc(est||'')}"></div>
+          <div class="form-group"><label class="form-label">Costs ($)</label><input class="form-input" type="number" id="fin-costs" value="${esc(j.costs||'')}"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">Invoiced ($)${lockedByInv?' <span style="color:var(--text-3);font-weight:400;text-transform:none;letter-spacing:0;font-size:10px">auto</span>':''}</label><input class="form-input" type="number" id="fin-inv" value="${esc(inv||'')}" ${lockedByInv?'disabled':''}></div>
+          <div class="form-group"><label class="form-label">Paid ($)${lockedByInv?' <span style="color:var(--text-3);font-weight:400;text-transform:none;letter-spacing:0;font-size:10px">auto</span>':''}</label><input class="form-input" type="number" id="fin-paid" value="${esc(paid||'')}" ${lockedByInv?'disabled':''}></div>
+        </div>
+        <button class="btn-post" id="btn-save-fin" style="margin-top:6px" ${lockedByInv?'disabled':''}>Save Financials</button>
+        ${lockedByInv?'<p style="font-size:11.5px;color:var(--text-3);margin-top:10px">Invoiced and Paid totals are computed from the Invoices tab. Edit individual invoices there.</p>':''}
+      </div>`;
+  }
+  if(tab==='comms'){
+    const comms=(j.comms||[]).slice().sort((a,b)=>(b.time||0)-(a.time||0));
+    const icon={call:'<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 01-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z"/></svg>',
+      text:'<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12.76c0 1.6 1.123 2.994 2.707 3.227 1.068.157 2.148.279 3.238.364.466.037.893.281 1.153.671L12 21l2.652-3.978c.26-.39.687-.634 1.153-.67 1.09-.086 2.17-.208 3.238-.365 1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z"/></svg>',
+      email:'<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75"/></svg>',
+      meeting:'<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493"/></svg>'};
+    return `
+      <div class="section">
+        <div class="section-hd">Communication Log <span>${comms.length}</span></div>
+        <div class="comm-list">
+          ${comms.length===0?'<p style="font-size:13px;color:var(--text-3);padding:4px 0">No communications logged. Track every call, text, and email with the customer.</p>'
+            :comms.map(c=>`<div class="comm-item">
+              <div class="comm-icon ${c.type}">${icon[c.type]||icon.call}</div>
+              <div class="comm-body">
+                <div class="comm-head"><div class="comm-type">${esc(c.type)} ${c.user?'· '+esc(c.user):''}</div><div class="comm-time">${ago(c.time)}</div></div>
+                <div class="comm-text">${esc(c.text)}</div>
+              </div>
+            </div>`).join('')}
+        </div>
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);padding:12px 14px">
+          <div class="form-group" style="margin-bottom:8px"><label class="form-label">Type</label>
+            <select class="form-select" id="comm-type">
+              <option value="call">📞 Phone Call</option>
+              <option value="text">💬 Text Message</option>
+              <option value="email">📧 Email</option>
+              <option value="meeting">👥 In-Person Meeting</option>
+            </select>
+          </div>
+          <div class="form-group" style="margin-bottom:8px"><label class="form-label">Summary</label>
+            <div class="textarea-with-mic"><textarea class="form-textarea" id="comm-text" placeholder="What was discussed?"></textarea>${micButton('#comm-text')}</div>
+          </div>
+          <button class="btn-post" id="btn-add-comm">Log Communication</button>
+        </div>
+      </div>`;
+  }
+  if(tab==='invoices'){
+    const invs=(j.invoices||[]).slice().sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+    const tot=invoiceTotals(j);
+    return `
+      <div class="section">
+        <div class="section-hd" style="margin-bottom:12px">Invoices <span>${invs.length}</span></div>
+        ${tot?`<div class="inv-totals" style="margin-bottom:14px">
+          <div class="inv-total-row"><span>Total Invoiced</span><span class="v">${money(tot.total)}</span></div>
+          <div class="inv-total-row"><span>Paid</span><span class="v">${money(tot.paid)}</span></div>
+          <div class="inv-total-row grand"><span>Balance Due</span><span class="v">${money(tot.balance)}</span></div>
+        </div>`:''}
+        <div class="invoice-list">
+          ${invs.length===0?'<p style="font-size:13px;color:var(--text-3);padding:4px 0">No invoices yet. Create your first one — it will use your company letterhead and pull from line items.</p>'
+            :invs.map(inv=>{
+              const c=calcInvoice(inv);
+              const st=invoiceStatus(inv);
+              return `<div class="invoice-row ${st}" data-inv-id="${esc(inv.id)}">
+                <div class="invoice-row-main">
+                  <div class="invoice-num">${esc(inv.number||'')} <span class="invoice-status ${st}">${st}</span></div>
+                  <div class="invoice-meta">${fmtDate(inv.date)}${inv.dueDate?' · due '+fmtDate(inv.dueDate):''} · ${(inv.items||[]).length} item${(inv.items||[]).length!==1?'s':''}</div>
+                </div>
+                <div class="invoice-row-amt">
+                  <div class="invoice-row-total">${money(c.total)}</div>
+                  <div class="invoice-row-bal">${c.balance>0.005?money(c.balance)+' due':'Paid'}</div>
+                </div>
+              </div>`;
+            }).join('')}
+        </div>
+        <button class="btn-post" id="btn-new-inv" style="margin-top:6px">+ New Invoice</button>
+      </div>`;
+  }
+  if(tab==='estimates'){
+    const ests=(j.estimates||[]).slice().sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+    return `
+      <div class="section">
+        <div class="section-hd" style="margin-bottom:12px">Estimates <span>${ests.length}</span></div>
+        <div class="invoice-list">
+          ${ests.length===0?'<p style="font-size:13px;color:var(--text-3);padding:4px 0">No estimates yet. Create one — it uses the same letterhead as your invoices and sends the same way.</p>'
+            :ests.map(e=>{
+              const c=calcInvoice(e);
+              const st=e.status||'draft';
+              return `<div class="invoice-row ${st}" data-est-id="${esc(e.id)}">
+                <div class="invoice-row-main">
+                  <div class="invoice-num">${esc(e.number||'')} <span class="invoice-status ${st}">${st}</span></div>
+                  <div class="invoice-meta">${fmtDate(e.date)}${e.dueDate?' · valid until '+fmtDate(e.dueDate):''} · ${(e.items||[]).length} item${(e.items||[]).length!==1?'s':''}</div>
+                </div>
+                <div class="invoice-row-amt">
+                  <div class="invoice-row-total">${money(c.total)}</div>
+                  <div class="invoice-row-bal">estimate</div>
+                </div>
+              </div>`;
+            }).join('')}
+        </div>
+        <button class="btn-post" id="btn-new-est" style="margin-top:6px">+ New Estimate</button>
+      </div>`;
+  }
+  if(tab==='notes'){
+    const notesHtml=(j.notes||[]).length===0?`<p style="font-size:13px;color:var(--text-3);padding:4px 0">No notes yet — be the first to add one.</p>`
+      :(j.notes||[]).slice().reverse().map(n=>`<div class="note-card"><div class="note-meta"><div class="note-avatar">${initials(n.user)}</div>${esc(n.user)} · ${ago(n.time)}</div><div class="note-text">${esc(n.text)}</div></div>`).join('');
+    return `
+      <div class="section">
+        <div class="section-hd">Internal Notes <span>${(j.notes||[]).length}</span></div>
+        <div class="notes-list">${notesHtml}</div>
+        <div class="note-compose">
+          <input class="note-input" id="note-in" placeholder="${S.user?'Add a note…':'Set your name first…'}" ${!S.user?'disabled':''}>
+          ${micButton('#note-in')}
+          <button class="btn-post" id="btn-post" ${!S.user?'disabled':''}>
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5"/></svg>
+            Post
+          </button>
+        </div>
+      </div>`;
+  }
+  return '';
+}
+
+function renderActivity(){
+  if(!S.activity.length)return`<div class="empty"><div class="empty-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5M5.625 4.5h12.75a1.875 1.875 0 010 3.75H5.625a1.875 1.875 0 010-3.75z"/></svg></div><h3>No activity yet</h3><p>As your team adds and updates jobs, everything will appear here.</p></div>`;
+  return'<div class="activity-feed">'+S.activity.map((a,i)=>'<div class="activity-item" style="animation-delay:'+( i*0.03)+'s">'+'<div class="activity-ava">'+initials(a.user)+'</div>'+'<div class="activity-body">'+'<div class="activity-text"><strong>'+esc(a.user)+'</strong> '+esc(a.action)+(a.job?' · <strong>'+esc(a.job)+'</strong>':'')+'</div><div class="activity-time">'+ago(a.time)+'</div></div></div>').join('')+'</div>';
+}
+
+// ══ Referrals — referred leads & payouts (per company) ══
+function refStatusMeta(s){
+  return ({new:{label:'New lead',pill:'sp-lead',col:'var(--gold)'},won:{label:'Won',pill:'sp-complete',col:'var(--green-600)'},lost:{label:'Lost',pill:'sp-hold',col:'var(--text-3)'}})[s]||{label:'New lead',pill:'sp-lead',col:'var(--gold)'};
+}
+function renderReferrals(){
+  const all=Object.values(S.referrals).sort((a,b)=>(b.created||0)-(a.created||0));
+  const total=all.length;
+  const won=all.filter(r=>r.status==='won').length;
+  const owed=all.filter(r=>r.payoutStatus!=='paid').reduce((s,r)=>s+Number(r.payout||0),0);
+  const paid=all.filter(r=>r.payoutStatus==='paid').reduce((s,r)=>s+Number(r.payout||0),0);
+  const f=S.refFilter||'all';
+  const isOwed=r=>r.payoutStatus!=='paid'&&Number(r.payout||0)>0;
+  const match=r=>f==='all'?true:f==='new'?r.status==='new':f==='won'?r.status==='won':f==='owed'?isOwed(r):f==='paid'?r.payoutStatus==='paid':true;
+  const shown=all.filter(match);
+  const cnt={all:total,new:all.filter(r=>r.status==='new').length,won:won,owed:all.filter(isOwed).length,paid:all.filter(r=>r.payoutStatus==='paid').length};
+  const chips=[['all','All'],['new','New'],['won','Won'],['owed','Owed'],['paid','Paid']];
+  const rows=shown.map(r=>{
+    const m=refStatusMeta(r.status);
+    const job=r.jobId&&S.jobs[r.jobId]?S.jobs[r.jobId]:null;
+    const meta=[r.dateReferred?fmtDate(r.dateReferred):'',job?'Job: '+esc(job.name):'',r.referrerPhone?esc(r.referrerPhone):'',r.dealValue?money(r.dealValue)+' deal':''].filter(Boolean).join(' · ');
+    const payoutCol=Number(r.payout||0)>0?(r.payoutStatus==='paid'?'var(--green-700)':'var(--orange)'):'var(--text-3)';
+    return `<div class="invoice-row" data-ref-open="${esc(r.id)}" style="border-left-color:${m.col}">
+      <div class="invoice-row-main">
+        <div class="invoice-num">${esc(r.referrer||'—')} <span style="color:var(--text-3);font-weight:500">referred</span> ${esc(r.lead||'—')}</div>
+        ${meta?`<div class="invoice-meta">${meta}</div>`:''}
+        <div style="margin-top:6px"><span class="status-pill ${m.pill}">${m.label}</span></div>
+      </div>
+      <div class="invoice-row-amt">
+        <div style="font-size:10px;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;font-weight:700">Payout</div>
+        <div style="font-weight:800;font-size:15px;color:${payoutCol}">${Number(r.payout||0)>0?money(r.payout):'—'}</div>
+        ${Number(r.payout||0)>0?`<span class="badge ${r.payoutStatus==='paid'?'':'danger'}" style="margin-top:4px">${r.payoutStatus==='paid'?'Paid'+(r.paidAt?' '+fmtShort(r.paidAt):''):'Owed'}</span>`:''}
+        ${isOwed(r)?`<div><button class="btn-mini" data-ref-paid="${esc(r.id)}" style="margin-top:7px">Mark paid</button></div>`:''}
+      </div>
+    </div>`;
+  }).join('');
+  const giftIcon='<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21 11.25v8.25a1.5 1.5 0 01-1.5 1.5H5.25a1.5 1.5 0 01-1.5-1.5v-8.25M12 4.875A2.625 2.625 0 109.375 7.5H12m0-2.625V7.5m0-2.625A2.625 2.625 0 1114.625 7.5H12m0 0V21m-8.625-9.75h18c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125h-18c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z"/></svg>';
+  return `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+      <div>
+        <div style="font-size:11px;color:var(--text-3);text-transform:uppercase;letter-spacing:0.06em;font-weight:700">Referrals</div>
+        <div style="font-size:20px;font-weight:700;margin-top:2px">Referred leads &amp; payouts</div>
+      </div>
+      <button class="btn-add" id="btn-add-ref"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>New Referral</button>
+    </div>
+    <div class="kpi-grid">
+      <div class="kpi-card accent"><div class="kpi-label">Payouts Owed</div><div class="kpi-value">${money(owed)}</div><div class="kpi-sub">to referrers</div></div>
+      <div class="kpi-card"><div class="kpi-label">Paid Out</div><div class="kpi-value">${money(paid)}</div><div class="kpi-sub">all-time</div></div>
+      <div class="kpi-card"><div class="kpi-label">Referrals</div><div class="kpi-value">${total}</div><div class="kpi-sub">${won} won</div></div>
+      <div class="kpi-card"><div class="kpi-label">Conversion</div><div class="kpi-value">${total>0?Math.round(won/total*100):0}%</div><div class="kpi-sub">leads → won</div></div>
+    </div>
+    <div class="filter-row" style="margin-bottom:14px">
+      ${chips.map(([k,l])=>`<div class="filter-chip ${f===k?'active':''}" data-ref-filter="${k}">${l} ${cnt[k]}</div>`).join('')}
+    </div>
+    ${shown.length===0?`<div class="empty"><div class="empty-icon">${giftIcon}</div><h3>${total===0?'No referrals yet':'No matches'}</h3><p>${total===0?'Track who sent you leads and what you owe them.':'Try a different filter.'}</p>${total===0?'<button class="btn-add" id="btn-add-ref2" style="margin:0 auto">+ Add Referral</button>':''}</div>`:`<div style="display:flex;flex-direction:column;gap:8px">${rows}</div>`}
+  `;
+}
+function showReferralModal(mode,ref){
+  const r=ref||{};
+  const sel=(v,cur)=>v===cur?'selected':'';
+  const jobOpts=Object.values(S.jobs).sort((a,b)=>(a.name||'').localeCompare(b.name||'')).map(j=>`<option value="${esc(j.id)}" ${r.jobId===j.id?'selected':''}>${esc(j.name)}</option>`).join('');
+  $('modal-root').innerHTML=`<div class="modal-bd" id="mbd" role="dialog" aria-modal="true" aria-label="Referral"><div class="modal"><div class="modal-handle"></div>
+    <div class="modal-head"><div class="modal-title">${mode==='add'?'New Referral':'Edit Referral'}</div><button class="modal-close" id="mc" aria-label="Close"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button></div>
+    <div class="modal-body">
+      <div class="form-group"><label class="form-label">Referred by (referrer)</label><input class="form-input" id="rf-referrer" value="${esc(r.referrer||'')}" placeholder="Who sent you this lead?"></div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Referrer phone</label><input class="form-input" type="tel" id="rf-phone" value="${esc(r.referrerPhone||'')}"></div>
+        <div class="form-group"><label class="form-label">Referrer email</label><input class="form-input" type="email" id="rf-email" value="${esc(r.referrerEmail||'')}"></div>
+      </div>
+      <div class="form-group"><label class="form-label">Referred lead / customer</label><input class="form-input" id="rf-lead" value="${esc(r.lead||'')}" placeholder="Name of the new lead"></div>
+      <div class="form-group"><label class="form-label">Linked job (optional)</label><select class="form-select" id="rf-job"><option value="">— None —</option>${jobOpts}</select></div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Status</label><select class="form-select" id="rf-status"><option value="new" ${sel('new',r.status||'new')}>New lead</option><option value="won" ${sel('won',r.status)}>Won</option><option value="lost" ${sel('lost',r.status)}>Lost</option></select></div>
+        <div class="form-group"><label class="form-label">Date referred</label><input class="form-input" type="date" id="rf-date" value="${esc(r.dateReferred||dateKey(new Date()))}"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Deal value</label><input class="form-input" type="number" step="0.01" id="rf-deal" value="${esc(r.dealValue||'')}" placeholder="0"></div>
+        <div class="form-group"><label class="form-label">Referral payout</label><input class="form-input" type="number" step="0.01" id="rf-payout" value="${esc(r.payout||'')}" placeholder="0"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Payout status</label><select class="form-select" id="rf-pstatus"><option value="pending" ${sel('pending',r.payoutStatus||'pending')}>Pending</option><option value="paid" ${sel('paid',r.payoutStatus)}>Paid</option></select></div>
+        <div class="form-group"><label class="form-label">Date paid</label><input class="form-input" type="date" id="rf-paid" value="${esc(r.paidAt||'')}"></div>
+      </div>
+      <div class="form-group"><label class="form-label">Notes</label><textarea class="form-textarea" id="rf-notes">${esc(r.notes||'')}</textarea></div>
+    </div>
+    <div class="modal-foot">${mode==='edit'?'<button class="btn-cancel" id="rf-del" style="color:var(--red);margin-right:auto">Delete</button>':''}<button class="btn-cancel" id="btn-cx">Cancel</button><button class="btn-save" id="rf-save">Save</button></div>
+  </div></div>`;
+  $('mc').onclick=$('btn-cx').onclick=closeModal;
+  $('mbd').onclick=e=>{if(e.target===e.currentTarget)closeModal()};
+  if(mode==='edit'){const d=$('rf-del');if(d)d.onclick=async()=>{if(confirm('Delete this referral?')){await deleteReferralDB(r.id);closeModal();render();toast('Referral deleted')}}}
+  $('rf-save').onclick=async()=>{
+    const rec={
+      id:r.id||('r_'+Date.now()+'_'+Math.random().toString(36).slice(2,6)),
+      created:r.created||Date.now(),
+      referrer:$('rf-referrer').value.trim(),
+      referrerPhone:$('rf-phone').value.trim(),
+      referrerEmail:$('rf-email').value.trim(),
+      lead:$('rf-lead').value.trim(),
+      jobId:$('rf-job').value||'',
+      status:$('rf-status').value,
+      dateReferred:$('rf-date').value,
+      dealValue:$('rf-deal').value,
+      payout:$('rf-payout').value,
+      payoutStatus:$('rf-pstatus').value,
+      paidAt:$('rf-paid').value,
+      notes:$('rf-notes').value.trim(),
+    };
+    if(!rec.referrer&&!rec.lead){toast('Add a referrer or lead name','');return}
+    if(rec.payoutStatus==='paid'&&!rec.paidAt)rec.paidAt=dateKey(new Date());
+    await writeReferral(rec);
+    await logAct((mode==='add'?'added a referral from ':'updated referral from ')+(rec.referrer||'someone'),rec.lead||'');
+    closeModal();render();toast(mode==='add'?'Referral added':'Referral saved');
+  };
+}
+function renderTeam(){
+  return`<div class="member-add">
+    <input id="member-in" placeholder="Add team member name…">
+    <button class="btn-save" id="btn-add-member">Add</button>
+  </div>
+  <div class="member-list">${S.members.map((m,i)=>`<div class="member-row"><div class="member-ava">${initials(m)}</div><div class="member-name">${esc(m)}</div><div class="tt-rate"><span>$</span><input class="tt-rate-in" type="number" inputmode="decimal" min="0" step="0.5" data-rate-member="${esc(m)}" value="${rateOf(m)||''}" placeholder="0" aria-label="Hourly rate for ${esc(m)}"><span>/hr</span></div><button class="btn-remove" data-rm="${i}">Remove</button></div>`).join('')}</div>
+  ${S.members.length?`<div class="tt-hint" style="margin-top:10px">Set each person’s hourly pay rate to calculate actual labor cost per job on the Time tab.</div>`:''}
+  <div class="team-info-card">
+    <strong>Team sharing:</strong><br>
+    ${DB?'✅ Firebase connected — all devices share the same data in real time.':'⚠️ Not connected. Each phone saves its own data. Tap <strong>Connect team →</strong> above to enable live sharing.'}
+  </div>`;
+}
+
+function renderTime(){
+  if(!S.members.length){
+    return `<div class="tt-empty" style="padding:44px 16px">
+      <p style="font-size:14px;color:var(--text-2);margin-bottom:18px;line-height:1.6">Add your team members first, then you can clock them in and out and track hours.</p>
+      <button class="btn-save" id="tt-goto-team">Go to Team →</button>
+    </div>`;
+  }
+  const all=timeList();
+  const active=all.filter(t=>!t.end).sort((a,b)=>a.start-b.start);
+  const today=dateKey(new Date());
+  const ws=weekStart();
+  const todayMs=all.filter(t=>dateKey(t.start)===today).reduce((s,t)=>s+entryDur(t),0);
+  const weekMs=all.filter(t=>t.start>=ws).reduce((s,t)=>s+entryDur(t),0);
+  const defMember=S.members.includes(S.user)?S.user:S.members[0];
+  const mOpts=S.members.map(m=>`<option value="${esc(m)}" ${m===defMember?'selected':''}>${esc(m)}</option>`).join('');
+  const jOpts=jobs().map(j=>`<option value="${esc(j.id)}">${esc(j.name)}</option>`).join('');
+
+  const completed=all.filter(t=>t.end).sort((a,b)=>b.start-a.start);
+  const groups={};
+  completed.forEach(t=>{const k=dateKey(t.start);(groups[k]=groups[k]||[]).push(t)});
+  const dayKeys=Object.keys(groups).sort((a,b)=>b.localeCompare(a)).slice(0,30);
+
+  const activeHtml=active.length?active.map(t=>{
+    const jn=t.job&&S.jobs[t.job]?S.jobs[t.job].name:'';
+    const meta=['Since '+fmtClockT(t.start),jn,t.note].filter(Boolean).join(' · ');
+    return `<div class="tt-active">
+      <div class="member-ava">${initials(t.member)}</div>
+      <div class="tt-active-body"><div class="tt-active-name">${esc(t.member)}</div><div class="tt-active-meta">${esc(meta)}</div></div>
+      <div class="tt-timer" data-tick-start="${t.start}">${fmtHMS(Date.now()-t.start)}</div>
+      <button class="tt-btn-out" data-clock-out="${esc(t.id)}">Clock Out</button>
+    </div>`;
+  }).join(''):`<div class="tt-empty">No one is on the clock right now.</div>`;
+
+  const logHtml=dayKeys.length?dayKeys.map(k=>{
+    const rows=groups[k];
+    const dayTotal=rows.reduce((s,t)=>s+entryDur(t),0);
+    const label=new Date(k+'T00:00:00').toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric'});
+    return `<div class="tt-day"><div class="tt-day-hd"><span class="tt-day-date">${k===today?'Today':esc(label)}</span><span class="tt-day-total">${fmtHM(dayTotal)}</span></div>${
+      rows.map(t=>{
+        const jn=t.job&&S.jobs[t.job]?S.jobs[t.job].name:'';
+        const meta=[fmtClockT(t.start)+' – '+fmtClockT(t.end),jn,t.note].filter(Boolean).join(' · ');
+        return `<div class="tt-row">
+          <div class="member-ava">${initials(t.member)}</div>
+          <div class="tt-row-body"><div class="tt-row-top"><span class="tt-row-name">${esc(t.member)}</span><span class="tt-row-dur">${fmtHM(entryDur(t))}</span></div><div class="tt-row-meta">${esc(meta)}</div></div>
+          <button class="tt-icon" data-time-edit="${esc(t.id)}" title="Edit" aria-label="Edit entry">✎</button>
+          <button class="tt-icon" data-time-del="${esc(t.id)}" title="Delete" aria-label="Delete entry">✕</button>
+        </div>`;
+      }).join('')
+    }</div>`;
+  }).join(''):`<div class="tt-empty">No completed time entries yet.</div>`;
+
+  const anyRates=S.members.some(m=>rateOf(m)>0);
+  const lb=laborByJob();
+  const laborRows=Object.keys(lb).map(k=>({k,name:k?(S.jobs[k]?S.jobs[k].name:'(deleted job)'):'General / no job',ms:lb[k].ms,cost:lb[k].cost,active:lb[k].active})).filter(r=>r.ms>0).sort((a,b)=>(b.cost-a.cost)||(b.ms-a.ms));
+  const laborHtml=laborRows.length?laborRows.map(r=>{
+    const clickable=r.k&&S.jobs[r.k];
+    return `<div class="tt-job"${clickable?` data-labor-job="${esc(r.k)}"`:''}>
+      <div class="tt-job-body"><div class="tt-job-name">${esc(r.name)}${r.active?` <span class="tt-live">● ${r.active} on the clock</span>`:''}</div><div class="tt-job-sub">${fmtHM(r.ms)} total${anyRates?'':' · set rates for cost'}</div></div>
+      <div class="tt-job-cost">${anyRates?money(r.cost):'—'}</div>
+    </div>`;
+  }).join(''):`<div class="tt-empty">No labor logged to jobs yet.</div>`;
+
+  return `
+    <div class="tt-kpis">
+      <div class="tt-kpi"><div class="tt-kpi-val">${active.length}</div><div class="tt-kpi-lbl">On the clock</div></div>
+      <div class="tt-kpi"><div class="tt-kpi-val">${fmtHM(todayMs)}</div><div class="tt-kpi-lbl">Today</div></div>
+      <div class="tt-kpi"><div class="tt-kpi-val">${fmtHM(weekMs)}</div><div class="tt-kpi-lbl">This week</div></div>
+    </div>
+    <div class="tt-card">
+      <div class="tt-card-hd">Clock in</div>
+      <div class="tt-field"><label>Team member</label><select id="tt-member">${mOpts}</select></div>
+      <div class="tt-field"><label>Job (optional)</label><select id="tt-job"><option value="">— No job / general —</option>${jOpts}</select></div>
+      <div class="tt-field"><label>Note (optional)</label><input id="tt-note" placeholder="e.g. framing the deck"></div>
+      <button class="tt-clockin-btn" id="tt-clockin">Clock In</button>
+    </div>
+    ${(!gateOn()||canSeeAll(SESSION))?`<button class="tt-payroll-btn" id="tt-payroll" type="button"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>Export payroll for Gusto</button>`:''}
+    <div class="section-hd">On the clock now</div>
+    ${activeHtml}
+    <div class="section-hd" style="margin-top:20px">Labor cost by job</div>
+    ${anyRates?'':`<div class="tt-hint">Set each person’s hourly rate on the Team tab to calculate labor cost.</div>`}
+    ${laborHtml}
+    <div class="section-hd" style="margin-top:20px">Time log <button class="btn-mini" id="tt-add-manual">+ Add entry</button></div>
+    ${logHtml}
+  `;
+}
+
+function showTimeModal(entry){
+  if(OWNER_MODE){toast('Open a company to edit time','');return}
+  if(!S.members.length){toast('Add team members first','');return}
+  const add=!entry;
+  const defMember=S.members.includes(S.user)?S.user:S.members[0];
+  const t=entry||{member:defMember,job:'',note:'',start:Date.now(),end:Date.now()};
+  const running=!add&&!t.end;
+  const mOpts=S.members.map(m=>`<option value="${esc(m)}" ${t.member===m?'selected':''}>${esc(m)}</option>`).join('');
+  const jOpts=jobs().map(j=>`<option value="${esc(j.id)}" ${t.job===j.id?'selected':''}>${esc(j.name)}</option>`).join('');
+  $('modal-root').innerHTML=`<div class="modal-bd" id="mbd"><div class="modal"><div class="modal-handle"></div>
+    <div class="modal-head"><div class="modal-title">${add?'Add Time Entry':'Edit Time Entry'}</div><button class="modal-close" id="mc"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button></div>
+    <div class="modal-body">
+      <div class="form-group"><label class="form-label">Team member</label><select class="form-select" id="tm-member">${mOpts}</select></div>
+      <div class="form-group"><label class="form-label">Job (optional)</label><select class="form-select" id="tm-job"><option value="">— No job / general —</option>${jOpts}</select></div>
+      <div class="form-group"><label class="form-label">Note (optional)</label><input class="form-input" id="tm-note" value="${esc(t.note||'')}" placeholder="What was worked on"></div>
+      <div class="form-group"><label class="form-label">Clock in</label><input class="form-input" type="datetime-local" id="tm-start" value="${dtLocalValue(t.start)}"></div>
+      <div class="form-group" style="display:flex;align-items:center;gap:8px"><input type="checkbox" id="tm-running" ${running?'checked':''} style="width:auto"><label class="form-label" for="tm-running" style="margin:0">Still on the clock</label></div>
+      <div class="form-group" id="tm-end-wrap" style="${running?'display:none':''}"><label class="form-label">Clock out</label><input class="form-input" type="datetime-local" id="tm-end" value="${dtLocalValue(t.end||Date.now())}"></div>
+    </div>
+    <div class="modal-foot">
+      ${add?'':`<button class="btn-delete" id="tm-del">Delete</button>`}
+      <button class="btn-cancel" id="btn-cx">Cancel</button>
+      <button class="btn-save" id="tm-save">${add?'Add':'Save'}</button>
+    </div>
+  </div></div>`;
+  $('mc').onclick=$('btn-cx').onclick=closeModal;
+  $('mbd').onclick=e=>{if(e.target===e.currentTarget)closeModal()};
+  $('tm-running').onchange=function(){$('tm-end-wrap').style.display=this.checked?'none':''};
+  $('tm-save').onclick=async()=>{
+    const member=$('tm-member').value;
+    if(!member){toast('Pick a team member','');return}
+    const start=dtLocalParse($('tm-start').value);
+    if(!start){toast('Enter a valid clock-in time','');return}
+    const stillRunning=$('tm-running').checked;
+    let end=stillRunning?null:dtLocalParse($('tm-end').value);
+    if(!stillRunning&&!end){toast('Enter a clock-out time','');return}
+    if(end&&end<start){toast('Clock out must be after clock in','');return}
+    const rec={id:t.id||tid(),member,job:$('tm-job').value||'',note:$('tm-note').value.trim(),start,end,by:t.by||S.user||'',created:t.created||Date.now()};
+    await writeTimeEntry(rec);closeModal();render();toast(add?'Time entry added':'Time entry saved');
+  };
+  if(!add)$('tm-del').onclick=async()=>{
+    if(!confirm('Delete this time entry?'))return;
+    const backup=JSON.parse(JSON.stringify(t));
+    await deleteTimeEntryDB(t.id);closeModal();render();
+    const restore=async()=>{await writeTimeEntry(backup);render();toast('Entry restored')};
+    UNDO.push(restore);toast('Entry deleted','undo',restore);
+  };
+}
+
+// ── Payroll export (crew hours → Gusto) ──
+// No live API: a static page can't hold Gusto's OAuth secret or call its API
+// (CORS), so this produces a payroll-ready CSV / copyable table you enter into
+// Gusto. Read-only — never alters time entries, invoices, or estimates.
+let PAYROLL_RANGE=null;
+function payrollData(fromKey,toKey){
+  const within=t=>{const k=dateKey(t.start);return (!fromKey||k>=fromKey)&&(!toKey||k<=toKey)};
+  const byMember={};
+  timeList().forEach(t=>{
+    if(!t.end)return;            // only completed sessions count toward payroll
+    if(!within(t))return;
+    const m=t.member||'(unassigned)';
+    const e=byMember[m]||(byMember[m]={member:m,ms:0,days:{}});
+    const d=entryDur(t);e.ms+=d;const k=dateKey(t.start);e.days[k]=(e.days[k]||0)+d;
+  });
+  const rows=Object.values(byMember).map(e=>{
+    const hours=e.ms/3600000,rate=rateOf(e.member);
+    return {member:e.member,hours,rate,gross:hours*rate,days:Object.keys(e.days).sort().map(k=>({date:k,hours:e.days[k]/3600000}))};
+  }).sort((a,b)=>a.member.localeCompare(b.member));
+  return {rows,totalHours:rows.reduce((s,r)=>s+r.hours,0),totalGross:rows.reduce((s,r)=>s+r.gross,0)};
+}
+function csvCell(s){s=String(s==null?'':s);return /[",\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s}
+function payrollSummaryCSV(data,anyRates){
+  const lines=[['Employee','Total Hours'].concat(anyRates?['Hourly Rate','Gross Pay']:[])];
+  data.rows.forEach(r=>lines.push([r.member,r.hours.toFixed(2)].concat(anyRates?[r.rate?r.rate.toFixed(2):'',r.rate?r.gross.toFixed(2):'']:[])));
+  return lines.map(r=>r.map(csvCell).join(',')).join('\r\n');
+}
+function payrollDailyCSV(data,anyRates){
+  const lines=[['Employee','Date','Hours'].concat(anyRates?['Hourly Rate','Gross Pay']:[])];
+  data.rows.forEach(r=>r.days.forEach(d=>lines.push([r.member,d.date,d.hours.toFixed(2)].concat(anyRates?[r.rate?r.rate.toFixed(2):'',r.rate?(d.hours*r.rate).toFixed(2):'']:[]))));
+  return lines.map(r=>r.map(csvCell).join(',')).join('\r\n');
+}
+function payrollFileBase(fromKey,toKey){
+  const co=((ACTIVE_CO&&ACTIVE_CO.label)||'company').replace(/[^a-z0-9]+/gi,'-').replace(/^-|-$/g,'');
+  return 'Payroll-'+co+'-'+fromKey+'_to_'+toKey;
+}
+function showPayrollModal(){
+  if(gateOn()&&!canSeeAll(SESSION)){toast('Only managers and owners can run payroll','');return}
+  if(!S.members.length){toast('Add team members first','');return}
+  const today=dateKey(new Date());
+  const start=new Date();start.setDate(start.getDate()-13);
+  const def=PAYROLL_RANGE||{from:dateKey(start),to:today};
+  renderPayrollModal(def.from,def.to);
+}
+function renderPayrollModal(fromKey,toKey){
+  PAYROLL_RANGE={from:fromKey,to:toKey};
+  const data=payrollData(fromKey,toKey);
+  const anyRates=S.members.some(m=>rateOf(m)>0)||data.rows.some(r=>r.rate>0);
+  const cols=anyRates?4:2;
+  const rowsHtml=data.rows.length?data.rows.map(r=>`<tr><td>${esc(r.member)}</td><td class="num">${r.hours.toFixed(2)}</td>${anyRates?`<td class="num">${r.rate?money2(r.rate):'—'}</td><td class="num">${r.rate?money2(r.gross):'—'}</td>`:''}</tr>`).join(''):`<tr><td colspan="${cols}" style="text-align:center;color:var(--text-3);padding:14px">No tracked hours in this range</td></tr>`;
+  const dailyHtml=data.rows.length?data.rows.map(r=>`<div style="margin-top:10px"><div style="font-weight:600;font-size:12.5px;display:flex;justify-content:space-between"><span>${esc(r.member)}</span><span>${r.hours.toFixed(2)} h${r.rate?' · '+money2(r.gross):''}</span></div>${r.days.map(d=>`<div style="display:flex;justify-content:space-between;font-size:11.5px;color:var(--text-3);padding:1px 0 1px 8px"><span>${esc(fmtDate(d.date))}</span><span>${d.hours.toFixed(2)} h</span></div>`).join('')}</div>`).join(''):'<div class="tt-empty">No hours.</div>';
+  $('modal-root').innerHTML=`<div class="modal-bd" id="mbd" role="dialog" aria-modal="true" aria-label="Payroll export"><div class="modal" style="max-width:640px"><div class="modal-handle"></div>
+    <div class="modal-head"><div class="modal-title">Payroll Export — ${esc(ACTIVE_CO.label)}</div><button class="modal-close" id="mc" aria-label="Close"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button></div>
+    <div class="modal-body">
+      <p style="font-size:12.5px;color:var(--text-2);line-height:1.55;margin-bottom:12px">Total tracked crew hours for the pay period. Download the summary as CSV (or copy it) and enter the hours into Gusto when you run payroll. Read-only — it never changes time entries, invoices, or estimates.</p>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">From</label><input class="form-input" type="date" id="pr-from" value="${esc(fromKey)}"></div>
+        <div class="form-group"><label class="form-label">To</label><input class="form-input" type="date" id="pr-to" value="${esc(toKey)}"></div>
+      </div>
+      <div style="overflow-x:auto;-webkit-overflow-scrolling:touch"><table class="admin-table">
+        <thead><tr><th>Employee</th><th class="num">Hours</th>${anyRates?'<th class="num">Rate</th><th class="num">Gross</th>':''}</tr></thead>
+        <tbody>${rowsHtml}
+          <tr class="total-row"><td>Total</td><td class="num">${data.totalHours.toFixed(2)}</td>${anyRates?`<td></td><td class="num">${money2(data.totalGross)}</td>`:''}</tr>
+        </tbody></table></div>
+      ${anyRates?'':'<div class="tt-hint" style="margin-top:10px">Set hourly rates on the Team tab to include gross pay.</div>'}
+      <div class="section-hd" style="margin-top:16px">Daily breakdown</div>
+      ${dailyHtml}
+    </div>
+    <div class="modal-foot">
+      <button class="btn-cancel" id="btn-cx">Close</button>
+      <button class="btn-sm" id="pr-copy" type="button">Copy summary</button>
+      <button class="btn-sm" id="pr-daily" type="button">Daily CSV</button>
+      <button class="btn-save" id="pr-csv" type="button">Download for Gusto</button>
+    </div>
+  </div></div>`;
+  $('mc').onclick=$('btn-cx').onclick=()=>closeModal();
+  $('mbd').onclick=e=>{if(e.target===e.currentTarget)closeModal()};
+  $('pr-from').onchange=()=>renderPayrollModal($('pr-from').value,$('pr-to').value);
+  $('pr-to').onchange=()=>renderPayrollModal($('pr-from').value,$('pr-to').value);
+  $('pr-csv').onclick=()=>{downloadFile(payrollFileBase(fromKey,toKey)+'.csv',payrollSummaryCSV(data,anyRates),'text/csv;charset=utf-8');toast('Payroll CSV downloaded')};
+  $('pr-daily').onclick=()=>{downloadFile(payrollFileBase(fromKey,toKey)+'-daily.csv',payrollDailyCSV(data,anyRates),'text/csv;charset=utf-8');toast('Daily CSV downloaded')};
+  $('pr-copy').onclick=async()=>{
+    const head=['Employee','Hours'].concat(anyRates?['Rate','Gross']:[]);
+    const tsv=[head].concat(data.rows.map(r=>[r.member,r.hours.toFixed(2)].concat(anyRates?[r.rate?r.rate.toFixed(2):'',r.rate?r.gross.toFixed(2):'']:[]))).map(r=>r.join('\t')).join('\n');
+    try{await navigator.clipboard.writeText(tsv);toast('Copied — paste into a sheet or Gusto')}catch(e){toast('Copy failed','')}
+  };
+}
+
+// ── Banking: CSV/OFX import, categorize, cash flow (per company) ──
+const BANK_CATS=['Income','Materials','Fuel / Travel','Subcontractor','Equipment','Payroll','Office / Admin','Insurance','Taxes / Fees','Bank / Transfer','Other'];
+function pad2(n){return String(n).padStart(2,'0')}
+function bankNormDate(s){s=String(s||'').trim();if(!s)return'';let m=s.match(/^(\d{4})[-\/.](\d{1,2})[-\/.](\d{1,2})/);if(m)return m[1]+'-'+pad2(m[2])+'-'+pad2(m[3]);m=s.match(/^(\d{1,2})[-\/.](\d{1,2})[-\/.](\d{2,4})/);if(m){let y=m[3];if(y.length===2)y='20'+y;return y+'-'+pad2(m[1])+'-'+pad2(m[2])}m=s.match(/^(\d{4})(\d{2})(\d{2})/);if(m)return m[1]+'-'+m[2]+'-'+m[3];const d=new Date(s);if(!isNaN(d))return d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate());return s}
+function bankParseAmt(s){if(s==null)return 0;let str=String(s).trim();if(!str)return 0;const neg=/^\(.*\)$/.test(str);str=str.replace(/[()$,\s]/g,'');let n=parseFloat(str);if(isNaN(n))return 0;return neg?-Math.abs(n):n}
+function bankParseCSV(text){const rows=[];let i=0,field='',row=[],inQ=false;text=String(text).replace(/\r\n/g,'\n').replace(/\r/g,'\n');while(i<text.length){const c=text[i];if(inQ){if(c==='"'){if(text[i+1]==='"'){field+='"';i+=2;continue}inQ=false;i++;continue}field+=c;i++;continue}if(c==='"'){inQ=true;i++;continue}if(c===','){row.push(field);field='';i++;continue}if(c==='\n'){row.push(field);rows.push(row);row=[];field='';i++;continue}field+=c;i++}if(field.length||row.length){row.push(field);rows.push(row)}return rows.filter(r=>r.some(x=>String(x).trim()!==''))}
+function bankCSVToTxns(text){const rows=bankParseCSV(text);if(rows.length<2)return[];const H=rows[0].map(h=>String(h).trim().toLowerCase());const find=(...names)=>{for(const n of names){const i=H.indexOf(n);if(i>=0)return i}for(const n of names){const i=H.findIndex(h=>h.includes(n));if(i>=0)return i}return -1};const di=find('date','posted date','transaction date','post date'),dsc=find('description','name','payee','memo','details','transaction'),amt=find('amount','amt'),deb=find('debit','withdrawal','withdrawals','money out','paid out'),cred=find('credit','deposit','deposits','money in','paid in');const out=[];for(let r=1;r<rows.length;r++){const cells=rows[r];const dateRaw=di>=0?cells[di]:'';let description=(dsc>=0?(cells[dsc]||''):'').trim();let amount=0;if(amt>=0)amount=bankParseAmt(cells[amt]);else{const d=Math.abs(bankParseAmt(cells[deb]||'')),c=Math.abs(bankParseAmt(cells[cred]||''));amount=c-d}if(!description&&!amount&&!dateRaw)continue;out.push({date:bankNormDate(dateRaw),description:description||'(no description)',amount})}return out}
+function bankOFXToTxns(text){const out=[];const blocks=String(text).split(/<STMTTRN>/i).slice(1);blocks.forEach(b=>{const get=t=>{const m=b.match(new RegExp('<'+t+'>([^<\\r\\n]*)','i'));return m?m[1].trim():''};const amount=parseFloat(get('TRNAMT'));if(isNaN(amount))return;out.push({date:bankNormDate(get('DTPOSTED')),description:(get('NAME')||get('MEMO')||'(no description)').trim(),amount})});return out}
+function bankParse(text){return (/<OFX>/i.test(text)||/<STMTTRN>/i.test(text))?bankOFXToTxns(text):bankCSVToTxns(text)}
+function bankAutoCat(desc,amount){const d=(desc||'').toLowerCase();if(amount>0)return'Income';const rules=[['Materials',/home ?depot|lowe'?s|menards|ace hardware|sherwin|84 lumber|ferguson|supply|building material|hardware|paint|concrete|lumber/],['Fuel / Travel',/shell|exxon|chevron|\bbp\b|marathon|fuel|gas station|speedway|circle k|pilot|love'?s|sunoco|valero|hotel|airline|uber|lyft/],['Subcontractor',/subcontract|\bsub\b|excavat|plumb|electric|drywall|roofing|hvac/],['Equipment',/rental|united rent|sunbelt|tool|equipment|caterpillar|bobcat|john deere/],['Payroll',/gusto|payroll|\badp\b|paychex|wage|direct dep/],['Insurance',/insurance|liberty mutual|state farm|geico|progressive|nationwide|policy|hiscox|next insurance/],['Taxes / Fees',/\birs\b|\btax\b|dept of revenue|franchise|permit|license fee|secretary of state|treasury/],['Bank / Transfer',/transfer|zelle|venmo|cash app|withdrawal|\batm\b|service charge|overdraft|interest charge|wire|bill pay/],['Office / Admin',/google|microsoft|adobe|verizon|at&t|comcast|t-mobile|office|staples|amazon|amzn|software|subscription|godaddy|dropbox|zoom/]];for(const[cat,re]of rules)if(re.test(d))return cat;return'Other'}
+function txnList(){return Object.values(S.transactions||{})}
+function bankKey(t){return (t.date||'')+'|'+(Number(t.amount)||0).toFixed(2)+'|'+String(t.description||'').slice(0,40).toLowerCase().replace(/\s+/g,' ').trim()}
+function bankTotals(){const all=txnList();const inSum=all.filter(t=>Number(t.amount)>0).reduce((s,t)=>s+Number(t.amount),0);const outSum=all.filter(t=>Number(t.amount)<0).reduce((s,t)=>s+Math.abs(Number(t.amount)),0);return{inSum,outSum,net:inSum-outSum,count:all.length}}
+async function writeTxn(t){S.transactions[t.id]=t;LOCAL.saveTransactions();if(DB)await DB.child('transactions/'+t.id).set(t).catch(()=>{})}
+async function deleteTxnDB(id){delete S.transactions[id];LOCAL.saveTransactions();if(DB)await DB.child('transactions/'+id).remove().catch(()=>{})}
+async function saveAllTxns(){LOCAL.saveTransactions();if(DB)await DB.child('transactions').set(S.transactions).catch(()=>{})}
+function renderBank(){
+  if(gateOn()&&!isOwnerRole(SESSION)) return `<div class="tt-empty" style="padding:40px 16px"><p style="font-size:14px;color:var(--text-2);line-height:1.6">Bank &amp; cash flow is owner-only.</p></div>`;
+  const t=bankTotals();
+  const all=txnList().slice().sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  const byCat={};all.forEach(x=>{if(Number(x.amount)<0){const c=x.category||'Other';byCat[c]=(byCat[c]||0)+Math.abs(Number(x.amount))}});
+  const cats=Object.entries(byCat).sort((a,b)=>b[1]-a[1]);
+  const catOpts=c=>BANK_CATS.map(x=>`<option value="${esc(x)}" ${c===x?'selected':''}>${esc(x)}</option>`).join('');
+  const jobOpts=jid=>`<option value="">— link job —</option>`+jobs().map(job=>`<option value="${esc(job.id)}" ${jid===job.id?'selected':''}>${esc(job.name)}</option>`).join('');
+  const rows=all.map(x=>{const out=Number(x.amount)<0;return `<div class="bank-row" data-bank="${esc(x.id)}">
+    <div class="bank-main"><div class="bank-desc">${esc(x.description||'')}</div><div class="bank-meta">${esc(fmtDate(x.date)||x.date||'')}${x.jobId&&S.jobs[x.jobId]?' · '+esc(S.jobs[x.jobId].name):''}</div></div>
+    <select class="bank-cat" data-bank-cat="${esc(x.id)}">${catOpts(x.category||'Other')}</select>
+    <select class="bank-job" data-bank-job="${esc(x.id)}">${jobOpts(x.jobId||'')}</select>
+    <div class="bank-amt ${out?'out':'in'}">${out?'−':'+'}${money2(Math.abs(Number(x.amount)))}</div>
+    <button class="tt-icon" data-bank-del="${esc(x.id)}" title="Delete" aria-label="Delete">✕</button>
+  </div>`}).join('');
+  return `
+    <div class="tt-kpis">
+      <div class="tt-kpi"><div class="tt-kpi-val" style="color:var(--green-700)">${money2(t.inSum)}</div><div class="tt-kpi-lbl">Money In</div></div>
+      <div class="tt-kpi"><div class="tt-kpi-val" style="color:var(--orange)">${money2(t.outSum)}</div><div class="tt-kpi-lbl">Money Out</div></div>
+      <div class="tt-kpi"><div class="tt-kpi-val" style="color:${t.net>=0?'var(--green-700)':'var(--red)'}">${money2(t.net)}</div><div class="tt-kpi-lbl">Net (profit)</div></div>
+    </div>
+    <div class="toolbar" style="margin-bottom:14px">
+      <button class="btn-add" id="bank-import"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"/></svg>Import CSV / OFX</button>
+      ${all.length?`<button class="btn-mini" id="bank-clear" style="margin-left:auto">Clear all</button>`:''}
+    </div>
+    ${cats.length?`<div class="section-hd">Spending by category</div><div class="rcpt-cats" style="margin-bottom:16px">${cats.map(([c,v])=>`<span class="rcpt-cat-chip">${esc(c)} · ${money2(v)}</span>`).join('')}</div>`:''}
+    <div class="section-hd">Transactions <span>${all.length}</span></div>
+    ${all.length?`<div class="bank-list">${rows}</div>`:`<div class="tt-empty">No transactions yet. Tap <strong>Import CSV / OFX</strong> and upload a transaction file from your bank.</div>`}
+  `;
+}
+function showBankImport(){
+  if(gateOn()&&!isOwnerRole(SESSION)){toast('Owner-only','');return}
+  $('modal-root').innerHTML=`<div class="modal-bd" id="mbd" role="dialog" aria-modal="true" aria-label="Import transactions"><div class="modal"><div class="modal-handle"></div>
+    <div class="modal-head"><div class="modal-title">Import Bank Transactions</div><button class="modal-close" id="mc" aria-label="Close"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button></div>
+    <div class="modal-body">
+      <p style="font-size:12.5px;color:var(--text-2);line-height:1.5;margin-bottom:12px">Download a <strong>CSV</strong> or <strong>OFX/QFX</strong> file of transactions from your bank or card, then upload it (or paste CSV text). New transactions are added and auto-categorized; duplicates are skipped.</p>
+      <label class="photo-add-btn" style="aspect-ratio:auto;padding:14px;flex-direction:row;gap:8px;margin-bottom:10px">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>
+        <span id="bank-file-label">Choose CSV / OFX file</span>
+        <input type="file" accept=".csv,.ofx,.qfx,text/csv,text/plain,application/x-ofx" id="bank-file" style="display:none">
+      </label>
+      <div class="form-group"><label class="form-label">…or paste CSV here</label><textarea class="form-textarea" id="bank-paste" style="font-family:monospace;font-size:12px;min-height:90px" placeholder="Date,Description,Amount&#10;2026-05-01,Home Depot,-152.34&#10;2026-05-03,Customer payment,1500.00"></textarea></div>
+      <div id="bank-preview" style="font-size:12.5px;color:var(--text-3);min-height:18px"></div>
+    </div>
+    <div class="modal-foot"><button class="btn-cancel" id="btn-cx">Cancel</button><button class="btn-save" id="bank-do-import" disabled>Import</button></div>
+  </div></div>`;
+  $('mc').onclick=$('btn-cx').onclick=closeModal;$('mbd').onclick=e=>{if(e.target===e.currentTarget)closeModal()};
+  let fresh=[];
+  function preview(text){
+    const parsed=bankParse(text)||[];
+    const existing=new Set(txnList().map(bankKey));
+    const seen=new Set();
+    fresh=parsed.filter(p=>{const k=bankKey(p);if(existing.has(k)||seen.has(k))return false;seen.add(k);return true});
+    $('bank-preview').innerHTML=parsed.length?`Found <strong>${parsed.length}</strong> · <strong>${fresh.length}</strong> new (duplicates skipped).`:'No transactions detected — check the file or format.';
+    $('bank-do-import').disabled=fresh.length===0;
+  }
+  $('bank-file').onchange=function(){const f=this.files&&this.files[0];if(!f)return;$('bank-file-label').textContent=f.name;const r=new FileReader();r.onload=e=>{const ta=$('bank-paste');if(ta)ta.value='';preview(e.target.result)};r.readAsText(f)};
+  $('bank-paste').oninput=function(){preview(this.value)};
+  $('bank-do-import').onclick=async()=>{
+    if(!fresh.length)return;
+    S.transactions=S.transactions||{};
+    fresh.forEach(p=>{const id='b_'+Date.now()+'_'+Math.random().toString(36).slice(2,6);S.transactions[id]={id,date:p.date,description:p.description,amount:Number(p.amount)||0,category:bankAutoCat(p.description,Number(p.amount)||0),jobId:'',source:'import',key:bankKey(p),imported:Date.now()}});
+    await saveAllTxns();await logAct('imported '+fresh.length+' bank transaction(s)','');closeModal();render();toast('Imported '+fresh.length+' transaction'+(fresh.length!==1?'s':''));
+  };
+}
+
+// ══ Modals ══
+function closeModal(){$('modal-root').innerHTML=''}
+
+function showJobModal(mode,job){
+  if(OWNER_MODE){toast('Open a company to add or edit jobs','');return}
+  const j=job||{};
+  const mOpts=S.members.map(m=>`<option value="${esc(m)}" ${j.assigned===m?'selected':''}>${esc(m)}</option>`).join('');
+  $('modal-root').innerHTML=`<div class="modal-bd" id="mbd"><div class="modal"><div class="modal-handle"></div>
+    <div class="modal-head"><div class="modal-title">${mode==='add'?'New Job':'Edit Job'}</div><button class="modal-close" id="mc"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button></div>
+    <div class="modal-body">
+      <div class="form-group"><label class="form-label">Job name *</label><input class="form-input" id="f-name" value="${esc(j.name||'')}" placeholder="e.g. Lake house dock repair"></div>
+      <div class="form-group"><label class="form-label">Job Site Address</label><input class="form-input" id="f-addr" value="${esc(j.address||'')}" placeholder="123 Waterfront Dr, LaFollette TN"></div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Stage</label><select class="form-select" id="f-stage">${STAGES.map(s=>`<option value="${esc(s)}" ${jobStage(j)===s?'selected':''}>${esc(s)}</option>`).join('')}</select></div>
+        <div class="form-group"><label class="form-label">Status</label><select class="form-select" id="f-status"><option value="lead" ${j.status==='lead'?'selected':''}>Lead</option><option value="active" ${(j.status==='active'||!j.status)?'selected':''}>Active</option><option value="complete" ${j.status==='complete'?'selected':''}>Complete</option><option value="hold" ${j.status==='hold'?'selected':''}>On Hold</option></select></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Job type</label><select class="form-select" id="f-type"><option value="">Select…</option><option value="New construction" ${j.type==='New construction'?'selected':''}>New construction</option><option value="Renovation" ${j.type==='Renovation'?'selected':''}>Renovation</option><option value="Dock / waterfront" ${j.type==='Dock / waterfront'?'selected':''}>Dock / waterfront</option><option value="Repair" ${j.type==='Repair'?'selected':''}>Repair</option><option value="Inspection" ${j.type==='Inspection'?'selected':''}>Inspection</option><option value="Other" ${j.type==='Other'?'selected':''}>Other</option></select></div>
+        <div class="form-group"><label class="form-label">Assigned to</label><select class="form-select" id="f-assigned"><option value="">Select…</option>${mOpts}<option value="__custom__">Type name…</option></select></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Start date</label><input class="form-input" type="date" id="f-start" value="${esc(j.startDate||'')}"></div>
+        <div class="form-group"><label class="form-label">Due date</label><input class="form-input" type="date" id="f-due" value="${esc(j.dueDate||'')}"></div>
+      </div>
+      <div id="custom-wrap" style="display:none" class="form-group"><label class="form-label">Custom name</label><input class="form-input" id="f-cname" placeholder="Name"></div>
+
+      <div style="margin:18px 0 10px;padding-top:14px;border-top:1px solid var(--border)">
+        <div class="form-label" style="font-size:12px;margin-bottom:10px">Customer Information</div>
+      </div>
+      <div class="form-group"><label class="form-label">Customer Name</label><input class="form-input" id="f-cust-name" value="${esc(j.customerName||'')}" placeholder="John & Jane Smith"></div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Phone</label><input class="form-input" type="tel" id="f-cust-phone" value="${esc(j.customerPhone||'')}" placeholder="(555) 123-4567"></div>
+        <div class="form-group"><label class="form-label">Email</label><input class="form-input" type="email" id="f-cust-email" value="${esc(j.customerEmail||'')}" placeholder="customer@example.com"></div>
+      </div>
+      <div class="form-group"><label class="form-label">Billing Address</label><input class="form-input" id="f-bill-addr" value="${esc(j.billingAddress||'')}" placeholder="Leave blank if same as job site"></div>
+      <div class="form-group"><label class="form-label">Lead Source</label><select class="form-select" id="f-source"><option value="">Not set</option>${LEAD_SOURCES.map(s=>`<option value="${esc(s)}" ${j.leadSource===s?'selected':''}>${esc(s)}</option>`).join('')}</select></div>
+
+      <div style="margin:18px 0 10px;padding-top:14px;border-top:1px solid var(--border)">
+        <div class="form-label" style="font-size:12px;margin-bottom:10px">Financial</div>
+      </div>
+      <div class="form-group"><label class="form-label">Estimated value ($)</label><input class="form-input" type="number" id="f-val" value="${esc(j.value||'')}" placeholder="0"></div>
+      <div class="form-group"><label class="form-label">Description / Scope of Work</label><textarea class="form-textarea" id="f-desc">${esc(j.description||'')}</textarea></div>
+    </div>
+    <div class="modal-foot">
+      ${mode==='edit'?`<button class="btn-delete" id="btn-del">Delete</button>`:''}
+      <button class="btn-cancel" id="btn-cx">Cancel</button>
+      <button class="btn-save" id="btn-sv">${mode==='add'?'Add Job':'Save'}</button>
+    </div>
+  </div></div>`;
+  $('mc').onclick=$('btn-cx').onclick=closeModal;
+  $('mbd').onclick=e=>{if(e.target===e.currentTarget)closeModal()};
+  $('f-assigned').onchange=function(){$('custom-wrap').style.display=this.value==='__custom__'?'block':'none'};
+  if(j.assigned&&S.members.includes(j.assigned))$('f-assigned').value=j.assigned;
+  $('btn-sv').onclick=async()=>{
+    const name=$('f-name').value.trim();
+    if(!name){toast('Please enter a job name','');return}
+    let assigned=$('f-assigned').value;
+    if(assigned==='__custom__')assigned=$('f-cname').value.trim();
+    const data={
+      name,assigned,
+      address:$('f-addr').value.trim(),
+      status:$('f-status').value,
+      stage:$('f-stage').value,
+      type:$('f-type').value,
+      startDate:$('f-start').value,
+      dueDate:$('f-due').value,
+      value:$('f-val').value,
+      description:$('f-desc').value.trim(),
+      customerName:$('f-cust-name').value.trim(),
+      customerPhone:$('f-cust-phone').value.trim(),
+      customerEmail:$('f-cust-email').value.trim(),
+      billingAddress:$('f-bill-addr').value.trim(),
+      leadSource:$('f-source').value,
+    };
+    if(mode==='add'){
+      const nj={id:uid(),...data,progress:data.status==='complete'?100:0,notes:[],photos:[],tasks:[],dailyLogs:[],documents:[],comms:[],created:Date.now()};
+      if(nj.status==='complete')nj.completedAt=Date.now();
+      await writeJob(nj);await logAct('added job',name);toast('Job added');
+    }else{
+      const merged={...j,...data};
+      if(merged.status==='complete'&&!j.completedAt)merged.completedAt=Date.now();
+      await writeJob(merged);await logAct('updated job',name);toast('Changes saved');
+    }
+    closeModal();render();
+  };
+  if(mode==='edit')$('btn-del').onclick=async()=>{
+    const backup=JSON.parse(JSON.stringify(j));
+    await deleteJobDB(j.id);await logAct('deleted job',j.name);
+    S.detail=null;closeModal();render();
+    toast('Job deleted','undo',async()=>{await writeJob(backup);render();toast('Job restored')});
+    UNDO.push(async()=>{await writeJob(backup);render();toast('Job restored')});
+  };
+}
+
+function showSetupModal(){
+  $('modal-root').innerHTML=`<div class="modal-bd" id="mbd"><div class="modal"><div class="modal-handle"></div>
+    <div class="modal-head"><div class="modal-title">Connect Your Team</div><button class="modal-close" id="mc"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button></div>
+    <div class="modal-body">
+      <p style="font-size:13.5px;color:var(--text-2);line-height:1.7;margin-bottom:16px">To share jobs, photos, and notes across your team in real time, connect a free Firebase database. Takes about 5 minutes.</p>
+      <div class="setup-steps">
+        <div class="setup-step"><div class="step-num">1</div><div class="step-text">Go to <a href="https://console.firebase.google.com" target="_blank">console.firebase.google.com</a> and sign in with Google.</div></div>
+        <div class="setup-step"><div class="step-num">2</div><div class="step-text">Click "Add project", name it <strong>waterfront-jobs</strong>, skip Analytics → Create.</div></div>
+        <div class="setup-step"><div class="step-num">3</div><div class="step-text">Build → Realtime Database → Create Database → "Start in test mode" → Done.</div></div>
+        <div class="setup-step"><div class="step-num">4</div><div class="step-text">Gear icon ⚙ → Project settings → Your apps → Web icon &lt;/&gt; → Register → copy the <strong>firebaseConfig</strong>.</div></div>
+        <div class="setup-step"><div class="step-num">5</div><div class="step-text">Paste the config JSON below and tap Connect. Do this on every team member's phone.</div></div>
+      </div>
+      <div class="form-group"><label class="form-label">Firebase config JSON</label><textarea class="form-textarea" id="fb-cfg" style="font-family:monospace;font-size:12px;min-height:110px" placeholder='{"apiKey":"AIza...","authDomain":"...","databaseURL":"https://....firebaseio.com","projectId":"...","storageBucket":"...","messagingSenderId":"...","appId":"..."}'>
+</textarea></div>
+    </div>
+    <div class="modal-foot"><button class="btn-cancel" id="btn-cx">Cancel</button><button class="btn-save" id="btn-connect">Connect Team</button></div>
+  </div></div>`;
+  $('mc').onclick=$('btn-cx').onclick=closeModal;
+  $('mbd').onclick=e=>{if(e.target===e.currentTarget)closeModal()};
+  $('btn-connect').onclick=()=>{
+    let raw=$('fb-cfg').value.trim();
+    let cfg;
+    try{raw=raw.replace(/^.*?=/,'').replace(/;?\s*$/,'');cfg=JSON.parse(raw);if(!cfg.databaseURL)throw new Error('Missing databaseURL')}
+    catch(e){toast('Invalid config — check and try again','');return}
+    localStorage.setItem('wfs_fb',JSON.stringify(cfg));FIREBASE_CONFIG=cfg;
+    closeModal();const ok=initFB(cfg);if(ok)toast('Team connected! Live sync active');
+  };
+}
+
+// ══ Helpers for photo backward compat ══
+function photoURL(p){return typeof p==='string'?p:(p&&p.url)||''}
+
+// ══ CSV export ══
+function exportCSV(){
+  const rows=[['Name','Customer','Phone','Email','Address','Status','Stage','Type','Assigned','Start','Due','Estimate','Invoiced','Paid','Balance','Progress','Created']];
+  jobs().forEach(j=>{
+    rows.push([j.name,j.customerName,j.customerPhone,j.customerEmail,j.address,j.status,jobStage(j),j.type,j.assigned,j.startDate,j.dueDate,j.value,j.invoiced,j.paid,jobBalance(j),(j.progress||0)+'%',j.created?new Date(j.created).toLocaleDateString():''].map(v=>v==null?'':String(v)));
+  });
+  const csv=rows.map(r=>r.map(c=>/[",\n]/.test(c)?'"'+c.replace(/"/g,'""')+'"':c).join(',')).join('\n');
+  const blob=new Blob([csv],{type:'text/csv'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='waterfront-jobs-'+dateKey(new Date())+'.csv';
+  a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+  toast('Exported '+jobs().length+' jobs');
+}
+
+// ══ Share / Print ══
+function printJob(j){
+  const w=window.open('','_blank');
+  if(!w){toast('Pop-up blocked','');return}
+  const photos=(j.photos||[]).map(p=>photoURL(p));
+  w.document.write(`<!DOCTYPE html><html><head><title>${esc(j.name)} — Job Summary</title>
+    <style>body{font-family:system-ui,sans-serif;max-width:800px;margin:30px auto;padding:0 20px;color:#0a1f18}
+    h1{font-size:24px;margin:0 0 6px}h2{font-size:14px;text-transform:uppercase;color:#666;margin:24px 0 8px;border-bottom:1px solid #ddd;padding-bottom:4px}
+    .meta{color:#666;margin-bottom:20px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:14px}
+    .cell{background:#f5f5f5;padding:10px;border-radius:6px}.label{font-size:11px;color:#666;text-transform:uppercase;font-weight:700}
+    img{max-width:200px;border-radius:8px;margin:4px}.pphotos{display:flex;flex-wrap:wrap}</style></head><body>
+    <h1>${esc(j.name)}</h1>
+    <div class="meta">${esc(j.address||'')} ${j.customerName?'· '+esc(j.customerName):''} ${j.customerPhone?'· '+esc(j.customerPhone):''}</div>
+    <h2>Details</h2>
+    <div class="grid">
+      <div class="cell"><div class="label">Stage</div>${esc(jobStage(j))}</div>
+      <div class="cell"><div class="label">Status</div>${esc(spLabel(j.status))}</div>
+      <div class="cell"><div class="label">Type</div>${esc(j.type||'—')}</div>
+      <div class="cell"><div class="label">Assigned</div>${esc(j.assigned||'—')}</div>
+      <div class="cell"><div class="label">Start</div>${esc(j.startDate||'—')}</div>
+      <div class="cell"><div class="label">Due</div>${esc(j.dueDate||'—')}</div>
+      <div class="cell"><div class="label">Estimate</div>${money(j.value)}</div>
+      <div class="cell"><div class="label">Balance</div>${money(jobBalance(j))}</div>
+    </div>
+    ${j.description?'<h2>Scope of Work</h2><p>'+esc(j.description).replace(/\n/g,'<br>')+'</p>':''}
+    ${(j.tasks||[]).length?'<h2>Tasks</h2><ul>'+(j.tasks||[]).map(t=>'<li>'+(t.done?'☑ ':'☐ ')+esc(t.text)+(t.due?' (due '+esc(t.due)+')':'')+'</li>').join('')+'</ul>':''}
+    ${photos.length?'<h2>Photos</h2><div class="pphotos">'+photos.map(p=>'<img src="'+p+'" />').join('')+'</div>':''}
+    </body></html>`);
+  w.document.close();
+  setTimeout(()=>w.print(),500);
+}
+
+async function shareJob(j){
+  const text=`${j.name}\n${j.address||''}\n${j.customerName?'Customer: '+j.customerName+'\n':''}Stage: ${jobStage(j)} · ${j.progress||0}% complete`;
+  if(navigator.share){
+    try{await navigator.share({title:j.name,text});return}catch(e){if(e.name==='AbortError')return}
+  }
+  try{await navigator.clipboard.writeText(text);toast('Copied to clipboard')}catch(e){alert(text)}
+}
+
+// ══ Invoice editor ══
+let INV_DRAFT=null; // current draft being edited
+
+function defaultInvoice(j){
+  const today=dateKey(new Date());
+  const due=new Date();due.setDate(due.getDate()+30);
+  return {
+    id:'inv_'+Date.now()+'_'+Math.random().toString(36).slice(2,6),
+    number:nextInvoiceNumber(),
+    date:today,
+    dueDate:dateKey(due),
+    items:[{desc:j.name||'Services rendered',qty:1,rate:Number(j.value||0)||0}],
+    taxRate:COMPANY.taxRate||'',
+    notes:'',
+    terms:COMPANY.terms||'',
+    photos:[],
+    paid:0,
+    status:'draft',
+    created:Date.now(),
+  };
+}
+
+function defaultEstimate(j){
+  const today=dateKey(new Date());
+  const exp=new Date();exp.setDate(exp.getDate()+30);
+  return {
+    id:'est_'+Date.now()+'_'+Math.random().toString(36).slice(2,6),
+    number:nextEstimateNumber(),
+    date:today,
+    dueDate:dateKey(exp),
+    items:[{desc:j.name||'Proposed work',qty:1,rate:Number(j.value||0)||0}],
+    taxRate:COMPANY.taxRate||'',
+    notes:'',
+    terms:COMPANY.terms||'',
+    photos:[],
+    status:'draft',
+    created:Date.now(),
+  };
+}
+
+function showInvoiceModal(jobId,invoiceId,kind){
+  kind=kind||'invoice';
+  const j=S.jobs[jobId];if(!j)return;
+  const arr=kind==='estimate'?(j.estimates||[]):(j.invoices||[]);
+  let inv;
+  if(invoiceId){
+    inv=arr.find(i=>i.id===invoiceId);
+    if(!inv)return;
+    INV_DRAFT=JSON.parse(JSON.stringify(inv));
+  }else{
+    INV_DRAFT=kind==='estimate'?defaultEstimate(j):defaultInvoice(j);
+  }
+  renderInvoiceModal(jobId,!!invoiceId,kind);
+}
+
+function renderInvoiceModal(jobId,isEdit,kind){
+  kind=kind||'invoice';const EST=kind==='estimate';
+  const inv=INV_DRAFT;
+  const c=calcInvoice(inv);
+  const itemsHtml=(inv.items||[]).map((it,i)=>`<div class="li-row" data-li="${i}">
+    <input type="text" data-li-field="desc" value="${esc(it.desc||'')}" placeholder="Description (e.g. Dock repair labor)" aria-label="Description">
+    <input type="number" step="0.01" data-li-field="qty" value="${esc(it.qty??'')}" placeholder="Qty" aria-label="Quantity">
+    <input type="number" step="0.01" data-li-field="rate" value="${esc(it.rate??'')}" placeholder="Rate" aria-label="Unit rate">
+    <div class="li-amt">${money((Number(it.qty||0)*Number(it.rate||0)))}</div>
+    <button class="li-del" data-li-del="${i}" aria-label="Remove line item">×</button>
+  </div>`).join('');
+
+  $('modal-root').innerHTML=`<div class="modal-bd" id="mbd" role="dialog" aria-modal="true" aria-label="Invoice editor"><div class="modal"><div class="modal-handle"></div>
+    <div class="modal-head"><div class="modal-title">${isEdit?(EST?'Edit Estimate':'Edit Invoice'):(EST?'New Estimate':'New Invoice')}</div><button class="modal-close" id="mc" aria-label="Close"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button></div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">${EST?'Estimate #':'Invoice #'}</label><input class="form-input" id="inv-num" value="${esc(inv.number||'')}"></div>
+        <div class="form-group"><label class="form-label">Status</label>
+          <select class="form-select" id="inv-status">
+            <option value="draft" ${inv.status==='draft'?'selected':''}>Draft</option>
+            <option value="sent" ${inv.status==='sent'?'selected':''}>Sent</option>
+            ${EST?`<option value="accepted" ${inv.status==='accepted'?'selected':''}>Accepted</option><option value="declined" ${inv.status==='declined'?'selected':''}>Declined</option>`:`<option value="paid" ${inv.status==='paid'?'selected':''}>Paid</option>`}
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">${EST?'Estimate Date':'Invoice Date'}</label><input class="form-input" type="date" id="inv-date" value="${esc(inv.date||'')}"></div>
+        <div class="form-group"><label class="form-label">${EST?'Valid Until':'Due Date'}</label><input class="form-input" type="date" id="inv-due" value="${esc(inv.dueDate||'')}"></div>
+      </div>
+      <div class="form-group"><label class="form-label">Line Items</label>
+        <div class="li-head"><div>Description</div><div>Qty</div><div>Rate</div><div>Amount</div><div></div></div>
+        <div class="line-items" id="line-items">${itemsHtml}</div>
+        <button class="li-add-btn" id="li-add" type="button">+ Add Line Item</button>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Tax Rate (%)</label><input class="form-input" type="number" step="0.01" id="inv-tax" value="${esc(inv.taxRate??'')}"></div>
+        ${EST?'':`<div class="form-group"><label class="form-label">Amount Paid</label><input class="form-input" type="number" step="0.01" id="inv-paid" value="${esc(inv.paid??'')}"></div>`}
+      </div>
+      <div class="inv-totals" id="inv-totals">
+        <div class="inv-total-row"><span>Subtotal</span><span class="v" id="t-sub">${money(c.sub)}</span></div>
+        <div class="inv-total-row"><span>Tax (${Number(inv.taxRate||0)}%)</span><span class="v" id="t-tax">${money(c.tax)}</span></div>
+        <div class="inv-total-row grand"><span>Total</span><span class="v" id="t-total">${money(c.total)}</span></div>
+        ${EST?'':`<div class="inv-total-row" style="color:var(--text-3);margin-top:4px"><span>Paid</span><span class="v" id="t-paid">${money(c.paid)}</span></div>
+        <div class="inv-total-row" style="font-weight:700"><span>Balance Due</span><span class="v" id="t-bal">${money(c.balance)}</span></div>`}
+      </div>
+      <div class="form-group"><label class="form-label">Notes (visible on ${EST?'estimate':'invoice'})</label>
+        <div class="textarea-with-mic"><textarea class="form-textarea" id="inv-notes" placeholder="Additional notes for the customer…">${esc(inv.notes||'')}</textarea>${micButton('#inv-notes')}</div>
+      </div>
+      <div class="form-group"><label class="form-label">Payment Terms</label><textarea class="form-textarea" id="inv-terms">${esc(inv.terms||'')}</textarea></div>
+      <div class="form-group"><label class="form-label">Photos / Attachments <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text-3);font-size:11px">attached to the printed / PDF ${EST?'estimate':'invoice'}</span></label>
+        <div class="inv-photos" id="inv-photos"></div>
+        <label class="photo-add-btn" style="aspect-ratio:auto;padding:12px;flex-direction:row;gap:8px">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z"/><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zM18.75 10.5h.008v.008h-.008V10.5z"/></svg>
+          <span>Add Photos</span>
+          <input type="file" accept="image/*" multiple id="inv-photo-upload" style="display:none">
+        </label>
+      </div>
+    </div>
+    <div class="modal-foot">
+      ${isEdit?`<button class="btn-delete" id="inv-del">Delete</button>`:''}
+      <button class="btn-cancel" id="btn-cx">Cancel</button>
+      <button class="btn-sm" id="inv-print" style="background:var(--surface);border:1.5px solid var(--border-md);font-weight:600">Save & Print</button>
+      <button class="btn-sm" id="inv-send" style="background:var(--green-100);border:1.5px solid var(--green-600);color:var(--green-700);font-weight:700"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="width:13px;height:13px"><path stroke-linecap="round" stroke-linejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5"/></svg>Save & Send</button>
+      <button class="btn-save" id="inv-save">Save</button>
+    </div>
+  </div></div>`;
+
+  $('mc').onclick=$('btn-cx').onclick=()=>{INV_DRAFT=null;closeModal()};
+  $('mbd').onclick=e=>{if(e.target===e.currentTarget){INV_DRAFT=null;closeModal()}};
+
+  function refreshLineItems(){
+    const wrap=$('line-items');
+    wrap.innerHTML=(INV_DRAFT.items||[]).map((it,i)=>`<div class="li-row" data-li="${i}">
+      <input type="text" data-li-field="desc" value="${esc(it.desc||'')}" placeholder="Description">
+      <input type="number" step="0.01" data-li-field="qty" value="${esc(it.qty??'')}" placeholder="Qty">
+      <input type="number" step="0.01" data-li-field="rate" value="${esc(it.rate??'')}" placeholder="Rate">
+      <div class="li-amt">${money(Number(it.qty||0)*Number(it.rate||0))}</div>
+      <button class="li-del" data-li-del="${i}">×</button>
+    </div>`).join('');
+    wireLineItemHandlers();
+    refreshTotals();
+  }
+  function refreshTotals(){
+    const c=calcInvoice(INV_DRAFT);
+    const tsub=$('t-sub'),ttax=$('t-tax'),ttot=$('t-total'),tpaid=$('t-paid'),tbal=$('t-bal');
+    if(tsub)tsub.textContent=money(c.sub);
+    if(ttax)ttax.textContent=money(c.tax);
+    if(ttot)ttot.textContent=money(c.total);
+    if(tpaid)tpaid.textContent=money(c.paid);
+    if(tbal)tbal.textContent=money(c.balance);
+    // Update tax row label
+    const taxLabel=document.querySelector('#inv-totals .inv-total-row:nth-child(2) span:first-child');
+    if(taxLabel)taxLabel.textContent='Tax ('+Number(INV_DRAFT.taxRate||0)+'%)';
+    // Update line-row amounts
+    document.querySelectorAll('[data-li]').forEach(row=>{
+      const i=parseInt(row.dataset.li);const it=INV_DRAFT.items[i];if(!it)return;
+      const amt=row.querySelector('.li-amt');
+      if(amt)amt.textContent=money(Number(it.qty||0)*Number(it.rate||0));
+    });
+  }
+  function wireLineItemHandlers(){
+    document.querySelectorAll('[data-li]').forEach(row=>{
+      const i=parseInt(row.dataset.li);
+      row.querySelectorAll('[data-li-field]').forEach(inp=>{
+        inp.oninput=()=>{
+          const f=inp.dataset.liField;
+          INV_DRAFT.items[i][f]=f==='desc'?inp.value:inp.value;
+          refreshTotals();
+        };
+      });
+    });
+    document.querySelectorAll('[data-li-del]').forEach(b=>b.onclick=()=>{
+      const i=parseInt(b.dataset.liDel);
+      INV_DRAFT.items.splice(i,1);
+      if(INV_DRAFT.items.length===0)INV_DRAFT.items.push({desc:'',qty:1,rate:0});
+      refreshLineItems();
+    });
+  }
+  wireLineItemHandlers();
+  wireMicButtons();
+
+  function renderInvPhotos(){
+    const wrap=$('inv-photos');if(!wrap)return;
+    const ph=INV_DRAFT.photos||[];
+    wrap.innerHTML=ph.map((p,i)=>`<div class="inv-photo" data-ip="${i}">
+      <img src="${p.url}" alt="">
+      <button class="inv-photo-del" data-ip-del="${i}" type="button" aria-label="Remove photo">×</button>
+      <input class="inv-photo-cap" data-ip-cap="${i}" value="${esc(p.caption||'')}" placeholder="Caption (optional)">
+    </div>`).join('');
+    wrap.querySelectorAll('[data-ip-del]').forEach(b=>b.onclick=()=>{INV_DRAFT.photos.splice(parseInt(b.dataset.ipDel),1);renderInvPhotos()});
+    wrap.querySelectorAll('[data-ip-cap]').forEach(inp=>inp.oninput=()=>{const i=parseInt(inp.dataset.ipCap);if(INV_DRAFT.photos[i])INV_DRAFT.photos[i].caption=inp.value});
+  }
+  renderInvPhotos();
+  $('inv-photo-upload')?.addEventListener('change',function(){
+    const files=Array.from(this.files||[]);if(!files.length)return;
+    INV_DRAFT.photos=INV_DRAFT.photos||[];
+    files.forEach(file=>{
+      if(!file.type.startsWith('image/'))return;
+      const r=new FileReader();
+      r.onload=e=>{const img=new Image();img.onload=()=>{
+        const c=document.createElement('canvas');const MAX=1200;let w=img.width,h=img.height;
+        if(w>MAX||h>MAX){if(w>h){h=Math.round(h*MAX/w);w=MAX}else{w=Math.round(w*MAX/h);h=MAX}}
+        c.width=w;c.height=h;c.getContext('2d').drawImage(img,0,0,w,h);
+        INV_DRAFT.photos.push({url:c.toDataURL('image/jpeg',0.8),caption:''});renderInvPhotos();
+      };img.src=e.target.result};
+      r.readAsDataURL(file);
+    });
+    this.value='';
+  });
+
+  $('li-add').onclick=()=>{INV_DRAFT.items=INV_DRAFT.items||[];INV_DRAFT.items.push({desc:'',qty:1,rate:0});refreshLineItems();};
+  ['inv-num','inv-date','inv-due','inv-status','inv-tax','inv-paid','inv-notes','inv-terms'].forEach(id=>{
+    const el=$(id);if(!el)return;
+    const k=id.replace('inv-','');
+    const fieldMap={num:'number',date:'date',due:'dueDate',status:'status',tax:'taxRate',paid:'paid',notes:'notes',terms:'terms'};
+    el.oninput=el.onchange=()=>{INV_DRAFT[fieldMap[k]]=el.value;refreshTotals()};
+  });
+
+  async function saveInvoice(){
+    const j=S.jobs[jobId];if(!j)return null;
+    // Drop empty trailing items
+    INV_DRAFT.items=(INV_DRAFT.items||[]).filter(it=>(it.desc&&it.desc.trim())||Number(it.qty||0)!==0||Number(it.rate||0)!==0);
+    if(INV_DRAFT.items.length===0){toast('Add at least one line item','');return null}
+    const key=EST?'estimates':'invoices';
+    j[key]=j[key]||[];
+    const existing=j[key].findIndex(i=>i.id===INV_DRAFT.id);
+    if(existing>=0)j[key][existing]=INV_DRAFT;else j[key].push(INV_DRAFT);
+    // Invoices update the job's aggregate invoiced/paid totals; estimates never do.
+    if(!EST){const tot=invoiceTotals(j);j.invoiced=tot.total;j.paid=tot.paid;}
+    await writeJob(j);
+    await logAct((existing>=0?'updated ':'created ')+(EST?'estimate':'invoice')+' on',j.name);
+    return INV_DRAFT;
+  }
+
+  $('inv-save').onclick=async()=>{
+    const saved=await saveInvoice();
+    if(saved){toast('Invoice saved');INV_DRAFT=null;closeModal();render()}
+  };
+  $('inv-print').onclick=async()=>{
+    const saved=await saveInvoice();
+    if(saved){INV_DRAFT=null;closeModal();render();printInvoice(S.jobs[jobId],saved,kind)}
+  };
+  $('inv-send').onclick=async()=>{
+    const saved=await saveInvoice();
+    if(saved){INV_DRAFT=null;closeModal();render();showSendInvoiceModal(S.jobs[jobId],saved,kind)}
+  };
+  if(isEdit){
+    $('inv-del').onclick=async()=>{
+      const j=S.jobs[jobId];if(!j)return;
+      const key=EST?'estimates':'invoices';
+      const backup=JSON.parse(JSON.stringify(INV_DRAFT));
+      j[key]=(j[key]||[]).filter(i=>i.id!==INV_DRAFT.id);
+      if(!EST){const tot=invoiceTotals(j);j.invoiced=tot?tot.total:0;j.paid=tot?tot.paid:0;}
+      await writeJob(j);await logAct('deleted '+(EST?'estimate':'invoice')+' on',j.name);
+      INV_DRAFT=null;closeModal();render();
+      const restore=async()=>{const jj=S.jobs[jobId];if(jj){jj[key]=jj[key]||[];jj[key].push(backup);if(!EST){const t=invoiceTotals(jj);jj.invoiced=t.total;jj.paid=t.paid;}await writeJob(jj);render();toast((EST?'Estimate':'Invoice')+' restored')}};
+      UNDO.push(restore);
+      toast((EST?'Estimate':'Invoice')+' deleted','undo',restore);
+    };
+  }
+}
+
+// ══ Printable invoice with company letterhead ══
+function printInvoice(j,inv,kind){
+  kind=kind||'invoice';const EST=kind==='estimate';
+  const w=window.open('','_blank');
+  if(!w){toast('Pop-up blocked — allow pop-ups to print','');return}
+  const c=calcInvoice(inv);
+  const stText=EST?(inv.status||'draft'):invoiceStatus(inv);
+  const logoSrc=getBrandLogoSrc();
+  const co=COMPANY;
+  const P=invTheme();
+  const logoFull=brandLogoFull();
+  const itemsRows=(inv.items||[]).map(it=>{
+    const amt=Number(it.qty||0)*Number(it.rate||0);
+    return `<tr>
+      <td>${esc(it.desc||'')}</td>
+      <td class="num">${esc(String(it.qty??''))}</td>
+      <td class="num">${money(Number(it.rate||0))}</td>
+      <td class="num">${money(amt)}</td>
+    </tr>`;
+  }).join('');
+
+  w.document.write(`<!DOCTYPE html><html><head>
+    <meta charset="utf-8">
+    <title>${esc(inv.number||'Invoice')} — ${esc(j.name||'')}</title>
+    <style>
+      *{box-sizing:border-box;margin:0;padding:0}
+      body{font-family:Helvetica,Arial,sans-serif;color:#0a1f18;background:#fff;max-width:780px;margin:30px auto;padding:0 32px;font-size:13px;line-height:1.5}
+      .lh{display:flex;justify-content:space-between;align-items:flex-start;padding-bottom:18px;border-bottom:3px solid ${P.rule};margin-bottom:24px;gap:20px}
+      .lh-l{display:flex;align-items:center;gap:14px;flex:1}
+      .lh-l img{width:78px;height:78px;object-fit:contain}
+      .lh-l img.full{width:300px;height:auto;max-width:62%}
+      .lh-co{flex:1}
+      .lh-co h1{font-family:Georgia,serif;font-size:24px;font-weight:600;color:${P.primary};letter-spacing:0.01em;line-height:1.1;margin-bottom:4px}
+      .lh-co .tag{font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#666}
+      .lh-co .addr{font-size:11.5px;color:#555;margin-top:6px;line-height:1.5;white-space:pre-line}
+      .lh-r{text-align:right}
+      .lh-r .title{font-size:36px;font-weight:800;color:${P.primary};letter-spacing:0.04em;line-height:1}
+      .lh-r .num{font-size:13px;color:#555;margin-top:6px}
+      .lh-r .status{display:inline-block;margin-top:8px;font-size:10.5px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;padding:4px 12px;border-radius:20px;background:#fef3c7;color:#92400e}
+      .lh-r .status.paid{background:#dcfce7;color:#166534}
+      .lh-r .status.accepted{background:#dcfce7;color:#166534}
+      .lh-r .status.draft{background:#f1f5f9;color:#475569}
+      .lh-r .status.overdue{background:#fee2e2;color:#991b1b}
+      .lh-r .status.declined{background:#fee2e2;color:#991b1b}
+      .meta{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:24px}
+      .meta-box .lbl{font-size:9.5px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#888;margin-bottom:4px}
+      .meta-box .v{font-size:13px;color:#0a1f18;line-height:1.5}
+      .meta-box .v strong{display:block;font-size:14px;margin-bottom:1px}
+      table{width:100%;border-collapse:collapse;margin-bottom:18px}
+      thead th{text-align:left;font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#666;padding:8px 10px;background:#f0faf6;border-top:1px solid #ddd;border-bottom:1px solid #ddd}
+      th.num,td.num{text-align:right}
+      tbody td{padding:10px;border-bottom:1px solid #eee;font-size:13px;vertical-align:top}
+      tbody tr:last-child td{border-bottom:1px solid #ddd}
+      .totals{margin-left:auto;width:300px;margin-bottom:20px}
+      .totals .row{display:flex;justify-content:space-between;padding:5px 0;font-size:13px}
+      .totals .row .v{font-variant-numeric:tabular-nums;font-weight:600}
+      .totals .grand{padding:10px 0;border-top:2px solid ${P.rule};margin-top:6px;font-size:16px;font-weight:700;color:${P.primary}}
+      .totals .due{margin-top:8px;padding:10px 14px;background:#fef3c7;border-radius:6px;font-size:14px;font-weight:700;color:#92400e;display:flex;justify-content:space-between}
+      .totals .due.zero{background:#dcfce7;color:#166534}
+      .notes{margin-top:16px;padding:14px;background:#f7f9f8;border-left:3px solid ${P.notesBar};border-radius:6px;font-size:12px;color:#3d6358;line-height:1.6}
+      .notes .lbl{font-size:9.5px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:${P.primary};margin-bottom:5px}
+      .terms{margin-top:14px;font-size:11px;color:#777;line-height:1.6;white-space:pre-line}
+      .ft{margin-top:28px;padding-top:14px;border-top:1px solid #ddd;text-align:center;font-size:10.5px;color:#888;letter-spacing:0.04em}
+      .inv-photos-doc{margin-top:22px;padding-top:16px;border-top:1px solid #ddd}
+      .inv-photos-doc .ip-hd{font-size:9.5px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#888;margin-bottom:12px}
+      .ip-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+      .ip-grid figure{border:1px solid #eee;border-radius:6px;overflow:hidden;page-break-inside:avoid;break-inside:avoid}
+      .ip-grid img{width:100%;height:auto;display:block}
+      .ip-grid figcaption{font-size:11px;color:#555;padding:6px 8px}
+      @media print{body{margin:0;padding:18mm 16mm;max-width:none}.no-print{display:none}}
+      .print-bar{position:fixed;top:12px;right:12px;display:flex;gap:8px}
+      .print-bar button{padding:8px 16px;background:${P.primary};color:#fff;border:none;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;font-family:Helvetica,sans-serif}
+      .print-bar button.alt{background:#fff;color:${P.primary};border:1.5px solid ${P.primary}}
+    </style></head><body>
+    <div class="no-print print-bar">
+      <button class="alt" onclick="window.close()">Close</button>
+      <button onclick="window.print()">Print / Save PDF</button>
+    </div>
+    <header class="lh">
+      <div class="lh-l">
+        ${logoFull
+          ?`<img class="full" src="${logoFull}" alt="${esc(co.name||'')}">
+        <div class="lh-co"><div class="addr">${esc(BIZ_ADDRESS)}${co.phone?'\n'+esc(co.phone):''}${co.email?' · '+esc(co.email):''}${co.website?'\n'+esc(co.website):''}</div></div>`
+          :`${logoSrc?`<img src="${logoSrc}" alt="">`:''}
+        <div class="lh-co">
+          <h1>${esc(co.name||'Waterfront Solutions')}</h1>
+          <div class="tag">${esc(co.license?'Lic. '+co.license:'Construction & Waterfront Services')}</div>
+          <div class="addr">${esc(BIZ_ADDRESS)}${co.phone?'\n'+esc(co.phone):''}${co.email?' · '+esc(co.email):''}${co.website?'\n'+esc(co.website):''}</div>
+        </div>`}
+      </div>
+      <div class="lh-r">
+        <div class="title">${EST?'ESTIMATE':'INVOICE'}</div>
+        <div class="num">${esc(inv.number||'')}</div>
+        <div class="status ${stText}">${stText}</div>
+      </div>
+    </header>
+    <section class="meta">
+      <div class="meta-box">
+        <div class="lbl">${EST?'Prepared For':'Bill To'}</div>
+        <div class="v"><strong>${esc(j.customerName||'Customer')}</strong>${j.billingAddress?'\n'+esc(j.billingAddress):(j.address?'\n'+esc(j.address):'')}${j.customerPhone?'\n'+esc(j.customerPhone):''}${j.customerEmail?'\n'+esc(j.customerEmail):''}</div>
+      </div>
+      <div class="meta-box">
+        <div class="lbl">Project</div>
+        <div class="v"><strong>${esc(j.name||'')}</strong>${j.address?'\n'+esc(j.address):''}</div>
+        <div style="margin-top:12px"><div class="lbl">${EST?'Estimate Date':'Invoice Date'}</div><div class="v">${fmtDate(inv.date)||''}</div></div>
+        ${inv.dueDate?`<div style="margin-top:8px"><div class="lbl">${EST?'Valid Until':'Due Date'}</div><div class="v">${fmtDate(inv.dueDate)}</div></div>`:''}
+      </div>
+    </section>
+    <table>
+      <thead><tr><th style="width:50%">Description</th><th class="num">Qty</th><th class="num">Rate</th><th class="num">Amount</th></tr></thead>
+      <tbody>${itemsRows||'<tr><td colspan="4" style="text-align:center;color:#999;padding:20px">No line items</td></tr>'}</tbody>
+    </table>
+    <div class="totals">
+      <div class="row"><span>Subtotal</span><span class="v">${money(c.sub)}</span></div>
+      <div class="row"><span>Tax (${Number(inv.taxRate||0)}%)</span><span class="v">${money(c.tax)}</span></div>
+      <div class="row grand"><span>Total</span><span class="v">${money(c.total)}</span></div>
+      ${EST
+        ?`<div class="due zero"><span>Estimated Total${inv.dueDate?' · valid until '+fmtDate(inv.dueDate):''}</span><span class="v">${money(c.total)}</span></div>`
+        :`${c.paid>0?`<div class="row"><span>Paid</span><span class="v">-${money(c.paid)}</span></div>`:''}
+      <div class="due ${c.balance<=0.005?'zero':''}"><span>${c.balance<=0.005?'Paid in Full':'Balance Due'}</span><span class="v">${money(Math.max(0,c.balance))}</span></div>`}
+    </div>
+    ${inv.notes?`<div class="notes"><div class="lbl">Notes</div>${esc(inv.notes).replace(/\n/g,'<br>')}</div>`:''}
+    ${inv.terms?`<div class="terms">${esc(inv.terms)}</div>`:''}
+    ${(inv.photos&&inv.photos.length)?`<div class="inv-photos-doc"><div class="ip-hd">Photos</div><div class="ip-grid">${inv.photos.map(p=>`<figure><img src="${p.url}" alt="">${p.caption?`<figcaption>${esc(p.caption)}</figcaption>`:''}</figure>`).join('')}</div></div>`:''}
+    <div class="ft">${esc(co.name||'Waterfront Solutions')}${co.phone?' · '+esc(co.phone):''}${co.email?' · '+esc(co.email):''} — Thank you for your business</div>
+    </body></html>`);
+  w.document.close();
+}
+
+// ══ Company / settings modal ══
+function showSettingsModal(){
+  const c={...COMPANY};
+  $('modal-root').innerHTML=`<div class="modal-bd" id="mbd" role="dialog" aria-modal="true" aria-label="Settings"><div class="modal"><div class="modal-handle"></div>
+    <div class="modal-head"><div class="modal-title">Settings</div><button class="modal-close" id="mc" aria-label="Close"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button></div>
+    <div class="modal-body">
+      <div class="form-group"><label class="form-label">Your Name (appears on notes & activity)</label><input class="form-input" id="set-user" value="${esc(S.user||'')}" placeholder="Your name"></div>
+      <div style="margin:14px 0 10px;padding-top:14px;border-top:1px solid var(--border)"><div class="form-label" style="font-size:12px">Company Info (used on invoices)</div></div>
+      <div class="form-group"><label class="form-label">Company Name</label><input class="form-input" id="set-co-name" value="${esc(c.name||'')}"></div>
+      <div class="form-group"><label class="form-label">Address</label><textarea class="form-textarea" id="set-co-addr" style="min-height:56px">${esc(c.address||'')}</textarea></div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Phone</label><input class="form-input" type="tel" id="set-co-phone" value="${esc(c.phone||'')}"></div>
+        <div class="form-group"><label class="form-label">Email</label><input class="form-input" type="email" id="set-co-email" value="${esc(c.email||'')}"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Website</label><input class="form-input" id="set-co-web" value="${esc(c.website||'')}"></div>
+        <div class="form-group"><label class="form-label">License #</label><input class="form-input" id="set-co-lic" value="${esc(c.license||'')}"></div>
+      </div>
+      <div class="form-group"><label class="form-label">Default Tax Rate (%)</label><input class="form-input" type="number" step="0.01" id="set-co-tax" value="${esc(c.taxRate||'')}"></div>
+      <div class="form-group"><label class="form-label">Default Invoice Terms</label><textarea class="form-textarea" id="set-co-terms">${esc(c.terms||'')}</textarea></div>
+      <div style="margin:14px 0 10px;padding-top:14px;border-top:1px solid var(--border)"><div class="form-label" style="font-size:12px">Email sending (Gmail API)</div></div>
+      <div id="gm-panel" style="margin-bottom:6px"></div>
+      <div style="margin:14px 0 10px;padding-top:14px;border-top:1px solid var(--border)"><div class="form-label" style="font-size:12px">Team Access &amp; Roles</div></div>
+      ${(FB_AUTH_ON||accessEnabled())
+        ? `<div class="tt-hint" style="margin-bottom:10px">Signed in as <strong>${esc(SESSION?SESSION.name:'?')}</strong> · ${esc(SESSION?SESSION.role:'')}${SESSION&&!canSeeAll(SESSION)?' · '+esc((COMPANIES[SESSION.company]||{}).label||SESSION.company):' · all companies'}</div>
+           <div style="display:flex;gap:8px;flex-wrap:wrap">${isOwnerRole(SESSION)?'<button class="btn-sm" id="set-access" type="button">Manage team access</button>':''}<button class="btn-sm" id="set-signout" type="button">Sign out</button></div>`
+        : `<div class="tt-hint" style="margin-bottom:10px">Access control is <strong>off</strong> — anyone can open any company. Turn it on to lock each worker to their company and give owners &amp; managers the full view.</div>
+           <button class="btn-sm" id="set-access" type="button">Set up team access</button>`}
+    </div>
+    <div class="modal-foot"><button class="btn-cancel" id="btn-cx">Cancel</button><button class="btn-save" id="btn-set-save">Save</button></div>
+  </div></div>`;
+  $('mc').onclick=$('btn-cx').onclick=closeModal;
+  $('mbd').onclick=e=>{if(e.target===e.currentTarget)closeModal()};
+  $('set-access')?.addEventListener('click',()=>{closeModal();showAccessModal()});
+  $('set-signout')?.addEventListener('click',()=>{if(confirm('Sign out of this device?'))signOut()});
+  function renderGmailPanel(){
+    const cfg=gmailLoad();const connected=gmailConnected();
+    const okOrigin=gmailOriginOk();const reason=gmailOriginReason();
+    const originBlock=okOrigin
+      ? `<div class="tt-hint" style="margin:8px 0;padding:8px 10px;background:var(--surface-2,#f5f5f5);border-radius:8px;font-size:12px">Authorized JavaScript origin to paste into Google Cloud Console:<br><strong style="font-family:monospace;font-size:12.5px;user-select:all">${esc(location.origin)}</strong></div>`
+      : `<div class="tt-hint" style="margin:8px 0;padding:10px;background:#fff4e5;border-left:3px solid #d97706;border-radius:6px;font-size:12px;color:#7c2d12"><strong>Can't connect from this URL.</strong><br>${esc(reason)}<br><br>Current origin: <span style="font-family:monospace">${esc(location.origin)}</span></div>`;
+    $('gm-panel').innerHTML=connected
+      ? `<div class="tt-hint" style="margin-bottom:8px">Connected as <strong>${esc(cfg.email||'(unknown account)')}</strong>. "Email PDF" sends the branded invoice/estimate + PDF in one click from this account's Sent folder.</div>
+         ${originBlock}
+         <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn-sm" id="gm-reconnect" type="button"${okOrigin?'':' disabled'}>Reconnect</button><button class="btn-sm" id="gm-disconnect" type="button">Disconnect</button></div>`
+      : `<div class="tt-hint" style="margin-bottom:10px">Connect a Gmail account once and "Email PDF" becomes true one-click for this company.<br><a href="#" id="gm-help" style="color:var(--green-700);text-decoration:underline">Setup steps (~10 min, one-time)</a></div>
+         ${originBlock}
+         <div class="form-group"><label class="form-label">OAuth Client ID</label><input class="form-input" id="gm-clientid" value="${esc(cfg.clientId||'')}" placeholder="123456789-abc.apps.googleusercontent.com" spellcheck="false" autocapitalize="off" style="font-family:monospace;font-size:12.5px"${okOrigin?'':' disabled'}></div>
+         <button class="btn-sm" id="gm-connect" type="button"${okOrigin?'':' disabled title="Open this app over HTTPS (or localhost) to connect Gmail"'}>Connect Gmail</button>`;
+    $('gm-connect')?.addEventListener('click',async()=>{
+      const id=($('gm-clientid')?.value||'').trim();if(!id){toast('Paste your OAuth Client ID first','');return}
+      const btn=$('gm-connect');btn.disabled=true;const oldT=btn.textContent;btn.textContent='Opening Google…';
+      try{await gmailConnect(id);toast('Gmail connected');renderGmailPanel()}
+      catch(e){toast('Connect failed: '+((e&&e.message)||e),'');btn.disabled=false;btn.textContent=oldT}
+    });
+    $('gm-reconnect')?.addEventListener('click',async()=>{
+      const cfg=gmailLoad();if(!cfg.clientId)return;
+      try{await gmailConnect(cfg.clientId);toast('Reconnected');renderGmailPanel()}catch(e){toast('Reconnect failed: '+((e&&e.message)||e),'')}
+    });
+    $('gm-disconnect')?.addEventListener('click',()=>{if(!confirm('Disconnect Gmail from this company? Sending will fall back to the share/download flow.'))return;gmailDisconnect();toast('Disconnected');renderGmailPanel()});
+    $('gm-help')?.addEventListener('click',(e)=>{e.preventDefault();alert('One-time Gmail setup (~10 min):\n\n1. Open console.cloud.google.com and create a project (or reuse one).\n2. APIs & Services → Library → enable "Gmail API".\n3. APIs & Services → OAuth consent screen → External → fill app name + your email → add scope https://www.googleapis.com/auth/gmail.send → add your gmail address as a Test user → save. (Stay in Testing mode; no Google verification needed for personal use.)\n4. APIs & Services → Credentials → Create Credentials → OAuth client ID → Web application.\n   Authorized JavaScript origins: paste EXACTLY this (HTTPS, no trailing slash, no path):\n   '+location.origin+'\n   Google requires HTTPS or localhost. file:// and plain http:// (non-localhost) will be rejected.\n5. Copy the Client ID and paste it here, then click Connect Gmail.')});
+  }
+  renderGmailPanel();
+  $('btn-set-save').onclick=()=>{
+    const newUser=$('set-user').value.trim();
+    if(newUser!==S.user){S.user=newUser;localStorage.setItem(LS('user'),S.user)}
+    COMPANY={
+      name:$('set-co-name').value.trim()||COMPANY_DEFAULT.name,
+      address:$('set-co-addr').value.trim(),
+      phone:$('set-co-phone').value.trim(),
+      email:$('set-co-email').value.trim(),
+      website:$('set-co-web').value.trim(),
+      license:$('set-co-lic').value.trim(),
+      taxRate:$('set-co-tax').value,
+      terms:$('set-co-terms').value.trim(),
+    };
+    saveCompany(COMPANY);
+    closeModal();render();toast('Settings saved');
+  };
+}
+
+// ══ Company Switcher ══
+function showCompanySwitcher(){
+  if(gateOn()&&!canSeeAll(SESSION)){toast('You only have access to '+ACTIVE_CO.label,'');return}
+  const cur=OWNER_MODE?'owner':COMPANY_ID;
+  const rows=Object.values(COMPANIES).map(co=>`
+    <button class="co-pick${co.id===cur?' active':''}" data-co="${esc(co.id)}">
+      <div><div class="co-pick-name">${esc(co.label)}</div><div class="co-pick-tag">${esc(co.tag)}</div></div>
+      ${co.id===cur?'<span class="co-pick-badge">Current</span>':''}
+    </button>`).join('');
+  const ownerActive=cur==='owner';
+  $('modal-root').innerHTML=`<div class="modal-bd" id="mbd" role="dialog" aria-modal="true" aria-label="Choose workspace"><div class="modal"><div class="modal-handle"></div>
+    <div class="modal-head"><div class="modal-title">Choose workspace</div><button class="modal-close" id="mc" aria-label="Close"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button></div>
+    <div class="modal-body">
+      <p style="font-size:13px;color:var(--text-2);margin-bottom:16px;line-height:1.5">Each company keeps completely separate jobs, invoices, schedule, photos, and settings. Owner is a cross-company analytics workspace. Picking any one reloads the app.</p>
+      ${rows}
+      <button class="co-pick${ownerActive?' active':''}" data-co="owner" style="border-color:var(--gold);background:${ownerActive?'var(--gold-light)':'var(--surface)'}">
+        <div><div class="co-pick-name">Owner</div><div class="co-pick-tag">Analytics &amp; reports across all companies</div></div>
+        ${ownerActive?'<span class="co-pick-badge">Current</span>':'<span class="co-pick-badge">All</span>'}
+      </button>
+    </div>
+  </div></div>`;
+  $('mc').onclick=closeModal;
+  $('mbd').onclick=e=>{if(e.target===e.currentTarget)closeModal()};
+  document.querySelectorAll('[data-co]').forEach(b=>b.onclick=()=>{
+    const id=b.dataset.co;
+    if(id===cur){closeModal();return}
+    try{localStorage.setItem('jt_company',id)}catch(e){}
+    location.reload();
+  });
+}
+
+// ══ Access control: lock screen + team/role manager ══
+function showLockScreen(msg){
+  let root=document.getElementById('lock-root');
+  if(!root){root=document.createElement('div');root.id='lock-root';document.body.appendChild(root)}
+  root.innerHTML=`<div class="lock-bd"><div class="lock-card">
+    <div class="lock-ico"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"/></svg></div>
+    <div class="lock-title">Enter your PIN</div>
+    <div class="lock-sub">Sign in to your workspace</div>
+    <input id="lock-pin" class="lock-pin" type="password" inputmode="numeric" autocomplete="off" maxlength="8" placeholder="••••" aria-label="PIN">
+    <div class="lock-err" id="lock-err">${msg?esc(msg):''}</div>
+    <button class="lock-btn" id="lock-go" type="button">Sign In</button>
+  </div></div>`;
+  const pin=document.getElementById('lock-pin');setTimeout(()=>{try{pin.focus()}catch(e){}},60);
+  function tryIn(){
+    const v=(document.getElementById('lock-pin').value||'').trim();
+    const m=v?(ACCESS.members||[]).find(x=>String(x.pin)===v):null;
+    if(!m){document.getElementById('lock-err').textContent='Incorrect PIN. Try again.';const p=document.getElementById('lock-pin');p.value='';p.focus();return}
+    try{localStorage.setItem(SESSION_KEY,m.id)}catch(e){}
+    location.reload();
+  }
+  document.getElementById('lock-go').onclick=tryIn;
+  pin.onkeydown=e=>{if(e.key==='Enter')tryIn()};
+}
+function signOut(){if(FB_AUTH_ON){try{firebase.auth().signOut()}catch(e){}return}try{localStorage.removeItem(SESSION_KEY)}catch(e){}location.reload()}
+
+let ACCESS_DRAFT=null;
+function showAccessModal(){
+  if(FB_AUTH_ON){return showFbUserAdmin();}
+  if(accessEnabled()&&!isOwnerRole(SESSION)){toast('Only owners can manage access','');return}
+  ACCESS_DRAFT=ACCESS?JSON.parse(JSON.stringify(ACCESS)):{enabled:false,members:[]};
+  ACCESS_DRAFT.members=ACCESS_DRAFT.members||[];
+  renderAccessModal();
+}
+function renderAccessModal(){
+  const a=ACCESS_DRAFT;
+  const coOpts=Object.values(COMPANIES).map(co=>`<option value="${esc(co.id)}">${esc(co.label)}</option>`).join('');
+  const rows=a.members.length?a.members.map((m,i)=>`<div class="acc-row" data-acc="${i}">
+    <div class="acc-ava">${initials(m.name)}</div>
+    <div class="acc-info"><div class="acc-name">${esc(m.name)} <span class="acc-role acc-role-${esc(m.role)}">${esc(m.role)}</span></div>
+      <div class="acc-meta">${canSeeAll(m)?'All companies':esc((COMPANIES[m.company]||{}).label||m.company)} · PIN ${esc(String(m.pin||''))}</div></div>
+    <button class="btn-remove" data-acc-del="${i}" type="button">Remove</button>
+  </div>`).join(''):'<p style="font-size:13px;color:var(--text-3);padding:4px 0">No people yet. Add at least one owner so you keep full access.</p>';
+  $('modal-root').innerHTML=`<div class="modal-bd" id="mbd" role="dialog" aria-modal="true" aria-label="Team access"><div class="modal"><div class="modal-handle"></div>
+    <div class="modal-head"><div class="modal-title">Team Access &amp; Roles</div><button class="modal-close" id="mc" aria-label="Close"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button></div>
+    <div class="modal-body">
+      <label class="acc-toggle"><input type="checkbox" id="acc-enabled" ${a.enabled?'checked':''}><span>Require a PIN to use the app (locks each worker to their company)</span></label>
+      <div class="member-list" style="margin-top:14px">${rows}</div>
+      <div style="margin:16px 0 8px;padding-top:14px;border-top:1px solid var(--border)"><div class="form-label" style="font-size:12px">Add person</div></div>
+      <div class="form-group"><label class="form-label">Name</label><input class="form-input" id="acc-name" placeholder="e.g. Mike Jones"></div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Role</label><select class="form-select" id="acc-role"><option value="worker">Worker — one company</option><option value="manager">Manager — all companies</option><option value="owner">Owner — all + manages access</option></select></div>
+        <div class="form-group" id="acc-co-wrap"><label class="form-label">Company</label><select class="form-select" id="acc-co">${coOpts}</select></div>
+      </div>
+      <div class="form-group"><label class="form-label">PIN (4–8 digits)</label><input class="form-input" id="acc-pin" inputmode="numeric" maxlength="8" placeholder="e.g. 1234"></div>
+      <button class="btn-sm" id="acc-add" type="button">+ Add person</button>
+      <div class="tt-hint" style="margin-top:14px">PINs are stored on the device for now (a soft gate). Real per-user logins arrive with Firebase sign-in — these names and roles carry over.</div>
+    </div>
+    <div class="modal-foot"><button class="btn-cancel" id="btn-cx">Cancel</button><button class="btn-save" id="acc-save">Save &amp; Apply</button></div>
+  </div></div>`;
+  $('mc').onclick=$('btn-cx').onclick=()=>{ACCESS_DRAFT=null;closeModal()};
+  $('mbd').onclick=e=>{if(e.target===e.currentTarget){ACCESS_DRAFT=null;closeModal()}};
+  const roleSel=$('acc-role'),coWrap=$('acc-co-wrap');
+  function syncCo(){coWrap.style.display=roleSel.value==='worker'?'':'none'}
+  roleSel.onchange=syncCo;syncCo();
+  $('acc-enabled').onchange=()=>{ACCESS_DRAFT.enabled=$('acc-enabled').checked};
+  document.querySelectorAll('[data-acc-del]').forEach(b=>b.onclick=()=>{ACCESS_DRAFT.members.splice(parseInt(b.dataset.accDel),1);renderAccessModal()});
+  $('acc-add').onclick=()=>{
+    const name=$('acc-name').value.trim();const role=$('acc-role').value;const pin=($('acc-pin').value||'').trim();const company=role==='worker'?$('acc-co').value:'all';
+    if(!name){toast('Enter a name','');return}
+    if(!/^\d{4,8}$/.test(pin)){toast('PIN must be 4–8 digits','');return}
+    if(ACCESS_DRAFT.members.some(m=>String(m.pin)===pin)){toast('That PIN is already used','');return}
+    ACCESS_DRAFT.members.push({id:'u_'+Date.now()+'_'+Math.random().toString(36).slice(2,6),name,role,company,pin});
+    renderAccessModal();
+  };
+  $('acc-save').onclick=()=>{
+    const a=ACCESS_DRAFT;
+    if(a.enabled){
+      if(!a.members.length){toast('Add at least one person first','');return}
+      if(!a.members.some(m=>m.role==='owner')){toast('Add at least one owner so you keep access','');return}
+    }
+    try{localStorage.setItem(ACCESS_KEY,JSON.stringify(a))}catch(e){}
+    ACCESS=a;
+    if(a.enabled){const me=a.members.find(m=>m.role==='owner');if(me){try{localStorage.setItem(SESSION_KEY,me.id)}catch(e){}}}
+    else{try{localStorage.removeItem(SESSION_KEY)}catch(e){}}
+    ACCESS_DRAFT=null;location.reload();
+  };
+}
+
+// Apply the active company's logo + color theme (logo/theme are optional;
+// Waterfront has none, so it keeps its original logo and green header).
+function applyCompanyBranding(){
+  if(ACTIVE_CO.logoSvg){
+    const img=document.querySelector('.brand-logo');
+    if(img){img.src='data:image/svg+xml;utf8,'+encodeURIComponent(ACTIVE_CO.logoSvg);img.alt=ACTIVE_CO.label;}
+  }
+  const t=ACTIVE_CO.theme;
+  if(t&&!document.getElementById('co-theme')){
+    let css='';
+    if(t.headerBg)css+='.header{background:'+t.headerBg+'}';
+    if(t.syncBg)css+='.sync-bar{background:'+t.syncBg+'}';
+    if(t.navActive)css+='.nav-btn.active{color:'+t.navActive+';border-bottom-color:'+t.navActive+'}';
+    if(css){const s=document.createElement('style');s.id='co-theme';s.textContent=css;document.head.appendChild(s);}
+  }
+}
+
+// ══ Command Palette ══
+let CMD={open:false,query:'',idx:0,items:[]};
+function cmdItems(){
+  const out=[];
+  // Views
+  [['dashboard','Home / Dashboard','home'],['jobs','Jobs','briefcase'],['schedule','Schedule','calendar'],['invoices','Invoices','invoice'],['referrals','Referrals','team'],['map','Map','map'],['reports','Reports','chart'],['activity','Activity','list'],['team','Team','team'],['time','Time','calendar'],['bank','Bank','chart']].forEach(([v,name,ico])=>{
+    out.push({type:'view',name:'Go to '+name,sub:'View',ico,run:()=>{S.view=v;S.detail=null;render()}});
+  });
+  // Actions
+  out.push({type:'action',name:'New Job',sub:'Create a job',ico:'plus',run:()=>showJobModal('add')});
+  out.push({type:'action',name:'New Invoice',sub:'Pick a job, then create invoice',ico:'invoice',run:()=>showJobPickerModal(jobId=>showInvoiceModal(jobId))});
+  out.push({type:'action',name:'New Estimate',sub:'Pick a job, then create an estimate',ico:'invoice',run:()=>showJobPickerModal(jobId=>showInvoiceModal(jobId,null,'estimate'))});
+  out.push({type:'action',name:'New Referral',sub:'Log a referred lead & payout',ico:'plus',run:()=>showReferralModal('add')});
+  out.push({type:'action',name:'Settings & Company Info',sub:'Edit name, logo, invoice defaults',ico:'kbd',run:showSettingsModal});
+  if(!gateOn()||canSeeAll(SESSION)){
+    out.push({type:'action',name:'Switch company / workspace',sub:'Waterfront · Manufactured Housing · Norris Lake · Owner',ico:'link',run:showCompanySwitcher});
+    if(!OWNER_MODE)out.push({type:'action',name:'Owner workspace',sub:'Analytics across all companies',ico:'chart',run:()=>{try{localStorage.setItem('jt_company','owner')}catch(e){};location.reload()}});
+  }
+  out.push({type:'action',name:'Export to CSV',sub:'Download all jobs',ico:'download',run:exportCSV});
+  out.push({type:'action',name:'Notifications',sub:'See your inbox',ico:'bell',run:showNotificationsModal});
+  out.push({type:'action',name:'Connect Team (Firebase)',sub:'Live sync setup',ico:'link',run:showSetupModal});
+  out.push({type:'action',name:'Keyboard Shortcuts',sub:'See all hotkeys',ico:'kbd',run:showShortcutsModal});
+  out.push({type:'action',name:'Undo last action',sub:'Reverse the most recent change',ico:'undo',run:undoLast});
+  // Jobs
+  jobs().forEach(j=>{
+    const sub=[j.customerName,j.address,spLabel(j.status)].filter(Boolean).join(' · ');
+    out.push({type:'job',name:j.name,sub,ico:'job',run:()=>{S.detail=j.id;S.view='jobs';S.detailTab='overview';render()}});
+  });
+  return out;
+}
+function cmdFilter(q){
+  const items=cmdItems();
+  if(!q)return items;
+  const ql=q.toLowerCase();
+  // Simple fuzzy: include if all query chars appear in order
+  const matches=items.map(it=>{
+    const hay=(it.name+' '+(it.sub||'')).toLowerCase();
+    let idx=0,score=0;
+    for(const ch of ql){
+      const f=hay.indexOf(ch,idx);
+      if(f<0)return null;
+      score+=(f-idx);idx=f+1;
+    }
+    return {it,score:score+(hay.startsWith(ql)?-100:0)};
+  }).filter(Boolean).sort((a,b)=>a.score-b.score);
+  return matches.map(m=>m.it);
+}
+const CMD_ICONS={
+  home:'<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75"/></svg>',
+  briefcase:'<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M20.25 14.15v4.25c0 1.094-.787 2.036-1.872 2.18-2.087.277-4.216.42-6.378.42s-4.291-.143-6.378-.42c-1.085-.144-1.872-1.086-1.872-2.18v-4.25m16.5 0a2.18 2.18 0 00.75-1.661V8.706c0-1.081-.768-2.015-1.837-2.175a48.114 48.114 0 00-3.413-.387m4.5 8.006c-.194.165-.42.295-.673.38A23.978 23.978 0 0112 15.75c-2.648 0-5.195-.429-7.577-1.22a2.016 2.016 0 01-.673-.38m0 0A2.18 2.18 0 013 12.489V8.706c0-1.081.768-2.015 1.837-2.175a48.111 48.111 0 013.413-.387m7.5 0V5.25A2.25 2.25 0 0013.5 3h-3a2.25 2.25 0 00-2.25 2.25v.894m7.5 0a48.667 48.667 0 00-7.5 0"/></svg>',
+  calendar:'<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25"/></svg>',
+  map:'<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 6.75V15m6-6v8.25m.503 3.498l4.875-2.437c.381-.19.622-.58.622-1.006V4.82c0-.836-.88-1.38-1.628-1.006l-3.869 1.934c-.317.159-.69.159-1.006 0L9.503 3.252a1.125 1.125 0 00-1.006 0L3.622 5.689C3.24 5.88 3 6.27 3 6.695V19.18c0 .836.88 1.38 1.628 1.006l3.869-1.934c.317-.159.69-.159 1.006 0l4.994 2.497c.317.158.69.158 1.006 0z"/></svg>',
+  chart:'<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75z"/></svg>',
+  list:'<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5M5.625 4.5h12.75a1.875 1.875 0 010 3.75H5.625a1.875 1.875 0 010-3.75z"/></svg>',
+  team:'<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952"/></svg>',
+  plus:'<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>',
+  download:'<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>',
+  bell:'<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31"/></svg>',
+  link:'<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757"/></svg>',
+  kbd:'<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5v10.5H3.75z"/></svg>',
+  undo:'<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3"/></svg>',
+  job:'<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12"/></svg>',
+  invoice:'<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 3h6m-9-9h12v18l-3-2-3 2-3-2-3 2V6z"/></svg>',
+};
+function showCommandPalette(){
+  CMD.open=true;CMD.query='';CMD.idx=0;CMD.items=cmdItems();
+  renderCmd();
+  setTimeout(()=>{const i=document.getElementById('cmd-input');if(i)i.focus()},10);
+}
+function hideCommandPalette(){CMD.open=false;document.getElementById('cmd-root').innerHTML=''}
+function renderCmd(){
+  if(!CMD.open)return;
+  const groups={action:[],view:[],job:[]};
+  CMD.items.forEach((it,i)=>groups[it.type].push({...it,gi:i}));
+  const groupOrder=[['action','Actions'],['view','Views'],['job','Jobs']];
+  let html='';
+  let visIdx=0;
+  groupOrder.forEach(([k,label])=>{
+    if(!groups[k].length)return;
+    html+=`<div class="cmd-group-hd">${label}</div>`;
+    groups[k].slice(0,20).forEach(it=>{
+      const sel=visIdx===CMD.idx?'sel':'';
+      html+=`<div class="cmd-item ${sel}" data-cmd-idx="${visIdx}">
+        <div class="cmd-item-icon">${CMD_ICONS[it.ico]||CMD_ICONS.job}</div>
+        <div class="cmd-item-body"><div class="cmd-item-name">${esc(it.name)}</div>${it.sub?`<div class="cmd-item-sub">${esc(it.sub)}</div>`:''}</div>
+      </div>`;
+      visIdx++;
+    });
+  });
+  if(!html)html=`<div class="cmd-empty">No matches for “${esc(CMD.query)}”</div>`;
+  document.getElementById('cmd-root').innerHTML=`<div class="cmd-bd" id="cmd-bd" role="dialog" aria-label="Command palette" aria-modal="true">
+    <div class="cmd-box">
+      <div class="cmd-input-wrap">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 15.803a7.5 7.5 0 0010.607 0z"/></svg>
+        <input id="cmd-input" class="cmd-input" placeholder="Search jobs, run commands…" value="${esc(CMD.query)}" aria-label="Search" autocomplete="off">
+        <span class="cmd-kbd">ESC</span>
+      </div>
+      <div class="cmd-results" id="cmd-results">${html}</div>
+      <div class="cmd-foot">
+        <span><span class="cmd-kbd">↑</span><span class="cmd-kbd">↓</span> navigate</span>
+        <span><span class="cmd-kbd">↵</span> select</span>
+        <span><span class="cmd-kbd">ESC</span> close</span>
+      </div>
+    </div>
+  </div>`;
+  const inp=document.getElementById('cmd-input');
+  inp.oninput=()=>{CMD.query=inp.value;CMD.items=cmdFilter(CMD.query);CMD.idx=0;renderCmd();setTimeout(()=>document.getElementById('cmd-input').focus(),0);inp.value;document.getElementById('cmd-input').value=CMD.query;document.getElementById('cmd-input').setSelectionRange(CMD.query.length,CMD.query.length)};
+  document.getElementById('cmd-bd').onclick=e=>{if(e.target.id==='cmd-bd')hideCommandPalette()};
+  document.querySelectorAll('[data-cmd-idx]').forEach(el=>el.onclick=()=>{
+    const i=parseInt(el.dataset.cmdIdx);CMD.idx=i;runCmd();
+  });
+}
+function runCmd(){
+  // Flatten in same order as render
+  const groups={action:[],view:[],job:[]};
+  CMD.items.forEach(it=>groups[it.type].push(it));
+  const ordered=[...groups.action,...groups.view,...groups.job.slice(0,20)];
+  const it=ordered[CMD.idx];
+  if(!it)return;
+  hideCommandPalette();
+  it.run();
+}
+
+// ══ Keyboard shortcuts modal ══
+function showShortcutsModal(){
+  const rows=[
+    ['Open command palette',['Ctrl','K'],['⌘','K']],
+    ['New job',['N']],
+    ['Search this view',['/'],],
+    ['Go to Dashboard',['G','D']],
+    ['Go to Jobs',['G','J']],
+    ['Go to Schedule',['G','S']],
+    ['Go to Invoices',['G','I']],
+    ['Go to Map',['G','M']],
+    ['Go to Reports',['G','R']],
+    ['Notifications',['B']],
+    ['Undo last action',['Ctrl','Z'],['⌘','Z']],
+    ['Show this help',['?']],
+    ['Close modal / palette',['ESC']],
+  ];
+  $('modal-root').innerHTML=`<div class="modal-bd" id="mbd" role="dialog" aria-label="Keyboard shortcuts" aria-modal="true"><div class="modal"><div class="modal-handle"></div>
+    <div class="modal-head"><div class="modal-title">Keyboard Shortcuts</div><button class="modal-close" id="mc" aria-label="Close"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button></div>
+    <div class="modal-body">
+      <p style="font-size:12.5px;color:var(--text-2);margin-bottom:14px;line-height:1.5">Speed up everyday actions. Shortcuts work anywhere except in text fields.</p>
+      <div class="kbd-grid">
+        ${rows.map(r=>`<div class="kbd-row"><div class="kbd-row-label">${esc(r[0])}</div><div class="kbd-keys">${r[1].map(k=>'<kbd>'+esc(k)+'</kbd>').join('')}</div></div>`).join('')}
+      </div>
+    </div>
+  </div></div>`;
+  $('mc').onclick=closeModal;
+  $('mbd').onclick=e=>{if(e.target===e.currentTarget)closeModal()};
+}
+
+// ══ Voice dictation (Web Speech API) ══
+const VOICE={rec:null,active:null};
+function supportsVoice(){return!!(window.SpeechRecognition||window.webkitSpeechRecognition)}
+function startVoice(targetEl,btn){
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){toast('Voice not supported in this browser','');return}
+  if(VOICE.rec){stopVoice();return}
+  const rec=new SR();
+  rec.continuous=true;rec.interimResults=true;rec.lang='en-US';
+  VOICE.rec=rec;VOICE.active=btn;
+  btn.classList.add('listening');btn.setAttribute('aria-pressed','true');
+  const initial=targetEl.value;
+  let final='';
+  rec.onresult=e=>{
+    let interim='';
+    for(let i=e.resultIndex;i<e.results.length;i++){
+      const r=e.results[i];
+      if(r.isFinal)final+=r[0].transcript;else interim+=r[0].transcript;
+    }
+    targetEl.value=(initial?initial+(initial.endsWith(' ')?'':' '):'')+final+interim;
+  };
+  rec.onerror=e=>{toast('Voice error: '+e.error,'');stopVoice()};
+  rec.onend=()=>{stopVoice()};
+  try{rec.start()}catch(e){toast('Could not start mic','');stopVoice()}
+}
+function stopVoice(){
+  if(VOICE.rec){try{VOICE.rec.stop()}catch(e){}VOICE.rec=null}
+  if(VOICE.active){VOICE.active.classList.remove('listening');VOICE.active.setAttribute('aria-pressed','false');VOICE.active=null}
+}
+function micButton(targetSelector){
+  if(!supportsVoice())return'';
+  return `<button type="button" class="mic-btn" data-mic="${targetSelector}" title="Voice dictation" aria-label="Start voice dictation" aria-pressed="false">
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 18.75a6 6 0 006-6v-1.5m-6 7.5a6 6 0 01-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 01-3-3V4.5a3 3 0 116 0v8.25a3 3 0 01-3 3z"/></svg>
+  </button>`;
+}
+function wireMicButtons(){
+  document.querySelectorAll('[data-mic]').forEach(btn=>{
+    btn.onclick=e=>{
+      e.preventDefault();
+      const sel=btn.dataset.mic;
+      const target=document.querySelector(sel);
+      if(!target){toast('Field not found','');return}
+      startVoice(target,btn);
+    };
+  });
+}
+
+// ══ Global keyboard ══
+let KBD_BUFFER='';let KBD_BUFFER_T=null;
+function onKey(e){
+  // Skip if a modal command palette is open (handled separately)
+  if(CMD.open){
+    if(e.key==='Escape'){e.preventDefault();hideCommandPalette();return}
+    if(e.key==='ArrowDown'){e.preventDefault();CMD.idx=Math.min(CMD.idx+1,Math.max(0,countCmdVisible()-1));renderCmd();const inp=document.getElementById('cmd-input');if(inp){inp.focus();inp.setSelectionRange(inp.value.length,inp.value.length)}return}
+    if(e.key==='ArrowUp'){e.preventDefault();CMD.idx=Math.max(0,CMD.idx-1);renderCmd();const inp=document.getElementById('cmd-input');if(inp){inp.focus();inp.setSelectionRange(inp.value.length,inp.value.length)}return}
+    if(e.key==='Enter'){e.preventDefault();runCmd();return}
+    return;
+  }
+  // Cmd/Ctrl+K opens palette regardless
+  if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'){e.preventDefault();showCommandPalette();return}
+  // Cmd/Ctrl+Z undo
+  if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='z'&&!e.shiftKey){
+    if(!isTyping(e)){e.preventDefault();undoLast();return}
+  }
+  // ESC closes any modal
+  if(e.key==='Escape'){
+    if($('modal-root').innerHTML){closeModal();return}
+    if($('fs-root').innerHTML){$('fs-root').innerHTML='';return}
+  }
+  // Don't trigger single-letter shortcuts while typing
+  if(isTyping(e))return;
+  const k=e.key;
+  if(OWNER_MODE){if(k==='?'){e.preventDefault();showShortcutsModal()}return}
+  if(k==='/'){e.preventDefault();const s=document.getElementById('search-in');if(s){s.focus();s.select()}else{showCommandPalette()};return}
+  if(k==='n'||k==='N'){e.preventDefault();showJobModal('add');return}
+  if(k==='?'){e.preventDefault();showShortcutsModal();return}
+  if(k==='b'||k==='B'){e.preventDefault();showNotificationsModal();return}
+  // g + (d/j/s/m/r) go-to
+  if(k==='g'||k==='G'){KBD_BUFFER='g';clearTimeout(KBD_BUFFER_T);KBD_BUFFER_T=setTimeout(()=>KBD_BUFFER='',1200);return}
+  if(KBD_BUFFER==='g'){
+    const map={d:'dashboard',j:'jobs',s:'schedule',i:'invoices',m:'map',r:'reports',a:'activity',t:'team'};
+    const target=map[k.toLowerCase()];
+    if(target){KBD_BUFFER='';clearTimeout(KBD_BUFFER_T);S.view=target;S.detail=null;render();e.preventDefault()}
+  }
+}
+function isTyping(e){
+  const t=e.target;
+  if(!t)return false;
+  const tag=(t.tagName||'').toLowerCase();
+  if(tag==='input'||tag==='textarea'||tag==='select')return true;
+  if(t.isContentEditable)return true;
+  return false;
+}
+function countCmdVisible(){
+  const groups={action:0,view:0,job:0};
+  CMD.items.forEach(it=>groups[it.type]++);
+  return groups.action+groups.view+Math.min(20,groups.job);
+}
+
+// ══ Handlers ══
+function attachHandlers(){
+  document.querySelectorAll('.nav-btn').forEach(b=>{
+    b.onclick=()=>{S.view=b.dataset.view;S.detail=null;render()}
+  });
+  $('user-btn').onclick=showSettingsModal;
+  $('setup-link').onclick=showSetupModal;
+  const _bco=$('brand-co');if(_bco)_bco.textContent=OWNER_MODE?'All Companies':ACTIVE_CO.label;
+  const _bsw=$('brand-switch');if(_bsw){if(gateOn()&&!canSeeAll(SESSION)){_bsw.style.display='none';}else{_bsw.onclick=showCompanySwitcher;}}
+  const _bnk=document.querySelector('.nav-btn[data-view="bank"]');if(_bnk&&gateOn()&&!isOwnerRole(SESSION))_bnk.style.display='none';
+  $('owner-refresh')?.addEventListener('click',refreshOwnerData);
+  document.querySelectorAll('[data-view-company]').forEach(b=>b.onclick=()=>{
+    const id=b.dataset.viewCompany;
+    try{localStorage.setItem('jt_company',id)}catch(e){}
+    location.reload();
+  });
+  $('bell-btn')?.addEventListener('click',showNotificationsModal);
+  $('cmd-btn')?.addEventListener('click',showCommandPalette);
+  $('fab')?.addEventListener('click',()=>showJobModal('add'));
+  $('btn-add-ref')?.addEventListener('click',()=>showReferralModal('add'));
+  $('btn-add-ref2')?.addEventListener('click',()=>showReferralModal('add'));
+  document.querySelectorAll('[data-ref-open]').forEach(el=>el.onclick=()=>showReferralModal('edit',S.referrals[el.dataset.refOpen]));
+  document.querySelectorAll('[data-ref-paid]').forEach(b=>b.onclick=async e=>{e.stopPropagation();const r=S.referrals[b.dataset.refPaid];if(!r)return;r.payoutStatus='paid';if(!r.paidAt)r.paidAt=dateKey(new Date());await writeReferral(r);render();toast('Marked paid')});
+  document.querySelectorAll('[data-ref-filter]').forEach(c=>c.onclick=()=>{S.refFilter=c.dataset.refFilter;render()});
+
+  // Sort menu
+  $('btn-sort')?.addEventListener('click',e=>{e.stopPropagation();S.sortOpen=!S.sortOpen;render()});
+  document.querySelectorAll('[data-sort]').forEach(el=>{
+    el.onclick=()=>{S.sort=el.dataset.sort;localStorage.setItem(LS('sort'),S.sort);S.sortOpen=false;render();toast('Sorted by '+el.textContent.trim().toLowerCase())};
+    el.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();el.click()}};
+  });
+  if(S.sortOpen){
+    // Click outside closes
+    setTimeout(()=>{
+      const handler=e=>{
+        if(!e.target.closest('.sort-wrap')){S.sortOpen=false;document.removeEventListener('click',handler);render()}
+      };
+      document.addEventListener('click',handler);
+    },0);
+  }
+
+  // Bulk mode
+  $('btn-bulk')?.addEventListener('click',()=>{S.bulkMode=!S.bulkMode;if(!S.bulkMode)S.bulkSel.clear();render()});
+  $('bulk-delete')?.addEventListener('click',async()=>{
+    const ids=Array.from(S.bulkSel);
+    if(!confirm('Delete '+ids.length+' job(s)? This can be undone right after.'))return;
+    const backup=ids.map(id=>S.jobs[id]).filter(Boolean).map(j=>JSON.parse(JSON.stringify(j)));
+    for(const id of ids){await deleteJobDB(id)}
+    await logAct('deleted '+ids.length+' job(s)','');
+    S.bulkSel.clear();S.bulkMode=false;render();
+    UNDO.push(async()=>{for(const j of backup){await writeJob(j)}render();toast('Restored '+backup.length+' job(s)')});
+    toast('Deleted '+ids.length+' job(s)','undo',()=>{UNDO.pop()();});
+  });
+  $('bulk-star')?.addEventListener('click',async()=>{
+    const ids=Array.from(S.bulkSel);
+    // Pin if any not pinned, else unpin all
+    const anyUnpinned=ids.some(id=>!S.jobs[id]?.favorite);
+    for(const id of ids){const j=S.jobs[id];if(j){j.favorite=anyUnpinned;await writeJob(j)}}
+    render();toast((anyUnpinned?'Pinned ':'Unpinned ')+ids.length+' job(s)');
+  });
+  $('bulk-status')?.addEventListener('click',async()=>{
+    const choice=prompt('Set status to: lead / active / hold / complete','active');
+    if(!choice||!['lead','active','hold','complete'].includes(choice.trim())){toast('Invalid status','');return}
+    const ids=Array.from(S.bulkSel);
+    for(const id of ids){const j=S.jobs[id];if(j){j.status=choice.trim();if(choice.trim()==='complete'){j.progress=100;j.completedAt=j.completedAt||Date.now()}await writeJob(j)}}
+    render();toast('Updated '+ids.length+' job(s)');
+  });
+  $('bulk-assign')?.addEventListener('click',async()=>{
+    const opts=S.members.length?S.members.join(', '):'(no team members yet)';
+    const choice=prompt('Assign to (must match a team member name): '+opts);
+    if(!choice)return;
+    const ids=Array.from(S.bulkSel);
+    for(const id of ids){const j=S.jobs[id];if(j){j.assigned=choice.trim();await writeJob(j)}}
+    render();toast('Assigned '+ids.length+' job(s)');
+  });
+
+  // Favorites star on cards
+  document.querySelectorAll('[data-fav]').forEach(b=>b.onclick=async e=>{
+    e.stopPropagation();
+    const id=b.dataset.fav;const j=S.jobs[id];if(!j)return;
+    j.favorite=!j.favorite;await writeJob(j);render();
+    toast(j.favorite?'Pinned to top':'Unpinned');
+  });
+
+  // Voice dictation mic buttons
+  wireMicButtons();
+
+  // Invoices (per-job tab)
+  $('btn-new-inv')?.addEventListener('click',()=>{const id=S.detail;if(id)showInvoiceModal(id)});
+  document.querySelectorAll('[data-inv-id]').forEach(row=>row.onclick=()=>{
+    const id=S.detail;if(id)showInvoiceModal(id,row.dataset.invId);
+  });
+  $('btn-new-est')?.addEventListener('click',()=>{const id=S.detail;if(id)showInvoiceModal(id,null,'estimate')});
+  document.querySelectorAll('[data-est-id]').forEach(row=>row.onclick=()=>{
+    const id=S.detail;if(id)showInvoiceModal(id,row.dataset.estId,'estimate');
+  });
+
+  // Invoices (global view)
+  $('btn-new-inv-global')?.addEventListener('click',()=>showJobPickerModal(jobId=>showInvoiceModal(jobId)));
+  $('inv-search')?.addEventListener('input',e=>{S.invSearch=e.target.value;render()});
+  $('inv-sort')?.addEventListener('change',e=>{S.invSort=e.target.value;render()});
+  document.querySelectorAll('[data-inv-filter]').forEach(c=>c.onclick=()=>{S.invFilter=c.dataset.invFilter;render()});
+  document.querySelectorAll('[data-open-inv]').forEach(el=>el.onclick=e=>{
+    e.stopPropagation();
+    const [jobId,invId]=el.dataset.openInv.split('|');
+    showInvoiceModal(jobId,invId);
+  });
+  document.querySelectorAll('[data-inv-print]').forEach(b=>b.onclick=e=>{
+    e.stopPropagation();
+    const [jobId,invId]=b.dataset.invPrint.split('|');
+    const j=S.jobs[jobId];if(!j)return;
+    const inv=(j.invoices||[]).find(i=>i.id===invId);
+    if(inv)printInvoice(j,inv);
+  });
+  document.querySelectorAll('[data-inv-paid]').forEach(b=>b.onclick=async e=>{
+    e.stopPropagation();
+    const [jobId,invId]=b.dataset.invPaid.split('|');
+    const j=S.jobs[jobId];if(!j)return;
+    const inv=(j.invoices||[]).find(i=>i.id===invId);
+    if(!inv)return;
+    const c=calcInvoice(inv);
+    const prevPaid=Number(inv.paid||0);
+    const prevStatus=inv.status;
+    inv.paid=c.total;inv.status='paid';
+    const tot=invoiceTotals(j);if(tot){j.invoiced=tot.total;j.paid=tot.paid}
+    await writeJob(j);await logAct('marked invoice '+(inv.number||'')+' paid on',j.name);render();
+    const restore=async()=>{
+      const jj=S.jobs[jobId];if(!jj)return;
+      const ii=(jj.invoices||[]).find(i=>i.id===invId);if(!ii)return;
+      ii.paid=prevPaid;ii.status=prevStatus;
+      const t=invoiceTotals(jj);if(t){jj.invoiced=t.total;jj.paid=t.paid}
+      await writeJob(jj);render();toast('Reverted');
+    };
+    UNDO.push(restore);
+    toast('Marked paid','undo',restore);
+  });
+  document.querySelectorAll('[data-inv-email]').forEach(b=>b.onclick=e=>{
+    e.stopPropagation();
+    const [jobId,invId]=b.dataset.invEmail.split('|');
+    const j=S.jobs[jobId];if(!j)return;
+    const inv=(j.invoices||[]).find(i=>i.id===invId);
+    if(inv)emailInvoice(j,inv);
+  });
+  // Reports
+  document.querySelectorAll('[data-range]').forEach(c=>c.onclick=()=>{S.reportRange=c.dataset.range;render()});
+  // Map
+  $('btn-geocode')?.addEventListener('click',geocodeAll);
+  $('btn-add-job')?.addEventListener('click',()=>showJobModal('add'));
+  $('btn-add-job2')?.addEventListener('click',()=>showJobModal('add'));
+  $('btn-export-csv')?.addEventListener('click',exportCSV);
+  $('btn-view-all-act')?.addEventListener('click',()=>{S.view='activity';render()});
+  $('search-in')?.addEventListener('input',e=>{S.search=e.target.value;render()});
+  document.querySelectorAll('[data-filter]').forEach(c=>c.onclick=()=>{S.filter=c.dataset.filter;render()});
+  document.querySelectorAll('[data-open]').forEach(c=>{
+    c.onclick=e=>{
+      e.stopPropagation();
+      // Bulk mode: clicks toggle selection instead of opening
+      if(S.bulkMode&&c.classList.contains('job-card')){
+        const id=c.dataset.open;
+        if(S.bulkSel.has(id))S.bulkSel.delete(id);else S.bulkSel.add(id);
+        render();return;
+      }
+      S.detail=c.dataset.open;S.view='jobs';S.detailTab='overview';render();
+    };
+    c.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();c.click()}};
+  });
+
+  // Calendar
+  $('cal-prev')?.addEventListener('click',()=>{
+    if(S.calMode==='agenda'){const n=new Date();S.calMonth=n.getMonth();S.calYear=n.getFullYear();render();return}
+    S.calMonth--;if(S.calMonth<0){S.calMonth=11;S.calYear--}render();
+  });
+  $('cal-next')?.addEventListener('click',()=>{
+    if(S.calMode==='agenda'){const n=new Date();S.calMonth=n.getMonth();S.calYear=n.getFullYear();render();return}
+    S.calMonth++;if(S.calMonth>11){S.calMonth=0;S.calYear++}render();
+  });
+  $('cal-today')?.addEventListener('click',()=>{const n=new Date();S.calMonth=n.getMonth();S.calYear=n.getFullYear();S.calSelected=dateKey(n);render()});
+  document.querySelectorAll('[data-cal-mode]').forEach(b=>b.onclick=()=>{S.calMode=b.dataset.calMode;localStorage.setItem(LS('calmode'),S.calMode);render()});
+  document.querySelectorAll('[data-cal-day]').forEach(d=>d.onclick=e=>{
+    // Ignore clicks on chips (they have their own handler that stops propagation, but be defensive)
+    if(e.target.closest('[data-open]'))return;
+    // Tapping a day from outside the current month jumps to that month
+    const k=d.dataset.calDay;
+    const [yy,mm]=k.split('-').map(n=>parseInt(n,10));
+    if(yy!==S.calYear||(mm-1)!==S.calMonth){S.calYear=yy;S.calMonth=mm-1}
+    S.calSelected=k;render();
+  });
+
+  // Detail
+  $('btn-back')?.addEventListener('click',()=>{S.detail=null;S.detailTab='overview';render()});
+  $('btn-edit-job')?.addEventListener('click',()=>{const j=S.jobs[S.detail];if(j)showJobModal('edit',j)});
+  $('btn-edit-customer')?.addEventListener('click',()=>{const j=S.jobs[S.detail];if(j)showJobModal('edit',j)});
+  $('btn-print-job')?.addEventListener('click',()=>{const j=S.jobs[S.detail];if(j)printJob(j)});
+  $('btn-share-job')?.addEventListener('click',()=>{const j=S.jobs[S.detail];if(j)shareJob(j)});
+
+  // Detail tabs
+  document.querySelectorAll('[data-tab]').forEach(t=>t.onclick=()=>{S.detailTab=t.dataset.tab;render()});
+  document.querySelectorAll('.stat-cell[data-goto]').forEach(el=>{
+    el.onclick=()=>{S.detailTab=el.dataset.goto;render()};
+    el.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();S.detailTab=el.dataset.goto;render()}};
+  });
+  document.querySelectorAll('.stat-add[data-add]').forEach(b=>{
+    b.onclick=e=>{e.stopPropagation();S.detailTab=b.dataset.add;S.quickAdd=b.dataset.add;render()};
+  });
+  if(S.quickAdd){const t=S.quickAdd;S.quickAdd=null;triggerQuickAdd(t)}
+
+  // Stage pipeline
+  document.querySelectorAll('[data-stage]').forEach(b=>b.onclick=async()=>{
+    const j=S.jobs[S.detail];if(!j)return;
+    const newStage=b.dataset.stage;
+    j.stage=newStage;
+    const newStatus=STAGE_TO_STATUS[newStage];
+    if(newStatus)j.status=newStatus;
+    if(newStage==='Complete'){j.progress=100;j.completedAt=Date.now()}
+    await writeJob(j);await logAct('moved to '+newStage,j.name);render();toast('Stage updated');
+  });
+
+  // Progress
+  const sl=$('prog-slider');
+  if(sl){let pt;sl.oninput=function(){const f=$('prog-fill-lg'),p=$('prog-pct');if(f)f.style.width=this.value+'%';if(p)p.textContent=this.value+'%';clearTimeout(pt);pt=setTimeout(async()=>{const j=S.jobs[S.detail];if(j){j.progress=parseInt(this.value);await writeJob(j)}},700)}}
+
+  // Photos
+  document.querySelectorAll('[data-photo-cat]').forEach(c=>c.onclick=()=>{S.photoCat=c.dataset.photoCat;render()});
+  $('photo-upload')?.addEventListener('change',function(){
+    const j=S.jobs[S.detail];if(!j)return;j.photos=j.photos||[];
+    const files=Array.from(this.files);if(!files.length)return;
+    const cat=S.photoCat&&S.photoCat!=='all'?S.photoCat:'';
+    const total=files.length;let done=0;
+    const finishOne=()=>{if(++done===total){writeJob(j).then(()=>{logAct('added '+total+' photo(s) to',j.name);render();toast(total+' photo'+(total>1?'s':'')+' added','photo')})}};
+    if(storageReady())toast('Uploading '+total+' photo'+(total>1?'s':'')+'…','photo');
+    files.forEach(file=>{const r=new FileReader();r.onload=e=>{
+      const img=new Image();img.onload=async()=>{
+        const c=document.createElement('canvas');const MAX=1400;
+        let w=img.width,h=img.height;
+        if(w>MAX||h>MAX){if(w>h){h=Math.round(h*MAX/w);w=MAX}else{w=Math.round(w*MAX/h);h=MAX}}
+        c.width=w;c.height=h;c.getContext('2d').drawImage(img,0,0,w,h);
+        const blob=await canvasToBlob(c,'image/jpeg',0.78);
+        const up=blob?await uploadToStorage(blob,'jobs/'+j.id+'/photos','jpg'):null;
+        const rec={cat:cat,user:S.user,time:Date.now()};
+        if(up){rec.url=up.url;rec.storagePath=up.path}
+        else{rec.url=c.toDataURL('image/jpeg',0.78)}
+        j.photos.push(rec);
+        finishOne();
+      };img.src=e.target.result
+    };r.readAsDataURL(file)});
+  });
+  document.querySelectorAll('[data-del-photo]').forEach(b=>b.onclick=async e=>{
+    e.stopPropagation();const j=S.jobs[S.detail];if(!j)return;
+    const removed=j.photos.splice(parseInt(b.dataset.delPhoto),1)[0];await writeJob(j);render();toast('Photo removed');
+    if(removed&&removed.storagePath)deleteStoragePath(removed.storagePath);
+  });
+  document.querySelectorAll('[data-view-photo]').forEach(img=>img.onclick=e=>{
+    e.stopPropagation();const j=S.jobs[S.detail];if(!j)return;
+    const idx=parseInt(img.dataset.viewPhoto);
+    const url=photoURL(j.photos[idx]);
+    $('fs-root').innerHTML=`<div class="photo-fs" id="fs"><button class="photo-fs-close" id="fsc">×</button><img src="${url}" alt=""></div>`;
+    $('fsc').onclick=()=>$('fs-root').innerHTML='';
+    $('fs').onclick=e=>{if(e.target===e.currentTarget)$('fs-root').innerHTML=''};
+  });
+
+  // Notes
+  const ni=$('note-in'),pb=$('btn-post');
+  async function postNote(){const t=ni?.value.trim();if(!t)return;const j=S.jobs[S.detail];if(!j)return;j.notes=j.notes||[];j.notes.push({user:S.user,text:t,time:Date.now()});await writeJob(j);await logAct('posted a note on',j.name);ni.value='';render();toast('Note posted','note')}
+  pb?.addEventListener('click',postNote);
+  ni?.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();postNote()}});
+
+  // Tasks
+  $('btn-add-task')?.addEventListener('click',async()=>{
+    const inp=$('task-in'),due=$('task-due');
+    const text=inp?.value.trim();if(!text)return;
+    const j=S.jobs[S.detail];if(!j)return;
+    j.tasks=j.tasks||[];
+    j.tasks.push({text,due:due?.value||'',assigned:'',done:false,user:S.user,time:Date.now()});
+    await writeJob(j);await logAct('added task to',j.name);render();toast('Task added');
+  });
+  $('task-in')?.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();$('btn-add-task')?.click()}});
+  document.querySelectorAll('[data-task-toggle]').forEach(b=>b.onclick=async()=>{
+    const j=S.jobs[S.detail];if(!j)return;const i=parseInt(b.dataset.taskToggle);
+    j.tasks[i].done=!j.tasks[i].done;
+    if(j.tasks[i].done){j.tasks[i].doneTime=Date.now();j.tasks[i].doneBy=S.user}
+    await writeJob(j);await logAct(j.tasks[i].done?'completed task':'reopened task',j.name);render();
+  });
+  document.querySelectorAll('[data-task-del]').forEach(b=>b.onclick=async()=>{
+    const j=S.jobs[S.detail];if(!j)return;
+    const i=parseInt(b.dataset.taskDel);
+    const removed=j.tasks.splice(i,1)[0];
+    await writeJob(j);render();
+    const restore=async()=>{const jj=S.jobs[j.id];if(jj){jj.tasks=jj.tasks||[];jj.tasks.splice(i,0,removed);await writeJob(jj);render();toast('Task restored')}};
+    UNDO.push(restore);
+    toast('Task removed','undo',restore);
+  });
+
+  // Daily log
+  $('btn-add-log')?.addEventListener('click',async()=>{
+    const text=$('log-text').value.trim();if(!text){toast('Enter work performed','');return}
+    const j=S.jobs[S.detail];if(!j)return;
+    j.dailyLogs=j.dailyLogs||[];
+    j.dailyLogs.push({date:$('log-date').value||dateKey(new Date()),weather:$('log-weather').value.trim(),hours:$('log-hours').value,text,user:S.user,time:Date.now()});
+    await writeJob(j);await logAct('added log entry to',j.name);render();toast('Log entry saved');
+  });
+
+  // Documents
+  $('doc-upload')?.addEventListener('change',function(){
+    const j=S.jobs[S.detail];if(!j)return;j.documents=j.documents||[];
+    const file=this.files[0];if(!file)return;
+    const cap=storageReady()?25*1024*1024:5*1024*1024;
+    if(file.size>cap){toast('File too large (max '+(cap/1024/1024)+'MB)','');return}
+    const meta={name:file.name,size:(file.size/1024).toFixed(0)+' KB',type:file.type,uploaded:Date.now(),user:S.user};
+    const finishDoc=async(extra)=>{j.documents.push({...meta,...extra});await writeJob(j);await logAct('uploaded '+file.name+' to',j.name);render();toast('File uploaded')};
+    if(storageReady())toast('Uploading…');
+    (async()=>{
+      const ext=(file.name.split('.').pop()||'').toLowerCase();
+      const up=await uploadToStorage(file,'jobs/'+j.id+'/docs',ext);
+      if(up){await finishDoc({url:up.url,storagePath:up.path})}
+      else{const r=new FileReader();r.onload=async e=>{await finishDoc({url:e.target.result})};r.readAsDataURL(file)}
+    })();
+  });
+  document.querySelectorAll('[data-doc-del]').forEach(b=>b.onclick=async e=>{
+    e.preventDefault();e.stopPropagation();
+    const j=S.jobs[S.detail];if(!j)return;
+    const i=parseInt(b.dataset.docDel);
+    const removed=j.documents.splice(i,1)[0];
+    await writeJob(j);render();
+    const restore=async()=>{const jj=S.jobs[j.id];if(jj){jj.documents=jj.documents||[];jj.documents.splice(i,0,removed);await writeJob(jj);render();toast('File restored')}};
+    UNDO.push(restore);
+    toast('File removed','undo',restore);
+  });
+
+  // Receipts & expenses
+  $('rcpt-upload')?.addEventListener('change',function(){const l=$('rcpt-file-label');if(l)l.textContent=this.files&&this.files[0]?this.files[0].name:'Attach receipt photo or PDF (optional)'});
+  $('btn-add-receipt')?.addEventListener('click',async()=>{
+    const j=S.jobs[S.detail];if(!j)return;
+    const amount=parseFloat($('rcpt-amount').value);
+    if(!(amount>0)){toast('Enter the receipt amount','');return}
+    const base={amount,vendor:$('rcpt-vendor').value.trim(),category:$('rcpt-cat').value,note:$('rcpt-note').value.trim(),date:$('rcpt-date').value||dateKey(new Date()),user:S.user,uploaded:Date.now()};
+    const fileInput=$('rcpt-upload');const file=fileInput&&fileInput.files&&fileInput.files[0];
+    const finish=async(extra)=>{j.receipts=j.receipts||[];j.receipts.push({...base,...extra});await writeJob(j);await logAct('added a receipt ('+money2(amount)+') to',j.name);render();toast('Receipt added')};
+    if(file){
+      const cap=storageReady()?25*1024*1024:6*1024*1024;
+      if(!file.type.startsWith('image/')&&file.size>cap){toast('File too large (max '+(cap/1024/1024)+'MB)','');return}
+      if(storageReady())toast('Uploading…');
+      if(file.type.startsWith('image/')){
+        const r=new FileReader();r.onload=e=>{const img=new Image();img.onload=async()=>{const c=document.createElement('canvas');const MAX=1400;let w=img.width,h=img.height;if(w>MAX||h>MAX){if(w>h){h=Math.round(h*MAX/w);w=MAX}else{w=Math.round(w*MAX/h);h=MAX}}c.width=w;c.height=h;c.getContext('2d').drawImage(img,0,0,w,h);const blob=await canvasToBlob(c,'image/jpeg',0.8);const up=blob?await uploadToStorage(blob,'jobs/'+j.id+'/receipts','jpg'):null;if(up){finish({name:file.name,type:file.type,url:up.url,storagePath:up.path})}else{finish({name:file.name,type:file.type,url:c.toDataURL('image/jpeg',0.8)})}};img.src=e.target.result};r.readAsDataURL(file);
+      }else{
+        (async()=>{const ext=(file.name.split('.').pop()||'').toLowerCase();const up=await uploadToStorage(file,'jobs/'+j.id+'/receipts',ext);if(up){finish({name:file.name,type:file.type,url:up.url,storagePath:up.path,size:(file.size/1024).toFixed(0)+' KB'})}else{const r=new FileReader();r.onload=e=>finish({name:file.name,type:file.type,url:e.target.result,size:(file.size/1024).toFixed(0)+' KB'});r.readAsDataURL(file)}})();
+      }
+    }else{finish({})}
+  });
+  document.querySelectorAll('[data-receipt-del]').forEach(b=>b.onclick=async e=>{
+    e.preventDefault();e.stopPropagation();
+    const j=S.jobs[S.detail];if(!j)return;
+    const i=parseInt(b.dataset.receiptDel);
+    const removed=(j.receipts||[]).splice(i,1)[0];
+    await writeJob(j);render();
+    const restore=async()=>{const jj=S.jobs[j.id];if(jj){jj.receipts=jj.receipts||[];jj.receipts.splice(i,0,removed);await writeJob(jj);render();toast('Receipt restored')}};
+    UNDO.push(restore);
+    toast('Receipt removed','undo',restore);
+  });
+
+  // Financials
+  $('btn-save-fin')?.addEventListener('click',async()=>{
+    const j=S.jobs[S.detail];if(!j)return;
+    j.value=$('fin-est').value;
+    j.costs=$('fin-costs').value;
+    j.invoiced=$('fin-inv').value;
+    j.paid=$('fin-paid').value;
+    await writeJob(j);await logAct('updated financials on',j.name);render();toast('Financials saved');
+  });
+
+  // Communications
+  $('btn-add-comm')?.addEventListener('click',async()=>{
+    const text=$('comm-text').value.trim();if(!text){toast('Add a summary','');return}
+    const j=S.jobs[S.detail];if(!j)return;
+    j.comms=j.comms||[];
+    j.comms.push({type:$('comm-type').value,text,user:S.user,time:Date.now()});
+    await writeJob(j);await logAct('logged a '+$('comm-type').value,j.name);render();toast('Communication logged');
+  });
+
+  // Team
+  $('btn-add-member')?.addEventListener('click',async()=>{
+    const inp=$('member-in');const name=inp?.value.trim();
+    if(!name||S.members.includes(name)){toast(name?'Already on team':'Enter a name','');return}
+    S.members.push(name);await saveMembers();inp.value='';render();toast(name+' added to team');
+  });
+  document.querySelectorAll('[data-rm]').forEach(b=>b.onclick=async()=>{S.members.splice(parseInt(b.dataset.rm),1);await saveMembers();render()});
+
+  // Time tracking
+  stopTimeTick();
+  $('tt-payroll')?.addEventListener('click',showPayrollModal);
+
+  // Bank / cash flow
+  $('bank-import')?.addEventListener('click',showBankImport);
+  $('bank-clear')?.addEventListener('click',async()=>{if(!confirm('Remove ALL imported transactions for this company? This cannot be undone.'))return;S.transactions={};await saveAllTxns();render();toast('Transactions cleared')});
+  document.querySelectorAll('[data-bank-cat]').forEach(sel=>sel.onchange=async()=>{const t=S.transactions[sel.dataset.bankCat];if(t){t.category=sel.value;await writeTxn(t)}});
+  document.querySelectorAll('[data-bank-job]').forEach(sel=>sel.onchange=async()=>{const t=S.transactions[sel.dataset.bankJob];if(t){t.jobId=sel.value;await writeTxn(t);render()}});
+  document.querySelectorAll('[data-bank-del]').forEach(b=>b.onclick=async()=>{const t=S.transactions[b.dataset.bankDel];if(!t)return;const backup=JSON.parse(JSON.stringify(t));await deleteTxnDB(t.id);render();const restore=async()=>{await writeTxn(backup);render();toast('Transaction restored')};UNDO.push(restore);toast('Transaction removed','undo',restore)});
+  $('tt-goto-team')?.addEventListener('click',()=>{S.view='team';render()});
+  $('tt-clockin')?.addEventListener('click',async()=>{
+    const member=$('tt-member')?.value;
+    if(!member){toast('Pick a team member','');return}
+    if(activeEntry(member)){toast(member+' is already clocked in','');return}
+    const job=$('tt-job')?.value||'';
+    const note=$('tt-note')?.value.trim()||'';
+    const t={id:tid(),member,job,note,start:Date.now(),end:null,by:S.user||'',created:Date.now()};
+    await writeTimeEntry(t);await logAct('clocked in '+member,job&&S.jobs[job]?S.jobs[job].name:'');render();toast(member+' clocked in');
+  });
+  document.querySelectorAll('[data-clock-out]').forEach(b=>b.onclick=async()=>{
+    const t=S.timeEntries[b.dataset.clockOut];if(!t||t.end)return;
+    t.end=Date.now();await writeTimeEntry(t);
+    await logAct('clocked out '+t.member+' ('+fmtHM(entryDur(t))+')',t.job&&S.jobs[t.job]?S.jobs[t.job].name:'');
+    render();toast(t.member+' clocked out · '+fmtHM(entryDur(t)));
+  });
+  $('tt-add-manual')?.addEventListener('click',()=>showTimeModal(null));
+  document.querySelectorAll('[data-rate-member]').forEach(inp=>{inp.onchange=async()=>{const m=inp.dataset.rateMember;const v=parseFloat(inp.value);S.payRates=S.payRates||{};if(!v||v<=0)delete S.payRates[m];else S.payRates[m]=v;await savePayRates();toast('Saved rate for '+m)}});
+  document.querySelectorAll('[data-labor-job]').forEach(el=>el.onclick=()=>{S.detail=el.dataset.laborJob;S.view='jobs';S.detailTab='financial';render()});
+  document.querySelectorAll('[data-time-edit]').forEach(b=>b.onclick=()=>{const t=S.timeEntries[b.dataset.timeEdit];if(t)showTimeModal(t)});
+  document.querySelectorAll('[data-time-del]').forEach(b=>b.onclick=async()=>{
+    const t=S.timeEntries[b.dataset.timeDel];if(!t)return;
+    const backup=JSON.parse(JSON.stringify(t));
+    await deleteTimeEntryDB(t.id);render();
+    const restore=async()=>{await writeTimeEntry(backup);render();toast('Entry restored')};
+    UNDO.push(restore);toast('Entry deleted','undo',restore);
+  });
+  if(S.view==='time'&&timeList().some(t=>!t.end))startTimeTick();
+}
+
+document.addEventListener('keydown',onKey);
+
+// Service worker would require a same-origin .js file; manifest alone makes it installable.
+// Browsers prompt "Add to Home Screen" when the manifest + HTTPS + an icon are present.
+
+function bootApp(){
+  loadAndConnect();
+  if(OWNER_MODE)applyOwnerChrome();else applyCompanyBranding();
+  render();
+}
+if(FB_AUTH_ON){startAuthGate();}
+else if(LOCKED){showLockScreen();}
+else{bootApp();}
