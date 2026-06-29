@@ -1,0 +1,38 @@
+name: Generate modular test files
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - modular-test-files
+    paths:
+      - .github/workflows/generate-modular-files.yml
+      - tools/split-index.mjs
+      - index.html
+
+permissions:
+  contents: write
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out branch
+        uses: actions/checkout@v4
+        with:
+          ref: modular-test-files
+
+      - name: Generate modular files
+        run: node tools/split-index.mjs
+
+      - name: Commit generated files
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.modular.html src/styles.css src/app.js
+          if git diff --cached --quiet; then
+            echo "No generated file changes."
+          else
+            git commit -m "Generate modular test files"
+            git push origin modular-test-files
+          fi
