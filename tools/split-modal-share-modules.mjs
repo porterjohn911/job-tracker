@@ -67,13 +67,23 @@ const scriptTags = chunks
   .join('\n');
 
 const index = await readFile(indexPath, 'utf8');
-const updated = index.replace(
-  /<script src="\.\/src\/app\/07-modals-jobs-share\.js"><\/script>/,
-  scriptTags,
-);
+const originalTag = '<script src="./src/app/07-modals-jobs-share.js"></script>';
+let replaced = false;
+let updated = index.replace(originalTag, () => {
+  replaced = true;
+  return scriptTags;
+});
 
-if (updated === index) {
-  throw new Error('Could not replace src/app/07-modals-jobs-share.js script tag in index.modular.html');
+if (!replaced) {
+  const existingSplitBlock = /<script src="\.\/src\/app\/jobs\/01-job-modal\.js"><\/script>\n[\s\S]*?<script src="\.\/src\/app\/08-invoice-editor-print\.js"><\/script>/;
+  updated = index.replace(existingSplitBlock, (match) => {
+    replaced = true;
+    return `${scriptTags}\n<script src="./src/app/08-invoice-editor-print.js"></script>`;
+  });
+}
+
+if (!replaced) {
+  throw new Error('Could not find modal/share script block in index.modular.html');
 }
 
 await writeFile(indexPath, updated);
