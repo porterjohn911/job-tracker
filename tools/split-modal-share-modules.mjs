@@ -1,4 +1,4 @@
-import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 
 const root = process.cwd();
@@ -19,16 +19,22 @@ const chunks = [
     description: 'Firebase/team setup modal',
   },
   {
+    file: path.join('src', 'app', 'share', '01-photo-helper.js'),
+    start: '// ══ Helpers for photo backward compat ══',
+    end: '// ══ CSV export ══',
+    description: 'Photo compatibility helper',
+  },
+  {
     file: path.join('src', 'app', 'exports', '01-csv-export.js'),
     start: '// ══ CSV export ══',
     end: '// ══ Share / Print ══',
     description: 'CSV export',
   },
   {
-    file: path.join('src', 'app', 'share', '01-print-share.js'),
-    start: '// ══ Helpers for photo backward compat ══',
+    file: path.join('src', 'app', 'share', '02-print-share.js'),
+    start: '// ══ Share / Print ══',
     end: null,
-    description: 'Photo compatibility, print summary, and native/share fallback',
+    description: 'Print summary and native/share fallback',
   },
 ];
 
@@ -41,6 +47,8 @@ function sliceBetween(text, startMarker, endMarker) {
   if (end === -1) throw new Error(`Missing end marker: ${endMarker}`);
   return text.slice(start, end).trimEnd();
 }
+
+await rm(path.join(root, 'src', 'app', 'share', '01-print-share.js'), { force: true });
 
 for (const chunk of chunks) {
   const body = sliceBetween(source, chunk.start, chunk.end);
