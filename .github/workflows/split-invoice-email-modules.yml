@@ -1,0 +1,39 @@
+name: Split invoice email module
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - split-invoice-email-modules
+    paths:
+      - .github/workflows/split-invoice-email-modules.yml
+      - tools/split-invoice-email-modules.mjs
+      - src/app/04-invoices-email.js
+      - index.modular.html
+
+permissions:
+  contents: write
+
+jobs:
+  split:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out branch
+        uses: actions/checkout@v4
+        with:
+          ref: split-invoice-email-modules
+
+      - name: Generate invoice/email modules
+        run: node tools/split-invoice-email-modules.mjs
+
+      - name: Commit generated modules
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.modular.html src/app/invoices/*.js
+          if git diff --cached --quiet; then
+            echo "No generated module changes."
+          else
+            git commit -m "Split invoice email module into focused files"
+            git push origin split-invoice-email-modules
+          fi
