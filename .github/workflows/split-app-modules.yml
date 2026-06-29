@@ -1,0 +1,39 @@
+name: Split app into ordered modules
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - split-app-modules
+    paths:
+      - .github/workflows/split-app-modules.yml
+      - tools/split-app-modules.mjs
+      - src/app.js
+      - index.modular.html
+
+permissions:
+  contents: write
+
+jobs:
+  split:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out branch
+        uses: actions/checkout@v4
+        with:
+          ref: split-app-modules
+
+      - name: Generate ordered app modules
+        run: node tools/split-app-modules.mjs
+
+      - name: Commit generated modules
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.modular.html src/app/*.js
+          if git diff --cached --quiet; then
+            echo "No generated module changes."
+          else
+            git commit -m "Split modular app script into ordered files"
+            git push origin split-app-modules
+          fi
