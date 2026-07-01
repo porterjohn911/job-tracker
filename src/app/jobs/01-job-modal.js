@@ -89,7 +89,9 @@ function showJobModal(mode,job){
     const backup=JSON.parse(JSON.stringify(j));
     await deleteJobDB(j.id);await logAct('deleted job',j.name);
     S.detail=null;closeModal();render();
-    toast('Job deleted','undo',async()=>{await writeJob(backup);render();toast('Job restored')});
-    UNDO.push(async()=>{await writeJob(backup);render();toast('Job restored')});
+    let restored=false;
+    const restore=async()=>{if(restored)return;restored=true;await writeJob(backup);render();toast('Job restored')};
+    UNDO.push(restore);
+    toast('Job deleted','undo',restore);
   };
 }
