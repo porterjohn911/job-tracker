@@ -28,7 +28,8 @@ function attachFinancialTeamTimeHandlers(){
     const i=parseInt(b.dataset.receiptDel);
     const removed=(j.receipts||[]).splice(i,1)[0];
     await writeJob(j);render();
-    const restore=async()=>{const jj=S.jobs[j.id];if(jj){jj.receipts=jj.receipts||[];jj.receipts.splice(i,0,removed);await writeJob(jj);render();toast('Receipt restored')}};
+    let restored=false;
+    const restore=async()=>{if(restored)return;restored=true;const jj=S.jobs[j.id];if(jj){jj.receipts=jj.receipts||[];jj.receipts.splice(i,0,removed);await writeJob(jj);render();toast('Receipt restored')}};
     UNDO.push(restore);
     toast('Receipt removed','undo',restore);
   });
@@ -66,10 +67,18 @@ function attachFinancialTeamTimeHandlers(){
 
   // Bank / cash flow
   $('bank-import')?.addEventListener('click',showBankImport);
-  $('bank-clear')?.addEventListener('click',async()=>{if(!confirm('Remove ALL imported transactions for this company? This cannot be undone.'))return;S.transactions={};await saveAllTxns();render();toast('Transactions cleared')});
+  $('bank-clear')?.addEventListener('click',async()=>{
+    if(!confirm('Remove ALL imported transactions for this company?'))return;
+    const backup=JSON.parse(JSON.stringify(S.transactions||{}));
+    S.transactions={};await saveAllTxns();render();
+    let restored=false;
+    const restore=async()=>{if(restored)return;restored=true;S.transactions=JSON.parse(JSON.stringify(backup));await saveAllTxns();render();toast('Transactions restored')};
+    UNDO.push(restore);
+    toast('Transactions cleared','undo',restore);
+  });
   document.querySelectorAll('[data-bank-cat]').forEach(sel=>sel.onchange=async()=>{const t=S.transactions[sel.dataset.bankCat];if(t){t.category=sel.value;await writeTxn(t)}});
   document.querySelectorAll('[data-bank-job]').forEach(sel=>sel.onchange=async()=>{const t=S.transactions[sel.dataset.bankJob];if(t){t.jobId=sel.value;await writeTxn(t);render()}});
-  document.querySelectorAll('[data-bank-del]').forEach(b=>b.onclick=async()=>{const t=S.transactions[b.dataset.bankDel];if(!t)return;const backup=JSON.parse(JSON.stringify(t));await deleteTxnDB(t.id);render();const restore=async()=>{await writeTxn(backup);render();toast('Transaction restored')};UNDO.push(restore);toast('Transaction removed','undo',restore)});
+  document.querySelectorAll('[data-bank-del]').forEach(b=>b.onclick=async()=>{const t=S.transactions[b.dataset.bankDel];if(!t)return;const backup=JSON.parse(JSON.stringify(t));await deleteTxnDB(t.id);render();let restored=false;const restore=async()=>{if(restored)return;restored=true;await writeTxn(backup);render();toast('Transaction restored')};UNDO.push(restore);toast('Transaction removed','undo',restore)});
   $('tt-goto-team')?.addEventListener('click',()=>{S.view='team';render()});
   $('tt-clockin')?.addEventListener('click',async()=>{
     const member=$('tt-member')?.value;
@@ -94,7 +103,8 @@ function attachFinancialTeamTimeHandlers(){
     const t=S.timeEntries[b.dataset.timeDel];if(!t)return;
     const backup=JSON.parse(JSON.stringify(t));
     await deleteTimeEntryDB(t.id);render();
-    const restore=async()=>{await writeTimeEntry(backup);render();toast('Entry restored')};
+    let restored=false;
+    const restore=async()=>{if(restored)return;restored=true;await writeTimeEntry(backup);render();toast('Entry restored')};
     UNDO.push(restore);toast('Entry deleted','undo',restore);
   });
   if(S.view==='time'&&timeList().some(t=>!t.end))startTimeTick();
