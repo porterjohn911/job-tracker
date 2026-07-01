@@ -195,7 +195,16 @@ function renderInvoiceModal(jobId,isEdit,kind){
       if(!EST){const tot=invoiceTotals(j);j.invoiced=tot?tot.total:0;j.paid=tot?tot.paid:0;}
       await writeJob(j);await logAct('deleted '+(EST?'estimate':'invoice')+' on',j.name);
       INV_DRAFT=null;closeModal();render();
-      const restore=async()=>{const jj=S.jobs[jobId];if(jj){jj[key]=jj[key]||[];jj[key].push(backup);if(!EST){const t=invoiceTotals(jj);jj.invoiced=t.total;jj.paid=t.paid;}await writeJob(jj);render();toast((EST?'Estimate':'Invoice')+' restored')}};
+      let restored=false;
+      const restore=async()=>{
+        if(restored)return;restored=true;
+        const jj=S.jobs[jobId];if(!jj)return;
+        jj[key]=jj[key]||[];
+        const existing=jj[key].findIndex(i=>i.id===backup.id);
+        if(existing>=0)jj[key][existing]=backup;else jj[key].push(backup);
+        if(!EST){const t=invoiceTotals(jj);jj.invoiced=t?t.total:0;jj.paid=t?t.paid:0;}
+        await writeJob(jj);render();toast((EST?'Estimate':'Invoice')+' restored');
+      };
       UNDO.push(restore);
       toast((EST?'Estimate':'Invoice')+' deleted','undo',restore);
     };
