@@ -27,8 +27,10 @@ function attachListInvoiceReportMapHandlers(){
     for(const id of ids){await deleteJobDB(id)}
     await logAct('deleted '+ids.length+' job(s)','');
     S.bulkSel.clear();S.bulkMode=false;render();
-    UNDO.push(async()=>{for(const j of backup){await writeJob(j)}render();toast('Restored '+backup.length+' job(s)')});
-    toast('Deleted '+ids.length+' job(s)','undo',()=>{UNDO.pop()();});
+    let restored=false;
+    const restore=async()=>{if(restored)return;restored=true;for(const j of backup){await writeJob(j)}render();toast('Restored '+backup.length+' job(s)')};
+    UNDO.push(restore);
+    toast('Deleted '+ids.length+' job(s)','undo',restore);
   });
   $('bulk-star')?.addEventListener('click',async()=>{
     const ids=Array.from(S.bulkSel);
@@ -103,7 +105,9 @@ function attachListInvoiceReportMapHandlers(){
     inv.paid=c.total;inv.status='paid';
     const tot=invoiceTotals(j);if(tot){j.invoiced=tot.total;j.paid=tot.paid}
     await writeJob(j);await logAct('marked invoice '+(inv.number||'')+' paid on',j.name);render();
+    let restored=false;
     const restore=async()=>{
+      if(restored)return;restored=true;
       const jj=S.jobs[jobId];if(!jj)return;
       const ii=(jj.invoices||[]).find(i=>i.id===invId);if(!ii)return;
       ii.paid=prevPaid;ii.status=prevStatus;
