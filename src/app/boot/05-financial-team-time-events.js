@@ -1,0 +1,101 @@
+// Receipts, financials, communications, team, bank, and time handlers
+// Generated from src/app/10-handlers-boot.js.
+
+function attachFinancialTeamTimeHandlers(){
+  // Receipts & expenses
+  $('rcpt-upload')?.addEventListener('change',function(){const l=$('rcpt-file-label');if(l)l.textContent=this.files&&this.files[0]?this.files[0].name:'Attach receipt photo or PDF (optional)'});
+  $('btn-add-receipt')?.addEventListener('click',async()=>{
+    const j=S.jobs[S.detail];if(!j)return;
+    const amount=parseFloat($('rcpt-amount').value);
+    if(!(amount>0)){toast('Enter the receipt amount','');return}
+    const base={amount,vendor:$('rcpt-vendor').value.trim(),category:$('rcpt-cat').value,note:$('rcpt-note').value.trim(),date:$('rcpt-date').value||dateKey(new Date()),user:S.user,uploaded:Date.now()};
+    const fileInput=$('rcpt-upload');const file=fileInput&&fileInput.files&&fileInput.files[0];
+    const finish=async(extra)=>{j.receipts=j.receipts||[];j.receipts.push({...base,...extra});await writeJob(j);await logAct('added a receipt ('+money2(amount)+') to',j.name);render();toast('Receipt added')};
+    if(file){
+      const cap=storageReady()?25*1024*1024:6*1024*1024;
+      if(!file.type.startsWith('image/')&&file.size>cap){toast('File too large (max '+(cap/1024/1024)+'MB)','');return}
+      if(storageReady())toast('Uploading…');
+      if(file.type.startsWith('image/')){
+        const r=new FileReader();r.onload=e=>{const img=new Image();img.onload=async()=>{const c=document.createElement('canvas');const MAX=1400;let w=img.width,h=img.height;if(w>MAX||h>MAX){if(w>h){h=Math.round(h*MAX/w);w=MAX}else{w=Math.round(w*MAX/h);h=MAX}}c.width=w;c.height=h;c.getContext('2d').drawImage(img,0,0,w,h);const blob=await canvasToBlob(c,'image/jpeg',0.8);const up=blob?await uploadToStorage(blob,'jobs/'+j.id+'/receipts','jpg'):null;if(up){finish({name:file.name,type:file.type,url:up.url,storagePath:up.path})}else{finish({name:file.name,type:file.type,url:c.toDataURL('image/jpeg',0.8)})}};img.src=e.target.result};r.readAsDataURL(file);
+      }else{
+        (async()=>{const ext=(file.name.split('.').pop()||'').toLowerCase();const up=await uploadToStorage(file,'jobs/'+j.id+'/receipts',ext);if(up){finish({name:file.name,type:file.type,url:up.url,storagePath:up.path,size:(file.size/1024).toFixed(0)+' KB'})}else{const r=new FileReader();r.onload=e=>finish({name:file.name,type:file.type,url:e.target.result,size:(file.size/1024).toFixed(0)+' KB'});r.readAsDataURL(file)}})();
+      }
+    }else{finish({})}
+  });
+  document.querySelectorAll('[data-receipt-del]').forEach(b=>b.onclick=async e=>{
+    e.preventDefault();e.stopPropagation();
+    const j=S.jobs[S.detail];if(!j)return;
+    const i=parseInt(b.dataset.receiptDel);
+    const removed=(j.receipts||[]).splice(i,1)[0];
+    await writeJob(j);render();
+    const restore=async()=>{const jj=S.jobs[j.id];if(jj){jj.receipts=jj.receipts||[];jj.receipts.splice(i,0,removed);await writeJob(jj);render();toast('Receipt restored')}};
+    UNDO.push(restore);
+    toast('Receipt removed','undo',restore);
+  });
+
+  // Financials
+  $('btn-save-fin')?.addEventListener('click',async()=>{
+    const j=S.jobs[S.detail];if(!j)return;
+    j.value=$('fin-est').value;
+    j.costs=$('fin-costs').value;
+    j.invoiced=$('fin-inv').value;
+    j.paid=$('fin-paid').value;
+    await writeJob(j);await logAct('updated financials on',j.name);render();toast('Financials saved');
+  });
+
+  // Communications
+  $('btn-add-comm')?.addEventListener('click',async()=>{
+    const text=$('comm-text').value.trim();if(!text){toast('Add a summary','');return}
+    const j=S.jobs[S.detail];if(!j)return;
+    j.comms=j.comms||[];
+    j.comms.push({type:$('comm-type').value,text,user:S.user,time:Date.now()});
+    await writeJob(j);await logAct('logged a '+$('comm-type').value,j.name);render();toast('Communication logged');
+  });
+
+  // Team
+  $('btn-add-member')?.addEventListener('click',async()=>{
+    const inp=$('member-in');const name=inp?.value.trim();
+    if(!name||S.members.includes(name)){toast(name?'Already on team':'Enter a name','');return}
+    S.members.push(name);await saveMembers();inp.value='';render();toast(name+' added to team');
+  });
+  document.querySelectorAll('[data-rm]').forEach(b=>b.onclick=async()=>{S.members.splice(parseInt(b.dataset.rm),1);await saveMembers();render()});
+
+  // Time tracking
+  stopTimeTick();
+  $('tt-payroll')?.addEventListener('click',showPayrollModal);
+
+  // Bank / cash flow
+  $('bank-import')?.addEventListener('click',showBankImport);
+  $('bank-clear')?.addEventListener('click',async()=>{if(!confirm('Remove ALL imported transactions for this company? This cannot be undone.'))return;S.transactions={};await saveAllTxns();render();toast('Transactions cleared')});
+  document.querySelectorAll('[data-bank-cat]').forEach(sel=>sel.onchange=async()=>{const t=S.transactions[sel.dataset.bankCat];if(t){t.category=sel.value;await writeTxn(t)}});
+  document.querySelectorAll('[data-bank-job]').forEach(sel=>sel.onchange=async()=>{const t=S.transactions[sel.dataset.bankJob];if(t){t.jobId=sel.value;await writeTxn(t);render()}});
+  document.querySelectorAll('[data-bank-del]').forEach(b=>b.onclick=async()=>{const t=S.transactions[b.dataset.bankDel];if(!t)return;const backup=JSON.parse(JSON.stringify(t));await deleteTxnDB(t.id);render();const restore=async()=>{await writeTxn(backup);render();toast('Transaction restored')};UNDO.push(restore);toast('Transaction removed','undo',restore)});
+  $('tt-goto-team')?.addEventListener('click',()=>{S.view='team';render()});
+  $('tt-clockin')?.addEventListener('click',async()=>{
+    const member=$('tt-member')?.value;
+    if(!member){toast('Pick a team member','');return}
+    if(activeEntry(member)){toast(member+' is already clocked in','');return}
+    const job=$('tt-job')?.value||'';
+    const note=$('tt-note')?.value.trim()||'';
+    const t={id:tid(),member,job,note,start:Date.now(),end:null,by:S.user||'',created:Date.now()};
+    await writeTimeEntry(t);await logAct('clocked in '+member,job&&S.jobs[job]?S.jobs[job].name:'');render();toast(member+' clocked in');
+  });
+  document.querySelectorAll('[data-clock-out]').forEach(b=>b.onclick=async()=>{
+    const t=S.timeEntries[b.dataset.clockOut];if(!t||t.end)return;
+    t.end=Date.now();await writeTimeEntry(t);
+    await logAct('clocked out '+t.member+' ('+fmtHM(entryDur(t))+')',t.job&&S.jobs[t.job]?S.jobs[t.job].name:'');
+    render();toast(t.member+' clocked out · '+fmtHM(entryDur(t)));
+  });
+  $('tt-add-manual')?.addEventListener('click',()=>showTimeModal(null));
+  document.querySelectorAll('[data-rate-member]').forEach(inp=>{inp.onchange=async()=>{const m=inp.dataset.rateMember;const v=parseFloat(inp.value);S.payRates=S.payRates||{};if(!v||v<=0)delete S.payRates[m];else S.payRates[m]=v;await savePayRates();toast('Saved rate for '+m)}});
+  document.querySelectorAll('[data-labor-job]').forEach(el=>el.onclick=()=>{S.detail=el.dataset.laborJob;S.view='jobs';S.detailTab='financial';render()});
+  document.querySelectorAll('[data-time-edit]').forEach(b=>b.onclick=()=>{const t=S.timeEntries[b.dataset.timeEdit];if(t)showTimeModal(t)});
+  document.querySelectorAll('[data-time-del]').forEach(b=>b.onclick=async()=>{
+    const t=S.timeEntries[b.dataset.timeDel];if(!t)return;
+    const backup=JSON.parse(JSON.stringify(t));
+    await deleteTimeEntryDB(t.id);render();
+    const restore=async()=>{await writeTimeEntry(backup);render();toast('Entry restored')};
+    UNDO.push(restore);toast('Entry deleted','undo',restore);
+  });
+  if(S.view==='time'&&timeList().some(t=>!t.end))startTimeTick();
+}

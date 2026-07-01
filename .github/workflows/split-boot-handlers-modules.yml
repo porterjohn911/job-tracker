@@ -1,0 +1,42 @@
+name: Split boot handlers module
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - split-boot-handlers-modules
+    paths:
+      - .github/workflows/split-boot-handlers-modules.yml
+      - tools/split-boot-handlers-modules.mjs
+      - src/app/10-handlers-boot.js
+      - index.modular.html
+
+permissions:
+  contents: write
+
+jobs:
+  split:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out branch
+        uses: actions/checkout@v4
+        with:
+          ref: split-boot-handlers-modules
+
+      - name: Generate boot handler modules
+        run: node tools/split-boot-handlers-modules.mjs
+
+      - name: Syntax check generated boot modules
+        run: node --check src/app/boot/01-shell-events.js && node --check src/app/boot/02-list-invoice-report-map-events.js && node --check src/app/boot/03-calendar-detail-events.js && node --check src/app/boot/04-job-asset-events.js && node --check src/app/boot/05-financial-team-time-events.js && node --check src/app/boot/06-attach-handlers.js && node --check src/app/boot/07-boot.js
+
+      - name: Commit generated modules
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A index.modular.html src/app/boot
+          if git diff --cached --quiet; then
+            echo "No generated module changes."
+          else
+            git commit -m "Split boot handler modules"
+            git push origin split-boot-handlers-modules
+          fi
