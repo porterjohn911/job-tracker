@@ -29,8 +29,12 @@ function attachJobAssetHandlers(){
   });
   document.querySelectorAll('[data-del-photo]').forEach(b=>b.onclick=async e=>{
     e.stopPropagation();const j=S.jobs[S.detail];if(!j)return;
-    const removed=j.photos.splice(parseInt(b.dataset.delPhoto),1)[0];await writeJob(j);render();toast('Photo removed');
-    if(removed&&removed.storagePath)deleteStoragePath(removed.storagePath);
+    const i=parseInt(b.dataset.delPhoto);
+    const removed=j.photos.splice(i,1)[0];await writeJob(j);render();
+    let restored=false;
+    const restore=async()=>{if(restored)return;restored=true;const jj=S.jobs[j.id];if(jj&&removed){jj.photos=jj.photos||[];jj.photos.splice(i,0,removed);await writeJob(jj);render();toast('Photo restored')}};
+    UNDO.push(restore);
+    toast('Photo removed','undo',restore);
   });
   document.querySelectorAll('[data-view-photo]').forEach(img=>img.onclick=e=>{
     e.stopPropagation();const j=S.jobs[S.detail];if(!j)return;
@@ -68,7 +72,8 @@ function attachJobAssetHandlers(){
     const i=parseInt(b.dataset.taskDel);
     const removed=j.tasks.splice(i,1)[0];
     await writeJob(j);render();
-    const restore=async()=>{const jj=S.jobs[j.id];if(jj){jj.tasks=jj.tasks||[];jj.tasks.splice(i,0,removed);await writeJob(jj);render();toast('Task restored')}};
+    let restored=false;
+    const restore=async()=>{if(restored)return;restored=true;const jj=S.jobs[j.id];if(jj){jj.tasks=jj.tasks||[];jj.tasks.splice(i,0,removed);await writeJob(jj);render();toast('Task restored')}};
     UNDO.push(restore);
     toast('Task removed','undo',restore);
   });
@@ -104,7 +109,8 @@ function attachJobAssetHandlers(){
     const i=parseInt(b.dataset.docDel);
     const removed=j.documents.splice(i,1)[0];
     await writeJob(j);render();
-    const restore=async()=>{const jj=S.jobs[j.id];if(jj){jj.documents=jj.documents||[];jj.documents.splice(i,0,removed);await writeJob(jj);render();toast('File restored')}};
+    let restored=false;
+    const restore=async()=>{if(restored)return;restored=true;const jj=S.jobs[j.id];if(jj){jj.documents=jj.documents||[];jj.documents.splice(i,0,removed);await writeJob(jj);render();toast('File restored')}};
     UNDO.push(restore);
     toast('File removed','undo',restore);
   });
