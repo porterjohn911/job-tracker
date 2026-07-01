@@ -1,0 +1,39 @@
+name: Split settings command voice module
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - split-settings-command-voice-modules
+    paths:
+      - .github/workflows/split-settings-command-voice-modules.yml
+      - tools/split-settings-command-voice-modules.mjs
+      - src/app/09-settings-access-command-voice.js
+      - index.modular.html
+
+permissions:
+  contents: write
+
+jobs:
+  split:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out branch
+        uses: actions/checkout@v4
+        with:
+          ref: split-settings-command-voice-modules
+
+      - name: Generate settings/access/command/voice modules
+        run: node tools/split-settings-command-voice-modules.mjs
+
+      - name: Commit generated modules
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A index.modular.html src/app/settings src/app/workspace src/app/access src/app/command src/app/voice src/app/keyboard
+          if git diff --cached --quiet; then
+            echo "No generated module changes."
+          else
+            git commit -m "Split settings access command voice modules"
+            git push origin split-settings-command-voice-modules
+          fi
