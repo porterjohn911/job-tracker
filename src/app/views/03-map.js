@@ -6,13 +6,19 @@ function renderMap(){
   const withCoords=all.filter(j=>j.lat&&j.lng);
   const needGeo=all.filter(j=>j.address&&(!j.lat||!j.lng));
   const failed=needGeo.filter(j=>j.geocodeStatus==='failed');
-  const pending=needGeo.length-failed.length;
+  const needsConfirm=needGeo.filter(j=>j.geocodeStatus==='needs_confirm'&&(j.geocodeCandidates||[]).length);
+  const pending=needGeo.length-failed.length-needsConfirm.length;
   return `
     <div class="map-controls">
-      <div class="map-stats">${withCoords.length} of ${all.filter(j=>j.address).length} jobs pinned${pending>0?` · ${pending} need locating`:''}${failed.length>0?` · ${failed.length} failed`:''}</div>
+      <div class="map-stats">${withCoords.length} of ${all.filter(j=>j.address).length} jobs pinned${pending>0?` · ${pending} need locating`:''}${needsConfirm.length>0?` · ${needsConfirm.length} need review`:''}${failed.length>0?` · ${failed.length} failed`:''}</div>
       ${needGeo.length>0?`<button class="btn-sm" id="btn-geocode">Locate ${needGeo.length} address${needGeo.length!==1?'es':''}</button>`:''}
       <span class="geocode-status" id="geo-status" style="display:none"></span>
     </div>
+    ${needsConfirm.length>0?`<div class="map-alert map-alert-review">
+      <strong>${needsConfirm.length} address${needsConfirm.length!==1?'es':''} need confirmation.</strong>
+      <span>Pick the matching result before the job is pinned.</span>
+      <div class="map-failed-list">${needsConfirm.slice(0,4).map(j=>`<button class="map-failed-job" data-pick-location="${j.id}">${esc(j.name)}${j.address?' · '+esc(j.address):''}</button>`).join('')}${needsConfirm.length>4?`<span class="map-failed-more">+${needsConfirm.length-4} more</span>`:''}</div>
+    </div>`:''}
     ${failed.length>0?`<div class="map-alert">
       <strong>${failed.length} address${failed.length!==1?'es':''} could not be located.</strong>
       <span>Check spelling, city, state, or ZIP, then run Locate again.</span>
@@ -64,32 +70,61 @@ function mountMap(){
 }
 
 // Nominatim geocoder (rate limited 1/sec by their TOS)
-async function geocodeOne(addr){
+function normalizeGeocodeCandidate(row){
+  return {
+    lat:parseFloat(row.lat),
+    lng:parseFloat(row.lon),
+    label:row.display_name||'',
+    type:[row.type,row.class].filter(Boolean).join(' · '),
+    importance:Number(row.importance||0)
+  };
+}
+async function geocodeCandidates(addr){
   try{
-    const r=await fetch('https://nominatim.openstreetmap.org/search?format=json&limit=1&q='+encodeURIComponent(addr),{headers:{'Accept':'application/json'}});
-    if(!r.ok)return null;
+    const r=await fetch('https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&limit=3&q='+encodeURIComponent(addr),{headers:{'Accept':'application/json'}});
+    if(!r.ok)return [];
     const data=await r.json();
-    if(data&&data.length>0)return{lat:parseFloat(data[0].lat),lng:parseFloat(data[0].lon),label:data[0].display_name||''};
+    if(data&&data.length>0)return data.map(normalizeGeocodeCandidate).filter(c=>Number.isFinite(c.lat)&&Number.isFinite(c.lng));
   }catch(e){}
+  return [];
+}
+function bestGeocodeCandidate(candidates){
+  if(!candidates.length)return null;
+  const [first,second]=candidates;
+  if(!second)return first;
+  if(first.importance&&second.importance&&(first.importance-second.importance)>0.18)return first;
   return null;
+}
+function applyGeocodeCandidate(j,c){
+  j.lat=c.lat;
+  j.lng=c.lng;
+  j.geocodeStatus='ok';
+  j.geocodeLabel=c.label;
+  j.geocodedAt=Date.now();
+  j.locationSource='geocode';
+  delete j.geocodeCandidates;
 }
 async function geocodeAll(){
   const queue=jobs().filter(j=>j.address&&(!j.lat||!j.lng));
   const status=$('geo-status');
-  let located=0,failed=0;
+  let located=0,review=0,failed=0;
   if(status)status.style.display='inline-block';
   for(let i=0;i<queue.length;i++){
     const j=queue[i];
     if(status)status.textContent=`Locating ${i+1} of ${queue.length}: ${j.name}…`;
-    const coords=await geocodeOne(j.address);
+    const candidates=await geocodeCandidates(j.address);
+    const coords=bestGeocodeCandidate(candidates);
     if(coords){
-      j.lat=coords.lat;
-      j.lng=coords.lng;
-      j.geocodeStatus='ok';
-      j.geocodeLabel=coords.label;
-      j.geocodedAt=Date.now();
-      j.locationSource='geocode';
+      applyGeocodeCandidate(j,coords);
       located++;
+    }else if(candidates.length){
+      delete j.lat;
+      delete j.lng;
+      j.geocodeStatus='needs_confirm';
+      j.geocodeCandidates=candidates;
+      j.geocodedAt=Date.now();
+      j.locationSource='address';
+      review++;
     }else{
       delete j.lat;
       delete j.lng;
@@ -101,7 +136,39 @@ async function geocodeAll(){
     await writeJob(j);
     await new Promise(r=>setTimeout(r,1100));
   }
-  if(status)status.textContent=`Done. ${located} located${failed?`, ${failed} failed`:''}.`;
-  toast(failed?`${located} located, ${failed} failed`:'Locations updated');
+  if(status)status.textContent=`Done. ${located} located${review?`, ${review} need review`:''}${failed?`, ${failed} failed`:''}.`;
+  toast(review||failed?`${located} located, ${review} need review, ${failed} failed`:'Locations updated');
   render();
+}
+function showGeocodeCandidateModal(jobId){
+  const j=S.jobs[jobId];
+  if(!j)return;
+  const candidates=j.geocodeCandidates||[];
+  if(!candidates.length){toast('No location choices saved','');return}
+  $('modal-root').innerHTML=`<div class="modal-bd" id="mbd" role="dialog" aria-modal="true" aria-label="Confirm map location"><div class="modal"><div class="modal-handle"></div>
+    <div class="modal-head"><div class="modal-title">Confirm Location</div><button class="modal-close" id="mc" aria-label="Close"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button></div>
+    <div class="modal-body">
+      <div class="map-confirm-job"><strong>${esc(j.name)}</strong><span>${esc(j.address||'')}</span></div>
+      <div class="map-candidate-list">
+        ${candidates.map((c,i)=>`<button class="map-candidate" data-location-choice="${i}">
+          <span class="map-candidate-title">${esc(c.label||'Unknown location')}</span>
+          <span class="map-candidate-meta">${c.type?esc(c.type)+' · ':''}${c.lat.toFixed(5)}, ${c.lng.toFixed(5)}</span>
+        </button>`).join('')}
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-cancel" id="btn-cx">Cancel</button>
+    </div>
+  </div></div>`;
+  $('mc').onclick=$('btn-cx').onclick=closeModal;
+  $('mbd').onclick=e=>{if(e.target===e.currentTarget)closeModal()};
+  document.querySelectorAll('[data-location-choice]').forEach(btn=>btn.onclick=async()=>{
+    const c=candidates[Number(btn.dataset.locationChoice)];
+    if(!c)return;
+    applyGeocodeCandidate(j,c);
+    await writeJob(j);
+    closeModal();
+    render();
+    toast('Location confirmed');
+  });
 }
