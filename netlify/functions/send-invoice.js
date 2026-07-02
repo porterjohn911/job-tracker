@@ -2,12 +2,12 @@
 // Workspace business email via SMTP. Called by the app's "Email it now" button.
 //
 // Required Netlify env vars (Site config -> Environment variables):
-//   SMTP_USER  = your Workspace address (e.g. office@witportconstruction.com)
+//   SMTP_USER  = the Workspace email address to send from
 //   SMTP_PASS  = a Google App Password for that account (NOT your login password)
 // Optional:
 //   SMTP_HOST  (default smtp.gmail.com)   SMTP_PORT (default 465)
-//   FIREBASE_API_KEY (defaults to the project's public web API key)
-//   FIREBASE_DB_URL  (defaults to the project's Realtime Database URL)
+//   FIREBASE_API_KEY
+//   FIREBASE_DB_URL
 //   ALLOWED_ORIGINS  (comma-separated site origins allowed to call this; when
 //                     unset, CORS falls back to '*' — set it to lock down)
 //
@@ -21,8 +21,8 @@
 const nodemailer = require('nodemailer');
 const { PDFDocument, StandardFonts, rgb } = require('pdf-lib');
 
-const FIREBASE_API_KEY = process.env.FIREBASE_API_KEY || 'AIzaSyDCE0Yo6YkYtSkibUx9T7Q5XEkgmEsSKRc';
-const FIREBASE_DB_URL = (process.env.FIREBASE_DB_URL || 'https://witport-constructionservices-default-rtdb.firebaseio.com').replace(/\/+$/, '');
+const FIREBASE_API_KEY = process.env.FIREBASE_API_KEY || '';
+const FIREBASE_DB_URL = (process.env.FIREBASE_DB_URL || '').replace(/\/+$/, '');
 const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS || '').split(',').map((s) => s.trim()).filter(Boolean);
 const APPROVED_ROLES = ['owner', 'manager', 'worker'];
 
@@ -166,6 +166,7 @@ exports.handler = async (event) => {
   const { idToken, to, subject, message, doc } = body;
   if (!to) return json(400, { error: 'Missing recipient email' });
   if (!doc) return json(400, { error: 'Missing invoice data' });
+  if (!FIREBASE_API_KEY || !FIREBASE_DB_URL) return json(500, { error: 'Firebase environment variables are not configured in Netlify' });
 
   const uid = await verifyToken(idToken);
   if (!uid) return json(401, { error: 'Not authorized — please sign in again' });

@@ -58,7 +58,22 @@ The app depends on these browser/service integrations:
 - Netlify Functions for server-side invoice/estimate email sending.
 - Google Workspace SMTP credentials in Netlify environment variables for outbound email.
 
-The Firebase web config in client code is not treated as a secret. Access protection should come from Firebase Auth and Firebase Database/Storage rules.
+Firebase config is loaded at runtime from Netlify environment variables through `netlify/functions/app-config.js` so deploy secret scanning does not flag committed source files.
+
+Required Netlify environment variables:
+
+- `FIREBASE_API_KEY`
+- `FIREBASE_AUTH_DOMAIN`
+- `FIREBASE_DB_URL`
+- `FIREBASE_PROJECT_ID`
+- `FIREBASE_STORAGE_BUCKET`
+- `FIREBASE_MESSAGING_SENDER_ID`
+- `FIREBASE_APP_ID`
+- `FIREBASE_MEASUREMENT_ID`
+- `SMTP_USER`
+- `SMTP_PASS`
+
+The Firebase web config values are public client configuration, but access protection still comes from Firebase Auth and Firebase Database/Storage rules.
 
 ## Data Model Overview
 
