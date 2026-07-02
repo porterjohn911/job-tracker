@@ -8,6 +8,24 @@ The app is deployed as a static Netlify site. Most of the application runs direc
 
 This project used to be one very large `index.html` file. It has been split into smaller JavaScript modules under `src/app/`, while keeping backup files in the repo for safety.
 
+### Current Source Of Truth
+
+The production app is `index.html` plus the ordered runtime scripts it loads from `src/app/**`.
+
+When changing app behavior, edit the focused files under nested folders such as `src/app/invoices/`, `src/app/views/`, `src/app/boot/`, `src/app/jobs/`, and `src/app/settings/`.
+
+The older files below are rollback/reference material only and should not be reintroduced into `index.html`:
+
+- `src/app.js`
+- `src/app/04-invoices-email.js`
+- `src/app/05-owner-reports-map-notifications.js`
+- `src/app/07-modals-jobs-share.js`
+- `src/app/08-invoice-editor-print.js`
+- `src/app/09-settings-access-command-voice.js`
+- `src/app/10-handlers-boot.js`
+
+Run `npm run check` before pushing changes. It verifies that `index.html` loads the current modular runtime scripts, not the old generated source chunks.
+
 Important entry files:
 
 - `index.html` is the live production page Netlify serves.

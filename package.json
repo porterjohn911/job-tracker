@@ -2,8 +2,16 @@
   "name": "witport-job-tracker",
   "private": true,
   "description": "Serverless function deps for emailing invoices/estimates (the app itself is static).",
+  "scripts": {
+    "check": "node scripts/check-static.mjs",
+    "test:smoke": "playwright test"
+  },
   "dependencies": {
-    "nodemailer": "^6.9.14",
+    "nodemailer": "^9.0.3",
     "pdf-lib": "^1.17.1"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.53.0",
+    "http-server": "^14.1.1"
   }
 }
