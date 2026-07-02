@@ -1,7 +1,7 @@
 // Invoice email HTML/text/EML and download helpers
 // Generated from src/app/04-invoices-email.js lines 223-433.
 // ── Build polished HTML email body for an invoice ──
-function buildInvoiceEmailHTML(j,inv,customMsg,kind){
+function buildInvoiceEmailHTML(j,inv,customMsg,kind){/* amounts use money2 (cents) so the emailed invoice matches the PDF attachment */
   kind=kind||'invoice';const EST=kind==='estimate';
   const c=calcInvoice(inv);
   const co=COMPANY;
@@ -12,8 +12,8 @@ function buildInvoiceEmailHTML(j,inv,customMsg,kind){
   const itemsRows=(inv.items||[]).map(it=>{
     const amt=Number(it.qty||0)*Number(it.rate||0);
     return `<tr><td style="padding:10px 8px;border-bottom:1px solid #eef3f1;font-size:13px;color:#0a1f18">${esc(it.desc||'')}</td>
-      <td style="padding:10px 8px;border-bottom:1px solid #eef3f1;font-size:13px;color:#3d6358;text-align:right;white-space:nowrap">${esc(String(it.qty??''))} × ${money(Number(it.rate||0))}</td>
-      <td style="padding:10px 8px;border-bottom:1px solid #eef3f1;font-size:13px;color:#0a1f18;text-align:right;font-weight:600;white-space:nowrap">${money(amt)}</td></tr>`;
+      <td style="padding:10px 8px;border-bottom:1px solid #eef3f1;font-size:13px;color:#3d6358;text-align:right;white-space:nowrap">${esc(String(it.qty??''))} × ${money2(Number(it.rate||0))}</td>
+      <td style="padding:10px 8px;border-bottom:1px solid #eef3f1;font-size:13px;color:#0a1f18;text-align:right;font-weight:600;white-space:nowrap">${money2(amt)}</td></tr>`;
   }).join('');
   const greeting=`Hi ${esc(firstName)},`;
   const intro=customMsg?esc(customMsg).replace(/\n/g,'<br>'):(EST
@@ -22,13 +22,13 @@ function buildInvoiceEmailHTML(j,inv,customMsg,kind){
   const balanceLine=EST
     ?`<div style="background:#e6f7f1;color:#0a3d2e;padding:16px 18px;border-radius:10px;margin:18px 0;text-align:center">
         <div style="font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;opacity:0.85">Estimated Total${inv.dueDate?' · valid until '+fmtDate(inv.dueDate):''}</div>
-        <div style="font-size:26px;font-weight:800;margin-top:4px;font-variant-numeric:tabular-nums">${money(c.total)}</div>
+        <div style="font-size:26px;font-weight:800;margin-top:4px;font-variant-numeric:tabular-nums">${money2(c.total)}</div>
       </div>`
     :(c.balance<=0.005
     ?`<div style="background:#dcfce7;color:#166534;padding:14px 18px;border-radius:10px;margin:18px 0;font-size:15px;font-weight:700;text-align:center">✓ Paid in Full — Thank you!</div>`
     :`<div style="background:#fef3c7;color:#92400e;padding:16px 18px;border-radius:10px;margin:18px 0;text-align:center">
         <div style="font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#92400e;opacity:0.85">Balance Due${inv.dueDate?' by '+fmtDate(inv.dueDate):''}</div>
-        <div style="font-size:26px;font-weight:800;color:#92400e;margin-top:4px;font-variant-numeric:tabular-nums">${money(c.balance)}</div>
+        <div style="font-size:26px;font-weight:800;color:#92400e;margin-top:4px;font-variant-numeric:tabular-nums">${money2(c.balance)}</div>
       </div>`);
   const contactLine=[co.phone?`<a href="tel:${esc(co.phone)}" style="color:${P.link};text-decoration:none">${esc(co.phone)}</a>`:'',
     co.email?`<a href="mailto:${esc(co.email)}" style="color:${P.link};text-decoration:none">${esc(co.email)}</a>`:'',
@@ -76,10 +76,10 @@ function buildInvoiceEmailHTML(j,inv,customMsg,kind){
           </td></tr>
           <tr><td style="padding:6px 16px 14px">
             <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="font-size:13px">
-              <tr><td style="padding:3px 0;color:#3d6358">Subtotal</td><td style="padding:3px 0;text-align:right;font-variant-numeric:tabular-nums;font-weight:600;color:#0a1f18">${money(c.sub)}</td></tr>
-              <tr><td style="padding:3px 0;color:#3d6358">Tax (${Number(inv.taxRate||0)}%)</td><td style="padding:3px 0;text-align:right;font-variant-numeric:tabular-nums;font-weight:600;color:#0a1f18">${money(c.tax)}</td></tr>
-              <tr><td style="padding:9px 0 3px;color:${P.primary};font-size:14px;font-weight:700;border-top:2px solid ${P.rule}">Total</td><td style="padding:9px 0 3px;text-align:right;font-variant-numeric:tabular-nums;font-weight:800;color:${P.primary};font-size:15px;border-top:2px solid ${P.rule}">${money(c.total)}</td></tr>
-              ${c.paid>0?`<tr><td style="padding:3px 0;color:#3d6358">Paid</td><td style="padding:3px 0;text-align:right;font-variant-numeric:tabular-nums;color:#3d6358">-${money(c.paid)}</td></tr>`:''}
+              <tr><td style="padding:3px 0;color:#3d6358">Subtotal</td><td style="padding:3px 0;text-align:right;font-variant-numeric:tabular-nums;font-weight:600;color:#0a1f18">${money2(c.sub)}</td></tr>
+              <tr><td style="padding:3px 0;color:#3d6358">Tax (${Number(inv.taxRate||0)}%)</td><td style="padding:3px 0;text-align:right;font-variant-numeric:tabular-nums;font-weight:600;color:#0a1f18">${money2(c.tax)}</td></tr>
+              <tr><td style="padding:9px 0 3px;color:${P.primary};font-size:14px;font-weight:700;border-top:2px solid ${P.rule}">Total</td><td style="padding:9px 0 3px;text-align:right;font-variant-numeric:tabular-nums;font-weight:800;color:${P.primary};font-size:15px;border-top:2px solid ${P.rule}">${money2(c.total)}</td></tr>
+              ${c.paid>0?`<tr><td style="padding:3px 0;color:#3d6358">Paid</td><td style="padding:3px 0;text-align:right;font-variant-numeric:tabular-nums;color:#3d6358">-${money2(c.paid)}</td></tr>`:''}
             </table>
           </td></tr>
         </table>
@@ -121,7 +121,7 @@ function buildInvoiceEmailText(j,inv,customMsg,kind){
   const intro=customMsg||(EST?`Thanks for considering ${co.name||'us'} for ${j.name||'your project'}. Your estimate is ready — details below. Let us know if you'd like to move forward.`:`Thanks for letting ${co.name||'us'} work with you on ${j.name||'your project'}. Your invoice is ready — details below.`);
   const items=(inv.items||[]).map(it=>{
     const amt=Number(it.qty||0)*Number(it.rate||0);
-    return `  • ${(it.desc||'').padEnd(40)} ${(it.qty??'')+' × '+money(Number(it.rate||0))}   ${money(amt)}`;
+    return `  • ${(it.desc||'').padEnd(40)} ${(it.qty??'')+' × '+money2(Number(it.rate||0))}   ${money2(amt)}`;
   }).join('\n');
   const lines=[
     `Hi ${firstName},`,'',
@@ -130,11 +130,11 @@ function buildInvoiceEmailText(j,inv,customMsg,kind){
     `Date: ${fmtDate(inv.date)||''}`,
     inv.dueDate?`${EST?'Valid until':'Due'}:  ${fmtDate(inv.dueDate)}`:'',
     '','Line Items:',items||'  (none)','',
-    `Subtotal:   ${money(c.sub)}`,
-    `Tax (${Number(inv.taxRate||0)}%):  ${money(c.tax)}`,
-    `Total:      ${money(c.total)}`,
-    EST?'':(c.paid>0?`Paid:      -${money(c.paid)}`:''),
-    EST?`ESTIMATED TOTAL: ${money(c.total)}`:(c.balance<=0.005?`PAID IN FULL — Thank you!`:`Balance Due: ${money(c.balance)}`),
+    `Subtotal:   ${money2(c.sub)}`,
+    `Tax (${Number(inv.taxRate||0)}%):  ${money2(c.tax)}`,
+    `Total:      ${money2(c.total)}`,
+    EST?'':(c.paid>0?`Paid:      -${money2(c.paid)}`:''),
+    EST?`ESTIMATED TOTAL: ${money2(c.total)}`:(c.balance<=0.005?`PAID IN FULL — Thank you!`:`Balance Due: ${money2(c.balance)}`),
     '',
     inv.notes?'Notes:\n'+inv.notes+'\n':'',
     `Questions? Just reply to this email${co.phone?' or call '+co.phone:''}. We appreciate your business!`,'',

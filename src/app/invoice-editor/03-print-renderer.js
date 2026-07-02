@@ -16,8 +16,8 @@ function printInvoice(j,inv,kind){
     return `<tr>
       <td>${esc(it.desc||'')}</td>
       <td class="num">${esc(String(it.qty??''))}</td>
-      <td class="num">${money(Number(it.rate||0))}</td>
-      <td class="num">${money(amt)}</td>
+      <td class="num">${money2(Number(it.rate||0))}</td>
+      <td class="num">${money2(amt)}</td>
     </tr>`;
   }).join('');
 
@@ -113,13 +113,13 @@ function printInvoice(j,inv,kind){
       <tbody>${itemsRows||'<tr><td colspan="4" style="text-align:center;color:#999;padding:20px">No line items</td></tr>'}</tbody>
     </table>
     <div class="totals">
-      <div class="row"><span>Subtotal</span><span class="v">${money(c.sub)}</span></div>
-      <div class="row"><span>Tax (${Number(inv.taxRate||0)}%)</span><span class="v">${money(c.tax)}</span></div>
-      <div class="row grand"><span>Total</span><span class="v">${money(c.total)}</span></div>
+      <div class="row"><span>Subtotal</span><span class="v">${money2(c.sub)}</span></div>
+      <div class="row"><span>Tax (${Number(inv.taxRate||0)}%)</span><span class="v">${money2(c.tax)}</span></div>
+      <div class="row grand"><span>Total</span><span class="v">${money2(c.total)}</span></div>
       ${EST
-        ?`<div class="due zero"><span>Estimated Total${inv.dueDate?' · valid until '+fmtDate(inv.dueDate):''}</span><span class="v">${money(c.total)}</span></div>`
-        :`${c.paid>0?`<div class="row"><span>Paid</span><span class="v">-${money(c.paid)}</span></div>`:''}
-      <div class="due ${c.balance<=0.005?'zero':''}"><span>${c.balance<=0.005?'Paid in Full':'Balance Due'}</span><span class="v">${money(Math.max(0,c.balance))}</span></div>`}
+        ?`<div class="due zero"><span>Estimated Total${inv.dueDate?' · valid until '+fmtDate(inv.dueDate):''}</span><span class="v">${money2(c.total)}</span></div>`
+        :`${c.paid>0?`<div class="row"><span>Paid</span><span class="v">-${money2(c.paid)}</span></div>`:''}
+      <div class="due ${c.balance<=0.005?'zero':''}"><span>${c.balance<=0.005?'Paid in Full':'Balance Due'}</span><span class="v">${money2(Math.max(0,c.balance))}</span></div>`}
     </div>
     ${inv.notes?`<div class="notes"><div class="lbl">Notes</div>${esc(inv.notes).replace(/\n/g,'<br>')}</div>`:''}
     ${inv.terms?`<div class="terms">${esc(inv.terms)}</div>`:''}

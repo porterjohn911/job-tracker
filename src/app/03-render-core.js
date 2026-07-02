@@ -159,11 +159,12 @@ function jobDateRange(j){
   const out=[];
   const s=new Date(start+'T00:00:00');
   const e=new Date(end+'T00:00:00');
-  for(let d=new Date(s);d<=e;d.setDate(d.getDate()+1)){
+  // Cap at 365 days inside the loop so a bad far-future date (e.g. dueDate
+  // "9999-12-31") can't build a multi-million-element array and freeze the tab.
+  for(let d=new Date(s);d<=e&&out.length<365;d.setDate(d.getDate()+1)){
     out.push(dateKey(d));
   }
-  // Cap at 365 days to avoid runaway iterations on bad data
-  return out.slice(0,365);
+  return out;
 }
 
 function chipClass(status){return{lead:'cs-lead',active:'cs-active',complete:'cs-complete',hold:'cs-hold',lost:'cs-lost'}[status]||'cs-active'}

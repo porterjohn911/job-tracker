@@ -41,7 +41,13 @@ function buildNotifications(){
   }
   return out.sort((a,b)=>b.time-a.time).slice(0,30);
 }
-function unreadCount(){return buildNotifications().filter(n=>n.time>S.notifReadAt).length}
+// Read state is tracked per notification (opening one marks only that one),
+// plus a legacy "mark all read" timestamp so older items stay read.
+function notifKey(n){return n.type+'|'+(n.jobId||'')+'|'+n.time}
+function notifReadSet(){if(!S.notifRead){try{const a=JSON.parse(localStorage.getItem(LS('notif_read_keys'))||'[]');S.notifRead=new Set(Array.isArray(a)?a:[])}catch(e){S.notifRead=new Set()}}return S.notifRead}
+function saveNotifReadSet(){try{localStorage.setItem(LS('notif_read_keys'),JSON.stringify([...notifReadSet()]))}catch(e){}}
+function notifIsRead(n){return n.time<=S.notifReadAt||notifReadSet().has(notifKey(n))}
+function unreadCount(){return buildNotifications().filter(n=>!notifIsRead(n)).length}
 function updateBellBadge(){
   const b=$('bell-badge');if(!b)return;
   const n=unreadCount();
@@ -53,10 +59,10 @@ function showNotificationsModal(){
   const ICONS={overdue:'!',task:'○',activity:'•',mention:'@'};
   const body=notifs.length===0
     ? `<div class="notif-empty">🔕<br><br>You're all caught up.<br><span style="font-size:12px">Tasks assigned to you, mentions, and activity on your jobs will appear here.</span></div>`
-    : '<div class="notif-list">'+notifs.map(n=>`<div class="notif-item ${n.time>S.notifReadAt?'unread':''}" data-open="${n.jobId}">
+    : '<div class="notif-list">'+notifs.map(n=>`<div class="notif-item ${notifIsRead(n)?'':'unread'}" data-open="${esc(n.jobId)}" data-nkey="${esc(notifKey(n))}">
         <div class="notif-icon ${n.type}">${ICONS[n.type]||'•'}</div>
         <div class="notif-body"><div class="notif-text">${n.text}</div><div class="notif-meta">${n.sub} · ${ago(n.time)}</div></div>
-        ${n.time>S.notifReadAt?'<div class="notif-dot"></div>':''}
+        ${notifIsRead(n)?'':'<div class="notif-dot"></div>'}
       </div>`).join('')+'</div>';
   $('modal-root').innerHTML=`<div class="modal-bd" id="mbd"><div class="modal"><div class="modal-handle"></div>
     <div class="modal-head"><div class="modal-title">Notifications ${notifs.length?'<span style="font-weight:400;color:var(--text-3);font-size:13px">· '+notifs.length+'</span>':''}</div>
@@ -72,8 +78,7 @@ function showNotificationsModal(){
     closeModal();render();toast('Marked all as read');
   });
   document.querySelectorAll('.notif-item[data-open]').forEach(el=>el.onclick=()=>{
-    S.notifReadAt=Math.max(S.notifReadAt,Date.now());
-    localStorage.setItem(LS('notif_read'),String(S.notifReadAt));
+    if(el.dataset.nkey){notifReadSet().add(el.dataset.nkey);saveNotifReadSet()}
     S.detail=el.dataset.open;S.view='jobs';S.detailTab='overview';closeModal();render();
   });
 }
