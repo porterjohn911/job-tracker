@@ -27,6 +27,8 @@ let COMPANY=loadCompany();
 // ── Workflow stages (BuilderTrend / AccuLynx style)
 const STAGES=['Lead','Estimate','Approved','Scheduled','In Progress','Punch List','Complete'];
 const STAGE_TO_STATUS={'Lead':'lead','Estimate':'lead','Approved':'active','Scheduled':'active','In Progress':'active','Punch List':'active','Complete':'complete'};
+const JOB_STATUS_VALUES=['lead','active','hold','lost','complete'];
+const CLOSED_JOB_STATUSES=['complete','lost'];
 const PHOTO_CATS=['all','before','during','after','damage','docs'];
 const LEAD_SOURCES=['Referral','Repeat Customer','Google Search','Facebook / Social','Yard Sign','Drive-By','Website','Phone Call','Walk-In','Other'];
 const RECEIPT_CATS=['Materials','Tools / Equipment','Fuel / Travel','Subcontractor','Permits / Fees','Labor','Meals','Other'];
@@ -63,6 +65,7 @@ function fmtShort(s){if(!s)return'';try{const d=new Date(s+(s.length===10?'T00:0
 function daysUntil(s){if(!s)return null;try{const d=new Date(s+(s.length===10?'T00:00:00':''));const t=new Date();t.setHours(0,0,0,0);return Math.round((d-t)/(1000*60*60*24))}catch(e){return null}}
 function jobBalance(j){const inv=Number(j.invoiced||0),paid=Number(j.paid||0);return inv-paid}
 function jobStage(j){return j.stage||(j.status==='complete'?'Complete':j.status==='lead'?'Lead':'In Progress')}
+function isClosedJob(j){return CLOSED_JOB_STATUSES.includes(j.status)}
 
 // ── Invoice helpers ──
 function calcInvoice(inv){

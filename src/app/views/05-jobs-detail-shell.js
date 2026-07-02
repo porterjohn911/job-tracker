@@ -2,7 +2,7 @@
 // Generated from src/app/05-owner-reports-map-notifications.js lines 586-780.
 function renderJobs(){
   const all=jobs();
-  const cnt={all:all.length,lead:0,active:0,complete:0,hold:0};
+  const cnt={all:all.length,lead:0,active:0,complete:0,hold:0,lost:0};
   all.forEach(j=>{if(cnt[j.status]!==undefined)cnt[j.status]++});
   const q=S.search.toLowerCase();
   const shown=all.filter(j=>{
@@ -46,6 +46,7 @@ function renderJobs(){
     <div class="filter-chip ${S.filter==='active'?'active':''}" data-filter="active">Active ${cnt.active}</div>
     <div class="filter-chip ${S.filter==='complete'?'active':''}" data-filter="complete">Done ${cnt.complete}</div>
     <div class="filter-chip ${S.filter==='hold'?'active':''}" data-filter="hold">On Hold ${cnt.hold}</div>
+    <div class="filter-chip ${S.filter==='lost'?'active':''}" data-filter="lost">Lost ${cnt.lost}</div>
   </div>
   ${S.bulkMode&&S.bulkSel.size>0?`<div class="bulk-bar">
     <div class="bulk-bar-count">${S.bulkSel.size} selected</div>

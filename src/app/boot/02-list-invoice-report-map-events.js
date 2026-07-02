@@ -40,8 +40,8 @@ function attachListInvoiceReportMapHandlers(){
     render();toast((anyUnpinned?'Pinned ':'Unpinned ')+ids.length+' job(s)');
   });
   $('bulk-status')?.addEventListener('click',async()=>{
-    const choice=prompt('Set status to: lead / active / hold / complete','active');
-    if(!choice||!['lead','active','hold','complete'].includes(choice.trim())){toast('Invalid status','');return}
+    const choice=prompt('Set status to: lead / active / hold / lost / complete','active');
+    if(!choice||!JOB_STATUS_VALUES.includes(choice.trim())){toast('Invalid status','');return}
     const ids=Array.from(S.bulkSel);
     for(const id of ids){const j=S.jobs[id];if(j){j.status=choice.trim();if(choice.trim()==='complete'){j.progress=100;j.completedAt=j.completedAt||Date.now()}await writeJob(j)}}
     render();toast('Updated '+ids.length+' job(s)');

@@ -8,7 +8,7 @@ const ADMIN_COLORS={wfs:'#2a9070',mhs:'#e8a830',nlr:'#3ab5c8'};
 function adminFirebaseReady(){return typeof firebase!=='undefined'&&firebase.apps&&firebase.apps.length}
 function refreshOwnerData(){ownerLoadLocal();render();toast('Refreshed');}
 function companyMetrics(arr){
-  const m={total:arr.length,active:0,leads:0,complete:0,hold:0,value:0,pipeline:0,invoiced:0,collected:0,revenue:0,won:0,lost:0};
+  const m={total:arr.length,active:0,leads:0,complete:0,hold:0,lostJobs:0,value:0,pipeline:0,invoiced:0,collected:0,revenue:0,won:0,lost:0};
   arr.forEach(j=>{
     const st=j.status;
     // Invoiced/collected come from the job's actual invoices when present
@@ -21,9 +21,10 @@ function companyMetrics(arr){
     if(st==='active')m.active++;
     else if(st==='lead')m.leads++;
     else if(st==='complete'){m.complete++;m.won++;m.revenue+=invd||Number(j.value||0);}
-    else if(st==='hold'){m.hold++;m.lost++;}
+    else if(st==='hold')m.hold++;
+    else if(st==='lost'){m.lostJobs++;m.lost++;}
     m.value+=Number(j.value||0);
-    if(st!=='complete'&&st!=='hold')m.pipeline+=Number(j.value||0);
+    if(!isClosedJob(j))m.pipeline+=Number(j.value||0);
     m.invoiced+=invd;
     m.collected+=pd;
   });
@@ -51,7 +52,7 @@ function fmtMoneyShort(v){v=Number(v||0);if(Math.abs(v)>=1000)return '$'+(v/1000
 const colorOf=co=>ADMIN_COLORS[co.id]||'var(--green-600)';
 const coLbl=co=>co.id.toUpperCase();
 function ownerList(){return Object.values(COMPANIES).map(co=>({co,jobs:ownerJobs(co.id),m:companyMetrics(ownerJobs(co.id))}))}
-function ownerGrand(list){const g={};['total','active','leads','complete','hold','value','pipeline','invoiced','collected','revenue','won','lost'].forEach(k=>g[k]=list.reduce((s,x)=>s+x.m[k],0));g.outstanding=g.invoiced-g.collected;g.winRate=(g.won+g.lost)>0?g.won/(g.won+g.lost)*100:0;return g}
+function ownerGrand(list){const g={};['total','active','leads','complete','hold','lostJobs','value','pipeline','invoiced','collected','revenue','won','lost'].forEach(k=>g[k]=list.reduce((s,x)=>s+x.m[k],0));g.outstanding=g.invoiced-g.collected;g.winRate=(g.won+g.lost)>0?g.won/(g.won+g.lost)*100:0;return g}
 function monthlyRevenue(jobsArr){
   const months=[];const now=new Date();
   for(let i=5;i>=0;i--){const d=new Date(now.getFullYear(),now.getMonth()-i,1);months.push({label:d.toLocaleDateString(undefined,{month:'short'}),key:d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'),val:0});}
@@ -268,4 +269,3 @@ function applyOwnerChrome(){
   const nav=document.querySelector('.nav');if(nav)nav.innerHTML=OWNER_NAV;
   const fab=$('fab');if(fab)fab.style.display='none';
 }
-
