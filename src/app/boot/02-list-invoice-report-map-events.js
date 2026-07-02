@@ -128,6 +128,14 @@ function attachListInvoiceReportMapHandlers(){
   document.querySelectorAll('[data-range]').forEach(c=>c.onclick=()=>{S.reportRange=c.dataset.range;render()});
   // Map
   $('btn-geocode')?.addEventListener('click',geocodeAll);
+  document.querySelectorAll('[data-open-job]').forEach(el=>el.onclick=e=>{
+    e.preventDefault();
+    e.stopPropagation();
+    S.detail=el.dataset.openJob;
+    S.view='jobs';
+    S.detailTab='overview';
+    render();
+  });
   $('btn-add-job')?.addEventListener('click',()=>showJobModal('add'));
   $('btn-add-job2')?.addEventListener('click',()=>showJobModal('add'));
   $('btn-export-csv')?.addEventListener('click',exportCSV);
