@@ -124,26 +124,21 @@ if (ENV === 'dev') {
 }
 
 // ══ Firebase config ══
-// Baked-in config: paste your project's firebaseConfig object below to make
-// every device auto-connect with no per-device "Connect Team" step. The
-// Firebase web config is NOT a secret — it's designed to ship in client code
-// (security comes from the database rules + Auth). Leave null to fall back to
-// the localStorage config set via the in-app "Connect Team" screen.
-const FIREBASE_CONFIG_BAKED = {
-  apiKey: "AIzaSyDCE0Yo6YkYtSkibUx9T7Q5XEkgmEsSKRc",
-  authDomain: "witport-constructionservices.firebaseapp.com",
-  // Realtime Database URL — assumes the default (us-central1) instance.
-  // If you created the database in another region, replace this with the
-  // exact databaseURL shown in the Firebase console.
-  databaseURL: "https://witport-constructionservices-default-rtdb.firebaseio.com",
-  projectId: "witport-constructionservices",
-  storageBucket: "witport-constructionservices.firebasestorage.app",
-  messagingSenderId: "85892975744",
-  appId: "1:85892975744:web:1140f8a3a577225b4a6a65",
-  measurementId: "G-9GYZ4K28V5"
-};
+// Production loads this from a Netlify function backed by environment
+// variables. Local/dev users can still paste config through Connect Team.
+const FIREBASE_CONFIG_BAKED = null;
 let FIREBASE_CONFIG = FIREBASE_CONFIG_BAKED;
 try{const s=localStorage.getItem('wfs_fb');if(!FIREBASE_CONFIG&&s)FIREBASE_CONFIG=JSON.parse(s)}catch(e){}
+async function loadRuntimeFirebaseConfig(){
+  if(FIREBASE_CONFIG||location.protocol==='file:')return;
+  if(['localhost','127.0.0.1','::1'].includes(location.hostname))return;
+  try{
+    const r=await fetch('/.netlify/functions/app-config',{headers:{Accept:'application/json'}});
+    if(!r.ok)return;
+    const cfg=await r.json();
+    if(cfg&&cfg.apiKey&&cfg.projectId)FIREBASE_CONFIG=cfg;
+  }catch(e){}
+}
 
 // ── Firebase Authentication gate (real logins + roles) ───────────────
 // Active whenever a Firebase config is present and the Auth SDK loaded.
@@ -152,7 +147,8 @@ try{const s=localStorage.getItem('wfs_fb');if(!FIREBASE_CONFIG&&s)FIREBASE_CONFI
 // sign in (empty /users) is auto-promoted to owner; later sign-ups start
 // "pending" until an owner assigns them. Database rules enforce all of this
 // server-side — these client checks only shape the UI.
-const FB_AUTH_ON = !!(FIREBASE_CONFIG && typeof firebase!=='undefined' && firebase.auth);
+let FB_AUTH_ON = !!(FIREBASE_CONFIG && typeof firebase!=='undefined' && firebase.auth);
+function refreshFirebaseAuthFlag(){FB_AUTH_ON=!!(FIREBASE_CONFIG&&typeof firebase!=='undefined'&&firebase.auth)}
 function gateOn(){return FB_AUTH_ON||accessEnabled()}
 function canSeeAllRec(r){return !!(r&&(r.role==='owner'||r.role==='manager'))}
 let FB_USER=null;
@@ -267,4 +263,3 @@ function renderFbUserList(users){
     };
   });
 }
-

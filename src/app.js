@@ -127,19 +127,7 @@ if (ENV === 'dev') {
 // Firebase web config is NOT a secret — it's designed to ship in client code
 // (security comes from the database rules + Auth). Leave null to fall back to
 // the localStorage config set via the in-app "Connect Team" screen.
-const FIREBASE_CONFIG_BAKED = {
-  apiKey: "AIzaSyDCE0Yo6YkYtSkibUx9T7Q5XEkgmEsSKRc",
-  authDomain: "witport-constructionservices.firebaseapp.com",
-  // Realtime Database URL — assumes the default (us-central1) instance.
-  // If you created the database in another region, replace this with the
-  // exact databaseURL shown in the Firebase console.
-  databaseURL: "https://witport-constructionservices-default-rtdb.firebaseio.com",
-  projectId: "witport-constructionservices",
-  storageBucket: "witport-constructionservices.firebasestorage.app",
-  messagingSenderId: "85892975744",
-  appId: "1:85892975744:web:1140f8a3a577225b4a6a65",
-  measurementId: "G-9GYZ4K28V5"
-};
+const FIREBASE_CONFIG_BAKED = null;
 let FIREBASE_CONFIG = FIREBASE_CONFIG_BAKED;
 try{const s=localStorage.getItem('wfs_fb');if(!FIREBASE_CONFIG&&s)FIREBASE_CONFIG=JSON.parse(s)}catch(e){}
 
@@ -3309,7 +3297,7 @@ function showSetupModal(){
         <div class="setup-step"><div class="step-num">4</div><div class="step-text">Gear icon ⚙ → Project settings → Your apps → Web icon &lt;/&gt; → Register → copy the <strong>firebaseConfig</strong>.</div></div>
         <div class="setup-step"><div class="step-num">5</div><div class="step-text">Paste the config JSON below and tap Connect. Do this on every team member's phone.</div></div>
       </div>
-      <div class="form-group"><label class="form-label">Firebase config JSON</label><textarea class="form-textarea" id="fb-cfg" style="font-family:monospace;font-size:12px;min-height:110px" placeholder='{"apiKey":"AIza...","authDomain":"...","databaseURL":"https://....firebaseio.com","projectId":"...","storageBucket":"...","messagingSenderId":"...","appId":"..."}'>
+      <div class="form-group"><label class="form-label">Firebase config JSON</label><textarea class="form-textarea" id="fb-cfg" style="font-family:monospace;font-size:12px;min-height:110px" placeholder='{"apiKey":"YOUR_FIREBASE_API_KEY","authDomain":"...","databaseURL":"https://....firebaseio.com","projectId":"...","storageBucket":"...","messagingSenderId":"...","appId":"..."}'>
 </textarea></div>
     </div>
     <div class="modal-foot"><button class="btn-cancel" id="btn-cx">Cancel</button><button class="btn-save" id="btn-connect">Connect Team</button></div>

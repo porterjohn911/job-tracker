@@ -11,8 +11,12 @@ function bootApp(){
   if(OWNER_MODE)applyOwnerChrome();else applyCompanyBranding();
   render();
 }
-if(FB_AUTH_ON){startAuthGate();}
-else if(LOCKED){showLockScreen();}
-else{bootApp();}
-
+async function startApp(){
+  await loadRuntimeFirebaseConfig();
+  refreshFirebaseAuthFlag();
+  if(FB_AUTH_ON){startAuthGate();}
+  else if(LOCKED){showLockScreen();}
+  else{bootApp();}
+}
+startApp();
 
