@@ -4,36 +4,77 @@ rules_version = '2';
 // Photos, receipts and documents are uploaded under:
 //   {companyNamespace}/jobs/{jobId}/{photos|docs|receipts}/{file}
 //
-// Storage rules cannot read Realtime Database role records. Per-company role
-// enforcement here requires custom auth claims or a server-side upload broker.
+// ───────────────────────────────────────────────────────────────────────────
+// SECURITY LIMITATION — READ THIS BEFORE RELYING ON THESE RULES
+//
+// Storage rules CANNOT read the Realtime Database, so they cannot see a user's
+// role or company (those live at /users/{uid} in RTDB). That means these rules
+// alone CANNOT enforce per-company isolation: any approved, signed-in user can
+// still read/write/delete files belonging to ANY company.
+//
+// The checks below are "interim hardening" only. They:
+//   • require a real (non-anonymous) signed-in account,
+//   • keep the company namespace + path shape constrained,
+//   • require photo uploads to actually be images, and
+//   • deny everything outside the known job-asset paths.
+//
+// They DO NOT, and cannot, stop a signed-in user of company A from reading
+// company B's files. Closing that gap requires one of:
+//   1. Firebase Auth custom claims (company/role stamped on the token by an
+//      admin/Cloud Function) gated here as request.auth.token.company == company, or
+//   2. a server-side upload/download broker that checks the caller's RTDB role.
+// Until one of those ships, treat cross-company file confidentiality as NOT
+// enforced at the Storage layer.
+// ───────────────────────────────────────────────────────────────────────────
 service firebase.storage {
   match /b/{bucket}/o {
+    // A real signed-in user. Anonymous auth is rejected: the app only uses
+    // email/password sign-in, so an anonymous token is never legitimate and
+    // would otherwise be a free pass for drive-by access.
     function signedIn() {
-      return request.auth != null;
+      return request.auth != null
+        && request.auth.token.firebase.sign_in_provider != 'anonymous';
     }
 
     function validCompany(company) {
       return company.matches('^(wfs|mhs|nlr)(_dev)?$');
     }
 
-    function reasonableUpload() {
+    function validKind(kind) {
+      return kind.matches('^(photos|docs|receipts)$');
+    }
+
+    // Document/receipt payloads: images, PDFs, plain text/CSV, Office files, or
+    // an unknown-binary fallback (some browsers upload files as octet-stream).
+    function docType() {
+      return request.resource.contentType.matches('image/.*')
+        || request.resource.contentType == 'application/pdf'
+        || request.resource.contentType == 'text/plain'
+        || request.resource.contentType == 'text/csv'
+        || request.resource.contentType == 'application/vnd.ms-excel'
+        || request.resource.contentType.matches('application/vnd\\.openxmlformats-officedocument\\..*')
+        || request.resource.contentType == 'application/octet-stream';
+    }
+
+    // The app always re-encodes photos to image/jpeg before upload, so the
+    // photos/ path only ever holds images. Enforcing that here stops the
+    // photos/ folder from being used to stash arbitrary binaries.
+    function typeOkFor(kind) {
+      return kind == 'photos'
+        ? request.resource.contentType.matches('image/.*')
+        : docType();
+    }
+
+    function reasonableUpload(kind) {
       return request.resource != null
         && request.resource.size < 25 * 1024 * 1024
-        && (
-          request.resource.contentType.matches('image/.*')
-          || request.resource.contentType == 'application/pdf'
-          || request.resource.contentType == 'text/plain'
-          || request.resource.contentType == 'text/csv'
-          || request.resource.contentType == 'application/vnd.ms-excel'
-          || request.resource.contentType.matches('application/vnd\\.openxmlformats-officedocument\\..*')
-          || request.resource.contentType == 'application/octet-stream'
-        );
+        && typeOkFor(kind);
     }
 
     match /{company}/jobs/{jobId}/{kind}/{fileName} {
-      allow read: if signedIn() && validCompany(company) && kind.matches('^(photos|docs|receipts)$');
-      allow create, update: if signedIn() && validCompany(company) && kind.matches('^(photos|docs|receipts)$') && reasonableUpload();
-      allow delete: if signedIn() && validCompany(company) && kind.matches('^(photos|docs|receipts)$');
+      allow read: if signedIn() && validCompany(company) && validKind(kind);
+      allow create, update: if signedIn() && validCompany(company) && validKind(kind) && reasonableUpload(kind);
+      allow delete: if signedIn() && validCompany(company) && validKind(kind);
     }
 
     match /{allPaths=**} {
