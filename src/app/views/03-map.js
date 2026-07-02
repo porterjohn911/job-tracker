@@ -8,12 +8,23 @@ function renderMap(){
   const failed=needGeo.filter(j=>j.geocodeStatus==='failed');
   const needsConfirm=needGeo.filter(j=>j.geocodeStatus==='needs_confirm'&&(j.geocodeCandidates||[]).length);
   const pending=needGeo.length-failed.length-needsConfirm.length;
+  const pinJobs=all.filter(j=>j.address||j.lat||j.lng);
+  const manualTarget=S.manualPinJob&&S.jobs[S.manualPinJob]?S.jobs[S.manualPinJob]:null;
   return `
     <div class="map-controls">
       <div class="map-stats">${withCoords.length} of ${all.filter(j=>j.address).length} jobs pinned${pending>0?` · ${pending} need locating`:''}${needsConfirm.length>0?` · ${needsConfirm.length} need review`:''}${failed.length>0?` · ${failed.length} failed`:''}</div>
       ${needGeo.length>0?`<button class="btn-sm" id="btn-geocode">Locate ${needGeo.length} address${needGeo.length!==1?'es':''}</button>`:''}
+      ${pinJobs.length>0?`<select class="map-job-select" id="map-manual-job" aria-label="Manual pin job">
+        <option value="">Set pin manually…</option>
+        ${pinJobs.map(j=>`<option value="${j.id}" ${manualTarget&&manualTarget.id===j.id?'selected':''}>${esc(j.name)}${j.lat&&j.lng?' · pinned':''}</option>`).join('')}
+      </select>`:''}
       <span class="geocode-status" id="geo-status" style="display:none"></span>
     </div>
+    ${manualTarget?`<div class="map-alert map-alert-manual">
+      <strong>Click the map to set the pin for ${esc(manualTarget.name)}.</strong>
+      <span>${manualTarget.address?esc(manualTarget.address):'No job site address saved.'}</span>
+      <button class="map-clear-manual" id="map-clear-manual">Cancel manual pin</button>
+    </div>`:''}
     ${needsConfirm.length>0?`<div class="map-alert map-alert-review">
       <strong>${needsConfirm.length} address${needsConfirm.length!==1?'es':''} need confirmation.</strong>
       <span>Pick the matching result before the job is pinned.</span>
@@ -26,9 +37,9 @@ function renderMap(){
     </div>`:''}
     ${withCoords.length===0?`<div class="map-empty">
       <p style="margin-bottom:10px">No jobs pinned to the map yet.</p>
-      <p style="font-size:12.5px">${needGeo.length>0?'Click "Locate" above to find addresses on the map.':'Add a job with an address to get started.'}</p>
+      <p style="font-size:12.5px">${manualTarget?'Click the map below to place this job.':needGeo.length>0?'Click "Locate" above to find addresses on the map.':'Add a job with an address to get started.'}</p>
     </div>`:''}
-    <div class="map-wrap" id="map-wrap" style="${withCoords.length===0?'display:none':''}">
+    <div class="map-wrap" id="map-wrap" style="${withCoords.length===0&&!manualTarget?'display:none':''}">
       <div id="leaflet-map"></div>
     </div>
   `;
@@ -43,7 +54,8 @@ function mountMap(){
   if(!el)return;
   if(MAP){MAP.remove();MAP=null;MAP_MARKERS=[]}
   const all=jobs().filter(j=>j.lat&&j.lng);
-  if(all.length===0)return;
+  const manualTarget=S.manualPinJob&&S.jobs[S.manualPinJob]?S.jobs[S.manualPinJob]:null;
+  if(all.length===0&&!manualTarget)return;
   MAP=L.map(el,{scrollWheelZoom:true});
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
     maxZoom:19,attribution:'© OpenStreetMap'
@@ -57,15 +69,36 @@ function mountMap(){
       iconSize:[24,24],iconAnchor:[12,24]
     });
     const m=L.marker([j.lat,j.lng],{icon}).addTo(MAP);
-    m.bindPopup(`<strong>${esc(j.name)}</strong>${esc(j.address||'')}${j.geocodeLabel&&j.geocodeLabel!==j.address?'<br><span class="popup-muted">Matched: '+esc(j.geocodeLabel)+'</span>':''}<br><br>${j.customerName?esc(j.customerName)+'<br>':''}${j.customerPhone?'📞 '+esc(j.customerPhone)+'<br>':''}<a href="#" data-open-job="${j.id}">Open job →</a>`);
+    const locLabel=j.locationSource==='manual'?'Manual pin':(j.geocodeLabel&&j.geocodeLabel!==j.address?'Matched: '+esc(j.geocodeLabel):'');
+    m.bindPopup(`<strong>${esc(j.name)}</strong>${esc(j.address||'')}${locLabel?'<br><span class="popup-muted">'+locLabel+'</span>':''}<br><br>${j.customerName?esc(j.customerName)+'<br>':''}${j.customerPhone?'📞 '+esc(j.customerPhone)+'<br>':''}<a href="#" data-open-job="${j.id}">Open job →</a><br><a href="#" data-manual-pin="${j.id}">Move pin</a>`);
     m.on('popupopen',()=>{
       const lnk=document.querySelector('[data-open-job="'+j.id+'"]');
       if(lnk)lnk.onclick=e=>{e.preventDefault();S.detail=j.id;S.view='jobs';S.detailTab='overview';render()};
+      const move=document.querySelector('[data-manual-pin="'+j.id+'"]');
+      if(move)move.onclick=e=>{e.preventDefault();S.manualPinJob=j.id;render()};
     });
     group.push([j.lat,j.lng]);
   });
-  if(group.length===1){MAP.setView(group[0],13)}
-  else{MAP.fitBounds(group,{padding:[40,40]})}
+  if(manualTarget&&manualTarget.lat&&manualTarget.lng){MAP.setView([manualTarget.lat,manualTarget.lng],16)}
+  else if(group.length===1){MAP.setView(group[0],13)}
+  else if(group.length>1){MAP.fitBounds(group,{padding:[40,40]})}
+  else{MAP.setView([36.3829,-84.1199],11)}
+  if(manualTarget){
+    MAP.on('click',async e=>{
+      if(!confirm('Set map pin for '+manualTarget.name+' here?'))return;
+      manualTarget.lat=e.latlng.lat;
+      manualTarget.lng=e.latlng.lng;
+      manualTarget.geocodeStatus='ok';
+      manualTarget.geocodeLabel='Manual pin';
+      manualTarget.geocodedAt=Date.now();
+      manualTarget.locationSource='manual';
+      delete manualTarget.geocodeCandidates;
+      await writeJob(manualTarget);
+      S.manualPinJob=null;
+      render();
+      toast('Manual pin saved');
+    });
+  }
   setTimeout(()=>MAP&&MAP.invalidateSize(),100);
 }
 
