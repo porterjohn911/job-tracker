@@ -5,12 +5,19 @@ function renderMap(){
   const all=jobs();
   const withCoords=all.filter(j=>j.lat&&j.lng);
   const needGeo=all.filter(j=>j.address&&(!j.lat||!j.lng));
+  const failed=needGeo.filter(j=>j.geocodeStatus==='failed');
+  const pending=needGeo.length-failed.length;
   return `
     <div class="map-controls">
-      <div class="map-stats">${withCoords.length} of ${all.filter(j=>j.address).length} jobs pinned</div>
+      <div class="map-stats">${withCoords.length} of ${all.filter(j=>j.address).length} jobs pinned${pending>0?` · ${pending} need locating`:''}${failed.length>0?` · ${failed.length} failed`:''}</div>
       ${needGeo.length>0?`<button class="btn-sm" id="btn-geocode">Locate ${needGeo.length} address${needGeo.length!==1?'es':''}</button>`:''}
       <span class="geocode-status" id="geo-status" style="display:none"></span>
     </div>
+    ${failed.length>0?`<div class="map-alert">
+      <strong>${failed.length} address${failed.length!==1?'es':''} could not be located.</strong>
+      <span>Check spelling, city, state, or ZIP, then run Locate again.</span>
+      <div class="map-failed-list">${failed.slice(0,4).map(j=>`<button class="map-failed-job" data-open-job="${j.id}">${esc(j.name)}${j.address?' · '+esc(j.address):''}</button>`).join('')}${failed.length>4?`<span class="map-failed-more">+${failed.length-4} more</span>`:''}</div>
+    </div>`:''}
     ${withCoords.length===0?`<div class="map-empty">
       <p style="margin-bottom:10px">No jobs pinned to the map yet.</p>
       <p style="font-size:12.5px">${needGeo.length>0?'Click "Locate" above to find addresses on the map.':'Add a job with an address to get started.'}</p>
@@ -44,7 +51,7 @@ function mountMap(){
       iconSize:[24,24],iconAnchor:[12,24]
     });
     const m=L.marker([j.lat,j.lng],{icon}).addTo(MAP);
-    m.bindPopup(`<strong>${esc(j.name)}</strong>${esc(j.address||'')}<br><br>${j.customerName?esc(j.customerName)+'<br>':''}${j.customerPhone?'📞 '+esc(j.customerPhone)+'<br>':''}<a href="#" data-open-job="${j.id}">Open job →</a>`);
+    m.bindPopup(`<strong>${esc(j.name)}</strong>${esc(j.address||'')}${j.geocodeLabel&&j.geocodeLabel!==j.address?'<br><span class="popup-muted">Matched: '+esc(j.geocodeLabel)+'</span>':''}<br><br>${j.customerName?esc(j.customerName)+'<br>':''}${j.customerPhone?'📞 '+esc(j.customerPhone)+'<br>':''}<a href="#" data-open-job="${j.id}">Open job →</a>`);
     m.on('popupopen',()=>{
       const lnk=document.querySelector('[data-open-job="'+j.id+'"]');
       if(lnk)lnk.onclick=e=>{e.preventDefault();S.detail=j.id;S.view='jobs';S.detailTab='overview';render()};
@@ -62,22 +69,39 @@ async function geocodeOne(addr){
     const r=await fetch('https://nominatim.openstreetmap.org/search?format=json&limit=1&q='+encodeURIComponent(addr),{headers:{'Accept':'application/json'}});
     if(!r.ok)return null;
     const data=await r.json();
-    if(data&&data.length>0)return{lat:parseFloat(data[0].lat),lng:parseFloat(data[0].lon)};
+    if(data&&data.length>0)return{lat:parseFloat(data[0].lat),lng:parseFloat(data[0].lon),label:data[0].display_name||''};
   }catch(e){}
   return null;
 }
 async function geocodeAll(){
   const queue=jobs().filter(j=>j.address&&(!j.lat||!j.lng));
   const status=$('geo-status');
+  let located=0,failed=0;
   if(status)status.style.display='inline-block';
   for(let i=0;i<queue.length;i++){
     const j=queue[i];
     if(status)status.textContent=`Locating ${i+1} of ${queue.length}: ${j.name}…`;
     const coords=await geocodeOne(j.address);
-    if(coords){j.lat=coords.lat;j.lng=coords.lng;await writeJob(j)}
+    if(coords){
+      j.lat=coords.lat;
+      j.lng=coords.lng;
+      j.geocodeStatus='ok';
+      j.geocodeLabel=coords.label;
+      j.geocodedAt=Date.now();
+      j.locationSource='geocode';
+      located++;
+    }else{
+      delete j.lat;
+      delete j.lng;
+      j.geocodeStatus='failed';
+      j.geocodedAt=Date.now();
+      j.locationSource='address';
+      failed++;
+    }
+    await writeJob(j);
     await new Promise(r=>setTimeout(r,1100));
   }
-  if(status)status.textContent='Done.';
-  toast('Locations updated');
+  if(status)status.textContent=`Done. ${located} located${failed?`, ${failed} failed`:''}.`;
+  toast(failed?`${located} located, ${failed} failed`:'Locations updated');
   render();
 }
