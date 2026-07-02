@@ -29,9 +29,9 @@ function updateUserUI(){
   a.textContent=S.user?initials(S.user):'?';
 }
 
-function sdClass(s){return{lead:'sd-lead',active:'sd-active',complete:'sd-complete',hold:'sd-hold'}[s]||'sd-hold'}
-function spClass(s){return{lead:'sp-lead',active:'sp-active',complete:'sp-complete',hold:'sp-hold'}[s]||'sp-hold'}
-function spLabel(s){return{lead:'Lead',active:'Active',complete:'Complete',hold:'On Hold'}[s]||s}
+function sdClass(s){return{lead:'sd-lead',active:'sd-active',complete:'sd-complete',hold:'sd-hold',lost:'sd-lost'}[s]||'sd-hold'}
+function spClass(s){return{lead:'sp-lead',active:'sp-active',complete:'sp-complete',hold:'sp-hold',lost:'sp-lost'}[s]||'sp-hold'}
+function spLabel(s){return{lead:'Lead',active:'Active',complete:'Complete',hold:'On Hold',lost:'Lost'}[s]||s}
 
 function renderDashboard(){
   const all=jobs();
@@ -45,7 +45,7 @@ function renderDashboard(){
   const pipeline=leads.reduce((s,j)=>s+Number(j.value||0),0);
   // Upcoming: jobs with start date in next 14 days, or not yet started
   const upcoming=all.filter(j=>{
-    if(j.status==='complete')return false;
+    if(isClosedJob(j))return false;
     const d=daysUntil(j.startDate);
     return d!==null&&d>=-1&&d<=14;
   }).sort((a,b)=>(new Date(a.startDate))-(new Date(b.startDate))).slice(0,5);
@@ -54,9 +54,9 @@ function renderDashboard(){
   all.forEach(j=>(j.tasks||[]).forEach((t,i)=>{if(!t.done)openTasks.push({...t,jobId:j.id,jobName:j.name})}));
   openTasks.sort((a,b)=>(a.due||'9999')>(b.due||'9999')?1:-1);
   // Status distribution for chart
-  const cntStatus={lead:leads.length,active:active.length,complete:done.length,hold:all.filter(j=>j.status==='hold').length};
+  const cntStatus={lead:leads.length,active:active.length,complete:done.length,hold:all.filter(j=>j.status==='hold').length,lost:all.filter(j=>j.status==='lost').length};
   const maxCnt=Math.max(1,...Object.values(cntStatus));
-  const colors={lead:'var(--gold)',active:'#4ade80',complete:'var(--sky)',hold:'#94a3b8'};
+  const colors={lead:'var(--gold)',active:'#4ade80',complete:'var(--sky)',hold:'#94a3b8',lost:'#dc2626'};
   const recent=S.activity.slice(0,5);
 
   return `
@@ -126,7 +126,7 @@ function renderDashboard(){
     <div class="dash-section">
       <div class="dash-section-hd">Jobs by Status</div>
       <div class="bar-chart">
-        ${['lead','active','hold','complete'].map(s=>`
+        ${['lead','active','hold','lost','complete'].map(s=>`
           <div class="bar-row">
             <div class="bar-row-label">${spLabel(s)}</div>
             <div class="bar-row-track"><div class="bar-row-fill" style="width:${(cntStatus[s]/maxCnt)*100}%;background:${colors[s]}"></div></div>
@@ -166,8 +166,8 @@ function jobDateRange(j){
   return out.slice(0,365);
 }
 
-function chipClass(status){return{lead:'cs-lead',active:'cs-active',complete:'cs-complete',hold:'cs-hold'}[status]||'cs-active'}
-function chipBarColor(status){return{lead:'#d97706',active:'#16a34a',complete:'#0284c7',hold:'#64748b'}[status]||'#16a34a'}
+function chipClass(status){return{lead:'cs-lead',active:'cs-active',complete:'cs-complete',hold:'cs-hold',lost:'cs-lost'}[status]||'cs-active'}
+function chipBarColor(status){return{lead:'#d97706',active:'#16a34a',complete:'#0284c7',hold:'#64748b',lost:'#dc2626'}[status]||'#16a34a'}
 
 function renderSchedule(){
   const y=S.calYear,m=S.calMonth;
@@ -211,6 +211,7 @@ function renderSchedule(){
       <div class="cal-legend-item"><div class="cal-legend-sw" style="background:var(--gold-light);border-left:3px solid #d97706"></div>Lead</div>
       <div class="cal-legend-item"><div class="cal-legend-sw" style="background:#e0f2fe;border-left:3px solid #0284c7"></div>Complete</div>
       <div class="cal-legend-item"><div class="cal-legend-sw" style="background:var(--surface-3);border-left:3px solid #64748b"></div>On Hold</div>
+      <div class="cal-legend-item"><div class="cal-legend-sw" style="background:#fee2e2;border-left:3px solid #dc2626"></div>Lost</div>
     </div>
     ${isMonth?renderCalMonth(y,m,daysInMonth,startDow,byDay,today,sel):renderCalAgenda(byDay,today)}
     ${isMonth?renderSelectedDay(byDay,sel,today):''}
@@ -274,8 +275,8 @@ function renderCalCell(k,dayNum,byDay,today,sel,otherMonth,maxChips){
 
 function renderSelectedDay(byDay,sel,today){
   const selList=(byDay[sel]||[]).slice();
-  // Sort: leads first? Or by status priority. Use status order: lead, active, complete, hold
-  const order={lead:0,active:1,complete:2,hold:3};
+  // Sort by workflow status: open work first, closed outcomes last.
+  const order={lead:0,active:1,hold:2,lost:3,complete:4};
   selList.sort((a,b)=>(order[a.job.status]??9)-(order[b.job.status]??9));
   const dt=new Date(sel+'T00:00:00');
   const lbl=dt.toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'});
@@ -314,7 +315,7 @@ function renderCalAgenda(byDay,today){
   return days.map(({k,date,list})=>{
     const isToday=k===today;
     const lbl=date.toLocaleDateString(undefined,{weekday:'long',month:'short',day:'numeric'});
-    const order={lead:0,active:1,complete:2,hold:3};
+    const order={lead:0,active:1,hold:2,lost:3,complete:4};
     const sorted=list.slice().sort((a,b)=>(order[a.job.status]??9)-(order[b.job.status]??9));
     return `<div class="agenda-day">
       <div class="agenda-day-hd">${esc(lbl)} ${isToday?'<span class="today-pill">TODAY</span>':''}<span style="margin-left:auto;color:var(--text-3);font-weight:600">${sorted.length} job${sorted.length!==1?'s':''}</span></div>
@@ -329,4 +330,3 @@ function renderCalAgenda(byDay,today){
     </div>`;
   }).join('');
 }
-

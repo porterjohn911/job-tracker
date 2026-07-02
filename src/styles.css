@@ -177,6 +177,7 @@ body{display:flex;flex-direction:column;max-width:680px;margin:0 auto;min-height
 .sd-active{background:#4ade80}
 .sd-complete{background:var(--sky)}
 .sd-hold{background:#94a3b8}
+.sd-lost{background:#dc2626}
 .card-body{padding:13px 15px 15px}
 .card-name{font-size:14.5px;font-weight:600;margin-bottom:3px;line-height:1.3}
 .card-addr{font-size:12px;color:var(--text-2);margin-bottom:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:4px}
@@ -192,11 +193,13 @@ body{display:flex;flex-direction:column;max-width:680px;margin:0 auto;min-height
 .sp-active{background:#dcfce7;color:#166534}
 .sp-complete{background:#e0f2fe;color:#075985}
 .sp-hold{background:var(--surface-3);color:var(--text-2)}
+.sp-lost{background:#fee2e2;color:#991b1b}
 @media(prefers-color-scheme:dark){
   .sp-lead{background:#3d2800;color:#fbbf24}
   .sp-active{background:#052e16;color:#4ade80}
   .sp-complete{background:#082f49;color:#38bdf8}
   .sp-hold{background:#1e2e28;color:var(--text-2)}
+  .sp-lost{background:#2d1515;color:#fca5a5}
 }
 .card-pct{font-size:12px;color:var(--text-3);font-weight:500}
 
@@ -613,6 +616,7 @@ input[type=range]{width:100%;accent-color:var(--green-700);height:4px;cursor:poi
 .cal-chip.cs-lead{border-left-color:#d97706;background:var(--gold-light);color:#92400e}
 .cal-chip.cs-complete{border-left-color:#0284c7;background:#e0f2fe;color:#075985}
 .cal-chip.cs-hold{border-left-color:#64748b;background:var(--surface-3);color:var(--text-2)}
+.cal-chip.cs-lost{border-left-color:#dc2626;background:#fee2e2;color:#991b1b}
 .cal-chip.continues-left{border-left:none;padding-left:8px;border-radius:0 3px 3px 0}
 .cal-chip.continues-right{border-radius:3px 0 0 3px;margin-right:-4px;padding-right:8px}
 .cal-chip.continues-both{border-left:none;border-radius:0;margin-right:-4px;padding-left:8px;padding-right:8px}
@@ -622,6 +626,7 @@ input[type=range]{width:100%;accent-color:var(--green-700);height:4px;cursor:poi
   .cal-chip.cs-lead{background:#3d2800;color:#fbbf24}
   .cal-chip.cs-complete{background:#082f49;color:#7dd3fc}
   .cal-chip.cs-hold{background:#1e2e28;color:var(--text-2)}
+  .cal-chip.cs-lost{background:#2d1515;color:#fca5a5}
 }
 .cal-day-more{font-size:9.5px;color:var(--text-3);font-weight:600;padding:1px 5px;cursor:pointer}
 .cal-day-more:hover{color:var(--green-700)}

@@ -5,11 +5,11 @@ function renderReports(){
   const range=parseInt(S.reportRange||'90',10);
   const cutoff=range>0?Date.now()-range*86400000:0;
   const inRange=all.filter(j=>(j.created||0)>=cutoff);
-  // Win rate: complete vs (complete + lead-but-not-converted-and-not-on-hold-recently). Simpler: of jobs that left "lead" stage, how many became "complete"?
+  // Win rate: completed jobs vs explicitly lost jobs. On-hold work stays out of decided outcomes.
   const totalLeads=all.filter(j=>j.created>=cutoff).length;
   const won=all.filter(j=>j.status==='complete'&&(j.created||0)>=cutoff).length;
-  const lost=all.filter(j=>j.status==='hold'&&(j.created||0)>=cutoff).length;
-  const open=all.filter(j=>(j.status==='lead'||j.status==='active')&&(j.created||0)>=cutoff).length;
+  const lost=all.filter(j=>j.status==='lost'&&(j.created||0)>=cutoff).length;
+  const open=all.filter(j=>(j.status==='lead'||j.status==='active'||j.status==='hold')&&(j.created||0)>=cutoff).length;
   const decided=won+lost;
   const winRate=decided>0?(won/decided)*100:0;
   const conversionRate=totalLeads>0?(won/totalLeads)*100:0;
@@ -19,7 +19,7 @@ function renderReports(){
   const revenue=inRange.filter(j=>j.status==='complete').reduce((s,j)=>{const t=invoiceTotals(j);return s+(t?t.total:Number(j.invoiced||j.value||0))},0);
   const collected=inRange.reduce((s,j)=>{const t=invoiceTotals(j);return s+(t?t.paid:Number(j.paid||0))},0);
   const avgDeal=won>0?revenue/won:0;
-  const pipeline=inRange.filter(j=>j.status!=='complete'&&j.status!=='hold').reduce((s,j)=>s+Number(j.value||0),0);
+  const pipeline=inRange.filter(j=>!isClosedJob(j)).reduce((s,j)=>s+Number(j.value||0),0);
 
   // Monthly revenue chart — last 6 months
   const months=[];
@@ -155,4 +155,3 @@ function renderReports(){
     </div>
   `;
 }
-
