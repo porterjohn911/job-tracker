@@ -64,13 +64,14 @@ function renderInvoicesView(){
     const hay=((inv.number||'')+' '+(job.name||'')+' '+(job.customerName||'')+' '+(job.address||'')).toLowerCase();
     return hay.includes(q);
   });
-  const sortFn={
+  const sortFns={
     date:(a,b)=>(b.inv.date||'').localeCompare(a.inv.date||''),
     due:(a,b)=>(a.inv.dueDate||'9999').localeCompare(b.inv.dueDate||'9999'),
     amount:(a,b)=>calcInvoice(b.inv).total-calcInvoice(a.inv).total,
     balance:(a,b)=>calcInvoice(b.inv).balance-calcInvoice(a.inv).balance,
     number:(a,b)=>(b.inv.number||'').localeCompare(a.inv.number||''),
-  }[S.invSort]||sortFn?.date;
+  };
+  const sortFn=sortFns[S.invSort]||sortFns.date;
   shown.sort(sortFn);
 
   const collectionRate=totalInvoiced>0?(totalPaid/totalInvoiced)*100:0;

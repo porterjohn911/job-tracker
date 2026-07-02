@@ -426,7 +426,10 @@ function showBankImport(){
   $('bank-do-import').onclick=async()=>{
     if(!fresh.length)return;
     S.transactions=S.transactions||{};
-    fresh.forEach(p=>{const id='b_'+Date.now()+'_'+Math.random().toString(36).slice(2,6);S.transactions[id]={id,date:p.date,description:p.description,amount:Number(p.amount)||0,category:bankAutoCat(p.description,Number(p.amount)||0),jobId:'',source:'import',key:bankKey(p),imported:Date.now()}});
+    // Include the row index so ids stay unique within a single import: Date.now()
+    // is identical across this synchronous loop, which previously let two rows
+    // collide on the same id and silently overwrite each other.
+    fresh.forEach((p,idx)=>{const id='b_'+Date.now()+'_'+idx+'_'+Math.random().toString(36).slice(2,8);S.transactions[id]={id,date:p.date,description:p.description,amount:Number(p.amount)||0,category:bankAutoCat(p.description,Number(p.amount)||0),jobId:'',source:'import',key:bankKey(p),imported:Date.now()}});
     await saveAllTxns();await logAct('imported '+fresh.length+' bank transaction(s)','');closeModal();render();toast('Imported '+fresh.length+' transaction'+(fresh.length!==1?'s':''));
   };
 }

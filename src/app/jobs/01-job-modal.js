@@ -52,7 +52,14 @@ function showJobModal(mode,job){
   $('mc').onclick=$('btn-cx').onclick=closeModal;
   $('mbd').onclick=e=>{if(e.target===e.currentTarget)closeModal()};
   $('f-assigned').onchange=function(){$('custom-wrap').style.display=this.value==='__custom__'?'block':'none'};
-  if(j.assigned&&S.members.includes(j.assigned))$('f-assigned').value=j.assigned;
+  if(j.assigned&&S.members.includes(j.assigned)){
+    $('f-assigned').value=j.assigned;
+  }else if(j.assigned){
+    // A custom (non-member) name — keep it via the "Type name…" field instead of wiping it on save
+    $('f-assigned').value='__custom__';
+    $('custom-wrap').style.display='block';
+    $('f-cname').value=j.assigned;
+  }
   $('btn-sv').onclick=async()=>{
     const name=$('f-name').value.trim();
     if(!name){toast('Please enter a job name','');return}

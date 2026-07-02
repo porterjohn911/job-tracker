@@ -62,7 +62,7 @@ function money2(n){const v=Number(n||0);return '$'+v.toLocaleString(undefined,{m
 function dateKey(d){const x=d instanceof Date?d:new Date(d);return x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0')}
 function fmtDate(s){if(!s)return'';try{const d=new Date(s+(s.length===10?'T00:00:00':''));return d.toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'})}catch(e){return s}}
 function fmtShort(s){if(!s)return'';try{const d=new Date(s+(s.length===10?'T00:00:00':''));return d.toLocaleDateString(undefined,{month:'short',day:'numeric'})}catch(e){return s}}
-function daysUntil(s){if(!s)return null;try{const d=new Date(s+(s.length===10?'T00:00:00':''));const t=new Date();t.setHours(0,0,0,0);return Math.round((d-t)/(1000*60*60*24))}catch(e){return null}}
+function daysUntil(s){if(!s)return null;try{const d=new Date(s+(s.length===10?'T00:00:00':''));const t=new Date();t.setHours(0,0,0,0);const n=Math.round((d-t)/(1000*60*60*24));return isNaN(n)?null:n}catch(e){return null}}
 function jobBalance(j){const inv=Number(j.invoiced||0),paid=Number(j.paid||0);return inv-paid}
 function jobStage(j){return j.stage||(j.status==='complete'?'Complete':j.status==='lead'?'Lead':'In Progress')}
 function isClosedJob(j){return CLOSED_JOB_STATUSES.includes(j.status)}

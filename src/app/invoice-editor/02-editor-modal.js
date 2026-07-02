@@ -8,7 +8,7 @@ function renderInvoiceModal(jobId,isEdit,kind){
     <input type="text" data-li-field="desc" value="${esc(it.desc||'')}" placeholder="Description (e.g. Dock repair labor)" aria-label="Description">
     <input type="number" step="0.01" data-li-field="qty" value="${esc(it.qty??'')}" placeholder="Qty" aria-label="Quantity">
     <input type="number" step="0.01" data-li-field="rate" value="${esc(it.rate??'')}" placeholder="Rate" aria-label="Unit rate">
-    <div class="li-amt">${money((Number(it.qty||0)*Number(it.rate||0)))}</div>
+    <div class="li-amt">${money2((Number(it.qty||0)*Number(it.rate||0)))}</div>
     <button class="li-del" data-li-del="${i}" aria-label="Remove line item">×</button>
   </div>`).join('');
 
@@ -39,11 +39,11 @@ function renderInvoiceModal(jobId,isEdit,kind){
         ${EST?'':`<div class="form-group"><label class="form-label">Amount Paid</label><input class="form-input" type="number" step="0.01" id="inv-paid" value="${esc(inv.paid??'')}"></div>`}
       </div>
       <div class="inv-totals" id="inv-totals">
-        <div class="inv-total-row"><span>Subtotal</span><span class="v" id="t-sub">${money(c.sub)}</span></div>
-        <div class="inv-total-row"><span>Tax (${Number(inv.taxRate||0)}%)</span><span class="v" id="t-tax">${money(c.tax)}</span></div>
-        <div class="inv-total-row grand"><span>Total</span><span class="v" id="t-total">${money(c.total)}</span></div>
-        ${EST?'':`<div class="inv-total-row" style="color:var(--text-3);margin-top:4px"><span>Paid</span><span class="v" id="t-paid">${money(c.paid)}</span></div>
-        <div class="inv-total-row" style="font-weight:700"><span>Balance Due</span><span class="v" id="t-bal">${money(c.balance)}</span></div>`}
+        <div class="inv-total-row"><span>Subtotal</span><span class="v" id="t-sub">${money2(c.sub)}</span></div>
+        <div class="inv-total-row"><span>Tax (${Number(inv.taxRate||0)}%)</span><span class="v" id="t-tax">${money2(c.tax)}</span></div>
+        <div class="inv-total-row grand"><span>Total</span><span class="v" id="t-total">${money2(c.total)}</span></div>
+        ${EST?'':`<div class="inv-total-row" style="color:var(--text-3);margin-top:4px"><span>Paid</span><span class="v" id="t-paid">${money2(c.paid)}</span></div>
+        <div class="inv-total-row" style="font-weight:700"><span>Balance Due</span><span class="v" id="t-bal">${money2(c.balance)}</span></div>`}
       </div>
       <div class="form-group"><label class="form-label">Notes (visible on ${EST?'estimate':'invoice'})</label>
         <div class="textarea-with-mic"><textarea class="form-textarea" id="inv-notes" placeholder="Additional notes for the customer…">${esc(inv.notes||'')}</textarea>${micButton('#inv-notes')}</div>
@@ -76,7 +76,7 @@ function renderInvoiceModal(jobId,isEdit,kind){
       <input type="text" data-li-field="desc" value="${esc(it.desc||'')}" placeholder="Description">
       <input type="number" step="0.01" data-li-field="qty" value="${esc(it.qty??'')}" placeholder="Qty">
       <input type="number" step="0.01" data-li-field="rate" value="${esc(it.rate??'')}" placeholder="Rate">
-      <div class="li-amt">${money(Number(it.qty||0)*Number(it.rate||0))}</div>
+      <div class="li-amt">${money2(Number(it.qty||0)*Number(it.rate||0))}</div>
       <button class="li-del" data-li-del="${i}">×</button>
     </div>`).join('');
     wireLineItemHandlers();
@@ -85,11 +85,11 @@ function renderInvoiceModal(jobId,isEdit,kind){
   function refreshTotals(){
     const c=calcInvoice(INV_DRAFT);
     const tsub=$('t-sub'),ttax=$('t-tax'),ttot=$('t-total'),tpaid=$('t-paid'),tbal=$('t-bal');
-    if(tsub)tsub.textContent=money(c.sub);
-    if(ttax)ttax.textContent=money(c.tax);
-    if(ttot)ttot.textContent=money(c.total);
-    if(tpaid)tpaid.textContent=money(c.paid);
-    if(tbal)tbal.textContent=money(c.balance);
+    if(tsub)tsub.textContent=money2(c.sub);
+    if(ttax)ttax.textContent=money2(c.tax);
+    if(ttot)ttot.textContent=money2(c.total);
+    if(tpaid)tpaid.textContent=money2(c.paid);
+    if(tbal)tbal.textContent=money2(c.balance);
     // Update tax row label
     const taxLabel=document.querySelector('#inv-totals .inv-total-row:nth-child(2) span:first-child');
     if(taxLabel)taxLabel.textContent='Tax ('+Number(INV_DRAFT.taxRate||0)+'%)';
@@ -97,7 +97,7 @@ function renderInvoiceModal(jobId,isEdit,kind){
     document.querySelectorAll('[data-li]').forEach(row=>{
       const i=parseInt(row.dataset.li);const it=INV_DRAFT.items[i];if(!it)return;
       const amt=row.querySelector('.li-amt');
-      if(amt)amt.textContent=money(Number(it.qty||0)*Number(it.rate||0));
+      if(amt)amt.textContent=money2(Number(it.qty||0)*Number(it.rate||0));
     });
   }
   function wireLineItemHandlers(){
@@ -106,7 +106,8 @@ function renderInvoiceModal(jobId,isEdit,kind){
       row.querySelectorAll('[data-li-field]').forEach(inp=>{
         inp.oninput=()=>{
           const f=inp.dataset.liField;
-          INV_DRAFT.items[i][f]=f==='desc'?inp.value:inp.value;
+          // qty/rate persist as numbers (not strings) so synced data keeps clean types
+          INV_DRAFT.items[i][f]=f==='desc'?inp.value:(inp.value===''?'':Number(inp.value));
           refreshTotals();
         };
       });
