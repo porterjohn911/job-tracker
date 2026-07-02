@@ -7,32 +7,84 @@
 // Optional:
 //   SMTP_HOST  (default smtp.gmail.com)   SMTP_PORT (default 465)
 //   FIREBASE_API_KEY (defaults to the project's public web API key)
+//   FIREBASE_DB_URL  (defaults to the project's Realtime Database URL)
+//   ALLOWED_ORIGINS  (comma-separated site origins allowed to call this; when
+//                     unset, CORS falls back to '*' — set it to lock down)
 //
-// Security: the caller must send a valid Firebase ID token (the signed-in
-// user), which is verified against the Firebase project before anything sends.
+// Security: the caller must send a valid, unexpired Firebase ID token. The
+// token is verified against the Firebase project AND the caller's /users/{uid}
+// record is read from the Realtime Database to confirm they are an APPROVED
+// team member (role owner/manager/worker) — not a pending/unapproved sign-up.
+// This stops the function from acting as an open mail relay: simply having a
+// Firebase account for the project is no longer enough to send mail.
 
 const nodemailer = require('nodemailer');
 const { PDFDocument, StandardFonts, rgb } = require('pdf-lib');
 
-const CORS = {
-  'Content-Type': 'application/json',
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'Content-Type',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-};
-const json = (statusCode, obj) => ({ statusCode, headers: CORS, body: JSON.stringify(obj) });
+const FIREBASE_API_KEY = process.env.FIREBASE_API_KEY || 'AIzaSyDCE0Yo6YkYtSkibUx9T7Q5XEkgmEsSKRc';
+const FIREBASE_DB_URL = (process.env.FIREBASE_DB_URL || 'https://witport-constructionservices-default-rtdb.firebaseio.com').replace(/\/+$/, '');
+const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS || '').split(',').map((s) => s.trim()).filter(Boolean);
+const APPROVED_ROLES = ['owner', 'manager', 'worker'];
 
-async function tokenValid(idToken) {
-  if (!idToken) return false;
-  const key = process.env.FIREBASE_API_KEY || 'AIzaSyDCE0Yo6YkYtSkibUx9T7Q5XEkgmEsSKRc';
+function corsHeaders(origin) {
+  const h = {
+    'Content-Type': 'application/json',
+    'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Vary': 'Origin',
+  };
+  if (!ALLOWED_ORIGINS.length) {
+    h['Access-Control-Allow-Origin'] = '*'; // not configured — permissive (see header notes)
+  } else if (origin && ALLOWED_ORIGINS.includes(origin)) {
+    h['Access-Control-Allow-Origin'] = origin;
+  }
+  // If an allowlist is set and the origin isn't on it, no ACAO header is sent,
+  // so browsers block the cross-origin response.
+  return h;
+}
+
+// Verify the ID token is genuine + unexpired (Google returns the account only
+// for a valid token) and return the caller's uid, or null.
+async function verifyToken(idToken) {
+  if (!idToken) return null;
   try {
-    const r = await fetch('https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=' + key, {
+    const r = await fetch('https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=' + FIREBASE_API_KEY, {
       method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ idToken }),
     });
-    if (!r.ok) return false;
+    if (!r.ok) return null;
     const d = await r.json();
-    return !!(d.users && d.users.length);
-  } catch (e) { return false; }
+    const u = d.users && d.users[0];
+    return u && u.localId ? u.localId : null;
+  } catch (e) { return null; }
+}
+
+// Read the caller's own /users/{uid} record from RTDB (the database rules allow
+// auth.uid === $uid to read their own record) and confirm they hold an approved
+// role. Returns the record on success, null otherwise.
+async function authorizedMember(idToken, uid) {
+  try {
+    const url = FIREBASE_DB_URL + '/users/' + encodeURIComponent(uid) + '.json?auth=' + encodeURIComponent(idToken);
+    const r = await fetch(url);
+    if (!r.ok) return null;
+    const rec = await r.json();
+    if (rec && APPROVED_ROLES.indexOf(rec.role) !== -1) return rec;
+    return null;
+  } catch (e) { return null; }
+}
+
+// Best-effort per-user rate limit. Netlify function containers are ephemeral
+// and not shared across regions, so this only throttles bursts on a warm
+// container — it is defense-in-depth, not a hard guarantee.
+const RATE = new Map();
+const RATE_MAX = 20;
+const RATE_WINDOW_MS = 10 * 60 * 1000;
+function rateLimited(uid) {
+  const now = Date.now();
+  const hits = (RATE.get(uid) || []).filter((t) => now - t < RATE_WINDOW_MS);
+  if (hits.length >= RATE_MAX) { RATE.set(uid, hits); return true; }
+  hits.push(now);
+  RATE.set(uid, hits);
+  return false;
 }
 
 const money = (n) => '$' + Number(n || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -102,6 +154,10 @@ async function buildPdf(doc) {
 }
 
 exports.handler = async (event) => {
+  const origin = event.headers && (event.headers.origin || event.headers.Origin);
+  const headers = corsHeaders(origin);
+  const json = (statusCode, obj) => ({ statusCode, headers, body: JSON.stringify(obj) });
+
   if (event.httpMethod === 'OPTIONS') return json(200, { ok: true });
   if (event.httpMethod !== 'POST') return json(405, { error: 'POST only' });
 
@@ -111,7 +167,11 @@ exports.handler = async (event) => {
   if (!to) return json(400, { error: 'Missing recipient email' });
   if (!doc) return json(400, { error: 'Missing invoice data' });
 
-  if (!(await tokenValid(idToken))) return json(401, { error: 'Not authorized — please sign in again' });
+  const uid = await verifyToken(idToken);
+  if (!uid) return json(401, { error: 'Not authorized — please sign in again' });
+  const member = await authorizedMember(idToken, uid);
+  if (!member) return json(403, { error: 'Your account is not approved to send email yet' });
+  if (rateLimited(uid)) return json(429, { error: 'Too many messages — please try again in a few minutes' });
 
   const user = process.env.SMTP_USER, pass = process.env.SMTP_PASS;
   if (!user || !pass) return json(500, { error: 'Email not set up yet (SMTP_USER / SMTP_PASS missing in Netlify)' });
