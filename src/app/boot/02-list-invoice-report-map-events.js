@@ -128,6 +128,8 @@ function attachListInvoiceReportMapHandlers(){
   document.querySelectorAll('[data-range]').forEach(c=>c.onclick=()=>{S.reportRange=c.dataset.range;render()});
   // Map
   $('btn-geocode')?.addEventListener('click',geocodeAll);
+  $('map-manual-job')?.addEventListener('change',e=>{S.manualPinJob=e.target.value||null;render()});
+  $('map-clear-manual')?.addEventListener('click',()=>{S.manualPinJob=null;render()});
   document.querySelectorAll('[data-pick-location]').forEach(el=>el.onclick=e=>{
     e.preventDefault();
     e.stopPropagation();
