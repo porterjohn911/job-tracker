@@ -6,6 +6,7 @@ function cmdItems(){
   const out=[];
   // Views
   [['dashboard','Home / Dashboard','home'],['jobs','Jobs','briefcase'],['schedule','Schedule','calendar'],['invoices','Invoices','invoice'],['referrals','Referrals','team'],['map','Map','map'],['reports','Reports','chart'],['activity','Activity','list'],['team','Team','team'],['time','Time','calendar'],['bank','Bank','chart']].forEach(([v,name,ico])=>{
+    if(!canOpenView(v))return;
     out.push({type:'view',name:'Go to '+name,sub:'View',ico,run:()=>{S.view=v;S.detail=null;render()}});
   });
   // Actions

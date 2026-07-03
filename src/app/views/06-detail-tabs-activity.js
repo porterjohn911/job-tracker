@@ -204,7 +204,7 @@ function renderDetailTab(j,tab){
   }
   if(tab==='financial'){
     const est=Number(j.value||0);
-    const lab=jobLaborStats(j.id);const anyRates=S.members.some(m=>rateOf(m)>0);
+    const lab=jobLaborStats(j.id);const showPay=canSeeFinancials();const anyRates=showPay&&S.members.some(m=>rateOf(m)>0);
     const exp=receiptTotal(j);const rcptN=(j.receipts||[]).length;
     const invTot=invoiceTotals(j);
     const inv=invTot?invTot.total:Number(j.invoiced||0);
@@ -226,7 +226,7 @@ function renderDetailTab(j,tab){
             <div style="font-size:11.5px;color:var(--text-3)">${pctPaid.toFixed(0)}% collected</div>
           </div>
           <div class="fin-cell" style="grid-column:1/-1"><div class="fin-label">Projected Margin</div><div class="fin-value" style="color:${margin>=0?'var(--green-700)':'var(--orange)'}">${money(margin)} <span style="font-size:12px;color:var(--text-3);font-weight:500">${est>0?'('+((margin/est)*100).toFixed(0)+'%)':''}</span></div></div>
-          <div class="fin-cell" style="grid-column:1/-1"><div class="fin-label">Actual Labor (tracked)${lab.active?' · <span style="color:var(--green-700);text-transform:none;letter-spacing:0;font-weight:600">'+lab.active+' on the clock</span>':''}</div><div class="fin-value">${anyRates?money(lab.cost):'—'} <span style="font-size:12px;color:var(--text-3);font-weight:500">${fmtHM(lab.ms)}${anyRates?'':' · set rates on Team'}</span></div></div>
+          <div class="fin-cell" style="grid-column:1/-1"><div class="fin-label">${showPay?'Actual Labor (tracked)':'Labor Hours (tracked)'}${lab.active?' · <span style="color:var(--green-700);text-transform:none;letter-spacing:0;font-weight:600">'+lab.active+' on the clock</span>':''}</div><div class="fin-value">${showPay?(anyRates?money(lab.cost):'—'):fmtHM(lab.ms)} <span style="font-size:12px;color:var(--text-3);font-weight:500">${showPay?fmtHM(lab.ms)+(anyRates?'':' · set rates on Team'):'tracked'}</span></div></div>
           <div class="fin-cell" style="grid-column:1/-1"><div class="fin-label">Receipt Expenses</div><div class="fin-value">${money2(exp)} <span style="font-size:12px;color:var(--text-3);font-weight:500">${rcptN?rcptN+' receipt'+(rcptN>1?'s':''):'none logged'}</span></div></div>
         </div>
         <div class="form-row">
@@ -356,5 +356,4 @@ function renderActivity(){
   if(!S.activity.length)return`<div class="empty"><div class="empty-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5M5.625 4.5h12.75a1.875 1.875 0 010 3.75H5.625a1.875 1.875 0 010-3.75z"/></svg></div><h3>No activity yet</h3><p>As your team adds and updates jobs, everything will appear here.</p></div>`;
   return'<div class="activity-feed">'+S.activity.map((a,i)=>'<div class="activity-item" style="animation-delay:'+( i*0.03)+'s">'+'<div class="activity-ava">'+initials(a.user)+'</div>'+'<div class="activity-body">'+'<div class="activity-text"><strong>'+esc(a.user)+'</strong> '+esc(a.action)+(a.job?' · <strong>'+esc(a.job)+'</strong>':'')+'</div><div class="activity-time">'+ago(a.time)+'</div></div></div>').join('')+'</div>';
 }
-
 

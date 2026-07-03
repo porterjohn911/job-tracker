@@ -114,12 +114,13 @@ function showReferralModal(mode,ref){
   };
 }
 function renderTeam(){
+  const showPay=canSeeFinancials();
   return`<div class="member-add">
     <input id="member-in" placeholder="Add team member name…">
     <button class="btn-save" id="btn-add-member">Add</button>
   </div>
-  <div class="member-list">${S.members.map((m,i)=>`<div class="member-row"><div class="member-ava">${initials(m)}</div><div class="member-name">${esc(m)}</div><div class="tt-rate"><span>$</span><input class="tt-rate-in" type="number" inputmode="decimal" min="0" step="0.5" data-rate-member="${esc(m)}" value="${rateOf(m)||''}" placeholder="0" aria-label="Hourly rate for ${esc(m)}"><span>/hr</span></div><button class="btn-remove" data-rm="${i}">Remove</button></div>`).join('')}</div>
-  ${S.members.length?`<div class="tt-hint" style="margin-top:10px">Set each person’s hourly pay rate to calculate actual labor cost per job on the Time tab.</div>`:''}
+  <div class="member-list">${S.members.map((m,i)=>`<div class="member-row"><div class="member-ava">${initials(m)}</div><div class="member-name">${esc(m)}</div>${showPay?`<div class="tt-rate"><span>$</span><input class="tt-rate-in" type="number" inputmode="decimal" min="0" step="0.5" data-rate-member="${esc(m)}" value="${rateOf(m)||''}" placeholder="0" aria-label="Hourly rate for ${esc(m)}"><span>/hr</span></div>`:''}<button class="btn-remove" data-rm="${i}">Remove</button></div>`).join('')}</div>
+  ${S.members.length&&showPay?`<div class="tt-hint" style="margin-top:10px">Set each person’s hourly pay rate to calculate actual labor cost per job on the Time tab.</div>`:''}
   <div class="team-info-card">
     <strong>Team sharing:</strong><br>
     ${DB?'✅ Firebase connected — all devices share the same data in real time.':'⚠️ Not connected. Each phone saves its own data. Tap <strong>Connect team →</strong> above to enable live sharing.'}
@@ -177,14 +178,15 @@ function renderTime(){
     }</div>`;
   }).join(''):`<div class="tt-empty">No completed time entries yet.</div>`;
 
-  const anyRates=S.members.some(m=>rateOf(m)>0);
+  const showPay=canSeeFinancials();
+  const anyRates=showPay&&S.members.some(m=>rateOf(m)>0);
   const lb=laborByJob();
-  const laborRows=Object.keys(lb).map(k=>({k,name:k?(S.jobs[k]?S.jobs[k].name:'(deleted job)'):'General / no job',ms:lb[k].ms,cost:lb[k].cost,active:lb[k].active})).filter(r=>r.ms>0).sort((a,b)=>(b.cost-a.cost)||(b.ms-a.ms));
+  const laborRows=Object.keys(lb).map(k=>({k,name:k?(S.jobs[k]?S.jobs[k].name:'(deleted job)'):'General / no job',ms:lb[k].ms,cost:lb[k].cost,active:lb[k].active})).filter(r=>r.ms>0).sort((a,b)=>showPay?((b.cost-a.cost)||(b.ms-a.ms)):(b.ms-a.ms));
   const laborHtml=laborRows.length?laborRows.map(r=>{
     const clickable=r.k&&S.jobs[r.k];
     return `<div class="tt-job"${clickable?` data-labor-job="${esc(r.k)}"`:''}>
-      <div class="tt-job-body"><div class="tt-job-name">${esc(r.name)}${r.active?` <span class="tt-live">● ${r.active} on the clock</span>`:''}</div><div class="tt-job-sub">${fmtHM(r.ms)} total${anyRates?'':' · set rates for cost'}</div></div>
-      <div class="tt-job-cost">${anyRates?money(r.cost):'—'}</div>
+      <div class="tt-job-body"><div class="tt-job-name">${esc(r.name)}${r.active?` <span class="tt-live">● ${r.active} on the clock</span>`:''}</div><div class="tt-job-sub">${fmtHM(r.ms)} total${showPay&&!anyRates?' · set rates for cost':''}</div></div>
+      <div class="tt-job-cost">${showPay?(anyRates?money(r.cost):'—'):fmtHM(r.ms)}</div>
     </div>`;
   }).join(''):`<div class="tt-empty">No labor logged to jobs yet.</div>`;
 
@@ -204,8 +206,8 @@ function renderTime(){
     ${(!gateOn()||canSeeAll(SESSION))?`<button class="tt-payroll-btn" id="tt-payroll" type="button"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>Export payroll for Gusto</button>`:''}
     <div class="section-hd">On the clock now</div>
     ${activeHtml}
-    <div class="section-hd" style="margin-top:20px">Labor cost by job</div>
-    ${anyRates?'':`<div class="tt-hint">Set each person’s hourly rate on the Team tab to calculate labor cost.</div>`}
+    <div class="section-hd" style="margin-top:20px">${showPay?'Labor cost by job':'Labor hours by job'}</div>
+    ${showPay&&!anyRates?`<div class="tt-hint">Set each person’s hourly rate on the Team tab to calculate labor cost.</div>`:''}
     ${laborHtml}
     <div class="section-hd" style="margin-top:20px">Time log <button class="btn-mini" id="tt-add-manual">+ Add entry</button></div>
     ${logHtml}
@@ -433,4 +435,3 @@ function showBankImport(){
     await saveAllTxns();await logAct('imported '+fresh.length+' bank transaction(s)','');closeModal();render();toast('Imported '+fresh.length+' transaction'+(fresh.length!==1?'s':''));
   };
 }
-

@@ -96,7 +96,7 @@ function attachFinancialTeamTimeHandlers(){
     render();toast(t.member+' clocked out · '+fmtHM(entryDur(t)));
   });
   $('tt-add-manual')?.addEventListener('click',()=>showTimeModal(null));
-  document.querySelectorAll('[data-rate-member]').forEach(inp=>{inp.onchange=async()=>{const m=inp.dataset.rateMember;const v=parseFloat(inp.value);S.payRates=S.payRates||{};if(!v||v<=0)delete S.payRates[m];else S.payRates[m]=v;await savePayRates();toast('Saved rate for '+m)}});
+  if(canSeeFinancials())document.querySelectorAll('[data-rate-member]').forEach(inp=>{inp.onchange=async()=>{const m=inp.dataset.rateMember;const v=parseFloat(inp.value);S.payRates=S.payRates||{};if(!v||v<=0)delete S.payRates[m];else S.payRates[m]=v;await savePayRates();toast('Saved rate for '+m)}});
   document.querySelectorAll('[data-labor-job]').forEach(el=>el.onclick=()=>{S.detail=el.dataset.laborJob;S.view='jobs';S.detailTab='financial';render()});
   document.querySelectorAll('[data-time-edit]').forEach(b=>b.onclick=()=>{const t=S.timeEntries[b.dataset.timeEdit];if(t)showTimeModal(t)});
   document.querySelectorAll('[data-time-del]').forEach(b=>b.onclick=async()=>{
