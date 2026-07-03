@@ -45,13 +45,23 @@ async function photoMigrationScan(){
   return {count,bytes};
 }
 
-async function photoMigrationRun(){
+async function photoMigrationRun(opts){
+  opts=opts||{};
+  const onProgress=typeof opts.onProgress==='function'?opts.onProgress:null;
   if(!(typeof storageReady==='function'&&storageReady())){
     console.error('[photo-migration] Firebase Storage is not ready. Enable Storage first, then reload.');
     if(typeof toast==='function')toast('Enable Firebase Storage first','');
     return {migrated:0,failed:0,jobsTouched:0};
   }
+  let toMove=0;
+  const countArr=arr=>(arr||[]).forEach(p=>{if(p&&_isBase64Url(p.url))toMove++});
+  Object.values((typeof S!=='undefined'&&S.jobs)||{}).forEach(j=>{
+    countArr(j.photos);countArr(j.receipts);countArr(j.documents);
+    (j.invoices||[]).forEach(inv=>countArr(inv&&inv.photos));
+    (j.estimates||[]).forEach(inv=>countArr(inv&&inv.photos));
+  });
   let migrated=0,failed=0,jobsTouched=0;
+  if(onProgress)onProgress(0,toMove);
   const migrateArr=async(arr,jobId,kind)=>{
     if(!Array.isArray(arr))return false;
     let changed=false;
@@ -62,6 +72,7 @@ async function photoMigrationRun(){
         if(up&&up.url){p.url=up.url;p.storagePath=up.path;migrated++;changed=true;}
         else{failed++;console.warn('[photo-migration] upload returned nothing for a '+kind+' on job '+jobId);}
       }catch(e){failed++;console.warn('[photo-migration] failed one '+kind,e);}
+      if(onProgress)onProgress(migrated+failed,toMove);
     }
     return changed;
   };
