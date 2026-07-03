@@ -84,6 +84,8 @@ function renderReports(){
       <div class="kpi-card"><div class="kpi-label">Collected</div><div class="kpi-value">${money(collected)}</div><div class="kpi-sub">${revenue>0?((collected/revenue)*100).toFixed(0):0}% of revenue</div></div>
     </div>
 
+    ${typeof renderJobCosting==='function'?renderJobCosting():''}
+
     <div class="report-section">
       <div class="report-hd">Win Rate <span class="kpi-sub">${won} won · ${lost} lost · ${open} open</span></div>
       <div class="donut-wrap">
