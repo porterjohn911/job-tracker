@@ -161,9 +161,29 @@ async function removeDB(path,label){
   try{await DB.child(path).remove();return true}
   catch(e){showCloudSaveError(label,e);throw e}
 }
+// Keep base64 image blobs OUT of the localStorage cache so its ~5MB limit can
+// never overflow. When cloud sync is active (DB set), the full data — including
+// any inline base64 — already lives in the Realtime Database, so the local
+// cache can safely drop those blobs; short https/Storage URLs are always kept.
+// With no cloud (offline/local-only) everything is stored as before, since the
+// cache would be the only copy.
+function slimJobsForLocal(jobsObj){
+  const big=u=>typeof u==='string'&&u.slice(0,5)==='data:';
+  const hasBig=arr=>Array.isArray(arr)&&arr.some(p=>p&&big(p.url));
+  const slimArr=arr=>hasBig(arr)?arr.map(p=>(p&&big(p.url))?{...p,url:''}:p):arr;
+  const slimInvs=arr=>Array.isArray(arr)&&arr.some(inv=>inv&&hasBig(inv.photos))
+    ?arr.map(inv=>(inv&&hasBig(inv.photos))?{...inv,photos:slimArr(inv.photos)}:inv):arr;
+  const out={};
+  for(const id in jobsObj){
+    const j=jobsObj[id];
+    if(!j||typeof j!=='object'){out[id]=j;continue}
+    out[id]={...j,photos:slimArr(j.photos),receipts:slimArr(j.receipts),documents:slimArr(j.documents),invoices:slimInvs(j.invoices),estimates:slimInvs(j.estimates)};
+  }
+  return out;
+}
 const LOCAL={
   load(){try{S.jobs=JSON.parse(localStorage.getItem(LS('jobs'))||'{}')}catch(e){S.jobs={}}try{S.activity=JSON.parse(localStorage.getItem(LS('activity'))||'[]')}catch(e){S.activity=[]}try{S.members=JSON.parse(localStorage.getItem(LS('members'))||'[]')}catch(e){S.members=[]}try{S.referrals=JSON.parse(localStorage.getItem(LS('referrals'))||'{}')}catch(e){S.referrals={}}try{S.timeEntries=JSON.parse(localStorage.getItem(LS('time'))||'{}')}catch(e){S.timeEntries={}}try{S.payRates=canSeeFinancials()?JSON.parse(localStorage.getItem(LS('payrates'))||'{}'):{};}catch(e){S.payRates={}}try{S.transactions=canSeeBank()?JSON.parse(localStorage.getItem(LS('transactions'))||'{}'):{};}catch(e){S.transactions={}}},
-  saveJobs(required){return saveLocalValue(LS('jobs'),S.jobs,'jobs',required)},
+  saveJobs(required){return saveLocalValue(LS('jobs'),DB?slimJobsForLocal(S.jobs):S.jobs,'jobs',required)},
   saveActivity(required){return saveLocalValue(LS('activity'),S.activity.slice(0,300),'activity',required)},
   saveMembers(required){return saveLocalValue(LS('members'),S.members,'team members',required)},
   saveReferrals(required){return saveLocalValue(LS('referrals'),S.referrals,'referrals',required)},
