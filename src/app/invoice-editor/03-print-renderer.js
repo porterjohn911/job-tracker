@@ -11,6 +11,12 @@ function printInvoice(j,inv,kind){
   const co=COMPANY;
   const P=invTheme();
   const logoFull=brandLogoFull();
+  const photoAppendix=(inv.photos||[]).filter(p=>p&&p.url).map((p,i)=>`
+    <section class="photo-page">
+      <div class="photo-page-hd">${EST?'Estimate':'Invoice'} ${esc(inv.number||'')} - Photo ${i+1}</div>
+      <img src="${esc(p.url)}" alt="">
+      ${p.caption?`<div class="photo-caption">${esc(p.caption)}</div>`:''}
+    </section>`).join('');
   const itemsRows=(inv.items||[]).map(it=>{
     const amt=Number(it.qty||0)*Number(it.rate||0);
     return `<tr>
@@ -63,13 +69,11 @@ function printInvoice(j,inv,kind){
       .notes .lbl{font-size:9.5px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:${P.primary};margin-bottom:5px}
       .terms{margin-top:14px;font-size:11px;color:#777;line-height:1.6;white-space:pre-line}
       .ft{margin-top:28px;padding-top:14px;border-top:1px solid #ddd;text-align:center;font-size:10.5px;color:#888;letter-spacing:0.04em}
-      .inv-photos-doc{margin-top:22px;padding-top:16px;border-top:1px solid #ddd}
-      .inv-photos-doc .ip-hd{font-size:9.5px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#888;margin-bottom:12px}
-      .ip-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-      .ip-grid figure{border:1px solid #eee;border-radius:6px;overflow:hidden;page-break-inside:avoid;break-inside:avoid}
-      .ip-grid img{width:100%;height:auto;display:block}
-      .ip-grid figcaption{font-size:11px;color:#555;padding:6px 8px}
-      @media print{body{margin:0;padding:18mm 16mm;max-width:none}.no-print{display:none}}
+      .photo-page{page-break-before:always;break-before:page;min-height:calc(100vh - 64px);display:flex;flex-direction:column;align-items:center;justify-content:center;padding-top:24px}
+      .photo-page-hd{align-self:flex-start;font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:${P.primary};margin-bottom:18px}
+      .photo-page img{max-width:100%;max-height:82vh;object-fit:contain;border:1px solid #ddd}
+      .photo-caption{align-self:flex-start;margin-top:12px;font-size:13px;color:#3d6358;line-height:1.5}
+      @media print{body{margin:0;padding:18mm 16mm;max-width:none}.no-print{display:none}.photo-page{min-height:calc(100vh - 36mm)}}
       .print-bar{position:fixed;top:12px;right:12px;display:flex;gap:8px}
       .print-bar button{padding:8px 16px;background:${P.primary};color:#fff;border:none;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;font-family:Helvetica,sans-serif}
       .print-bar button.alt{background:#fff;color:${P.primary};border:1.5px solid ${P.primary}}
@@ -123,8 +127,8 @@ function printInvoice(j,inv,kind){
     </div>
     ${inv.notes?`<div class="notes"><div class="lbl">Notes</div>${esc(inv.notes).replace(/\n/g,'<br>')}</div>`:''}
     ${inv.terms?`<div class="terms">${esc(inv.terms)}</div>`:''}
-    ${(inv.photos&&inv.photos.length)?`<div class="inv-photos-doc"><div class="ip-hd">Photos</div><div class="ip-grid">${inv.photos.map(p=>`<figure><img src="${p.url}" alt="">${p.caption?`<figcaption>${esc(p.caption)}</figcaption>`:''}</figure>`).join('')}</div></div>`:''}
     <div class="ft">${esc(co.name||'Waterfront Solutions')}${co.phone?' · '+esc(co.phone):''}${co.email?' · '+esc(co.email):''} — Thank you for your business</div>
+    ${photoAppendix}
     </body></html>`);
   w.document.close();
 }
