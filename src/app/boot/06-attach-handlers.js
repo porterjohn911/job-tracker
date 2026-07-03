@@ -7,4 +7,5 @@ function attachHandlers(){
   attachCalendarDetailHandlers();
   attachJobAssetHandlers();
   attachFinancialTeamTimeHandlers();
+  attachCustomerHandlers();
 }
