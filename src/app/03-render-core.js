@@ -10,6 +10,7 @@ function render(){
   else if(S.view==='dashboard')c.innerHTML=renderDashboard();
   else if(S.view==='schedule')c.innerHTML=renderSchedule();
   else if(S.view==='invoices')c.innerHTML=renderInvoicesView();
+  else if(S.view==='customers')c.innerHTML=renderCustomers();
   else if(S.view==='referrals')c.innerHTML=renderReferrals();
   else if(S.view==='map')c.innerHTML=renderMap();
   else if(S.view==='reports')c.innerHTML=renderReports();
