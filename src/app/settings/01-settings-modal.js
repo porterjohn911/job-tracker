@@ -22,6 +22,7 @@ function showSettingsModal(){
       <div class="form-group"><label class="form-label">Default Invoice Terms</label><textarea class="form-textarea" id="set-co-terms">${esc(c.terms||'')}</textarea></div>
       <div style="margin:14px 0 10px;padding-top:14px;border-top:1px solid var(--border)"><div class="form-label" style="font-size:12px">Email sending (Gmail API)</div></div>
       <div id="gm-panel" style="margin-bottom:6px"></div>
+      ${typeof renderStorageSettings==='function'?renderStorageSettings():''}
       <div style="margin:14px 0 10px;padding-top:14px;border-top:1px solid var(--border)"><div class="form-label" style="font-size:12px">Team Access &amp; Roles</div></div>
       ${(FB_AUTH_ON||accessEnabled())
         ? `<div class="tt-hint" style="margin-bottom:10px">Signed in as <strong>${esc(SESSION?SESSION.name:'?')}</strong> · ${esc(SESSION?SESSION.role:'')}${SESSION&&!canSeeAll(SESSION)?' · '+esc((COMPANIES[SESSION.company]||{}).label||SESSION.company):' · all companies'}</div>
@@ -63,6 +64,7 @@ function showSettingsModal(){
     $('gm-help')?.addEventListener('click',(e)=>{e.preventDefault();alert('One-time Gmail setup (~10 min):\n\n1. Open console.cloud.google.com and create a project (or reuse one).\n2. APIs & Services → Library → enable "Gmail API".\n3. APIs & Services → OAuth consent screen → External → fill app name + your email → add scope https://www.googleapis.com/auth/gmail.send → add your gmail address as a Test user → save. (Stay in Testing mode; no Google verification needed for personal use.)\n4. APIs & Services → Credentials → Create Credentials → OAuth client ID → Web application.\n   Authorized JavaScript origins: paste EXACTLY this (HTTPS, no trailing slash, no path):\n   '+location.origin+'\n   Google requires HTTPS or localhost. file:// and plain http:// (non-localhost) will be rejected.\n5. Copy the Client ID and paste it here, then click Connect Gmail.')});
   }
   renderGmailPanel();
+  if(typeof wireStorageSettings==='function')wireStorageSettings();
   $('btn-set-save').onclick=()=>{
     const newUser=$('set-user').value.trim();
     if(newUser!==S.user){S.user=newUser;localStorage.setItem(LS('user'),S.user)}
