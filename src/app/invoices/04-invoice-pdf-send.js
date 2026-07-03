@@ -1,8 +1,6 @@
 // Invoice PDF creation and send modal
 // Generated from src/app/04-invoices-email.js lines 573-814.
-// ── Send PDF: jsPDF with real text → Web Share on mobile, Download + Gmail draft on desktop ──
-// Image-only invoice PDFs are commonly flagged by mail scanners. Keep the
-// invoice page text/vector based and only rasterize customer photos.
+// ── Send PDF: email-style invoice template → Web Share on mobile, Download + Gmail draft on desktop ──
 let _pdfLibsP=null;
 function loadPDFLibs(){
   if(_pdfLibsP)return _pdfLibsP;
@@ -38,149 +36,90 @@ async function buildInvoicePDFFile(j,inv,kind){
   const c=calcInvoice(inv);
   const co=COMPANY;
   const P=invTheme();
-  const primary=_hex2rgb(P.primary),link=_hex2rgb(P.link),rule=_hex2rgb(P.rule);
-  const dark=[10,31,24],mid=[61,99,88],muted=[122,168,152];
+  const primary=_hex2rgb(P.primary),band=_hex2rgb(P.band),rule=_hex2rgb(P.rule);
+  const dark=[10,31,24],mid=[61,99,88],muted=[122,168,152],paper=[240,250,246],cardBg=[255,255,255];
   const pdf=new jsPDF({unit:'pt',format:'letter',orientation:'portrait',compress:true});
   const pageW=pdf.internal.pageSize.getWidth(),pageH=pdf.internal.pageSize.getHeight();
-  const ML=48,MR=48,contentW=pageW-ML-MR,bottom=pageH-56;
-  const amtX=pageW-MR,qtyX=pageW-MR-118,descRight=qtyX-92;
+  const cardX=96,cardY=36,cardW=420,cardBottom=696,innerX=120,innerW=372;
   const setColor=rgb=>pdf.setTextColor(rgb[0],rgb[1],rgb[2]);
-  let y=0;
-  const ensure=h=>{if(y+h>bottom){pdf.addPage();y=56}};
-
-  const headerTop=36,headerBottom=124;
-  const logoFull=(typeof brandLogoFull==='function')?brandLogoFull():'';
-  const logoSrc=(typeof getBrandLogoSrc==='function')?getBrandLogoSrc():'';
+  const fill=rgb=>pdf.setFillColor(rgb[0],rgb[1],rgb[2]);
+  const line=rgb=>pdf.setDrawColor(rgb[0],rgb[1],rgb[2]);
+  const textLines=(txt,x,y,w,lh,opts)=>{const lines=pdf.splitTextToSize(String(txt||''),w);lines.forEach((ln,i)=>pdf.text(ln,x,y+i*lh,opts||{}));return y+lines.length*lh};
+  fill(paper);pdf.rect(0,0,pageW,pageH,'F');
+  fill(cardBg);pdf.roundedRect(cardX,cardY,cardW,cardBottom-cardY,9,9,'F');
+  fill(band);pdf.roundedRect(cardX,cardY,cardW,138,9,9,'F');pdf.rect(cardX,cardY+120,cardW,18,'F');
   try{
-    const logo=await _pdfImageData(logoFull||logoSrc);
+    const logo=await _pdfImageData((typeof getBrandLogoSrc==='function')?getBrandLogoSrc():'');
     if(logo){
-      if(logoFull){
-        const maxW=300,maxH=72,k=Math.min(maxW/logo.w,maxH/logo.h,1);
-        const lw=logo.w*k,lh=logo.h*k;
-        pdf.addImage(logo.du,logo.fmt,ML,headerTop,lw,lh);
-        pdf.setFont('helvetica','normal');pdf.setFontSize(8.8);setColor(mid);
-        const addr=[BIZ_ADDRESS,co.phone,co.email,co.website].filter(Boolean).join('\n');
-        pdf.splitTextToSize(addr,contentW-lw-28).forEach((ln,i)=>pdf.text(ln,ML+lw+14,headerTop+14+i*12));
-      }else{
-        const lh=62,lw=lh*(logo.w/logo.h);
-        pdf.addImage(logo.du,logo.fmt,ML,headerTop,lw,lh);
-        pdf.setFont('helvetica','bold');pdf.setFontSize(20);setColor(primary);
-        pdf.text(co.name||'Waterfront Solutions',ML+lw+14,headerTop+20);
-        pdf.setFont('helvetica','bold');pdf.setFontSize(8.5);pdf.setTextColor(102,102,102);
-        pdf.text(co.license?'Lic. '+co.license:'Construction & Waterfront Services',ML+lw+14,headerTop+34);
-        pdf.setFont('helvetica','normal');pdf.setFontSize(8.8);pdf.setTextColor(85,85,85);
-        const addr=[BIZ_ADDRESS,co.phone+(co.email?' · '+co.email:''),co.website].filter(Boolean).join('\n');
-        pdf.splitTextToSize(addr,260).forEach((ln,i)=>pdf.text(ln,ML+lw+14,headerTop+49+i*12));
-      }
-    }else{
-      pdf.setFont('helvetica','bold');pdf.setFontSize(20);setColor(primary);
-      pdf.text(co.name||'Waterfront Solutions',ML,headerTop+20);
+      const lh=62,lw=lh*(logo.w/logo.h);
+      pdf.addImage(logo.du,logo.fmt,cardX+(cardW-lw)/2,cardY+20,lw,lh);
     }
   }catch(e){}
-  pdf.setFont('helvetica','bold');pdf.setFontSize(36);setColor(primary);
-  pdf.text(EST?'ESTIMATE':'INVOICE',amtX,headerTop+24,{align:'right'});
-  pdf.setFont('helvetica','normal');pdf.setFontSize(10.5);setColor(mid);
-  if(inv.number)pdf.text(String(inv.number),amtX,headerTop+43,{align:'right'});
-  const stText=EST?(inv.status||'draft'):invoiceStatus(inv);
-  pdf.setFont('helvetica','bold');pdf.setFontSize(8.8);
-  let stFill=[241,245,249],stColor=[71,85,105];
-  if(stText==='paid'||stText==='accepted'){stFill=[220,252,231];stColor=[22,101,52]}
-  else if(stText==='overdue'||stText==='declined'){stFill=[254,226,226];stColor=[153,27,27]}
-  else if(stText==='sent'){stFill=[254,243,199];stColor=[146,64,14]}
-  pdf.setFillColor(stFill[0],stFill[1],stFill[2]);pdf.roundedRect(amtX-88,headerTop+52,88,18,9,9,'F');
-  pdf.setTextColor(stColor[0],stColor[1],stColor[2]);pdf.text(String(stText).toUpperCase(),amtX-44,headerTop+64,{align:'center'});
-  pdf.setDrawColor(rule[0],rule[1],rule[2]);pdf.setLineWidth(3);pdf.line(ML,headerBottom,pageW-MR,headerBottom);
-  y=headerBottom+28;
+  pdf.setFont('times','bold');pdf.setFontSize(20);pdf.setTextColor(255,255,255);
+  pdf.text(co.name||'Waterfront Solutions',cardX+cardW/2,cardY+106,{align:'center'});
+  pdf.setFont('helvetica','normal');pdf.setFontSize(9.5);pdf.setTextColor(210,229,222);
+  if(BIZ_ADDRESS)pdf.text(String(BIZ_ADDRESS).replace(/\n/g,' · '),cardX+cardW/2,cardY+122,{align:'center'});
 
-  pdf.setFont('helvetica','bold');pdf.setFontSize(9);setColor(muted);
-  pdf.text(EST?'PREPARED FOR':'BILL TO',ML,y);
-  let billY=y+16;
-  if(j.customerName){pdf.setFont('helvetica','bold');pdf.setFontSize(12);setColor(dark);pdf.text(String(j.customerName),ML,billY);billY+=15}
-  pdf.setFont('helvetica','normal');pdf.setFontSize(10);setColor(mid);
-  [(j.billingAddress||j.address),j.customerPhone,j.customerEmail].filter(Boolean).forEach(l=>{
-    pdf.splitTextToSize(String(l),250).forEach(ln=>{pdf.text(ln,ML,billY);billY+=14});
-  });
-  const metaX=ML+contentW/2+12;
-  pdf.setFont('helvetica','bold');pdf.setFontSize(9);setColor(muted);
-  pdf.text('PROJECT',metaX,y);
-  let metaY=y+16;
-  if(j.name){pdf.setFont('helvetica','bold');pdf.setFontSize(12);setColor(dark);pdf.text(String(j.name),metaX,metaY);metaY+=15}
-  pdf.setFont('helvetica','normal');pdf.setFontSize(10);setColor(mid);
-  if(j.address){pdf.splitTextToSize(String(j.address),250).forEach(ln=>{pdf.text(ln,metaX,metaY);metaY+=14})}
-  metaY+=8;
-  pdf.setFont('helvetica','bold');pdf.setFontSize(9);setColor(muted);pdf.text(EST?'ESTIMATE DATE':'INVOICE DATE',metaX,metaY);metaY+=14;
-  pdf.setFont('helvetica','normal');pdf.setFontSize(10);setColor(dark);pdf.text(fmtDate(inv.date)||'',metaX,metaY);metaY+=18;
-  if(inv.dueDate){pdf.setFont('helvetica','bold');pdf.setFontSize(9);setColor(muted);pdf.text(EST?'VALID UNTIL':'DUE DATE',metaX,metaY);metaY+=14;pdf.setFont('helvetica','normal');pdf.setFontSize(10);setColor(dark);pdf.text(fmtDate(inv.dueDate),metaX,metaY);metaY+=14}
-  y=Math.max(metaY,billY)+22;
-
-  pdf.setFillColor(240,250,246);
-  pdf.rect(ML,y,contentW,24,'F');
-  pdf.setDrawColor(221,221,221);pdf.setLineWidth(0.7);pdf.line(ML,y,ML+contentW,y);pdf.line(ML,y+24,ML+contentW,y+24);
-  pdf.setTextColor(102,102,102);pdf.setFont('helvetica','bold');pdf.setFontSize(9);
-  pdf.text('DESCRIPTION',ML+10,y+16);
-  pdf.text('QTY',qtyX-72,y+16,{align:'right'});
-  pdf.text('RATE',qtyX,y+16,{align:'right'});
-  pdf.text('AMOUNT',amtX,y+16,{align:'right'});
+  let y=cardY+168;
+  pdf.setFont('helvetica','bold');pdf.setFontSize(9.5);setColor(muted);
+  pdf.text((EST?'ESTIMATE ':'INVOICE ')+(inv.number||''),innerX,y);
   y+=24;
+  const firstName=((j.customerName||'').trim().split(/\s+/)[0])||'there';
+  pdf.setFont('helvetica','bold');pdf.setFontSize(17);setColor(primary);
+  pdf.text('Hi '+firstName+',',innerX,y);
+  y+=30;
+  pdf.setFont('helvetica','normal');pdf.setFontSize(12);setColor(mid);
+  const intro=EST
+    ?`Thank you for considering ${co.name||'us'} for ${j.name||'your project'}. Here is your estimate - the details are below. Let us know if you'd like to move forward.`
+    :`Thank you for letting ${co.name||'us'} work with you on ${j.name||'your project'}. Your invoice is ready and the details are below.`;
+  y=textLines(intro,innerX,y,innerW,17)+22;
 
-  pdf.setFont('helvetica','normal');pdf.setFontSize(10.5);
-  const items=inv.items||[];
-  items.forEach((it,idx)=>{
+  const bannerFill=EST?[230,247,241]:(c.balance<=0.005?[220,252,231]:[254,243,199]);
+  const bannerText=EST?[10,61,46]:(c.balance<=0.005?[22,101,52]:[146,64,14]);
+  fill(bannerFill);pdf.roundedRect(innerX,y,innerW,56,8,8,'F');
+  pdf.setFont('helvetica','bold');pdf.setFontSize(9.5);pdf.setTextColor(bannerText[0],bannerText[1],bannerText[2]);
+  const bannerLabel=EST?('ESTIMATED TOTAL'+(inv.dueDate?' · VALID UNTIL '+String(fmtDate(inv.dueDate)).toUpperCase():'')):(c.balance<=0.005?'PAID IN FULL - THANK YOU':'BALANCE DUE'+(inv.dueDate?' BY '+String(fmtDate(inv.dueDate)).toUpperCase():''));
+  pdf.text(bannerLabel,innerX+innerW/2,y+18,{align:'center'});
+  pdf.setFontSize(22);pdf.text(EST?money2(c.total):(c.balance<=0.005?'':money2(c.balance)),innerX+innerW/2,y+42,{align:'center'});
+  y+=76;
+
+  const boxY=y;fill([250,253,251]);line([230,240,235]);pdf.roundedRect(innerX,boxY,innerW,218,8,8,'FD');
+  fill(paper);pdf.rect(innerX,boxY,innerW,42,'F');line([230,240,235]);pdf.line(innerX,boxY+42,innerX+innerW,boxY+42);
+  pdf.setFont('helvetica','bold');pdf.setFontSize(9);setColor(muted);
+  pdf.text(EST?'ESTIMATE DATE':'INVOICE DATE',innerX+12,boxY+18);
+  pdf.text(inv.dueDate?(EST?'VALID UNTIL':'DUE DATE'):'',innerX+innerW-12,boxY+18,{align:'right'});
+  pdf.setFontSize(11);setColor(dark);
+  pdf.text(fmtDate(inv.date)||'-',innerX+12,boxY+32);
+  if(inv.dueDate)pdf.text(fmtDate(inv.dueDate),innerX+innerW-12,boxY+32,{align:'right'});
+  y=boxY+66;
+  (inv.items||[]).forEach(it=>{
     const amt=Number(it.qty||0)*Number(it.rate||0);
-    const descLines=pdf.splitTextToSize(String(it.desc||''),descRight-(ML+10));
-    const rowH=Math.max(22,descLines.length*13+9);
-    ensure(rowH);
-    setColor(dark);
-    descLines.forEach((ln,i)=>pdf.text(ln,ML+10,y+15+i*13));
-    setColor(mid);
-    pdf.text(String(it.qty??''),qtyX-72,y+15,{align:'right'});
-    pdf.text(money2(Number(it.rate||0)),qtyX,y+15,{align:'right'});
-    pdf.setFont('helvetica','bold');setColor(dark);
-    pdf.text(money2(amt),amtX,y+15,{align:'right'});
-    pdf.setFont('helvetica','normal');
-    y+=rowH;
-    pdf.setDrawColor(238,243,241);pdf.setLineWidth(0.5);pdf.line(ML,y,ML+contentW,y);
+    pdf.setFont('helvetica','normal');pdf.setFontSize(10.5);setColor(dark);
+    const nextY=textLines(it.desc||'',innerX+12,y,240,13);
+    setColor(mid);pdf.text((it.qty??'')+' x '+money2(Number(it.rate||0)),innerX+innerW-74,y,{align:'right'});
+    pdf.setFont('helvetica','bold');setColor(dark);pdf.text(money2(amt),innerX+innerW-12,y,{align:'right'});
+    y=Math.max(nextY,y+20);line([238,243,241]);pdf.line(innerX+8,y,innerX+innerW-8,y);y+=14;
   });
-  if(!items.length){ensure(22);setColor(muted);pdf.text('No line items',ML+10,y+15);y+=22}
+  if(!(inv.items||[]).length){pdf.setFont('helvetica','normal');pdf.setFontSize(10);setColor(muted);pdf.text('No line items',innerX+innerW/2,y,{align:'center'});y+=28}
+  const totalsY=boxY+156;
+  pdf.setFont('helvetica','normal');pdf.setFontSize(10.5);setColor(mid);
+  pdf.text('Subtotal',innerX+12,totalsY);pdf.text(money2(c.sub),innerX+innerW-12,totalsY,{align:'right'});
+  pdf.text('Tax ('+Number(inv.taxRate||0)+'%)',innerX+12,totalsY+17);pdf.text(money2(c.tax),innerX+innerW-12,totalsY+17,{align:'right'});
+  line(rule);pdf.setLineWidth(1.5);pdf.line(innerX+12,totalsY+24,innerX+innerW-12,totalsY+24);
+  pdf.setFont('helvetica','bold');pdf.setFontSize(13);setColor(primary);
+  pdf.text('Total',innerX+12,totalsY+43);pdf.text(money2(c.total),innerX+innerW-12,totalsY+43,{align:'right'});
+  y=boxY+246;
 
-  ensure(120);
-  y+=18;
-  const totLabelX=amtX-300,totValX=amtX;
-  const totRow=(label,val,o)=>{o=o||{};pdf.setFont('helvetica',o.bold?'bold':'normal');pdf.setFontSize(o.size||10.5);setColor(o.color||mid);pdf.text(label,totLabelX,y);setColor(o.valColor||o.color||dark);pdf.text(val,totValX,y,{align:'right'});y+=o.gap||16};
-  totRow('Subtotal',money2(c.sub));
-  totRow('Tax ('+Number(inv.taxRate||0)+'%)',money2(c.tax));
-  pdf.setDrawColor(rule[0],rule[1],rule[2]);pdf.setLineWidth(1.2);pdf.line(totLabelX,y-4,totValX,y-4);y+=8;
-  totRow('Total',money2(c.total),{bold:true,size:12,color:primary,valColor:primary});
-  if(c.paid>0)totRow('Paid','-'+money2(c.paid));
+  pdf.setFont('helvetica','normal');pdf.setFontSize(12);setColor(dark);
+  pdf.text('Thanks,',innerX,y);y+=16;
+  pdf.setFont('helvetica','bold');setColor(primary);pdf.text(S.user||co.name||'The Waterfront Solutions Team',innerX,y);y+=30;
+  if(inv.terms){line([230,240,235]);pdf.line(innerX,y,innerX+innerW,y);y+=18;pdf.setFont('helvetica','italic');pdf.setFontSize(9);setColor(muted);textLines(inv.terms,innerX,y,innerW,11)}
 
-  y+=8;ensure(52);
-  const boxH=40,boxY=y;
-  let boxLabel,boxVal,boxFill,boxText;
-  if(EST){boxLabel='ESTIMATED TOTAL';boxVal=money2(c.total);boxFill=[230,247,241];boxText=[10,61,46]}
-  else if(c.balance<=0.005){boxLabel='PAID IN FULL - THANK YOU';boxVal='';boxFill=[220,252,231];boxText=[22,101,52]}
-  else{boxLabel='BALANCE DUE'+(inv.dueDate?' BY '+fmtDate(inv.dueDate).toUpperCase():'');boxVal=money2(c.balance);boxFill=[254,243,199];boxText=[146,64,14]}
-  pdf.setFillColor(boxFill[0],boxFill[1],boxFill[2]);
-  pdf.roundedRect(ML,boxY,contentW,boxH,6,6,'F');
-  pdf.setTextColor(boxText[0],boxText[1],boxText[2]);
-  pdf.setFont('helvetica','bold');pdf.setFontSize(9.5);
-  pdf.text(boxLabel,ML+16,boxY+24);
-  if(boxVal){pdf.setFontSize(18);pdf.text(boxVal,amtX-16,boxY+26,{align:'right'})}
-  y=boxY+boxH+20;
-
-  if(inv.notes){
-    ensure(28);
-    pdf.setFont('helvetica','bold');pdf.setFontSize(9);setColor(link);pdf.text('NOTES',ML,y);y+=14;
-    pdf.setFont('helvetica','normal');pdf.setFontSize(10);setColor(mid);
-    pdf.splitTextToSize(String(inv.notes),contentW).forEach(ln=>{ensure(13);pdf.text(ln,ML,y);y+=13});
-    y+=8;
-  }
-
-  if(inv.terms){
-    ensure(24);
-    pdf.setDrawColor(230,240,235);pdf.setLineWidth(0.5);pdf.line(ML,y,ML+contentW,y);y+=12;
-    pdf.setFont('helvetica','italic');pdf.setFontSize(8.5);setColor(muted);
-    pdf.splitTextToSize(String(inv.terms),contentW).forEach(ln=>{ensure(11);pdf.text(ln,ML,y);y+=11});
-  }
+  const footY=708;
+  pdf.setFont('times','bold');pdf.setFontSize(12);setColor(primary);
+  pdf.text(co.name||'Waterfront Solutions',pageW/2,footY,{align:'center'});
+  pdf.setFont('helvetica','normal');pdf.setFontSize(9.5);setColor(muted);
+  pdf.text('This '+(EST?'estimate':'invoice')+' was sent from your '+(co.name||'Waterfront Solutions')+' job tracker.',pageW/2,footY+34,{align:'center'});
 
   const photos=(inv.photos||[]).filter(p=>p&&p.url);
   for(const ph of photos){
@@ -189,25 +128,13 @@ async function buildInvoicePDFFile(j,inv,kind){
     if(!img.width)continue;
     const maxW=pageW-72,maxH=pageH-120;let w=img.width,h=img.height;const k=Math.min(maxW/w,maxH/h,1);w*=k;h*=k;
     pdf.addPage();
-    pdf.setFont('helvetica','bold');pdf.setFontSize(11);setColor(primary);
+    pdf.setFont('helvetica','bold');pdf.setFontSize(11);pdf.setTextColor(10,61,46);
     pdf.text((kind==='estimate'?'Estimate':'Invoice')+' '+(inv.number||'')+' — Photos',36,40);
     pdf.addImage(du,_imgFmt(du),(pageW-w)/2,60,w,h);
-    if(ph.caption){pdf.setFont('helvetica','normal');pdf.setFontSize(10);setColor(mid);pdf.text(String(ph.caption).slice(0,200),36,60+h+22,{maxWidth:pageW-72})}
-  }
-
-  const pageCount=pdf.internal.getNumberOfPages();
-  for(let p=1;p<=pageCount;p++){
-    pdf.setPage(p);
-    const fy=pageH-30;
-    pdf.setDrawColor(230,240,235);pdf.setLineWidth(0.5);pdf.line(ML,fy-14,ML+contentW,fy-14);
-    pdf.setFont('helvetica','normal');pdf.setFontSize(8.5);setColor(muted);
-    const bits=[co.name,co.phone,co.email,co.website].filter(Boolean).join('  ·  ');
-    if(bits)pdf.text(bits,pageW/2,fy,{align:'center'});
-    if(co.license)pdf.text('License #'+co.license,pageW/2,fy+11,{align:'center'});
-    if(pageCount>1)pdf.text(p+' / '+pageCount,amtX,fy,{align:'right'});
+    if(ph.caption){pdf.setFont('helvetica','normal');pdf.setFontSize(10);pdf.setTextColor(61,99,88);pdf.text(String(ph.caption).slice(0,200),36,60+h+22,{maxWidth:pageW-72})}
   }
   const blob=pdf.output('blob');
-  const filename=(EST?'Estimate':'Invoice')+'-'+(inv.number||'draft')+'.pdf';
+  const filename=(kind==='estimate'?'Estimate':'Invoice')+'-'+(inv.number||'draft')+'.pdf';
   return new File([blob],filename,{type:'application/pdf'});
 }
 async function sendInvoicePDF(j,inv,kind,opts){
