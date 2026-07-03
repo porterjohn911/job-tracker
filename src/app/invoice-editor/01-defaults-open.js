@@ -3,6 +3,24 @@
 // ══ Invoice editor ══
 let INV_DRAFT=null; // current draft being edited
 
+// Auto-attach a job's Before/During/After photos to a new invoice, each
+// captioned with its stage so whoever receives it knows what they're looking
+// at. Ordered Before → During → After. Reads only job data — the editor, the
+// printed invoice, and the emailed PDF already render inv.photos + captions.
+function invoicePhotosFromJob(j){
+  const label={before:'Before',during:'During',after:'After'};
+  const out=[];
+  ['before','during','after'].forEach(stage=>{
+    (((j&&j.photos)||[])).forEach(p=>{
+      if(!p||(p.cat||'')!==stage)return;
+      const url=(typeof photoURL==='function')?photoURL(p):(typeof p==='string'?p:(p&&p.url)||'');
+      if(!url)return;
+      out.push({url,caption:p.caption?label[stage]+' — '+p.caption:label[stage]});
+    });
+  });
+  return out;
+}
+
 function defaultInvoice(j){
   const today=dateKey(new Date());
   const due=new Date();due.setDate(due.getDate()+30);
@@ -15,7 +33,7 @@ function defaultInvoice(j){
     taxRate:COMPANY.taxRate||'',
     notes:'',
     terms:COMPANY.terms||'',
-    photos:[],
+    photos:invoicePhotosFromJob(j),
     paid:0,
     status:'draft',
     created:Date.now(),
