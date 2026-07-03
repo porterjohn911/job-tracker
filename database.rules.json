@@ -39,6 +39,13 @@
         }
       },
 
+      "customers": {
+        ".write": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'owner' || root.child('users').child(auth.uid).child('role').val() === 'manager' || root.child('users').child(auth.uid).child('company').val() === $company || $company === root.child('users').child(auth.uid).child('company').val() + '_dev')",
+        "$customerId": {
+          ".validate": "newData.hasChildren(['id']) && newData.child('id').isString() && newData.child('id').val() === $customerId"
+        }
+      },
+
       "time": {
         ".write": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'owner' || root.child('users').child(auth.uid).child('role').val() === 'manager' || root.child('users').child(auth.uid).child('company').val() === $company || $company === root.child('users').child(auth.uid).child('company').val() + '_dev')",
         "$entryId": {
