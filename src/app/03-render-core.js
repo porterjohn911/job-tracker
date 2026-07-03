@@ -5,6 +5,13 @@ function render(){
   const c=$('content');
   if(OWNER_MODE){renderOwner(c);return}
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.toggle('active',b.dataset.view===S.view));
+  if(!canOpenView(S.view)){
+    c.innerHTML=renderRestrictedView(S.view);
+    updateUserUI();
+    updateBellBadge();
+    attachHandlers();
+    return;
+  }
   if(S.view==='jobs'&&S.detail)c.innerHTML=renderDetail(S.detail);
   else if(S.view==='jobs')c.innerHTML=renderJobs();
   else if(S.view==='dashboard')c.innerHTML=renderDashboard();
@@ -22,6 +29,13 @@ function render(){
   updateBellBadge();
   attachHandlers();
   if(S.view==='map')mountMap();
+}
+
+function renderRestrictedView(view){
+  const msg=view==='reports'
+    ? 'Reports are only available to managers and owners.'
+    : 'This area is owner-only.';
+  return `<div class="tt-empty" style="padding:40px 16px"><p style="font-size:14px;color:var(--text-2);line-height:1.6">${esc(msg)}</p></div>`;
 }
 
 function updateUserUI(){

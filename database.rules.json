@@ -12,9 +12,8 @@
     },
 
     "$company": {
-      ".read": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'owner' || root.child('users').child(auth.uid).child('role').val() === 'manager' || root.child('users').child(auth.uid).child('company').val() === $company || $company === root.child('users').child(auth.uid).child('company').val() + '_dev')",
-
       "jobs": {
+        ".read": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'owner' || root.child('users').child(auth.uid).child('role').val() === 'manager' || root.child('users').child(auth.uid).child('company').val() === $company || $company === root.child('users').child(auth.uid).child('company').val() + '_dev')",
         ".write": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'owner' || root.child('users').child(auth.uid).child('role').val() === 'manager' || root.child('users').child(auth.uid).child('company').val() === $company || $company === root.child('users').child(auth.uid).child('company').val() + '_dev')",
         "$jobId": {
           ".validate": "newData.hasChildren(['id', 'name']) && newData.child('id').isString() && newData.child('id').val() === $jobId && newData.child('name').isString()"
@@ -22,6 +21,7 @@
       },
 
       "activity": {
+        ".read": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'owner' || root.child('users').child(auth.uid).child('role').val() === 'manager' || root.child('users').child(auth.uid).child('company').val() === $company || $company === root.child('users').child(auth.uid).child('company').val() + '_dev')",
         ".write": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'owner' || root.child('users').child(auth.uid).child('role').val() === 'manager' || root.child('users').child(auth.uid).child('company').val() === $company || $company === root.child('users').child(auth.uid).child('company').val() + '_dev')",
         "$activityId": {
           ".validate": "newData.hasChildren(['action', 'time']) && newData.child('action').isString() && newData.child('time').isNumber()"
@@ -29,10 +29,12 @@
       },
 
       "members": {
+        ".read": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'owner' || root.child('users').child(auth.uid).child('role').val() === 'manager' || root.child('users').child(auth.uid).child('company').val() === $company || $company === root.child('users').child(auth.uid).child('company').val() + '_dev')",
         ".write": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'owner' || root.child('users').child(auth.uid).child('role').val() === 'manager' || root.child('users').child(auth.uid).child('company').val() === $company || $company === root.child('users').child(auth.uid).child('company').val() + '_dev')"
       },
 
       "referrals": {
+        ".read": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'owner' || root.child('users').child(auth.uid).child('role').val() === 'manager' || root.child('users').child(auth.uid).child('company').val() === $company || $company === root.child('users').child(auth.uid).child('company').val() + '_dev')",
         ".write": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'owner' || root.child('users').child(auth.uid).child('role').val() === 'manager' || root.child('users').child(auth.uid).child('company').val() === $company || $company === root.child('users').child(auth.uid).child('company').val() + '_dev')",
         "$referralId": {
           ".validate": "newData.hasChildren(['id']) && newData.child('id').isString() && newData.child('id').val() === $referralId"
@@ -40,6 +42,7 @@
       },
 
       "customers": {
+        ".read": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'owner' || root.child('users').child(auth.uid).child('role').val() === 'manager' || root.child('users').child(auth.uid).child('company').val() === $company || $company === root.child('users').child(auth.uid).child('company').val() + '_dev')",
         ".write": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'owner' || root.child('users').child(auth.uid).child('role').val() === 'manager' || root.child('users').child(auth.uid).child('company').val() === $company || $company === root.child('users').child(auth.uid).child('company').val() + '_dev')",
         "$customerId": {
           ".validate": "newData.hasChildren(['id']) && newData.child('id').isString() && newData.child('id').val() === $customerId"
@@ -47,6 +50,7 @@
       },
 
       "time": {
+        ".read": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'owner' || root.child('users').child(auth.uid).child('role').val() === 'manager' || root.child('users').child(auth.uid).child('company').val() === $company || $company === root.child('users').child(auth.uid).child('company').val() + '_dev')",
         ".write": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'owner' || root.child('users').child(auth.uid).child('role').val() === 'manager' || root.child('users').child(auth.uid).child('company').val() === $company || $company === root.child('users').child(auth.uid).child('company').val() + '_dev')",
         "$entryId": {
           ".validate": "newData.hasChildren(['id', 'member', 'start']) && newData.child('id').isString() && newData.child('id').val() === $entryId && newData.child('member').isString() && newData.child('start').isNumber()"
@@ -54,10 +58,12 @@
       },
 
       "payrates": {
+        ".read": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'owner' || root.child('users').child(auth.uid).child('role').val() === 'manager')",
         ".write": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'owner' || root.child('users').child(auth.uid).child('role').val() === 'manager')"
       },
 
       "transactions": {
+        ".read": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'owner'",
         ".write": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'owner'",
         "$transactionId": {
           ".validate": "newData.hasChildren(['id', 'date', 'description', 'amount']) && newData.child('id').isString() && newData.child('id').val() === $transactionId && newData.child('date').isString() && newData.child('description').isString() && newData.child('amount').isNumber()"

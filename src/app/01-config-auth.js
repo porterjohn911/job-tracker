@@ -94,6 +94,13 @@ function accessEnabled(){return !!(ACCESS&&ACCESS.enabled&&ACCESS.members&&ACCES
 function findMember(id){return (ACCESS&&ACCESS.members||[]).find(m=>m.id===id)||null}
 function canSeeAll(m){return !!(m&&(m.role==='owner'||m.role==='manager'))}
 function isOwnerRole(m){return !!(m&&m.role==='owner')}
+function canSeeFinancials(m=SESSION){return !gateOn()||canSeeAll(m)}
+function canSeeBank(m=SESSION){return !gateOn()||isOwnerRole(m)}
+function canOpenView(v){
+  if(v==='reports')return canSeeFinancials();
+  if(v==='bank')return canSeeBank();
+  return true;
+}
 let SESSION=accessEnabled()?(()=>{try{return findMember(localStorage.getItem(SESSION_KEY))}catch(e){return null}})():null;
 const LOCKED=accessEnabled()&&!SESSION;
 

@@ -162,7 +162,7 @@ async function removeDB(path,label){
   catch(e){showCloudSaveError(label,e);throw e}
 }
 const LOCAL={
-  load(){try{S.jobs=JSON.parse(localStorage.getItem(LS('jobs'))||'{}')}catch(e){S.jobs={}}try{S.activity=JSON.parse(localStorage.getItem(LS('activity'))||'[]')}catch(e){S.activity=[]}try{S.members=JSON.parse(localStorage.getItem(LS('members'))||'[]')}catch(e){S.members=[]}try{S.referrals=JSON.parse(localStorage.getItem(LS('referrals'))||'{}')}catch(e){S.referrals={}}try{S.timeEntries=JSON.parse(localStorage.getItem(LS('time'))||'{}')}catch(e){S.timeEntries={}}try{S.payRates=JSON.parse(localStorage.getItem(LS('payrates'))||'{}')}catch(e){S.payRates={}}try{S.transactions=JSON.parse(localStorage.getItem(LS('transactions'))||'{}')}catch(e){S.transactions={}}},
+  load(){try{S.jobs=JSON.parse(localStorage.getItem(LS('jobs'))||'{}')}catch(e){S.jobs={}}try{S.activity=JSON.parse(localStorage.getItem(LS('activity'))||'[]')}catch(e){S.activity=[]}try{S.members=JSON.parse(localStorage.getItem(LS('members'))||'[]')}catch(e){S.members=[]}try{S.referrals=JSON.parse(localStorage.getItem(LS('referrals'))||'{}')}catch(e){S.referrals={}}try{S.timeEntries=JSON.parse(localStorage.getItem(LS('time'))||'{}')}catch(e){S.timeEntries={}}try{S.payRates=canSeeFinancials()?JSON.parse(localStorage.getItem(LS('payrates'))||'{}'):{};}catch(e){S.payRates={}}try{S.transactions=canSeeBank()?JSON.parse(localStorage.getItem(LS('transactions'))||'{}'):{};}catch(e){S.transactions={}}},
   saveJobs(required){return saveLocalValue(LS('jobs'),S.jobs,'jobs',required)},
   saveActivity(required){return saveLocalValue(LS('activity'),S.activity.slice(0,300),'activity',required)},
   saveMembers(required){return saveLocalValue(LS('members'),S.members,'team members',required)},
@@ -206,8 +206,10 @@ function initFB(cfg){
     DB.child('members').on('value',s=>{S.members=s.val()||[];LOCAL.saveMembers();render()});
     DB.child('referrals').on('value',s=>{S.referrals=s.val()||{};LOCAL.saveReferrals();render()});
     DB.child('time').on('value',s=>{S.timeEntries=s.val()||{};LOCAL.saveTime();render()});
-    DB.child('payrates').on('value',s=>{S.payRates=s.val()||{};LOCAL.savePayRates();render()});
-    DB.child('transactions').on('value',s=>{S.transactions=s.val()||{};LOCAL.saveTransactions();render()});
+    if(canSeeFinancials())DB.child('payrates').on('value',s=>{S.payRates=s.val()||{};LOCAL.savePayRates();render()});
+    else S.payRates={};
+    if(canSeeBank())DB.child('transactions').on('value',s=>{S.transactions=s.val()||{};LOCAL.saveTransactions();render()});
+    else S.transactions={};
     DB.child('.info/connected').on('value',s=>{if(!s.val())syncStatus('err','Reconnecting…')});
     return true;
   }catch(e){syncStatus('err','Firebase error');return false}
@@ -253,7 +255,7 @@ let TIME_TICK=null;
 function stopTimeTick(){if(TIME_TICK){clearInterval(TIME_TICK);TIME_TICK=null}}
 function startTimeTick(){stopTimeTick();TIME_TICK=setInterval(()=>{document.querySelectorAll('[data-tick-start]').forEach(el=>{const s=parseInt(el.getAttribute('data-tick-start'),10);if(s)el.textContent=fmtHMS(Date.now()-s)})},1000)}
 // ── Labor cost roll-ups ──
-async function savePayRates(){const localOk=LOCAL.savePayRates(!DB);await writeDB('payrates',S.payRates,'pay rates');if(!localOk&&!DB)throw new Error('Local pay rate save failed')}
+async function savePayRates(){if(!canSeeFinancials()){toast('Only managers and owners can edit pay rates','');return}const localOk=LOCAL.savePayRates(!DB);await writeDB('payrates',S.payRates,'pay rates');if(!localOk&&!DB)throw new Error('Local pay rate save failed')}
 function rateOf(m){return Number((S.payRates||{})[m]||0)}
 function hoursOf(ms){return ms/3600000}
 function jobLaborStats(jobId){let ms=0,cost=0,active=0;timeList().forEach(t=>{if((t.job||'')!==jobId)return;const d=entryDur(t);ms+=d;cost+=hoursOf(d)*rateOf(t.member);if(!t.end)active++});return{ms,hours:hoursOf(ms),cost,active}}

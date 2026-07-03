@@ -35,7 +35,11 @@ function onKey(e){
   if(KBD_BUFFER==='g'){
     const map={d:'dashboard',j:'jobs',s:'schedule',i:'invoices',m:'map',r:'reports',a:'activity',t:'team'};
     const target=map[k.toLowerCase()];
-    if(target){KBD_BUFFER='';clearTimeout(KBD_BUFFER_T);S.view=target;S.detail=null;render();e.preventDefault()}
+    if(target){
+      KBD_BUFFER='';clearTimeout(KBD_BUFFER_T);e.preventDefault();
+      if(!canOpenView(target)){toast(target==='reports'?'Reports are manager/owner only':'Owner-only','');return}
+      S.view=target;S.detail=null;render();
+    }
   }
 }
 function isTyping(e){
