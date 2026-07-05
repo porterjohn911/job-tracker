@@ -131,6 +131,15 @@ function attachListInvoiceReportMapHandlers(){
   $('map-manual-job')?.addEventListener('change',e=>{S.manualPinJob=e.target.value||null;render()});
   $('map-clear-manual')?.addEventListener('click',()=>{S.manualPinJob=null;render()});
   document.querySelectorAll('[data-map-filter]').forEach(c=>c.onclick=()=>{S.mapFilter=c.dataset.mapFilter;render()});
+  $('map-near-me')?.addEventListener('click',()=>{
+    if(!navigator.geolocation){toast('Location not supported on this device','');return}
+    const btn=$('map-near-me');if(btn){btn.disabled=true;btn.textContent='Locating…';}
+    navigator.geolocation.getCurrentPosition(
+      pos=>{USER_LOC={lat:pos.coords.latitude,lng:pos.coords.longitude};MAP_VIEW={center:[USER_LOC.lat,USER_LOC.lng],zoom:14};render();toast('Found your location');},
+      ()=>{const b=$('map-near-me');if(b){b.disabled=false;b.textContent='📍 Near me';}toast('Could not get your location','');},
+      {enableHighAccuracy:true,timeout:10000,maximumAge:60000}
+    );
+  });
   document.querySelectorAll('[data-pick-location]').forEach(el=>el.onclick=e=>{
     e.preventDefault();
     e.stopPropagation();

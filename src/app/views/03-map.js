@@ -4,6 +4,19 @@
 // Remembered map center/zoom so re-renders (which fully rebuild the Leaflet
 // instance) don't throw away the user's pan/zoom. Persists for the session.
 let MAP_VIEW=null;
+// Optional "you are here" position from the Near-me button. Session-only,
+// never written to a job or persisted anywhere.
+let USER_LOC=null;
+// Pin/legend colors, shared by the map markers and the status filter chips.
+function jobPinColor(status){return status==='complete'?'#3ab5c8':status==='active'?'#4ade80':status==='lost'?'#dc2626':status==='hold'?'#94a3b8':'#e8a830'}
+// Straight-line distance in miles between two {lat,lng} points (haversine).
+function milesBetween(a,b){
+  const R=3958.8,toRad=d=>d*Math.PI/180;
+  const dLat=toRad(b.lat-a.lat),dLng=toRad(b.lng-a.lng);
+  const s=Math.sin(dLat/2)**2+Math.cos(toRad(a.lat))*Math.cos(toRad(b.lat))*Math.sin(dLng/2)**2;
+  return 2*R*Math.asin(Math.min(1,Math.sqrt(s)));
+}
+function fmtMiles(mi){return mi<0.1?'here':mi<10?mi.toFixed(1)+' mi':Math.round(mi)+' mi'}
 function renderMap(){
   const all=jobs();
   const withCoords=all.filter(j=>j.lat&&j.lng);
@@ -25,10 +38,11 @@ function renderMap(){
         <option value="">Set pin manually…</option>
         ${pinJobs.map(j=>`<option value="${j.id}" ${manualTarget&&manualTarget.id===j.id?'selected':''}>${esc(j.name)}${j.lat&&j.lng?' · pinned':''}</option>`).join('')}
       </select>`:''}
+      <button class="btn-sm" id="map-near-me" aria-label="Center map on my location">📍 Near me</button>
       <span class="geocode-status" id="geo-status" style="display:none"></span>
     </div>
     ${withCoords.length>0?`<div class="filter-row map-filter-row" style="margin-bottom:10px" role="group" aria-label="Filter map by status">
-      ${['all','lead','active','complete','hold','lost'].map(s=>`<div class="filter-chip ${mapFilter===s?'active':''}" data-map-filter="${s}">${mfLabels[s]} ${mcnt[s]}</div>`).join('')}
+      ${['all','lead','active','complete','hold','lost'].map(s=>`<div class="filter-chip ${mapFilter===s?'active':''}" data-map-filter="${s}">${s!=='all'?`<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${jobPinColor(s)};margin-right:5px;vertical-align:middle"></span>`:''}${mfLabels[s]} ${mcnt[s]}</div>`).join('')}
     </div>`:''}
     ${manualTarget?`<div class="map-alert map-alert-manual">
       <strong>Click the map to set the pin for ${esc(manualTarget.name)}.</strong>
@@ -49,7 +63,8 @@ function renderMap(){
       <p style="margin-bottom:10px">No jobs pinned to the map yet.</p>
       <p style="font-size:12.5px">${manualTarget?'Click the map below to place this job.':needGeo.length>0?'Click "Locate" above to find addresses on the map.':'Add a job with an address to get started.'}</p>
     </div>`:''}
-    <div class="map-wrap" id="map-wrap" style="${withCoords.length===0&&!manualTarget?'display:none':''}">
+    ${USER_LOC&&withCoords.length?(()=>{const n=withCoords.map(j=>({j,d:milesBetween(USER_LOC,{lat:Number(j.lat),lng:Number(j.lng)})})).sort((a,b)=>a.d-b.d)[0];return `<div class="map-stats" style="margin:0 0 10px">📍 Nearest job: <strong>${esc(n.j.name)}</strong> · ${fmtMiles(n.d)} away</div>`})():''}
+    <div class="map-wrap" id="map-wrap" style="${withCoords.length===0&&!manualTarget&&!USER_LOC?'display:none':''}">
       <div id="leaflet-map"></div>
     </div>
   `;
@@ -67,7 +82,7 @@ function mountMap(){
   const allCoords=jobs().filter(j=>j.lat&&j.lng);
   const all=allCoords.filter(j=>mapFilter==='all'||j.status===mapFilter);
   const manualTarget=S.manualPinJob&&S.jobs[S.manualPinJob]?S.jobs[S.manualPinJob]:null;
-  if(allCoords.length===0&&!manualTarget)return;
+  if(allCoords.length===0&&!manualTarget&&!USER_LOC)return;
   MAP=L.map(el,{scrollWheelZoom:true});
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
     maxZoom:19,attribution:'© OpenStreetMap'
@@ -78,7 +93,7 @@ function mountMap(){
   const cluster=(typeof L.markerClusterGroup==='function')?L.markerClusterGroup({showCoverageOnHover:false,maxClusterRadius:50,spiderfyOnMaxZoom:true}):null;
   const group=[];
   all.forEach(j=>{
-    const color=j.status==='complete'?'#3ab5c8':j.status==='active'?'#4ade80':j.status==='lost'?'#dc2626':j.status==='hold'?'#94a3b8':'#e8a830';
+    const color=jobPinColor(j.status);
     const icon=L.divIcon({
       className:'',
       html:`<div style="background:${color};width:24px;height:24px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center"><div style="transform:rotate(45deg);color:#fff;font-size:11px;font-weight:700">${initials(j.name)}</div></div>`,
@@ -88,7 +103,9 @@ function mountMap(){
     if(cluster)cluster.addLayer(m);else m.addTo(MAP);
     MAP_MARKERS.push(m);
     const locLabel=j.locationSource==='manual'?'Manual pin':(j.geocodeLabel&&j.geocodeLabel!==j.address?'Matched: '+esc(j.geocodeLabel):'');
-    m.bindPopup(`<strong>${esc(j.name)}</strong>${esc(j.address||'')}${locLabel?'<br><span class="popup-muted">'+locLabel+'</span>':''}<br><br>${j.customerName?esc(j.customerName)+'<br>':''}${j.customerPhone?'📞 '+esc(j.customerPhone)+'<br>':''}<a href="#" data-open-job="${j.id}">Open job →</a><br><a href="#" data-manual-pin="${j.id}">Move pin</a>`);
+    const dir='https://www.google.com/maps/dir/?api=1&destination='+j.lat+','+j.lng;
+    const dist=USER_LOC?fmtMiles(milesBetween(USER_LOC,{lat:Number(j.lat),lng:Number(j.lng)}))+' away':'';
+    m.bindPopup(`<strong>${esc(j.name)}</strong>${esc(j.address||'')}${locLabel?'<br><span class="popup-muted">'+locLabel+'</span>':''}${dist?'<br><span class="popup-muted">📍 '+dist+'</span>':''}<br><br>${j.customerName?esc(j.customerName)+'<br>':''}${j.customerPhone?'📞 '+esc(j.customerPhone)+'<br>':''}<a href="${dir}" target="_blank" rel="noopener">🧭 Directions</a><br><a href="#" data-open-job="${j.id}">Open job →</a><br><a href="#" data-manual-pin="${j.id}">Move pin</a>`);
     m.on('popupopen',()=>{
       const lnk=document.querySelector('[data-open-job="'+j.id+'"]');
       if(lnk)lnk.onclick=e=>{e.preventDefault();S.detail=j.id;S.view='jobs';S.detailTab='overview';render()};
@@ -98,9 +115,14 @@ function mountMap(){
     group.push([j.lat,j.lng]);
   });
   if(cluster)MAP.addLayer(cluster);
+  if(USER_LOC){
+    const uicon=L.divIcon({className:'',html:`<div style="width:16px;height:16px;border-radius:50%;background:#2563eb;border:3px solid #fff;box-shadow:0 0 0 3px rgba(37,99,235,0.3),0 2px 6px rgba(0,0,0,0.35)"></div>`,iconSize:[16,16],iconAnchor:[8,8]});
+    L.marker([USER_LOC.lat,USER_LOC.lng],{icon:uicon,zIndexOffset:1000,keyboard:false}).addTo(MAP).bindPopup('<strong>You are here</strong>');
+  }
   // Restore the user's last view if they've moved the map this session; otherwise
-  // frame the pins (or the manual-pin target) on first open.
+  // focus my location, frame the pins, or the manual-pin target on first open.
   if(MAP_VIEW){MAP.setView(MAP_VIEW.center,MAP_VIEW.zoom)}
+  else if(USER_LOC){MAP.setView([USER_LOC.lat,USER_LOC.lng],14)}
   else if(manualTarget&&manualTarget.lat&&manualTarget.lng){MAP.setView([manualTarget.lat,manualTarget.lng],16)}
   else if(group.length===1){MAP.setView(group[0],13)}
   else if(group.length>1){MAP.fitBounds(group,{padding:[40,40]})}
