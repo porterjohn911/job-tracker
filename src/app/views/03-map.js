@@ -146,6 +146,70 @@ function mountMap(){
   setTimeout(()=>MAP&&MAP.invalidateSize(),100);
 }
 
+// ── Address enrichment (helps both geocoders locate bare addresses) ──
+const STATE_TO_CODE={alabama:'AL',alaska:'AK',arizona:'AZ',arkansas:'AR',california:'CA',colorado:'CO',connecticut:'CT',delaware:'DE',florida:'FL',georgia:'GA',hawaii:'HI',idaho:'ID',illinois:'IL',indiana:'IN',iowa:'IA',kansas:'KS',kentucky:'KY',louisiana:'LA',maine:'ME',maryland:'MD',massachusetts:'MA',michigan:'MI',minnesota:'MN',mississippi:'MS',missouri:'MO',montana:'MT',nebraska:'NE',nevada:'NV','new hampshire':'NH','new jersey':'NJ','new mexico':'NM','new york':'NY','north carolina':'NC','north dakota':'ND',ohio:'OH',oklahoma:'OK',oregon:'OR',pennsylvania:'PA','rhode island':'RI','south carolina':'SC','south dakota':'SD',tennessee:'TN',texas:'TX',utah:'UT',vermont:'VT',virginia:'VA',washington:'WA','west virginia':'WV',wisconsin:'WI',wyoming:'WY'};
+const STATE_CODES=new Set(Object.values(STATE_TO_CODE));
+// Return a US state code found in the text (full name or 2-letter code), else ''.
+function detectState(text){
+  if(!text)return '';
+  // Normalize punctuation to spaces so ", Tennessee," still word-matches.
+  const norm=' '+String(text).toLowerCase().replace(/[^a-z0-9]+/g,' ').trim()+' ';
+  for(const name in STATE_TO_CODE){if(norm.includes(' '+name+' '))return STATE_TO_CODE[name];}
+  const codes=String(text).toUpperCase().match(/\b[A-Z]{2}\b/g);
+  if(codes){for(const c of codes){if(STATE_CODES.has(c))return c;}}
+  return '';
+}
+// An address already carries region info if it has a 5-digit ZIP or a state.
+function hasRegion(addr){return /\b\d{5}\b/.test(addr)||detectState(addr)!==''}
+// Most common state among jobs that are already located — used as the default
+// context for bare addresses. Returns '' if nothing is located yet.
+function defaultRegionHint(){
+  const counts={};
+  jobs().forEach(j=>{
+    if(!(j.lat&&j.lng))return;
+    const st=detectState(j.geocodeLabel)||detectState(j.address);
+    if(st)counts[st]=(counts[st]||0)+1;
+  });
+  let best='',n=0;
+  for(const k in counts){if(counts[k]>n){n=counts[k];best=k;}}
+  return best;
+}
+// Append the default region to an address that lacks any city/state/ZIP.
+function enrichAddress(addr,hint){
+  const a=String(addr).trim();
+  if(hint&&!hasRegion(a))return a+', '+hint+', USA';
+  return a;
+}
+
+// ── US Census Bureau geocoder (free, no key, best for exact US addresses) ──
+async function geocodeCensus(addr){
+  try{
+    const url='https://geocoding.geo.census.gov/geocoder/locations/onelineaddress?benchmark=Public_AR_Current&format=json&address='+encodeURIComponent(addr);
+    const r=await fetch(url);
+    if(!r.ok)return [];
+    const data=await r.json();
+    const matches=(data&&data.result&&data.result.addressMatches)||[];
+    return matches.map(m=>({
+      lat:parseFloat(m.coordinates&&m.coordinates.y),
+      lng:parseFloat(m.coordinates&&m.coordinates.x),
+      label:m.matchedAddress||addr,
+      type:'US Census address',
+      importance:0.9
+    })).filter(c=>Number.isFinite(c.lat)&&Number.isFinite(c.lng));
+  }catch(e){}
+  return [];
+}
+
+// Try Census first (authoritative for US street addresses), then fall back to
+// Nominatim. Returns {candidates, source} so the caller can trust Census matches.
+async function geocodeOne(addr,hint){
+  const q=enrichAddress(addr,hint);
+  const census=await geocodeCensus(q);
+  if(census.length)return {candidates:census,source:'census'};
+  const osm=await geocodeCandidates(q);
+  return {candidates:osm,source:'nominatim'};
+}
+
 // Nominatim geocoder (rate limited 1/sec by their TOS)
 function normalizeGeocodeCandidate(row){
   return {
@@ -158,7 +222,7 @@ function normalizeGeocodeCandidate(row){
 }
 async function geocodeCandidates(addr){
   try{
-    const r=await fetch('https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&limit=3&q='+encodeURIComponent(addr),{headers:{'Accept':'application/json'}});
+    const r=await fetch('https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&countrycodes=us&limit=3&q='+encodeURIComponent(addr),{headers:{'Accept':'application/json'}});
     if(!r.ok)return [];
     const data=await r.json();
     if(data&&data.length>0)return data.map(normalizeGeocodeCandidate).filter(c=>Number.isFinite(c.lat)&&Number.isFinite(c.lng));
@@ -184,13 +248,16 @@ function applyGeocodeCandidate(j,c){
 async function geocodeAll(){
   const queue=jobs().filter(j=>j.address&&(!j.lat||!j.lng));
   const status=$('geo-status');
+  const hint=defaultRegionHint();
   let located=0,review=0,failed=0;
   if(status)status.style.display='inline-block';
   for(let i=0;i<queue.length;i++){
     const j=queue[i];
     if(status)status.textContent=`Locating ${i+1} of ${queue.length}: ${j.name}…`;
-    const candidates=await geocodeCandidates(j.address);
-    const coords=bestGeocodeCandidate(candidates);
+    const {candidates,source}=await geocodeOne(j.address,hint);
+    // Census only returns real address-level matches, so trust its top hit;
+    // for Nominatim, keep requiring a clear best candidate.
+    const coords=source==='census'?candidates[0]:bestGeocodeCandidate(candidates);
     if(coords){
       applyGeocodeCandidate(j,coords);
       located++;
@@ -211,7 +278,9 @@ async function geocodeAll(){
       failed++;
     }
     await writeJob(j);
-    await new Promise(r=>setTimeout(r,1100));
+    // Only pause the full second when we actually queried Nominatim (its TOS
+    // requires ≤1 req/sec); Census successes need only a courtesy gap.
+    await new Promise(r=>setTimeout(r,source==='nominatim'?1100:250));
   }
   if(status)status.textContent=`Done. ${located} located${review?`, ${review} need review`:''}${failed?`, ${failed} failed`:''}.`;
   toast(review||failed?`${located} located, ${review} need review, ${failed} failed`:'Locations updated');
