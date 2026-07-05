@@ -50,6 +50,13 @@ test('boots the job tracker shell without console errors', async ({ page }) => {
       route.fulfill({ contentType: 'text/css', body: '' });
     }
   });
+  await page.route('https://unpkg.com/leaflet.markercluster@1.5.3/**', (route) => {
+    if (route.request().url().endsWith('.js')) {
+      route.fulfill({ contentType: 'application/javascript', body: 'window.L && (window.L.markerClusterGroup = function () { return { addLayer() { return this; }, addTo() { return this; } }; });' });
+    } else {
+      route.fulfill({ contentType: 'text/css', body: '' });
+    }
+  });
   await page.route('https://fonts.googleapis.com/**', (route) => route.fulfill({ contentType: 'text/css', body: '' }));
   await page.route('https://fonts.gstatic.com/**', (route) => route.abort());
 
