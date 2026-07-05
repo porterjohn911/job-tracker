@@ -130,6 +130,7 @@ function attachListInvoiceReportMapHandlers(){
   $('btn-geocode')?.addEventListener('click',geocodeAll);
   $('map-manual-job')?.addEventListener('change',e=>{S.manualPinJob=e.target.value||null;render()});
   $('map-clear-manual')?.addEventListener('click',()=>{S.manualPinJob=null;render()});
+  document.querySelectorAll('[data-map-filter]').forEach(c=>c.onclick=()=>{S.mapFilter=c.dataset.mapFilter;render()});
   document.querySelectorAll('[data-pick-location]').forEach(el=>el.onclick=e=>{
     e.preventDefault();
     e.stopPropagation();

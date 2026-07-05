@@ -1,6 +1,9 @@
 // Map view and geocoding
 // Generated from src/app/05-owner-reports-map-notifications.js lines 426-507.
 // ══ Map ══
+// Remembered map center/zoom so re-renders (which fully rebuild the Leaflet
+// instance) don't throw away the user's pan/zoom. Persists for the session.
+let MAP_VIEW=null;
 function renderMap(){
   const all=jobs();
   const withCoords=all.filter(j=>j.lat&&j.lng);
@@ -10,6 +13,10 @@ function renderMap(){
   const pending=needGeo.length-failed.length-needsConfirm.length;
   const pinJobs=all.filter(j=>j.address||j.lat||j.lng);
   const manualTarget=S.manualPinJob&&S.jobs[S.manualPinJob]?S.jobs[S.manualPinJob]:null;
+  const mapFilter=S.mapFilter||'all';
+  const mcnt={all:withCoords.length,lead:0,active:0,complete:0,hold:0,lost:0};
+  withCoords.forEach(j=>{if(mcnt[j.status]!==undefined)mcnt[j.status]++});
+  const mfLabels={all:'All',lead:'Lead',active:'Active',complete:'Done',hold:'On Hold',lost:'Lost'};
   return `
     <div class="map-controls">
       <div class="map-stats">${withCoords.length} of ${all.filter(j=>j.address).length} jobs pinned${pending>0?` · ${pending} need locating`:''}${needsConfirm.length>0?` · ${needsConfirm.length} need review`:''}${failed.length>0?` · ${failed.length} failed`:''}</div>
@@ -20,6 +27,9 @@ function renderMap(){
       </select>`:''}
       <span class="geocode-status" id="geo-status" style="display:none"></span>
     </div>
+    ${withCoords.length>0?`<div class="filter-row map-filter-row" style="margin-bottom:10px" role="group" aria-label="Filter map by status">
+      ${['all','lead','active','complete','hold','lost'].map(s=>`<div class="filter-chip ${mapFilter===s?'active':''}" data-map-filter="${s}">${mfLabels[s]} ${mcnt[s]}</div>`).join('')}
+    </div>`:''}
     ${manualTarget?`<div class="map-alert map-alert-manual">
       <strong>Click the map to set the pin for ${esc(manualTarget.name)}.</strong>
       <span>${manualTarget.address?esc(manualTarget.address):'No job site address saved.'}</span>
@@ -53,13 +63,19 @@ function mountMap(){
   const el=document.getElementById('leaflet-map');
   if(!el)return;
   if(MAP){MAP.remove();MAP=null;MAP_MARKERS=[]}
-  const all=jobs().filter(j=>j.lat&&j.lng);
+  const mapFilter=S.mapFilter||'all';
+  const allCoords=jobs().filter(j=>j.lat&&j.lng);
+  const all=allCoords.filter(j=>mapFilter==='all'||j.status===mapFilter);
   const manualTarget=S.manualPinJob&&S.jobs[S.manualPinJob]?S.jobs[S.manualPinJob]:null;
-  if(all.length===0&&!manualTarget)return;
+  if(allCoords.length===0&&!manualTarget)return;
   MAP=L.map(el,{scrollWheelZoom:true});
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
     maxZoom:19,attribution:'© OpenStreetMap'
   }).addTo(MAP);
+  // Remember where the user last left the map so the next re-render can restore it.
+  MAP.on('moveend',()=>{if(MAP)MAP_VIEW={center:MAP.getCenter(),zoom:MAP.getZoom()}});
+  // Cluster overlapping pins when the plugin is available; fall back to plain pins.
+  const cluster=(typeof L.markerClusterGroup==='function')?L.markerClusterGroup({showCoverageOnHover:false,maxClusterRadius:50,spiderfyOnMaxZoom:true}):null;
   const group=[];
   all.forEach(j=>{
     const color=j.status==='complete'?'#3ab5c8':j.status==='active'?'#4ade80':j.status==='lost'?'#dc2626':j.status==='hold'?'#94a3b8':'#e8a830';
@@ -68,7 +84,9 @@ function mountMap(){
       html:`<div style="background:${color};width:24px;height:24px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center"><div style="transform:rotate(45deg);color:#fff;font-size:11px;font-weight:700">${initials(j.name)}</div></div>`,
       iconSize:[24,24],iconAnchor:[12,24]
     });
-    const m=L.marker([j.lat,j.lng],{icon}).addTo(MAP);
+    const m=L.marker([j.lat,j.lng],{icon});
+    if(cluster)cluster.addLayer(m);else m.addTo(MAP);
+    MAP_MARKERS.push(m);
     const locLabel=j.locationSource==='manual'?'Manual pin':(j.geocodeLabel&&j.geocodeLabel!==j.address?'Matched: '+esc(j.geocodeLabel):'');
     m.bindPopup(`<strong>${esc(j.name)}</strong>${esc(j.address||'')}${locLabel?'<br><span class="popup-muted">'+locLabel+'</span>':''}<br><br>${j.customerName?esc(j.customerName)+'<br>':''}${j.customerPhone?'📞 '+esc(j.customerPhone)+'<br>':''}<a href="#" data-open-job="${j.id}">Open job →</a><br><a href="#" data-manual-pin="${j.id}">Move pin</a>`);
     m.on('popupopen',()=>{
@@ -79,7 +97,11 @@ function mountMap(){
     });
     group.push([j.lat,j.lng]);
   });
-  if(manualTarget&&manualTarget.lat&&manualTarget.lng){MAP.setView([manualTarget.lat,manualTarget.lng],16)}
+  if(cluster)MAP.addLayer(cluster);
+  // Restore the user's last view if they've moved the map this session; otherwise
+  // frame the pins (or the manual-pin target) on first open.
+  if(MAP_VIEW){MAP.setView(MAP_VIEW.center,MAP_VIEW.zoom)}
+  else if(manualTarget&&manualTarget.lat&&manualTarget.lng){MAP.setView([manualTarget.lat,manualTarget.lng],16)}
   else if(group.length===1){MAP.setView(group[0],13)}
   else if(group.length>1){MAP.fitBounds(group,{padding:[40,40]})}
   else{MAP.setView([36.3829,-84.1199],11)}
