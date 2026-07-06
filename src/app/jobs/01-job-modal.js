@@ -88,7 +88,7 @@ function showJobModal(mode,job){
       const nj={id:uid(),...data,progress:data.status==='complete'?100:0,notes:[],photos:[],tasks:[],dailyLogs:[],documents:[],comms:[],created:Date.now()};
       nj.geocodeStatus=address?'pending':'none';
       if(nj.status==='complete')nj.completedAt=Date.now();
-      await writeJob(nj);await logAct('added job',name);toast('Job added');
+      await writeJob(nj);await logAct('added job',name,nj.id);toast('Job added');
     }else{
       const merged={...j,...data};
       if(addressChanged){
@@ -100,7 +100,7 @@ function showJobModal(mode,job){
         merged.locationSource=address?'address':'none';
       }
       if(merged.status==='complete'&&!j.completedAt)merged.completedAt=Date.now();
-      await writeJob(merged);await logAct('updated job',name);toast('Changes saved');
+      await writeJob(merged);await logAct('updated job',name,merged.id);toast('Changes saved');
     }
     closeModal();render();
   };

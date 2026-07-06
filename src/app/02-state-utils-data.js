@@ -249,8 +249,9 @@ async function deleteJobDB(id){
   finally{delete SYNC.pendingJobs[id]}
   if(!localOk&&!DB)throw new Error('Local job delete failed');
 }
-async function logAct(action,job){
+async function logAct(action,job,jobId){
   const e={user:S.user||'Someone',action,job:job||'',time:Date.now()};
+  if(jobId)e.jobId=jobId;
   S.activity.unshift(e);LOCAL.saveActivity();
   if(DB){try{await DB.child('activity').push(e)}catch(err){console.warn('Activity sync failed',err)}}
 }
