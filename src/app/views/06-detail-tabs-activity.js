@@ -354,6 +354,14 @@ function renderDetailTab(j,tab){
 
 function renderActivity(){
   if(!S.activity.length)return`<div class="empty"><div class="empty-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5M5.625 4.5h12.75a1.875 1.875 0 010 3.75H5.625a1.875 1.875 0 010-3.75z"/></svg></div><h3>No activity yet</h3><p>As your team adds and updates jobs, everything will appear here.</p></div>`;
-  return'<div class="activity-feed">'+S.activity.map((a,i)=>'<div class="activity-item" style="animation-delay:'+( i*0.03)+'s">'+'<div class="activity-ava">'+initials(a.user)+'</div>'+'<div class="activity-body">'+'<div class="activity-text"><strong>'+esc(a.user)+'</strong> '+esc(a.action)+(a.job?' · <strong>'+esc(a.job)+'</strong>':'')+'</div><div class="activity-time">'+ago(a.time)+'</div></div></div>').join('')+'</div>';
+  return'<div class="activity-feed">'+S.activity.map((a,i)=>{
+    // Link the entry to its job: prefer a stored jobId (survives renames), else
+    // match the logged job name. Non-job entries (customers, referrals, bank)
+    // and deleted jobs simply won't resolve and stay non-clickable.
+    const job=(a.jobId&&S.jobs[a.jobId])?S.jobs[a.jobId]:(a.job?Object.values(S.jobs).find(j=>j.name===a.job):null);
+    const clickable=!!job;
+    const attrs=clickable?' class="activity-item clickable" data-open="'+esc(job.id)+'" role="button" tabindex="0" aria-label="Open '+esc(job.name)+'"':' class="activity-item"';
+    return '<div'+attrs+' style="animation-delay:'+(i*0.03)+'s">'+'<div class="activity-ava">'+initials(a.user)+'</div>'+'<div class="activity-body">'+'<div class="activity-text"><strong>'+esc(a.user)+'</strong> '+esc(a.action)+(a.job?' · <strong>'+esc(a.job)+'</strong>':'')+'</div><div class="activity-time">'+ago(a.time)+'</div></div>'+(clickable?'<div class="activity-go" aria-hidden="true">›</div>':'')+'</div>';
+  }).join('')+'</div>';
 }
 

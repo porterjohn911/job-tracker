@@ -354,9 +354,13 @@ input[type=range]{width:100%;accent-color:var(--green-700);height:4px;cursor:poi
 /* ── ACTIVITY ── */
 .activity-feed{display:flex;flex-direction:column;gap:0}
 .activity-item{
-  display:flex;gap:12px;padding:13px 0;
+  display:flex;gap:12px;padding:13px 0;align-items:center;
   border-bottom:1px solid var(--border);animation:fadeUp 0.25s ease both;
 }
+.activity-item.clickable{cursor:pointer;padding-left:8px;padding-right:8px;margin:0 -8px;border-radius:8px;transition:background 0.12s}
+.activity-item.clickable:hover,.activity-item.clickable:focus-visible{background:var(--surface-3);outline:none}
+.activity-go{margin-left:auto;flex-shrink:0;color:var(--text-3);font-size:18px;font-weight:700;opacity:0;transition:opacity 0.12s}
+.activity-item.clickable:hover .activity-go,.activity-item.clickable:focus-visible .activity-go{opacity:1}
 .activity-ava{
   width:34px;height:34px;border-radius:50%;
   background:linear-gradient(135deg,var(--green-700),var(--green-600));
