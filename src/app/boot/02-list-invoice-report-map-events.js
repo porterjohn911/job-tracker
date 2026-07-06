@@ -56,12 +56,7 @@ function attachListInvoiceReportMapHandlers(){
   });
 
   // Favorites star on cards
-  document.querySelectorAll('[data-fav]').forEach(b=>b.onclick=async e=>{
-    e.stopPropagation();
-    const id=b.dataset.fav;const j=S.jobs[id];if(!j)return;
-    j.favorite=!j.favorite;await writeJob(j);render();
-    toast(j.favorite?'Pinned to top':'Unpinned');
-  });
+  attachJobCardHandlers(document);
 
   // Voice dictation mic buttons
   wireMicButtons();
@@ -147,9 +142,18 @@ function attachListInvoiceReportMapHandlers(){
   $('btn-add-job2')?.addEventListener('click',()=>showJobModal('add'));
   $('btn-export-csv')?.addEventListener('click',exportCSV);
   $('btn-view-all-act')?.addEventListener('click',()=>{S.view='activity';render()});
-  $('search-in')?.addEventListener('input',e=>{S.search=e.target.value;render()});
+  $('search-in')?.addEventListener('input',e=>{S.search=e.target.value;refreshJobsResults()});
   document.querySelectorAll('[data-filter]').forEach(c=>c.onclick=()=>{S.filter=c.dataset.filter;render()});
-  document.querySelectorAll('[data-open]').forEach(c=>{
+}
+
+function attachJobCardHandlers(root=document){
+  root.querySelectorAll('[data-fav]').forEach(b=>b.onclick=async e=>{
+    e.stopPropagation();
+    const id=b.dataset.fav;const j=S.jobs[id];if(!j)return;
+    j.favorite=!j.favorite;await writeJob(j);render();
+    toast(j.favorite?'Pinned to top':'Unpinned');
+  });
+  root.querySelectorAll('[data-open]').forEach(c=>{
     c.onclick=e=>{
       e.stopPropagation();
       // Bulk mode: clicks toggle selection instead of opening
