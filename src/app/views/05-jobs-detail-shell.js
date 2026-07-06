@@ -4,13 +4,6 @@ function renderJobs(){
   const all=jobs();
   const cnt={all:all.length,lead:0,active:0,complete:0,hold:0,lost:0};
   all.forEach(j=>{if(cnt[j.status]!==undefined)cnt[j.status]++});
-  const q=S.search.toLowerCase();
-  const shown=all.filter(j=>{
-    const mf=S.filter==='all'||j.status===S.filter;
-    const hay=(j.name+' '+(j.address||'')+' '+(j.customerName||'')+' '+(j.customerPhone||'')+' '+(j.customerEmail||'')+' '+(j.assigned||'')).toLowerCase();
-    const ms=!S.search||hay.includes(q);
-    return mf&&ms;
-  });
   const sortLabels={newest:'Newest',oldest:'Oldest',name:'A–Z',value:'Highest value',due:'Due soonest',progress:'Most complete'};
   const sortCheckSvg='<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>';
   return`<div class="toolbar">
@@ -55,7 +48,31 @@ function renderJobs(){
     <button id="bulk-star">Pin/Unpin</button>
     <button class="danger" id="bulk-delete">Delete</button>
   </div>`:''}
-  ${shown.length===0?renderEmpty(all.length):'<div class="jobs-grid">'+shown.map(renderCard).join('')+'</div>'}` ;
+  <div id="jobs-results">${renderJobsResults()}</div>` ;
+}
+
+function filteredJobs(){
+  const q=S.search.toLowerCase();
+  return jobs().filter(j=>{
+    const mf=S.filter==='all'||j.status===S.filter;
+    const hay=(j.name+' '+(j.address||'')+' '+(j.customerName||'')+' '+(j.customerPhone||'')+' '+(j.customerEmail||'')+' '+(j.assigned||'')).toLowerCase();
+    const ms=!S.search||hay.includes(q);
+    return mf&&ms;
+  });
+}
+
+function renderJobsResults(){
+  const all=jobs();
+  const shown=filteredJobs();
+  return shown.length===0?renderEmpty(all.length):'<div class="jobs-grid">'+shown.map(renderCard).join('')+'</div>';
+}
+
+function refreshJobsResults(){
+  const results=$('jobs-results');
+  if(!results)return;
+  results.innerHTML=renderJobsResults();
+  attachJobCardHandlers(results);
+  $('btn-add-job2')?.addEventListener('click',()=>showJobModal('add'));
 }
 
 function renderEmpty(total){
