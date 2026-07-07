@@ -5,7 +5,7 @@ function renderInvoiceModal(jobId,isEdit,kind){
   const inv=INV_DRAFT;
   const c=calcInvoice(inv);
   const itemsHtml=(inv.items||[]).map((it,i)=>`<div class="li-row" data-li="${i}">
-    <input type="text" data-li-field="desc" value="${esc(it.desc||'')}" placeholder="Description (e.g. Dock repair labor)" aria-label="Description">
+    <textarea class="line-desc" data-li-field="desc" data-autogrow rows="1" placeholder="Description (e.g. Dock repair labor)" aria-label="Description">${esc(it.desc||'')}</textarea>
     <input type="number" step="0.01" data-li-field="qty" value="${esc(it.qty??'')}" placeholder="Qty" aria-label="Quantity">
     <input type="number" step="0.01" data-li-field="rate" value="${esc(it.rate??'')}" placeholder="Rate" aria-label="Unit rate">
     <div class="li-amt">${money2((Number(it.qty||0)*Number(it.rate||0)))}</div>
@@ -46,9 +46,9 @@ function renderInvoiceModal(jobId,isEdit,kind){
         <div class="inv-total-row" style="font-weight:700"><span>Balance Due</span><span class="v" id="t-bal">${money2(c.balance)}</span></div>`}
       </div>
       <div class="form-group"><label class="form-label">Notes (visible on ${EST?'estimate':'invoice'})</label>
-        <div class="textarea-with-mic"><textarea class="form-textarea" id="inv-notes" placeholder="Additional notes for the customer…">${esc(inv.notes||'')}</textarea>${micButton('#inv-notes')}</div>
+        <div class="textarea-with-mic"><textarea class="form-textarea" id="inv-notes" data-autogrow placeholder="Additional notes for the customer…">${esc(inv.notes||'')}</textarea>${micButton('#inv-notes')}</div>
       </div>
-      <div class="form-group"><label class="form-label">Payment Terms</label><textarea class="form-textarea" id="inv-terms">${esc(inv.terms||'')}</textarea></div>
+      <div class="form-group"><label class="form-label">Payment Terms</label><textarea class="form-textarea" id="inv-terms" data-autogrow>${esc(inv.terms||'')}</textarea></div>
       <div class="form-group"><label class="form-label">Photos / Attachments <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text-3);font-size:11px">attached to the printed / PDF ${EST?'estimate':'invoice'}</span></label>
         <div class="inv-photos" id="inv-photos"></div>
         <label class="photo-add-btn" style="aspect-ratio:auto;padding:12px;flex-direction:row;gap:8px">
@@ -73,13 +73,14 @@ function renderInvoiceModal(jobId,isEdit,kind){
   function refreshLineItems(){
     const wrap=$('line-items');
     wrap.innerHTML=(INV_DRAFT.items||[]).map((it,i)=>`<div class="li-row" data-li="${i}">
-      <input type="text" data-li-field="desc" value="${esc(it.desc||'')}" placeholder="Description">
+      <textarea class="line-desc" data-li-field="desc" data-autogrow rows="1" placeholder="Description">${esc(it.desc||'')}</textarea>
       <input type="number" step="0.01" data-li-field="qty" value="${esc(it.qty??'')}" placeholder="Qty">
       <input type="number" step="0.01" data-li-field="rate" value="${esc(it.rate??'')}" placeholder="Rate">
       <div class="li-amt">${money2(Number(it.qty||0)*Number(it.rate||0))}</div>
       <button class="li-del" data-li-del="${i}">×</button>
     </div>`).join('');
     wireLineItemHandlers();
+    autoGrowTextareas(wrap);
     refreshTotals();
   }
   function refreshTotals(){
@@ -121,6 +122,7 @@ function renderInvoiceModal(jobId,isEdit,kind){
   }
   wireLineItemHandlers();
   wireMicButtons();
+  autoGrowTextareas($('modal-root'));
 
   function renderInvPhotos(){
     const wrap=$('inv-photos');if(!wrap)return;
@@ -128,10 +130,11 @@ function renderInvoiceModal(jobId,isEdit,kind){
     wrap.innerHTML=ph.map((p,i)=>`<div class="inv-photo" data-ip="${i}">
       <img src="${p.url}" alt="">
       <button class="inv-photo-del" data-ip-del="${i}" type="button" aria-label="Remove photo">×</button>
-      <input class="inv-photo-cap" data-ip-cap="${i}" value="${esc(p.caption||'')}" placeholder="Caption (optional)">
+      <textarea class="inv-photo-cap" data-ip-cap="${i}" data-autogrow rows="1" placeholder="Caption (optional)">${esc(p.caption||'')}</textarea>
     </div>`).join('');
     wrap.querySelectorAll('[data-ip-del]').forEach(b=>b.onclick=()=>{INV_DRAFT.photos.splice(parseInt(b.dataset.ipDel),1);renderInvPhotos()});
     wrap.querySelectorAll('[data-ip-cap]').forEach(inp=>inp.oninput=()=>{const i=parseInt(inp.dataset.ipCap);if(INV_DRAFT.photos[i])INV_DRAFT.photos[i].caption=inp.value});
+    autoGrowTextareas(wrap);
   }
   renderInvPhotos();
   $('inv-photo-upload')?.addEventListener('change',function(){

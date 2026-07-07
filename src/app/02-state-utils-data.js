@@ -112,6 +112,15 @@ function getBrandLogoSrc(){
   const el=document.querySelector('.brand-logo');
   return el?el.src:'';
 }
+function autoGrowTextareas(root=document){
+  root.querySelectorAll('textarea[data-autogrow]').forEach(el=>{
+    const grow=()=>{el.style.height='auto';el.style.height=el.scrollHeight+'px'};
+    el.removeEventListener('input',el._autoGrowHandler);
+    el._autoGrowHandler=grow;
+    el.addEventListener('input',grow);
+    grow();
+  });
+}
 
 function toast(msg,icon='check',undoFn){
   const t=$('toast');
