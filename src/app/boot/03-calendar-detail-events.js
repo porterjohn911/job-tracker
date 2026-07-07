@@ -23,6 +23,26 @@ function attachCalendarDetailHandlers(){
     S.calSelected=k;render();
   });
 
+  // Time off
+  $('btn-request-timeoff')?.addEventListener('click',showTimeOffModal);
+  document.querySelectorAll('[data-timeoff-approve]').forEach(b=>b.onclick=async()=>{
+    if(!canApproveTimeOff()){toast('Only owners can approve time off','');return}
+    const r=S.timeOff[b.dataset.timeoffApprove];if(!r)return;
+    r.status='approved';r.reviewedBy=currentPersonName();r.reviewedAt=Date.now();
+    await writeTimeOff(r);render();toast('Time off approved');
+  });
+  document.querySelectorAll('[data-timeoff-deny]').forEach(b=>b.onclick=async()=>{
+    if(!canApproveTimeOff()){toast('Only owners can approve time off','');return}
+    const r=S.timeOff[b.dataset.timeoffDeny];if(!r)return;
+    r.status='denied';r.reviewedBy=currentPersonName();r.reviewedAt=Date.now();
+    await writeTimeOff(r);render();toast('Request denied');
+  });
+  document.querySelectorAll('[data-timeoff-delete]').forEach(b=>b.onclick=async()=>{
+    const id=b.dataset.timeoffDelete;
+    if(!confirm('Cancel this time-off request?'))return;
+    await deleteTimeOff(id);render();toast('Request canceled');
+  });
+
   // Detail
   $('btn-back')?.addEventListener('click',()=>{S.detail=null;S.detailTab='overview';render()});
   $('btn-edit-job')?.addEventListener('click',()=>{const j=S.jobs[S.detail];if(j)showJobModal('edit',j)});

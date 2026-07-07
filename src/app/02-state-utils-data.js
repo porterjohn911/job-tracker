@@ -3,7 +3,7 @@
 // ══ State ══
 let DB=null;
 let MAP=null,MAP_MARKERS=[];
-const S={jobs:{},activity:[],members:[],view:'dashboard',detail:null,detailTab:'overview',filter:'all',search:'',photoCat:'all',calMonth:new Date().getMonth(),calYear:new Date().getFullYear(),calSelected:null,calMode:localStorage.getItem(LS('calmode'))||'month',reportRange:'90',sort:localStorage.getItem(LS('sort'))||'newest',sortOpen:false,bulkMode:false,bulkSel:new Set(),invFilter:'all',invSearch:'',invSort:'date',user:localStorage.getItem(LS('user'))||'',notifReadAt:parseInt(localStorage.getItem(LS('notif_read'))||'0',10),refFilter:'all',referrals:{},timeEntries:{},payRates:{},transactions:{},owner:{}};
+const S={jobs:{},activity:[],members:[],view:'dashboard',detail:null,detailTab:'overview',filter:'all',search:'',photoCat:'all',calMonth:new Date().getMonth(),calYear:new Date().getFullYear(),calSelected:null,calMode:localStorage.getItem(LS('calmode'))||'month',reportRange:'90',sort:localStorage.getItem(LS('sort'))||'newest',sortOpen:false,bulkMode:false,bulkSel:new Set(),invFilter:'all',invSearch:'',invSort:'date',user:localStorage.getItem(LS('user'))||'',notifReadAt:parseInt(localStorage.getItem(LS('notif_read'))||'0',10),refFilter:'all',referrals:{},timeEntries:{},payRates:{},transactions:{},timeOff:{},owner:{}};
 const UNDO={stack:[],push(op){this.stack.push(op);if(this.stack.length>20)this.stack.shift()},pop(){return this.stack.pop()}};
 
 // ── Company info for invoice letterhead (editable via Settings)
@@ -136,6 +136,48 @@ function toast(msg,icon='check',undoFn){
 }
 function undoLast(){const op=UNDO.pop();if(!op){toast('Nothing to undo','');return}op();}
 
+// ── Time off (employees request → owner approves → shown on the schedule) ──
+function timeOffList(){return Object.values(S.timeOff||{})}
+// Owner-only approval; in ungated solo mode the single user is treated as owner.
+function canApproveTimeOff(){return !gateOn()||isOwnerRole(SESSION)}
+function currentPersonName(){return (SESSION&&SESSION.name)||S.user||'Me'}
+function currentPersonId(){return (SESSION&&(SESSION.uid||SESSION.id))||('name:'+String(S.user||'me').toLowerCase())}
+function timeOffId(){return 'to_'+Date.now()+'_'+Math.random().toString(36).slice(2,6)}
+// Inclusive YYYY-MM-DD keys from start..end, capped so a bad far date can't blow up.
+function dateRangeKeys(start,end){
+  if(!start)return[];
+  const s=start.slice(0,10),e=(end||start).slice(0,10);
+  if(e<s)return[s];
+  const out=[],a=new Date(s+'T00:00:00'),b=new Date(e+'T00:00:00');
+  for(let d=new Date(a);d<=b&&out.length<120;d.setDate(d.getDate()+1))out.push(dateKey(d));
+  return out;
+}
+// dateKey -> [{req, half}] for APPROVED time off, expanded across each covered day.
+function timeOffByDay(){
+  const map={};
+  timeOffList().forEach(r=>{
+    if(r.status!=='approved')return;
+    const keys=dateRangeKeys(r.startDate,r.endDate);
+    keys.forEach(k=>{
+      const half=keys.length===1?(r.half||false):false; // half-day only for single-day requests
+      (map[k]=map[k]||[]).push({req:r,half});
+    });
+  });
+  return map;
+}
+async function writeTimeOff(r){
+  S.timeOff[r.id]=r;
+  const localOk=LOCAL.saveTimeOff(!DB);
+  await writeDB('timeoff/'+r.id,r,'time off');
+  if(!localOk&&!DB)throw new Error('Local time-off save failed');
+}
+async function deleteTimeOff(id){
+  delete S.timeOff[id];
+  const localOk=LOCAL.saveTimeOff(!DB);
+  await removeDB('timeoff/'+id,'time off');
+  if(!localOk&&!DB)throw new Error('Local time-off delete failed');
+}
+
 // ══ DB layer ══
 const SYNC={pendingJobs:{}};
 function reportLocalSaveError(label,e,required){
@@ -191,14 +233,15 @@ function slimJobsForLocal(jobsObj){
   return out;
 }
 const LOCAL={
-  load(){try{S.jobs=JSON.parse(localStorage.getItem(LS('jobs'))||'{}')}catch(e){S.jobs={}}try{S.activity=JSON.parse(localStorage.getItem(LS('activity'))||'[]')}catch(e){S.activity=[]}try{S.members=JSON.parse(localStorage.getItem(LS('members'))||'[]')}catch(e){S.members=[]}try{S.referrals=JSON.parse(localStorage.getItem(LS('referrals'))||'{}')}catch(e){S.referrals={}}try{S.timeEntries=JSON.parse(localStorage.getItem(LS('time'))||'{}')}catch(e){S.timeEntries={}}try{S.payRates=canSeeFinancials()?JSON.parse(localStorage.getItem(LS('payrates'))||'{}'):{};}catch(e){S.payRates={}}try{S.transactions=canSeeBank()?JSON.parse(localStorage.getItem(LS('transactions'))||'{}'):{};}catch(e){S.transactions={}}},
+  load(){try{S.jobs=JSON.parse(localStorage.getItem(LS('jobs'))||'{}')}catch(e){S.jobs={}}try{S.activity=JSON.parse(localStorage.getItem(LS('activity'))||'[]')}catch(e){S.activity=[]}try{S.members=JSON.parse(localStorage.getItem(LS('members'))||'[]')}catch(e){S.members=[]}try{S.referrals=JSON.parse(localStorage.getItem(LS('referrals'))||'{}')}catch(e){S.referrals={}}try{S.timeEntries=JSON.parse(localStorage.getItem(LS('time'))||'{}')}catch(e){S.timeEntries={}}try{S.payRates=canSeeFinancials()?JSON.parse(localStorage.getItem(LS('payrates'))||'{}'):{};}catch(e){S.payRates={}}try{S.transactions=canSeeBank()?JSON.parse(localStorage.getItem(LS('transactions'))||'{}'):{};}catch(e){S.transactions={}}try{S.timeOff=JSON.parse(localStorage.getItem(LS('timeoff'))||'{}')}catch(e){S.timeOff={}}},
   saveJobs(required){return saveLocalValue(LS('jobs'),DB?slimJobsForLocal(S.jobs):S.jobs,'jobs',required)},
   saveActivity(required){return saveLocalValue(LS('activity'),S.activity.slice(0,300),'activity',required)},
   saveMembers(required){return saveLocalValue(LS('members'),S.members,'team members',required)},
   saveReferrals(required){return saveLocalValue(LS('referrals'),S.referrals,'referrals',required)},
   saveTime(required){return saveLocalValue(LS('time'),S.timeEntries,'time entries',required)},
   savePayRates(required){return saveLocalValue(LS('payrates'),S.payRates,'pay rates',required)},
-  saveTransactions(required){return saveLocalValue(LS('transactions'),S.transactions,'bank transactions',required)}
+  saveTransactions(required){return saveLocalValue(LS('transactions'),S.transactions,'bank transactions',required)},
+  saveTimeOff(required){return saveLocalValue(LS('timeoff'),S.timeOff,'time off',required)}
 };
 function syncStatus(state,msg){const d=$('sync-dot'),t=$('sync-text');d.className='sync-dot '+state;t.textContent=msg}
 
@@ -233,6 +276,7 @@ function initFB(cfg){
     DB.child('jobs').on('value',s=>{S.jobs=applyPendingJobs(s.val()||{});LOCAL.saveJobs();syncStatus('ok','Team sync live');render()});
     DB.child('activity').on('value',s=>{const r=s.val();S.activity=r?Object.values(r).sort((a,b)=>b.time-a.time):[];LOCAL.saveActivity()});
     DB.child('members').on('value',s=>{S.members=s.val()||[];LOCAL.saveMembers();render()});
+    DB.child('timeoff').on('value',s=>{S.timeOff=s.val()||{};LOCAL.saveTimeOff();render()});
     DB.child('referrals').on('value',s=>{S.referrals=s.val()||{};LOCAL.saveReferrals();render()});
     DB.child('time').on('value',s=>{S.timeEntries=s.val()||{};LOCAL.saveTime();render()});
     if(canSeeFinancials())DB.child('payrates').on('value',s=>{S.payRates=s.val()||{};LOCAL.savePayRates();render()});
