@@ -48,6 +48,7 @@ function attachJobAssetHandlers(){
   // Notes
   const ni=$('note-in'),pb=$('btn-post');
   async function postNote(){const t=ni?.value.trim();if(!t)return;const j=S.jobs[S.detail];if(!j)return;j.notes=j.notes||[];j.notes.push({user:S.user,text:t,time:Date.now()});await writeJob(j);await logAct('posted a note on',j.name);ni.value='';render();toast('Note posted','note')}
+  if(ni)autoGrowTextareas(ni.parentElement||document);
   pb?.addEventListener('click',postNote);
   ni?.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();postNote()}});
 
