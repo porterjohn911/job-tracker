@@ -206,6 +206,7 @@ function renderSchedule(){
     return a.job.name.localeCompare(b.job.name);
   }));
 
+  const offByDay=timeOffByDay();
   const sel=S.calSelected||today;
   const isMonth=S.calMode!=='agenda';
 
@@ -228,13 +229,15 @@ function renderSchedule(){
       <div class="cal-legend-item"><div class="cal-legend-sw" style="background:#e0f2fe;border-left:3px solid #0284c7"></div>Complete</div>
       <div class="cal-legend-item"><div class="cal-legend-sw" style="background:var(--surface-3);border-left:3px solid #64748b"></div>On Hold</div>
       <div class="cal-legend-item"><div class="cal-legend-sw" style="background:#fee2e2;border-left:3px solid #dc2626"></div>Lost</div>
+      <div class="cal-legend-item"><div class="cal-legend-sw" style="background:#ede9fe;border-left:3px solid #8b5cf6"></div>Time off</div>
     </div>
-    ${isMonth?renderCalMonth(y,m,daysInMonth,startDow,byDay,today,sel):renderCalAgenda(byDay,today)}
-    ${isMonth?renderSelectedDay(byDay,sel,today):''}
+    ${renderTimeOffPanel()}
+    ${isMonth?renderCalMonth(y,m,daysInMonth,startDow,byDay,today,sel,offByDay):renderCalAgenda(byDay,today,offByDay)}
+    ${isMonth?renderSelectedDay(byDay,sel,today,offByDay):''}
   `;
 }
 
-function renderCalMonth(y,m,daysInMonth,startDow,byDay,today,sel){
+function renderCalMonth(y,m,daysInMonth,startDow,byDay,today,sel,offByDay){
   const MAX_CHIPS=3;
   let cells='';
   const DOW=['S','M','T','W','T','F','S'];
@@ -246,12 +249,12 @@ function renderCalMonth(y,m,daysInMonth,startDow,byDay,today,sel){
     const prevM=m===0?11:m-1;
     const prevY=m===0?y-1:y;
     const k=`${prevY}-${String(prevM+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-    cells+=renderCalCell(k,d,byDay,today,sel,true,MAX_CHIPS);
+    cells+=renderCalCell(k,d,byDay,today,sel,true,MAX_CHIPS,offByDay);
   }
   // Current month
   for(let d=1;d<=daysInMonth;d++){
     const k=`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-    cells+=renderCalCell(k,d,byDay,today,sel,false,MAX_CHIPS);
+    cells+=renderCalCell(k,d,byDay,today,sel,false,MAX_CHIPS,offByDay);
   }
   // Trailing days to fill final week
   const filled=startDow+daysInMonth;
@@ -260,13 +263,18 @@ function renderCalMonth(y,m,daysInMonth,startDow,byDay,today,sel){
     const nextM=m===11?0:m+1;
     const nextY=m===11?y+1:y;
     const k=`${nextY}-${String(nextM+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
-    cells+=renderCalCell(k,i,byDay,today,sel,true,MAX_CHIPS);
+    cells+=renderCalCell(k,i,byDay,today,sel,true,MAX_CHIPS,offByDay);
   }
   return `<div class="cal-grid">${cells}</div>`;
 }
 
-function renderCalCell(k,dayNum,byDay,today,sel,otherMonth,maxChips){
+function renderCalCell(k,dayNum,byDay,today,sel,otherMonth,maxChips,offByDay){
   const list=byDay[k]||[];
+  const offs=(offByDay&&offByDay[k])||[];
+  const offChips=offs.map(o=>{
+    const nm=(o.req.member||'?').split(' ')[0];
+    return `<div class="cal-chip cal-chip-off" title="${esc(o.req.member)} — time off${o.half?(' · ½ '+String(o.half).toUpperCase()):''}">${o.half?'½ ':''}${esc(nm)}</div>`;
+  }).join('');
   const isToday=k===today;
   const isSel=k===sel;
   const cls='cal-day'+(isToday?' today':'')+(isSel?' selected':'')+(otherMonth?' other-month':'');
@@ -286,21 +294,30 @@ function renderCalCell(k,dayNum,byDay,today,sel,otherMonth,maxChips){
     return `<div class="cal-chip ${chipClass(job.status)} ${contCls}" data-open="${job.id}" title="${esc(job.name)} · ${spLabel(job.status)}${totalDays>1?' · day '+(dayIdx+1)+'/'+totalDays:''}">${label||'&nbsp;'}</div>`;
   }).join('');
   const more=overflow>0?`<div class="cal-day-more" data-cal-day="${k}">+${overflow} more</div>`:'';
-  return `<div class="${cls}" data-cal-day="${k}"><div class="cal-day-num"><span>${dayNum}</span></div><div class="cal-day-chips">${chips}${more}</div></div>`;
+  return `<div class="${cls}" data-cal-day="${k}"><div class="cal-day-num"><span>${dayNum}</span></div><div class="cal-day-chips">${offChips}${chips}${more}</div></div>`;
 }
 
-function renderSelectedDay(byDay,sel,today){
+function renderSelectedDay(byDay,sel,today,offByDay){
   const selList=(byDay[sel]||[]).slice();
   // Sort by workflow status: open work first, closed outcomes last.
   const order={lead:0,active:1,hold:2,lost:3,complete:4};
   selList.sort((a,b)=>(order[a.job.status]??9)-(order[b.job.status]??9));
+  const offs=(offByDay&&offByDay[sel])||[];
   const dt=new Date(sel+'T00:00:00');
   const lbl=dt.toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'});
   const isToday=sel===today;
+  const offRows=offs.map(o=>`<div class="cal-job-row">
+        <div class="cal-job-row-bar" style="background:#8b5cf6"></div>
+        <div style="flex:1;min-width:0">
+          <div style="font-weight:600">${esc(o.req.member)} — Time off${o.half?(' (½ '+String(o.half).toUpperCase()+')'):''}</div>
+          <div class="cal-job-row-meta">${o.req.reason?esc(o.req.reason):'Approved time off'}</div>
+        </div>
+        <span class="status-pill sp-hold">OFF</span>
+      </div>`).join('');
   return `<div class="cal-day-list">
-    <div class="cal-day-list-hd"><span>${esc(lbl)}${isToday?' <span class="kpi-sub" style="color:var(--green-700);font-weight:700;margin-left:6px">Today</span>':''}</span><span class="kpi-sub">${selList.length} job${selList.length!==1?'s':''}</span></div>
-    ${selList.length===0?'<p style="font-size:12.5px;color:var(--text-3);padding:4px 0">Nothing scheduled. Tap a date above with jobs to see what\'s on the books.</p>'
-      :selList.map(({job,dayIdx,totalDays})=>`<div class="cal-job-row" data-open="${job.id}">
+    <div class="cal-day-list-hd"><span>${esc(lbl)}${isToday?' <span class="kpi-sub" style="color:var(--green-700);font-weight:700;margin-left:6px">Today</span>':''}</span><span class="kpi-sub">${selList.length} job${selList.length!==1?'s':''}${offs.length?' · '+offs.length+' off':''}</span></div>
+    ${selList.length===0&&offs.length===0?'<p style="font-size:12.5px;color:var(--text-3);padding:4px 0">Nothing scheduled. Tap a date above with jobs to see what\'s on the books.</p>'
+      :offRows+selList.map(({job,dayIdx,totalDays})=>`<div class="cal-job-row" data-open="${job.id}">
         <div class="cal-job-row-bar" style="background:${chipBarColor(job.status)}"></div>
         <div style="flex:1;min-width:0">
           <div style="font-weight:600">${esc(job.name)}${totalDays>1?` <span class="cal-job-row-day">Day ${dayIdx+1}/${totalDays}</span>`:''}</div>
@@ -311,15 +328,16 @@ function renderSelectedDay(byDay,sel,today){
   </div>`;
 }
 
-function renderCalAgenda(byDay,today){
-  // Show today plus next 14 days that have anything scheduled
+function renderCalAgenda(byDay,today,offByDay){
+  // Show today plus next 3 weeks that have anything scheduled (jobs or time off)
   const days=[];
   const start=new Date(today+'T00:00:00');
   for(let i=0;i<21;i++){
     const d=new Date(start);d.setDate(start.getDate()+i);
     const k=dateKey(d);
-    if(byDay[k]&&byDay[k].length){
-      days.push({k,date:d,list:byDay[k]});
+    const offs=(offByDay&&offByDay[k])||[];
+    if((byDay[k]&&byDay[k].length)||offs.length){
+      days.push({k,date:d,list:byDay[k]||[],offs});
     }
   }
   if(days.length===0){
@@ -328,14 +346,19 @@ function renderCalAgenda(byDay,today){
       <p style="font-size:12.5px;color:var(--text-3)">Add a start date (and optional due date) to a job to see it here.</p>
     </div>`;
   }
-  return days.map(({k,date,list})=>{
+  return days.map(({k,date,list,offs})=>{
     const isToday=k===today;
     const lbl=date.toLocaleDateString(undefined,{weekday:'long',month:'short',day:'numeric'});
     const order={lead:0,active:1,hold:2,lost:3,complete:4};
     const sorted=list.slice().sort((a,b)=>(order[a.job.status]??9)-(order[b.job.status]??9));
+    const offRows=offs.map(o=>`<div class="cal-job-row">
+        <div class="cal-job-row-bar" style="background:#8b5cf6"></div>
+        <div style="flex:1;min-width:0"><div style="font-weight:600">${esc(o.req.member)} — Time off${o.half?(' (½ '+String(o.half).toUpperCase()+')'):''}</div><div class="cal-job-row-meta">${o.req.reason?esc(o.req.reason):'Approved time off'}</div></div>
+        <span class="status-pill sp-hold">OFF</span>
+      </div>`).join('');
     return `<div class="agenda-day">
-      <div class="agenda-day-hd">${esc(lbl)} ${isToday?'<span class="today-pill">TODAY</span>':''}<span style="margin-left:auto;color:var(--text-3);font-weight:600">${sorted.length} job${sorted.length!==1?'s':''}</span></div>
-      ${sorted.map(({job,dayIdx,totalDays})=>`<div class="cal-job-row" data-open="${job.id}">
+      <div class="agenda-day-hd">${esc(lbl)} ${isToday?'<span class="today-pill">TODAY</span>':''}<span style="margin-left:auto;color:var(--text-3);font-weight:600">${sorted.length} job${sorted.length!==1?'s':''}${offs.length?' · '+offs.length+' off':''}</span></div>
+      ${offRows}${sorted.map(({job,dayIdx,totalDays})=>`<div class="cal-job-row" data-open="${job.id}">
         <div class="cal-job-row-bar" style="background:${chipBarColor(job.status)}"></div>
         <div style="flex:1;min-width:0">
           <div style="font-weight:600">${esc(job.name)}${totalDays>1?` <span class="cal-job-row-day">Day ${dayIdx+1}/${totalDays}</span>`:''}</div>
@@ -345,4 +368,67 @@ function renderCalAgenda(byDay,today){
       </div>`).join('')}
     </div>`;
   }).join('');
+}
+
+// ── Time-off panel (request + owner review + your requests) ──
+function timeOffRangeLabel(r){
+  const s=fmtShort(r.startDate);
+  const multi=r.endDate&&r.endDate!==r.startDate;
+  const e=multi?' – '+fmtShort(r.endDate):'';
+  const h=(!multi&&r.half)?(r.half==='am'?' · ½ AM':' · ½ PM'):'';
+  return s+e+h;
+}
+function renderTimeOffPanel(){
+  const canApprove=canApproveTimeOff();
+  const meId=currentPersonId();
+  const all=timeOffList();
+  const pending=all.filter(r=>r.status==='pending').sort((a,b)=>(a.startDate||'').localeCompare(b.startDate||''));
+  const mine=all.filter(r=>r.memberId===meId).sort((a,b)=>(b.requestedAt||0)-(a.requestedAt||0));
+  const pill=st=>`<span class="status-pill ${st==='approved'?'sp-complete':st==='denied'?'sp-lost':'sp-lead'}">${esc(st)}</span>`;
+  return `<div class="timeoff-panel">
+    <div class="timeoff-hd"><span>Time Off</span><button class="btn-sm" id="btn-request-timeoff">+ Request time off</button></div>
+    ${canApprove&&pending.length?`<div class="timeoff-sub">Pending approval (${pending.length})</div>
+      ${pending.map(r=>`<div class="timeoff-row">
+        <div style="flex:1;min-width:0"><div style="font-weight:600">${esc(r.member)}</div><div class="timeoff-meta">${esc(timeOffRangeLabel(r))}${r.reason?' · '+esc(r.reason):''}</div></div>
+        <button class="btn-sm timeoff-approve" data-timeoff-approve="${esc(r.id)}">Approve</button>
+        <button class="btn-sm timeoff-deny" data-timeoff-deny="${esc(r.id)}">Deny</button>
+      </div>`).join('')}`:''}
+    ${mine.length?`<div class="timeoff-sub">Your requests</div>
+      ${mine.slice(0,6).map(r=>`<div class="timeoff-row">
+        <div style="flex:1;min-width:0"><div style="font-weight:600">${esc(timeOffRangeLabel(r))}</div><div class="timeoff-meta">${r.reason?esc(r.reason)+' · ':''}${pill(r.status)}</div></div>
+        ${r.status==='pending'?`<button class="btn-remove" data-timeoff-delete="${esc(r.id)}">Cancel</button>`:''}
+      </div>`).join('')}`:''}
+    ${!pending.length&&!mine.length?`<div class="timeoff-meta" style="padding:6px 0">No time-off requests yet. Use “Request time off” to add one.</div>`:''}
+  </div>`;
+}
+function showTimeOffModal(){
+  const today=dateKey(new Date());
+  $('modal-root').innerHTML=`<div class="modal-bd" id="mbd" role="dialog" aria-modal="true" aria-label="Request time off"><div class="modal"><div class="modal-handle"></div>
+    <div class="modal-head"><div class="modal-title">Request Time Off</div><button class="modal-close" id="mc" aria-label="Close"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button></div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">From</label><input class="form-input" id="to-start" type="date" value="${today}"></div>
+        <div class="form-group"><label class="form-label">To</label><input class="form-input" id="to-end" type="date" value="${today}"></div>
+      </div>
+      <div class="form-group"><label class="form-label">Length</label><select class="form-select" id="to-half"><option value="">Full day(s)</option><option value="am">Half day — morning (AM)</option><option value="pm">Half day — afternoon (PM)</option></select></div>
+      <div class="form-group"><label class="form-label">Reason (optional)</label><input class="form-input" id="to-reason" placeholder="e.g. Vacation, appointment"></div>
+      <div class="tt-hint">Half-day applies when From and To are the same day.${canApproveTimeOff()?' As an owner, your own request is approved automatically.':' Your request is sent to the owner for approval.'}</div>
+    </div>
+    <div class="modal-foot"><button class="btn-cancel" id="btn-cx">Cancel</button><button class="btn-save" id="to-save">Submit request</button></div>
+  </div></div>`;
+  $('mc').onclick=$('btn-cx').onclick=closeModal;
+  $('mbd').onclick=e=>{if(e.target===e.currentTarget)closeModal()};
+  $('to-save').onclick=submitTimeOff;
+}
+async function submitTimeOff(){
+  const start=$('to-start').value,end=$('to-end').value||$('to-start').value;
+  if(!start){toast('Pick a start date','');return}
+  if(end<start){toast('End date is before the start date','');return}
+  const owner=canApproveTimeOff();
+  const now=Date.now();
+  const r={id:timeOffId(),member:currentPersonName(),memberId:currentPersonId(),startDate:start,endDate:end,half:start===end?($('to-half').value||false):false,reason:$('to-reason').value.trim(),status:owner?'approved':'pending',requestedAt:now};
+  if(owner){r.reviewedBy=currentPersonName();r.reviewedAt=now;}
+  try{await writeTimeOff(r)}catch(e){}
+  closeModal();render();
+  toast(owner?'Time off added to the schedule':'Request sent to the owner for approval');
 }

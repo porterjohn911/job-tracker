@@ -70,6 +70,14 @@
         }
       },
 
+      "timeoff": {
+        ".read": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'owner' || root.child('users').child(auth.uid).child('role').val() === 'manager' || root.child('users').child(auth.uid).child('company').val() === $company || $company === root.child('users').child(auth.uid).child('company').val() + '_dev')",
+        ".write": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'owner' || root.child('users').child(auth.uid).child('role').val() === 'manager' || root.child('users').child(auth.uid).child('company').val() === $company || $company === root.child('users').child(auth.uid).child('company').val() + '_dev')",
+        "$id": {
+          ".validate": "newData.hasChildren(['id', 'member', 'startDate', 'status']) && newData.child('id').isString() && newData.child('id').val() === $id && newData.child('member').isString() && newData.child('startDate').isString() && newData.child('status').isString()"
+        }
+      },
+
       "$other": {
         ".validate": false
       }
