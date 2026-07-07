@@ -11,16 +11,17 @@
 //   Other    = the job's manual "Costs" field (financials tab)
 //   Revenue  = invoice total if invoiced, else the job's invoiced/estimate value
 
-// Labor cost per jobId, computed in one pass over time entries.
+// Labor cost per job, computed in one pass over time entries.
 function jobLaborCosts(){
   const out={};
   const entries=(typeof timeList==='function')?timeList():Object.values((typeof S!=='undefined'&&S.timeEntries)||{});
   entries.forEach(t=>{
-    if(!t||!t.jobId||!t.end||!t.start)return;
+    const jobId=t&&(t.job||t.jobId);
+    if(!t||!jobId||!t.end||!t.start)return;
     const hours=(t.end-t.start)/3600000;
     if(!(hours>0))return;
     const rate=(typeof rateOf==='function')?rateOf(t.member):Number(((S.payRates||{})[t.member])||0);
-    out[t.jobId]=(out[t.jobId]||0)+hours*rate;
+    out[jobId]=(out[jobId]||0)+hours*rate;
   });
   return out;
 }
