@@ -127,6 +127,22 @@ function renderTeam(){
   </div>`;
 }
 
+// Short mileage label for clock-in/out distance from the job site.
+function fmtMi(mi){return mi<0.1?'<0.1 mi':((mi<10?mi.toFixed(1):Math.round(mi))+' mi')}
+// Owner/manager-only location summary for a time entry (empty otherwise).
+function timeEntryLocationHtml(t){
+  if(gateOn()&&!canSeeAll(SESSION))return '';
+  const seg=(lat,lng,acc,miles,label)=>{
+    if(lat==null||lng==null)return '';
+    const url='https://www.google.com/maps?q='+lat+','+lng;
+    const txt=(miles!=null)
+      ? ((miles<0.25?'✓ ':miles>1?'⚠️ ':'')+fmtMi(miles)+' from site')
+      : ('location saved'+(acc?(' ±'+acc+'m'):''));
+    return label+' <a href="'+url+'" target="_blank" rel="noopener">'+txt+'</a>';
+  };
+  const parts=[seg(t.inLat,t.inLng,t.inAcc,t.inMiles,'In:'),seg(t.outLat,t.outLng,t.outAcc,t.outMiles,'Out:')].filter(Boolean);
+  return parts.length?('<div class="tt-loc">📍 '+parts.join(' · ')+'</div>'):'';
+}
 function renderTime(){
   if(!S.members.length){
     return `<div class="tt-empty" style="padding:44px 16px">
@@ -154,7 +170,7 @@ function renderTime(){
     const meta=['Since '+fmtClockT(t.start),jn,t.note].filter(Boolean).join(' · ');
     return `<div class="tt-active">
       <div class="member-ava">${initials(t.member)}</div>
-      <div class="tt-active-body"><div class="tt-active-name">${esc(t.member)}</div><div class="tt-active-meta">${esc(meta)}</div></div>
+      <div class="tt-active-body"><div class="tt-active-name">${esc(t.member)}</div><div class="tt-active-meta">${esc(meta)}</div>${timeEntryLocationHtml(t)}</div>
       <div class="tt-timer" data-tick-start="${t.start}">${fmtHMS(Date.now()-t.start)}</div>
       <button class="tt-btn-out" data-clock-out="${esc(t.id)}">Clock Out</button>
     </div>`;
@@ -170,7 +186,7 @@ function renderTime(){
         const meta=[fmtClockT(t.start)+' – '+fmtClockT(t.end),jn,t.note].filter(Boolean).join(' · ');
         return `<div class="tt-row">
           <div class="member-ava">${initials(t.member)}</div>
-          <div class="tt-row-body"><div class="tt-row-top"><span class="tt-row-name">${esc(t.member)}</span><span class="tt-row-dur">${fmtHM(entryDur(t))}</span></div><div class="tt-row-meta">${esc(meta)}</div></div>
+          <div class="tt-row-body"><div class="tt-row-top"><span class="tt-row-name">${esc(t.member)}</span><span class="tt-row-dur">${fmtHM(entryDur(t))}</span></div><div class="tt-row-meta">${esc(meta)}</div>${timeEntryLocationHtml(t)}</div>
           <button class="tt-icon" data-time-edit="${esc(t.id)}" title="Edit" aria-label="Edit entry">✎</button>
           <button class="tt-icon" data-time-del="${esc(t.id)}" title="Delete" aria-label="Delete entry">✕</button>
         </div>`;
