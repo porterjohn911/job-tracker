@@ -1,6 +1,40 @@
 // Receipts, financials, communications, team, bank, and time handlers
 // Generated from src/app/10-handlers-boot.js.
 
+// ── Clock in/out location capture (in-app GPS; foreground snapshot only) ──
+// One reading at the moment of clock in / out. Resolves null on denial,
+// unavailability, or timeout — clocking in/out is never blocked or changed.
+function captureGeo(){
+  return new Promise(res=>{
+    if(!navigator.geolocation)return res(null);
+    navigator.geolocation.getCurrentPosition(
+      p=>res({lat:p.coords.latitude,lng:p.coords.longitude,acc:Math.round(p.coords.accuracy||0)}),
+      ()=>res(null),
+      {enableHighAccuracy:true,timeout:8000,maximumAge:60000}
+    );
+  });
+}
+// One-time, non-blocking transparency notice on this device.
+function geoNoticeOnce(){
+  try{if(localStorage.getItem(LS('geo_notice')))return;localStorage.setItem(LS('geo_notice'),'1');}catch(e){}
+  toast('Location is recorded at clock in/out (owners/managers only)');
+}
+// Capture location in the background and patch the entry; if the job is
+// geocoded, also record distance from the job site. Never blocks clock in/out.
+async function stampTimeLocation(entryId,phase){
+  const g=await captureGeo();
+  if(!g)return;
+  const t=S.timeEntries[entryId];
+  if(!t)return;
+  const j=t.job&&S.jobs[t.job];
+  const miles=(j&&j.lat&&j.lng&&typeof milesBetween==='function')
+    ? +milesBetween({lat:g.lat,lng:g.lng},{lat:Number(j.lat),lng:Number(j.lng)}).toFixed(2) : null;
+  if(phase==='in'){t.inLat=g.lat;t.inLng=g.lng;t.inAcc=g.acc;t.inAt=Date.now();if(miles!=null)t.inMiles=miles;}
+  else{t.outLat=g.lat;t.outLng=g.lng;t.outAcc=g.acc;t.outAt=Date.now();if(miles!=null)t.outMiles=miles;}
+  try{await writeTimeEntry(t)}catch(e){}
+  render();
+}
+
 function attachFinancialTeamTimeHandlers(){
   // Receipts & expenses
   $('rcpt-upload')?.addEventListener('change',function(){const l=$('rcpt-file-label');if(l)l.textContent=this.files&&this.files[0]?this.files[0].name:'Attach receipt photo or PDF (optional)'});
@@ -88,12 +122,14 @@ function attachFinancialTeamTimeHandlers(){
     const note=$('tt-note')?.value.trim()||'';
     const t={id:tid(),member,job,note,start:Date.now(),end:null,by:S.user||'',created:Date.now()};
     await writeTimeEntry(t);await logAct('clocked in '+member,job&&S.jobs[job]?S.jobs[job].name:'');render();toast(member+' clocked in');
+    geoNoticeOnce();stampTimeLocation(t.id,'in');
   });
   document.querySelectorAll('[data-clock-out]').forEach(b=>b.onclick=async()=>{
     const t=S.timeEntries[b.dataset.clockOut];if(!t||t.end)return;
     t.end=Date.now();await writeTimeEntry(t);
     await logAct('clocked out '+t.member+' ('+fmtHM(entryDur(t))+')',t.job&&S.jobs[t.job]?S.jobs[t.job].name:'');
     render();toast(t.member+' clocked out · '+fmtHM(entryDur(t)));
+    stampTimeLocation(t.id,'out');
   });
   $('tt-add-manual')?.addEventListener('click',()=>showTimeModal(null));
   if(canSeeFinancials())document.querySelectorAll('[data-rate-member]').forEach(inp=>{inp.onchange=async()=>{const m=inp.dataset.rateMember;const v=parseFloat(inp.value);S.payRates=S.payRates||{};if(!v||v<=0)delete S.payRates[m];else S.payRates[m]=v;await savePayRates();toast('Saved rate for '+m)}});
