@@ -42,7 +42,7 @@ function attachFinancialTeamTimeHandlers(){
     const j=S.jobs[S.detail];if(!j)return;
     const amount=parseFloat($('rcpt-amount').value);
     if(!(amount>0)){toast('Enter the receipt amount','');return}
-    const base={amount,vendor:$('rcpt-vendor').value.trim(),category:$('rcpt-cat').value,note:$('rcpt-note').value.trim(),date:$('rcpt-date').value||dateKey(new Date()),user:S.user,uploaded:Date.now()};
+    const base={id:'rc_'+Date.now()+'_'+Math.random().toString(36).slice(2,6),amount,vendor:$('rcpt-vendor').value.trim(),category:$('rcpt-cat').value,note:$('rcpt-note').value.trim(),date:$('rcpt-date').value||dateKey(new Date()),user:S.user,uploaded:Date.now()};
     const fileInput=$('rcpt-upload');const file=fileInput&&fileInput.files&&fileInput.files[0];
     const finish=async(extra)=>{j.receipts=j.receipts||[];j.receipts.push({...base,...extra});await writeJob(j);await logAct('added a receipt ('+money2(amount)+') to',j.name);render();toast('Receipt added')};
     if(file){
@@ -113,6 +113,28 @@ function attachFinancialTeamTimeHandlers(){
   document.querySelectorAll('[data-bank-cat]').forEach(sel=>sel.onchange=async()=>{const t=S.transactions[sel.dataset.bankCat];if(t){t.category=sel.value;await writeTxn(t)}});
   document.querySelectorAll('[data-bank-job]').forEach(sel=>sel.onchange=async()=>{const t=S.transactions[sel.dataset.bankJob];if(t){t.jobId=sel.value;await writeTxn(t);render()}});
   document.querySelectorAll('[data-bank-del]').forEach(b=>b.onclick=async()=>{const t=S.transactions[b.dataset.bankDel];if(!t)return;const backup=JSON.parse(JSON.stringify(t));await deleteTxnDB(t.id);render();let restored=false;const restore=async()=>{if(restored)return;restored=true;await writeTxn(backup);render();toast('Transaction restored')};UNDO.push(restore);toast('Transaction removed','undo',restore)});
+  // Receipt reconciliation
+  $('recon-automatch')?.addEventListener('click',async()=>{
+    const changed=autoMatchReceipts();
+    for(const t of changed)await writeTxn(t);
+    render();toast(changed.length?changed.length+' matched':'No confident matches found');
+  });
+  document.querySelectorAll('[data-recon-match]').forEach(sel=>sel.onchange=async()=>{
+    const t=S.transactions[sel.dataset.reconMatch];if(!t||!sel.value)return;
+    t.matchReceipt=sel.value;t.reconciledAt=Date.now();await writeTxn(t);render();toast('Matched to receipt');
+  });
+  document.querySelectorAll('[data-recon-unmatch]').forEach(b=>b.onclick=async()=>{
+    const t=S.transactions[b.dataset.reconUnmatch];if(!t)return;
+    delete t.matchReceipt;delete t.reconciledAt;await writeTxn(t);render();toast('Unmatched');
+  });
+  document.querySelectorAll('[data-recon-doc]').forEach(sel=>sel.onchange=async()=>{
+    const t=S.transactions[sel.dataset.reconDoc];const j=S.jobs[sel.value];if(!t||!j)return;
+    const cat=(typeof RECEIPT_CATS!=='undefined'&&RECEIPT_CATS.includes(t.category))?t.category:(t.category==='Equipment'?'Tools / Equipment':'Other');
+    const r={id:'rc_'+Date.now()+'_'+Math.random().toString(36).slice(2,6),amount:Math.abs(Number(t.amount)||0),vendor:((t.description||'')+'').slice(0,60),category:cat,note:'From bank import',date:((t.date||'')+'').slice(0,10)||dateKey(new Date()),user:S.user,uploaded:Date.now(),source:'bank',txnId:t.id};
+    j.receipts=j.receipts||[];j.receipts.push(r);
+    t.matchReceipt='rid:'+r.id;t.reconciledAt=Date.now();if(!t.jobId)t.jobId=j.id;
+    await writeJob(j);await writeTxn(t);await logAct('documented a bank expense on',j.name);render();toast('Receipt added & matched');
+  });
   $('tt-goto-team')?.addEventListener('click',()=>{S.view='team';render()});
   $('tt-clockin')?.addEventListener('click',async()=>{
     const member=$('tt-member')?.value;
