@@ -383,6 +383,75 @@ function bankTotals(){const all=txnList();const inSum=all.filter(t=>Number(t.amo
 async function writeTxn(t){S.transactions[t.id]=t;LOCAL.saveTransactions();if(DB)await DB.child('transactions/'+t.id).set(t).catch(()=>{})}
 async function deleteTxnDB(id){delete S.transactions[id];LOCAL.saveTransactions();if(DB)await DB.child('transactions/'+id).remove().catch(()=>{})}
 async function saveAllTxns(){LOCAL.saveTransactions();if(DB)await DB.child('transactions').set(S.transactions).catch(()=>{})}
+
+// ── Receipt reconciliation (lightweight: match bank expenses ↔ receipts) ──
+// Purely additive/read-only over existing data. Match state is stored only on
+// the transaction (t.matchReceipt); receipts are never mutated for matching.
+function reconReceiptKey(jobId,r,idx){return (r&&r.id)?('rid:'+r.id):('r:'+jobId+'|'+idx+'|'+((r&&r.date)||'')+'|'+(Number(r&&r.amount)||0).toFixed(2))}
+function reconDaysApart(a,b){if(!a||!b)return 999;const da=new Date(a+'T00:00:00'),db=new Date(b+'T00:00:00');return Math.round((da-db)/86400000)}
+// Every receipt across all jobs, flattened with a stable key.
+function reconAllReceipts(){
+  const out=[];
+  Object.values(S.jobs||{}).forEach(j=>{(j.receipts||[]).forEach((r,idx)=>{
+    out.push({job:j,jobId:j.id,idx,key:reconReceiptKey(j.id,r,idx),amount:Number(r.amount)||0,date:((r.date||'')+'').slice(0,10),vendor:((r.vendor||r.note||'')+'').trim(),r});
+  })});
+  return out;
+}
+// Snapshot: matched pairs, undocumented bank expenses, and unmatched receipts.
+function reconcileData(){
+  const receipts=reconAllReceipts();
+  const byKey={};receipts.forEach(x=>{byKey[x.key]=x});
+  const matchedKeys=new Set();
+  const matched=[],unmatchedTxns=[];
+  txnList().filter(t=>Number(t.amount)<0).forEach(t=>{
+    const rk=t.matchReceipt;
+    if(rk&&byKey[rk]){matched.push({txn:t,rec:byKey[rk]});matchedKeys.add(rk);}
+    else unmatchedTxns.push(t);
+  });
+  const unmatchedReceipts=receipts.filter(x=>!matchedKeys.has(x.key));
+  const docAmt=matched.reduce((s,m)=>s+Math.abs(Number(m.txn.amount)||0),0);
+  const gapAmt=unmatchedTxns.reduce((s,t)=>s+Math.abs(Number(t.amount)||0),0);
+  return {matched,unmatchedTxns,unmatchedReceipts,docCount:matched.length,total:matched.length+unmatchedTxns.length,docAmt,gapAmt};
+}
+// Auto-match unmatched expenses to unmatched receipts by exact amount + date within 5 days.
+// Returns the changed transaction objects (caller persists them).
+function autoMatchReceipts(){
+  const d=reconcileData();
+  const avail=d.unmatchedReceipts.slice();
+  const changed=[];
+  d.unmatchedTxns.forEach(t=>{
+    const amt=Math.abs(Number(t.amount)||0),td=((t.date||'')+'').slice(0,10);
+    let bi=-1,best=6;
+    avail.forEach((r,i)=>{if(Math.abs(r.amount-amt)>0.01)return;const dd=Math.abs(reconDaysApart(td,r.date));if(dd<=5&&dd<best){best=dd;bi=i;}});
+    if(bi>=0){t.matchReceipt=avail[bi].key;t.reconciledAt=Date.now();avail.splice(bi,1);changed.push(t);}
+  });
+  return changed;
+}
+function renderReconciliation(){
+  const d=reconcileData();
+  if(!d.total&&!d.unmatchedReceipts.length)return '';
+  const pct=d.total?Math.round(d.docCount/d.total*100):100;
+  const urOpts=d.unmatchedReceipts.map(r=>`<option value="${esc(r.key)}">${money2(r.amount)} · ${esc(r.vendor||r.job.name)} · ${esc(fmtDate(r.date)||r.date||'')}</option>`).join('');
+  const jOpts=jobs().map(j=>`<option value="${esc(j.id)}">${esc(j.name)}</option>`).join('');
+  return `
+    <div class="section-hd">Receipt reconciliation <span>${d.docCount}/${d.total} documented</span></div>
+    <div class="recon-panel">
+      <div class="recon-bar-wrap"><div class="recon-bar" style="width:${pct}%"></div></div>
+      <div class="recon-summary">${money2(d.docAmt)} documented · <strong>${money2(d.gapAmt)}</strong> in ${d.unmatchedTxns.length} bank expense${d.unmatchedTxns.length!==1?'s':''} without a receipt${d.unmatchedReceipts.length?` · ${d.unmatchedReceipts.length} receipt${d.unmatchedReceipts.length!==1?'s':''} unmatched`:''}</div>
+      ${d.unmatchedTxns.length?`<button class="btn-sm" id="recon-automatch" type="button">⚡ Auto-match by amount + date</button>
+        <div class="recon-sub">Bank expenses without a receipt</div>
+        ${d.unmatchedTxns.slice(0,40).map(t=>`<div class="recon-row">
+          <div style="flex:1;min-width:0"><div class="recon-title">${money2(Math.abs(Number(t.amount)||0))} · ${esc(t.description||'')}</div><div class="recon-meta">${esc(fmtDate(t.date)||t.date||'')}${t.category?' · '+esc(t.category):''}</div></div>
+          ${d.unmatchedReceipts.length?`<select class="recon-sel" data-recon-match="${esc(t.id)}"><option value="">Match receipt…</option>${urOpts}</select>`:''}
+          <select class="recon-sel" data-recon-doc="${esc(t.id)}"><option value="">Add as receipt to…</option>${jOpts}</select>
+        </div>`).join('')}
+        ${d.unmatchedTxns.length>40?`<div class="recon-meta" style="padding:6px 2px">+${d.unmatchedTxns.length-40} more…</div>`:''}`
+        :`<div class="recon-ok">✓ Every bank expense has a matching receipt.</div>`}
+      ${d.unmatchedReceipts.length?`<div class="recon-sub">Receipts with no bank charge — review (cash? duplicate?)</div>
+        ${d.unmatchedReceipts.slice(0,20).map(r=>`<div class="recon-row"><div style="flex:1;min-width:0"><div class="recon-title">${money2(r.amount)} · ${esc(r.vendor||'—')}</div><div class="recon-meta">${esc(fmtDate(r.date)||r.date||'')} · ${esc(r.job.name)}</div></div></div>`).join('')}`:''}
+      ${d.matched.length?`<details class="recon-details"><summary>Matched (${d.matched.length})</summary>${d.matched.slice(0,60).map(m=>`<div class="recon-row"><div style="flex:1;min-width:0"><div class="recon-title">${money2(Math.abs(Number(m.txn.amount)||0))} · ${esc(m.txn.description||'')}</div><div class="recon-meta">✓ ${esc(m.rec.vendor||m.rec.job.name)} · ${esc(fmtDate(m.txn.date)||m.txn.date||'')}</div></div><button class="btn-remove" data-recon-unmatch="${esc(m.txn.id)}" type="button">Unmatch</button></div>`).join('')}</details>`:''}
+    </div>`;
+}
 function renderBank(){
   if(gateOn()&&!isOwnerRole(SESSION)) return `<div class="tt-empty" style="padding:40px 16px"><p style="font-size:14px;color:var(--text-2);line-height:1.6">Bank &amp; cash flow is owner-only.</p></div>`;
   const t=bankTotals();
@@ -409,6 +478,7 @@ function renderBank(){
       ${all.length?`<button class="btn-mini" id="bank-clear" style="margin-left:auto">Clear all</button>`:''}
     </div>
     ${cats.length?`<div class="section-hd">Spending by category</div><div class="rcpt-cats" style="margin-bottom:16px">${cats.map(([c,v])=>`<span class="rcpt-cat-chip">${esc(c)} · ${money2(v)}</span>`).join('')}</div>`:''}
+    ${renderReconciliation()}
     <div class="section-hd">Transactions <span>${all.length}</span></div>
     ${all.length?`<div class="bank-list">${rows}</div>`:`<div class="tt-empty">No transactions yet. Tap <strong>Import CSV / OFX</strong> and upload a transaction file from your bank.</div>`}
   `;
