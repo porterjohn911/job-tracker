@@ -81,9 +81,101 @@ function renderOwner(c){
     : v==='o_leads'?ownerLeads()
     : v==='o_companies'?ownerCompanies()
     : v==='o_hours'?ownerHours()
+    : v==='o_schedule'?renderOwnerSchedule()
     : ownerOverview();
   updateUserUI();
   attachHandlers();
+  attachOwnerScheduleHandlers();
+}
+
+// ── Owner shared calendar — Phase 1: cross-company events, month view ──
+function ownerScheduleColor(type){return type==='meeting'?'#3b82f6':type==='other'?'#8b5cf6':'#16a34a'}
+function ownerEventJobLabel(ev){if(!ev.jobId||!ev.company)return '';const j=((S.owner&&S.owner[ev.company])||[]).find(x=>x.id===ev.jobId);return j?j.name:'(job)'}
+function renderOwnerSchedule(){
+  if(S.ocalYear==null){const n=new Date();S.ocalYear=n.getFullYear();S.ocalMonth=n.getMonth();}
+  const y=S.ocalYear,m=S.ocalMonth,today=dateKey(new Date()),sel=S.ocalSel||today;
+  const monthName=new Date(y,m,1).toLocaleDateString(undefined,{month:'long',year:'numeric'});
+  const byDay={};
+  ownerScheduleList().forEach(ev=>{if(ev.date)(byDay[ev.date]=byDay[ev.date]||[]).push(ev)});
+  Object.values(byDay).forEach(a=>a.sort((x,z)=>(x.startMin||0)-(z.startMin||0)));
+  const first=new Date(y,m,1),daysInMonth=new Date(y,m+1,0).getDate(),startDow=first.getDay();
+  const cell=(k,dnum,other)=>{
+    const list=byDay[k]||[],isToday=k===today,isSel=k===sel;
+    const chips=list.slice(0,3).map(ev=>{const c=ownerScheduleColor(ev.type);return `<div class="cal-chip osch-chip" style="border-left-color:${c};background:${c}1a;color:${c}" data-osch-edit="${esc(ev.id)}" title="${esc(ev.title)} · ${minToLabel(ev.startMin)}">${minToLabel(ev.startMin)} ${esc(ev.title)}</div>`}).join('');
+    const more=list.length>3?`<div class="cal-day-more">+${list.length-3}</div>`:'';
+    return `<div class="cal-day${isToday?' today':''}${isSel?' selected':''}${other?' other-month':''}" data-osch-day="${k}"><div class="cal-day-num"><span>${dnum}</span></div><div class="cal-day-chips">${chips}${more}</div></div>`;
+  };
+  let cells='';['S','M','T','W','T','F','S'].forEach(d=>cells+=`<div class="cal-dow">${d}</div>`);
+  const prevDays=new Date(y,m,0).getDate();
+  for(let i=startDow-1;i>=0;i--){const d=prevDays-i,pm=m===0?11:m-1,py=m===0?y-1:y;cells+=cell(`${py}-${String(pm+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`,d,true)}
+  for(let d=1;d<=daysInMonth;d++){cells+=cell(`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`,d,false)}
+  const trailing=(7-(startDow+daysInMonth)%7)%7;
+  for(let i=1;i<=trailing;i++){const nm=m===11?0:m+1,ny=m===11?y+1:y;cells+=cell(`${ny}-${String(nm+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`,i,true)}
+  const selList=byDay[sel]||[];
+  const dayLbl=new Date(sel+'T00:00:00').toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'});
+  const dayHtml=selList.length?selList.map(ev=>{const jl=ownerEventJobLabel(ev),co=ev.company?((COMPANIES[ev.company]||{}).label||ev.company):'';const meta=[ev.assignee,jl,co].filter(Boolean).join(' · ');return `<div class="osch-row" data-osch-edit="${esc(ev.id)}">
+    <div class="osch-time">${minToLabel(ev.startMin)}${ev.endMin!=null?'–'+minToLabel(ev.endMin):''}</div>
+    <div style="flex:1;min-width:0"><div style="font-weight:600">${esc(ev.title)}</div>${meta?`<div class="osch-meta">${esc(meta)}</div>`:''}</div>
+    <span class="osch-dot" style="background:${ownerScheduleColor(ev.type)}"></span>
+  </div>`}).join(''):`<div class="tt-empty" style="padding:16px 0">Nothing scheduled. Tap a day or “New event”.</div>`;
+  return `${ownerTitle('Schedule')}
+    <div class="cal-head"><div class="cal-title">${esc(monthName)}</div>
+      <div class="cal-nav"><button id="osch-prev" aria-label="Previous month">‹</button><button id="osch-today" style="width:auto;padding:0 12px;font-size:12px;font-weight:600">Today</button><button id="osch-next" aria-label="Next month">›</button></div>
+    </div>
+    <button class="btn-add" id="osch-new" style="margin-bottom:12px"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>New event</button>
+    <div class="cal-legend"><div class="cal-legend-item"><div class="cal-legend-sw" style="background:#16a34a1a;border-left:3px solid #16a34a"></div>Job site</div><div class="cal-legend-item"><div class="cal-legend-sw" style="background:#3b82f61a;border-left:3px solid #3b82f6"></div>Meeting</div><div class="cal-legend-item"><div class="cal-legend-sw" style="background:#8b5cf61a;border-left:3px solid #8b5cf6"></div>Other</div></div>
+    <div class="cal-grid">${cells}</div>
+    <div class="cal-day-list"><div class="cal-day-list-hd"><span>${esc(dayLbl)}</span><span class="kpi-sub">${selList.length} event${selList.length!==1?'s':''}</span></div>${dayHtml}</div>`;
+}
+function showOwnerEventModal(ev){
+  const editing=!!(ev&&ev.id);ev=ev||{};
+  const dflt=S.ocalSel||dateKey(new Date());
+  const typeOpt=(v,l)=>`<option value="${v}" ${ev.type===v?'selected':''}>${l}</option>`;
+  const jobOpts=Object.values(COMPANIES).map(co=>{const js=(S.owner&&S.owner[co.id])||[];if(!js.length)return '';return `<optgroup label="${esc(co.label)}">`+js.slice().sort((a,b)=>(a.name||'').localeCompare(b.name||'')).map(j=>`<option value="${esc(co.id)}|${esc(j.id)}" ${ev.company===co.id&&ev.jobId===j.id?'selected':''}>${esc(j.name)}</option>`).join('')+`</optgroup>`}).join('');
+  const assignees=[...new Set(ownerScheduleList().map(e=>e.assignee).filter(Boolean))];
+  $('modal-root').innerHTML=`<div class="modal-bd" id="mbd" role="dialog" aria-modal="true" aria-label="Schedule event"><div class="modal"><div class="modal-handle"></div>
+    <div class="modal-head"><div class="modal-title">${editing?'Edit event':'New event'}</div><button class="modal-close" id="mc" aria-label="Close"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button></div>
+    <div class="modal-body">
+      <div class="form-group"><label class="form-label">Title</label><input class="form-input" id="oev-title" value="${esc(ev.title||'')}" placeholder="Site visit, team meeting…"></div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Type</label><select class="form-select" id="oev-type">${typeOpt('job','Job site')}${typeOpt('meeting','Meeting')}${typeOpt('other','Other')}</select></div>
+        <div class="form-group"><label class="form-label">Date</label><input class="form-input" id="oev-date" type="date" value="${esc(ev.date||dflt)}"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Start</label><input class="form-input" id="oev-start" type="time" value="${ev.startMin!=null?minToInput(ev.startMin):'08:00'}"></div>
+        <div class="form-group"><label class="form-label">End</label><input class="form-input" id="oev-end" type="time" value="${ev.endMin!=null?minToInput(ev.endMin):'09:00'}"></div>
+      </div>
+      <div class="form-group"><label class="form-label">Who</label><input class="form-input" id="oev-assignee" list="oev-assignees" value="${esc(ev.assignee||'')}" placeholder="Name"><datalist id="oev-assignees">${assignees.map(a=>`<option value="${esc(a)}"></option>`).join('')}</datalist></div>
+      <div class="form-group"><label class="form-label">Link a job (optional — any company)</label><select class="form-select" id="oev-job"><option value="">— none —</option>${jobOpts}</select></div>
+      <div class="form-group"><label class="form-label">Note (optional)</label><input class="form-input" id="oev-note" value="${esc(ev.note||'')}"></div>
+    </div>
+    <div class="modal-foot">${editing?`<button class="btn-cancel" id="oev-del" style="color:var(--red);border-color:var(--red)">Delete</button>`:`<button class="btn-cancel" id="btn-cx">Cancel</button>`}<button class="btn-save" id="oev-save">${editing?'Save':'Add event'}</button></div>
+  </div></div>`;
+  $('mc').onclick=closeModal;
+  const cx=$('btn-cx');if(cx)cx.onclick=closeModal;
+  $('mbd').onclick=e=>{if(e.target===e.currentTarget)closeModal()};
+  $('oev-save').onclick=()=>submitOwnerEvent(editing?ev.id:null);
+  const del=$('oev-del');if(del)del.onclick=async()=>{if(!confirm('Delete this event?'))return;await deleteOwnerSchedule(ev.id);closeModal();render();toast('Event deleted')};
+}
+async function submitOwnerEvent(id){
+  const title=$('oev-title').value.trim();if(!title){toast('Enter a title','');return}
+  const date=$('oev-date').value;if(!date){toast('Pick a date','');return}
+  const startMin=inputToMin($('oev-start').value),endMin=inputToMin($('oev-end').value);
+  if(startMin!=null&&endMin!=null&&endMin<startMin){toast('End time is before the start','');return}
+  let company='',jobId='';const jv=$('oev-job').value;if(jv){const p=jv.split('|');company=p[0]||'';jobId=p[1]||''}
+  const prev=(id&&S.ownerSchedule)?S.ownerSchedule[id]:null;
+  const ev={id:id||ownerEventId(),title,type:$('oev-type').value||'job',date,startMin,endMin,assignee:$('oev-assignee').value.trim(),company,jobId,note:$('oev-note').value.trim(),by:(prev&&prev.by)||currentPersonName(),created:(prev&&prev.created)||Date.now()};
+  S.ocalSel=date;
+  try{await writeOwnerSchedule(ev)}catch(e){}
+  closeModal();render();toast(id?'Event updated':'Event added');
+}
+function attachOwnerScheduleHandlers(){
+  $('osch-new')?.addEventListener('click',()=>showOwnerEventModal(null));
+  $('osch-prev')?.addEventListener('click',()=>{S.ocalMonth--;if(S.ocalMonth<0){S.ocalMonth=11;S.ocalYear--}render()});
+  $('osch-next')?.addEventListener('click',()=>{S.ocalMonth++;if(S.ocalMonth>11){S.ocalMonth=0;S.ocalYear++}render()});
+  $('osch-today')?.addEventListener('click',()=>{const n=new Date();S.ocalYear=n.getFullYear();S.ocalMonth=n.getMonth();S.ocalSel=dateKey(n);render()});
+  document.querySelectorAll('[data-osch-day]').forEach(d=>d.onclick=e=>{if(e.target.closest('[data-osch-edit]'))return;S.ocalSel=d.dataset.oschDay;render()});
+  document.querySelectorAll('[data-osch-edit]').forEach(el=>el.onclick=e=>{e.stopPropagation();const ev=S.ownerSchedule&&S.ownerSchedule[el.dataset.oschEdit];if(ev)showOwnerEventModal(ev)});
 }
 function ownerOverview(){
   const list=ownerList(),g=ownerGrand(list);
