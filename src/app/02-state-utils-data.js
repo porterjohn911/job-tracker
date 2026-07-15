@@ -348,11 +348,25 @@ function ownerInitFB(cfg){
       firebase.database().ref(ownerNode(co)).child('time').on('value',s=>{S.ownerTime=S.ownerTime||{};S.ownerTime[co.id]=Object.values(s.val()||{});render()});
       firebase.database().ref(ownerNode(co)).child('payrates').on('value',s=>{S.ownerRates=S.ownerRates||{};S.ownerRates[co.id]=s.val()||{};render()});
     });
+    firebase.database().ref('owner_schedule').on('value',s=>{S.ownerSchedule=s.val()||{};saveOwnerScheduleLocal();render()});
     firebase.database().ref('.info/connected').on('value',s=>{if(!s.val())syncStatus('err','Reconnecting…')});
     return true;
   }catch(e){syncStatus('err','Firebase error');return false}
 }
 function ownerJobs(id){return (S.owner&&S.owner[id])||[]}
+
+// ── Owner shared calendar (cross-company events; owner-level node) ──
+function ownerScheduleReady(){return typeof firebase!=='undefined'&&firebase.apps&&firebase.apps.length}
+function ownerScheduleLoadLocal(){try{S.ownerSchedule=JSON.parse(localStorage.getItem('jt_owner_schedule')||'{}')}catch(e){S.ownerSchedule={}}}
+function saveOwnerScheduleLocal(){try{localStorage.setItem('jt_owner_schedule',JSON.stringify(S.ownerSchedule||{}))}catch(e){}}
+function ownerScheduleList(){if(!S.ownerSchedule)ownerScheduleLoadLocal();return Object.values(S.ownerSchedule||{})}
+function ownerEventId(){return 'oev_'+Date.now()+'_'+Math.random().toString(36).slice(2,6)}
+async function writeOwnerSchedule(ev){S.ownerSchedule=S.ownerSchedule||{};S.ownerSchedule[ev.id]=ev;saveOwnerScheduleLocal();if(ownerScheduleReady()){try{await firebase.database().ref('owner_schedule/'+ev.id).set(ev)}catch(e){}}}
+async function deleteOwnerSchedule(id){if(S.ownerSchedule)delete S.ownerSchedule[id];saveOwnerScheduleLocal();if(ownerScheduleReady()){try{await firebase.database().ref('owner_schedule/'+id).remove()}catch(e){}}}
+// Time-of-day helpers (minutes from midnight).
+function minToLabel(min){min=Number(min)||0;const h=Math.floor(min/60),mm=min%60,ap=h<12?'AM':'PM',h12=(h%12)||12;return h12+(mm?':'+String(mm).padStart(2,'0'):'')+' '+ap}
+function minToInput(min){min=Number(min)||0;return String(Math.floor(min/60)).padStart(2,'0')+':'+String(min%60).padStart(2,'0')}
+function inputToMin(v){if(!v)return null;const p=String(v).split(':');return (Number(p[0])||0)*60+(Number(p[1])||0)}
 
 function loadAndConnect(){
   if(OWNER_MODE){ownerLoadLocal();if(FIREBASE_CONFIG)ownerInitFB(FIREBASE_CONFIG);}
