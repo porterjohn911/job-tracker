@@ -92,9 +92,31 @@ function renderOwner(c){
 function ownerScheduleColor(type){return type==='meeting'?'#3b82f6':type==='other'?'#8b5cf6':'#16a34a'}
 function ownerEventJobLabel(ev){if(!ev.jobId||!ev.company)return '';const j=((S.owner&&S.owner[ev.company])||[]).find(x=>x.id===ev.jobId);return j?j.name:'(job)'}
 function renderOwnerSchedule(){
-  if(S.ocalYear==null){const n=new Date();S.ocalYear=n.getFullYear();S.ocalMonth=n.getMonth();}
+  const n=new Date();
+  if(S.ocalYear==null){S.ocalYear=n.getFullYear();S.ocalMonth=n.getMonth();}
+  if(!S.ocalDate)S.ocalDate=dateKey(n);
+  if(!S.ocalMode)S.ocalMode='month';
+  const mode=S.ocalMode;
+  let navLabel;
+  if(mode==='month')navLabel=new Date(S.ocalYear,S.ocalMonth,1).toLocaleDateString(undefined,{month:'long',year:'numeric'});
+  else if(mode==='day')navLabel=new Date(S.ocalDate+'T00:00:00').toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'});
+  else{const d=new Date(S.ocalDate+'T00:00:00'),su=new Date(d);su.setDate(d.getDate()-d.getDay());const sa=new Date(su);sa.setDate(su.getDate()+6);navLabel=su.toLocaleDateString(undefined,{month:'short',day:'numeric'})+' – '+sa.toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'});}
+  const body=mode==='day'?renderOschDay():mode==='week'?renderOschWeek():renderOschMonth();
+  return `${ownerTitle('Schedule')}
+    <div class="cal-view-toggle" role="tablist" style="margin-bottom:10px">
+      <button class="${mode==='day'?'active':''}" data-osch-mode="day" role="tab" aria-selected="${mode==='day'}">Day</button>
+      <button class="${mode==='week'?'active':''}" data-osch-mode="week" role="tab" aria-selected="${mode==='week'}">Week</button>
+      <button class="${mode==='month'?'active':''}" data-osch-mode="month" role="tab" aria-selected="${mode==='month'}">Month</button>
+    </div>
+    <div class="cal-head"><div class="cal-title">${esc(navLabel)}</div>
+      <div class="cal-nav"><button id="osch-prev" aria-label="Previous">‹</button><button id="osch-today" style="width:auto;padding:0 12px;font-size:12px;font-weight:600">Today</button><button id="osch-next" aria-label="Next">›</button></div>
+    </div>
+    <button class="btn-add" id="osch-new" style="margin-bottom:12px"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>New event</button>
+    <div class="cal-legend"><div class="cal-legend-item"><div class="cal-legend-sw" style="background:#16a34a1a;border-left:3px solid #16a34a"></div>Job site</div><div class="cal-legend-item"><div class="cal-legend-sw" style="background:#3b82f61a;border-left:3px solid #3b82f6"></div>Meeting</div><div class="cal-legend-item"><div class="cal-legend-sw" style="background:#8b5cf61a;border-left:3px solid #8b5cf6"></div>Other</div></div>
+    ${body}`;
+}
+function renderOschMonth(){
   const y=S.ocalYear,m=S.ocalMonth,today=dateKey(new Date()),sel=S.ocalSel||today;
-  const monthName=new Date(y,m,1).toLocaleDateString(undefined,{month:'long',year:'numeric'});
   const byDay={};
   ownerScheduleList().forEach(ev=>{if(ev.date)(byDay[ev.date]=byDay[ev.date]||[]).push(ev)});
   Object.values(byDay).forEach(a=>a.sort((x,z)=>(x.startMin||0)-(z.startMin||0)));
@@ -118,14 +140,40 @@ function renderOwnerSchedule(){
     <div style="flex:1;min-width:0"><div style="font-weight:600">${esc(ev.title)}</div>${meta?`<div class="osch-meta">${esc(meta)}</div>`:''}</div>
     <span class="osch-dot" style="background:${ownerScheduleColor(ev.type)}"></span>
   </div>`}).join(''):`<div class="tt-empty" style="padding:16px 0">Nothing scheduled. Tap a day or “New event”.</div>`;
-  return `${ownerTitle('Schedule')}
-    <div class="cal-head"><div class="cal-title">${esc(monthName)}</div>
-      <div class="cal-nav"><button id="osch-prev" aria-label="Previous month">‹</button><button id="osch-today" style="width:auto;padding:0 12px;font-size:12px;font-weight:600">Today</button><button id="osch-next" aria-label="Next month">›</button></div>
-    </div>
-    <button class="btn-add" id="osch-new" style="margin-bottom:12px"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>New event</button>
-    <div class="cal-legend"><div class="cal-legend-item"><div class="cal-legend-sw" style="background:#16a34a1a;border-left:3px solid #16a34a"></div>Job site</div><div class="cal-legend-item"><div class="cal-legend-sw" style="background:#3b82f61a;border-left:3px solid #3b82f6"></div>Meeting</div><div class="cal-legend-item"><div class="cal-legend-sw" style="background:#8b5cf61a;border-left:3px solid #8b5cf6"></div>Other</div></div>
-    <div class="cal-grid">${cells}</div>
+  return `<div class="cal-grid">${cells}</div>
     <div class="cal-day-list"><div class="cal-day-list-hd"><span>${esc(dayLbl)}</span><span class="kpi-sub">${selList.length} event${selList.length!==1?'s':''}</span></div>${dayHtml}</div>`;
+}
+// Greedy interval packing so overlapping events sit side by side.
+function layoutDayEvents(evs,winStart,ppm){
+  const items=evs.map(e=>({e,s:Number(e.startMin)||0,en:(e.endMin!=null&&e.endMin>e.startMin)?e.endMin:(Number(e.startMin)||0)+30})).sort((a,b)=>a.s-b.s||a.en-b.en);
+  const out=[];let cluster=[],clusterEnd=-1;
+  const flush=cl=>{const cols=[];cl.forEach(it=>{let placed=-1;for(let i=0;i<cols.length;i++){if(it.s>=cols[i]){cols[i]=it.en;placed=i;break}}if(placed<0){placed=cols.length;cols.push(it.en)}it.col=placed});cl.forEach(it=>it.ncols=cols.length);out.push(...cl)};
+  items.forEach(it=>{if(cluster.length&&it.s>=clusterEnd){flush(cluster);cluster=[];clusterEnd=-1}cluster.push(it);clusterEnd=Math.max(clusterEnd,it.en)});
+  if(cluster.length)flush(cluster);
+  return out.map(it=>({e:it.e,top:(it.s-winStart)*ppm,height:Math.max(20,(it.en-it.s)*ppm),leftPct:(it.col/it.ncols)*100,widthPct:(1/it.ncols)*100}));
+}
+// Shared hourly grid used by day (1 column) and week (7 columns).
+function renderOschTimeGrid(dayKeys){
+  const evs=ownerScheduleList();
+  let minS=6*60,maxE=20*60;
+  dayKeys.forEach(k=>evs.filter(e=>e.date===k).forEach(e=>{if(e.startMin!=null)minS=Math.min(minS,e.startMin);const en=(e.endMin!=null?e.endMin:(Number(e.startMin)||0)+30);maxE=Math.max(maxE,en)}));
+  const winStart=Math.floor(Math.min(minS,6*60)/60)*60,winEnd=Math.ceil(Math.max(maxE,20*60)/60)*60,PPM=0.8,totalH=(winEnd-winStart)*PPM;
+  let gutter='';for(let mn=winStart;mn<winEnd;mn+=60)gutter+=`<div class="osch-hour" style="height:${60*PPM}px"><span>${minToLabel(mn)}</span></div>`;
+  let lines='';for(let mn=winStart;mn<=winEnd;mn+=60)lines+=`<div class="osch-line" style="top:${(mn-winStart)*PPM}px"></div>`;
+  const cols=dayKeys.map(k=>{
+    const laid=layoutDayEvents(evs.filter(e=>e.date===k),winStart,PPM);
+    const blocks=laid.map(L=>{const ev=L.e,c=ownerScheduleColor(ev.type);return `<div class="osch-block" data-osch-edit="${esc(ev.id)}" style="top:${L.top}px;height:${L.height}px;left:calc(${L.leftPct}% + 1px);width:calc(${L.widthPct}% - 2px);background:${c}22;border-left:3px solid ${c};color:${c}"><div class="osch-block-t">${esc(ev.title)}</div><div class="osch-block-m">${minToLabel(ev.startMin)}${ev.assignee?' · '+esc(ev.assignee):''}</div></div>`}).join('');
+    return `<div class="osch-daycol" data-osch-daycol="${k}" data-win-start="${winStart}" data-ppm="${PPM}">${blocks}</div>`;
+  }).join('');
+  return `<div class="osch-view-scroll"><div class="osch-grid"><div class="osch-gutter" style="height:${totalH}px">${gutter}</div><div class="osch-cols" style="height:${totalH}px">${lines}${cols}</div></div></div>`;
+}
+function renderOschDay(){return renderOschTimeGrid([S.ocalDate])}
+function renderOschWeek(){
+  const d=new Date(S.ocalDate+'T00:00:00'),su=new Date(d);su.setDate(d.getDate()-d.getDay());
+  const keys=[];for(let i=0;i<7;i++){const x=new Date(su);x.setDate(su.getDate()+i);keys.push(dateKey(x))}
+  const today=dateKey(new Date());
+  const head=`<div class="osch-weekhead"><div class="osch-wh-gutter"></div>${keys.map(k=>{const dt=new Date(k+'T00:00:00');return `<div class="osch-wh-day${k===today?' today':''}" data-osch-pickday="${k}"><span class="osch-wh-dow">${dt.toLocaleDateString(undefined,{weekday:'short'})}</span><span class="osch-wh-num">${dt.getDate()}</span></div>`}).join('')}</div>`;
+  return head+renderOschTimeGrid(keys);
 }
 function showOwnerEventModal(ev){
   const editing=!!(ev&&ev.id);ev=ev||{};
@@ -170,11 +218,25 @@ async function submitOwnerEvent(id){
   closeModal();render();toast(id?'Event updated':'Event added');
 }
 function attachOwnerScheduleHandlers(){
+  document.querySelectorAll('[data-osch-mode]').forEach(b=>b.onclick=()=>{S.ocalMode=b.dataset.oschMode;render()});
   $('osch-new')?.addEventListener('click',()=>showOwnerEventModal(null));
-  $('osch-prev')?.addEventListener('click',()=>{S.ocalMonth--;if(S.ocalMonth<0){S.ocalMonth=11;S.ocalYear--}render()});
-  $('osch-next')?.addEventListener('click',()=>{S.ocalMonth++;if(S.ocalMonth>11){S.ocalMonth=0;S.ocalYear++}render()});
-  $('osch-today')?.addEventListener('click',()=>{const n=new Date();S.ocalYear=n.getFullYear();S.ocalMonth=n.getMonth();S.ocalSel=dateKey(n);render()});
+  const step=dir=>{
+    if(S.ocalMode==='month'){S.ocalMonth+=dir;if(S.ocalMonth<0){S.ocalMonth=11;S.ocalYear--}if(S.ocalMonth>11){S.ocalMonth=0;S.ocalYear++}}
+    else{const d=new Date((S.ocalDate||dateKey(new Date()))+'T00:00:00');d.setDate(d.getDate()+dir*(S.ocalMode==='week'?7:1));S.ocalDate=dateKey(d)}
+    render();
+  };
+  $('osch-prev')?.addEventListener('click',()=>step(-1));
+  $('osch-next')?.addEventListener('click',()=>step(1));
+  $('osch-today')?.addEventListener('click',()=>{const n=new Date();S.ocalYear=n.getFullYear();S.ocalMonth=n.getMonth();S.ocalDate=dateKey(n);S.ocalSel=dateKey(n);render()});
   document.querySelectorAll('[data-osch-day]').forEach(d=>d.onclick=e=>{if(e.target.closest('[data-osch-edit]'))return;S.ocalSel=d.dataset.oschDay;render()});
+  document.querySelectorAll('[data-osch-pickday]').forEach(d=>d.onclick=()=>{S.ocalMode='day';S.ocalDate=d.dataset.oschPickday;render()});
+  document.querySelectorAll('[data-osch-daycol]').forEach(col=>col.onclick=e=>{
+    if(e.target.closest('[data-osch-edit]'))return;
+    const ppm=Number(col.dataset.ppm)||0.8,ws=Number(col.dataset.winStart)||360;
+    const y=e.clientY-col.getBoundingClientRect().top;
+    let mn=Math.round((ws+y/ppm)/15)*15;mn=Math.max(0,Math.min(1425,mn));
+    showOwnerEventModal({date:col.dataset.oschDaycol,startMin:mn,endMin:mn+60});
+  });
   document.querySelectorAll('[data-osch-edit]').forEach(el=>el.onclick=e=>{e.stopPropagation();const ev=S.ownerSchedule&&S.ownerSchedule[el.dataset.oschEdit];if(ev)showOwnerEventModal(ev)});
 }
 function ownerOverview(){

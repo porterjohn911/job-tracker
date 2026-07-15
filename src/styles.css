@@ -658,6 +658,25 @@ input[type=range]{width:100%;accent-color:var(--green-700);height:4px;cursor:poi
 .osch-time{font-size:11.5px;font-weight:700;color:var(--text-2);white-space:nowrap;min-width:66px}
 .osch-meta{font-size:11.5px;color:var(--text-3);margin-top:2px}
 .osch-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+/* Day / week hourly grid */
+.osch-view-scroll{max-height:62vh;overflow-y:auto;border:1px solid var(--border);border-radius:var(--r-md);background:var(--surface)}
+.osch-grid{display:flex;position:relative}
+.osch-gutter{flex:0 0 54px;position:relative}
+.osch-hour{position:relative;box-sizing:border-box}
+.osch-hour span{position:absolute;top:-6px;right:6px;font-size:9.5px;color:var(--text-3);white-space:nowrap}
+.osch-cols{position:relative;flex:1;display:flex}
+.osch-line{position:absolute;left:0;right:0;border-top:1px solid var(--border);pointer-events:none}
+.osch-daycol{position:relative;flex:1 1 0;min-width:0;border-left:1px solid var(--border);cursor:copy}
+.osch-block{position:absolute;border-radius:6px;padding:2px 6px;overflow:hidden;cursor:pointer;font-size:11px;box-sizing:border-box;z-index:1}
+.osch-block-t{font-weight:700;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.osch-block-m{opacity:0.85;font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.osch-weekhead{display:flex}
+.osch-wh-gutter{flex:0 0 54px}
+.osch-wh-day{flex:1 1 0;min-width:0;text-align:center;padding:4px 2px;cursor:pointer;border-radius:6px 6px 0 0}
+.osch-wh-day.today{background:var(--surface-3)}
+.osch-wh-day:hover{background:var(--surface-3)}
+.osch-wh-dow{display:block;font-size:10px;color:var(--text-3);text-transform:uppercase;letter-spacing:0.03em}
+.osch-wh-num{display:block;font-size:14px;font-weight:700}
 /* ── Time off ── */
 .timeoff-panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);padding:12px 14px;margin-bottom:14px}
 .timeoff-hd{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:13px;font-weight:800}
