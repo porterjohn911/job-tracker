@@ -92,7 +92,7 @@ function renderOwner(c){
 function ownerScheduleColor(type){return type==='meeting'?'#3b82f6':type==='other'?'#8b5cf6':'#16a34a'}
 function ownerEventJobLabel(ev){if(!ev.jobId||!ev.company)return '';const j=((S.owner&&S.owner[ev.company])||[]).find(x=>x.id===ev.jobId);return j?j.name:'(job)'}
 // What the time is scheduled for (the main thing shown on the calendar).
-function oschTypeLabel(t){return ({onsite:'On site',meeting:'Meeting',estimating:'Estimating',delivering:'Delivering materials'})[t]||'On site'}
+function oschTypeLabel(t){return ({onsite:'On site',meeting:'Meeting',estimating:'Estimating',delivering:'Delivering materials',admin:'Admin work'})[t]||'On site'}
 // Optional extra info (kept in ev.desc; older events fall back to ev.title).
 function oschEventDetail(ev){return ev.desc||((ev.title&&ev.title!==oschTypeLabel(ev.type))?ev.title:'')}
 // Stable color per person so each owner keeps the same color everywhere.
@@ -194,7 +194,7 @@ function showOwnerEventModal(ev){
   $('modal-root').innerHTML=`<div class="modal-bd" id="mbd" role="dialog" aria-modal="true" aria-label="Schedule event"><div class="modal"><div class="modal-handle"></div>
     <div class="modal-head"><div class="modal-title">${editing?'Edit event':'New event'}</div><button class="modal-close" id="mc" aria-label="Close"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button></div>
     <div class="modal-body">
-      <div class="form-group"><label class="form-label">What's scheduled</label><select class="form-select" id="oev-type">${typeOpt('onsite','On site')}${typeOpt('meeting','Meeting')}${typeOpt('estimating','Estimating')}${typeOpt('delivering','Delivering materials')}</select></div>
+      <div class="form-group"><label class="form-label">What's scheduled</label><select class="form-select" id="oev-type">${typeOpt('onsite','On site')}${typeOpt('meeting','Meeting')}${typeOpt('estimating','Estimating')}${typeOpt('delivering','Delivering materials')}${typeOpt('admin','Admin work')}</select></div>
       <div class="form-group"><label class="form-label">Who</label><input class="form-input" id="oev-assignee" list="oev-assignees" value="${esc(ev.assignee||'')}" placeholder="Name"><datalist id="oev-assignees">${assignees.map(a=>`<option value="${esc(a)}"></option>`).join('')}</datalist></div>
       <div class="form-group"><label class="form-label">Date</label><input class="form-input" id="oev-date" type="date" value="${esc(ev.date||dflt)}"></div>
       <div class="form-row">
