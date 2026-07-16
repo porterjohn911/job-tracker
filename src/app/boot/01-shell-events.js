@@ -5,7 +5,7 @@ function attachShellHandlers(){
   document.querySelectorAll('.nav-btn').forEach(b=>{
     b.onclick=()=>{
       const view=b.dataset.view;
-      if(!canOpenView(view)){toast(view==='reports'?'Reports are manager/owner only':'Owner-only','');return}
+      if(!canOpenView(view)){toast(view==='reports'?'Reports are owner-only':'Owner-only','');return}
       S.view=view;S.detail=null;render();
     }
   });
@@ -13,9 +13,10 @@ function attachShellHandlers(){
   $('setup-link').onclick=showSetupModal;
   const _bco=$('brand-co');if(_bco)_bco.textContent=OWNER_MODE?'All Companies':ACTIVE_CO.label;
   const _bsw=$('brand-switch');if(_bsw){if(gateOn()&&!canSeeAll(SESSION)){_bsw.style.display='none';}else{_bsw.onclick=showCompanySwitcher;}}
-  const _rpt=document.querySelector('.nav-btn[data-view="reports"]');if(_rpt&&!canSeeFinancials())_rpt.style.display='none';
+  const _rpt=document.querySelector('.nav-btn[data-view="reports"]');if(_rpt&&!canSeeBank())_rpt.style.display='none';
   const _bnk=document.querySelector('.nav-btn[data-view="bank"]');if(_bnk&&!canSeeBank())_bnk.style.display='none';
   $('owner-refresh')?.addEventListener('click',refreshOwnerData);
+  $('owner-manage-companies')?.addEventListener('click',showCompanyManagerModal);
   document.querySelectorAll('[data-view-company]').forEach(b=>b.onclick=()=>{
     const id=b.dataset.viewCompany;
     try{localStorage.setItem('jt_company',id)}catch(e){}

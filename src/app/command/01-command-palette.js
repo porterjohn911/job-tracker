@@ -16,7 +16,8 @@ function cmdItems(){
   out.push({type:'action',name:'New Referral',sub:'Log a referred lead & payout',ico:'plus',run:()=>showReferralModal('add')});
   out.push({type:'action',name:'Settings & Company Info',sub:'Edit name, logo, invoice defaults',ico:'kbd',run:showSettingsModal});
   if(!gateOn()||canSeeAll(SESSION)){
-    out.push({type:'action',name:'Switch company / workspace',sub:'Waterfront · Manufactured Housing · Norris Lake · Owner',ico:'link',run:showCompanySwitcher});
+    out.push({type:'action',name:'Switch company / workspace',sub:'Companies · Owner',ico:'link',run:showCompanySwitcher});
+    if(!gateOn()||isOwnerRole(SESSION))out.push({type:'action',name:'Manage companies',sub:'Add, edit, or archive companies',ico:'link',run:showCompanyManagerModal});
     if(!OWNER_MODE)out.push({type:'action',name:'Owner workspace',sub:'Analytics across all companies',ico:'chart',run:()=>{try{localStorage.setItem('jt_company','owner')}catch(e){};location.reload()}});
   }
   out.push({type:'action',name:'Export to CSV',sub:'Download all jobs',ico:'download',run:exportCSV});
