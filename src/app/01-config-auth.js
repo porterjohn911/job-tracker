@@ -114,7 +114,43 @@ let COMPANIES=loadCompanyRegistryLocal();
 // Invoice palette helpers — default matches Waterfront so other companies
 // (and any without an override) keep the original green invoice styling.
 const INV_DEFAULT={ band:'linear-gradient(135deg,#0a3d2e 0%,#1a6e55 100%)', primary:'#0a3d2e', link:'#0f5040', notesBar:'#1a6e55', rule:'#0a3d2e' };
-function invTheme(){ return ACTIVE_CO.inv||INV_DEFAULT }
+function normalizeHexColor(v){
+  const raw=String(v||'').trim();
+  const m=raw.match(/^#?([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/);
+  if(!m)return '';
+  let h=m[1].toLowerCase();
+  if(h.length===3)h=h.split('').map(c=>c+c).join('');
+  return '#'+h;
+}
+function firstHexColor(v){
+  const m=String(v||'').match(/#[0-9a-fA-F]{3}(?:[0-9a-fA-F]{3})?\b/);
+  return m?normalizeHexColor(m[0]):'';
+}
+function hexRgb(hex){
+  hex=normalizeHexColor(hex);
+  if(!hex)return null;
+  const n=parseInt(hex.slice(1),16);
+  return {r:(n>>16)&255,g:(n>>8)&255,b:n&255};
+}
+function readableOn(hex){
+  const rgb=hexRgb(hex);
+  if(!rgb)return '#ffffff';
+  const lum=(0.299*rgb.r+0.587*rgb.g+0.114*rgb.b)/255;
+  return lum>0.62?'#0a1f18':'#ffffff';
+}
+function companyHeaderColor(co=ACTIVE_CO){
+  const t=(co&&co.theme)||{};
+  return normalizeHexColor(t.headerColor)||firstHexColor(t.headerBg)||normalizeHexColor(co&&co.inv&&co.inv.primary)||INV_DEFAULT.primary;
+}
+function companyHeaderBg(co=ACTIVE_CO){
+  const t=(co&&co.theme)||{};
+  return normalizeHexColor(t.headerColor)||t.headerBg||INV_DEFAULT.band;
+}
+function invTheme(){
+  const base={...INV_DEFAULT,...(ACTIVE_CO.inv||{})};
+  const header=normalizeHexColor(ACTIVE_CO.theme&&ACTIVE_CO.theme.headerColor);
+  return header?{...base,band:header,primary:header,link:header,notesBar:header,rule:header}:base;
+}
 function svgDataUrl(svg){return svg?'data:image/svg+xml;utf8,'+encodeURIComponent(svg):''}
 function companyAppLogoSrc(){return ACTIVE_CO.appLogoUrl||ACTIVE_CO.logoUrl||svgDataUrl(ACTIVE_CO.logoSvg)}
 function brandLogoFull(){ return ACTIVE_CO.invoiceLogoUrl||ACTIVE_CO.logoFullUrl||svgDataUrl(ACTIVE_CO.logoFull)||companyAppLogoSrc() }
