@@ -384,15 +384,35 @@ function laborByJob(){const map={};timeList().forEach(t=>{const k=t.job||'';cons
 function ownerPrefix(co){return co.ns+(ENV==='dev'?'_dev_':'_')}
 function ownerNode(co){return co.ns+(ENV==='dev'?'_dev':'')}
 function ownerLoadLocal(){S.owner=S.owner||{};S.ownerTime=S.ownerTime||{};S.ownerRates=S.ownerRates||{};Object.values(COMPANIES).forEach(co=>{try{S.owner[co.id]=Object.values(JSON.parse(localStorage.getItem(ownerPrefix(co)+'jobs')||'{}')||{})}catch(e){S.owner[co.id]=[]}try{S.ownerTime[co.id]=Object.values(JSON.parse(localStorage.getItem(ownerPrefix(co)+'time')||'{}')||{})}catch(e){S.ownerTime[co.id]=[]}try{S.ownerRates[co.id]=JSON.parse(localStorage.getItem(ownerPrefix(co)+'payrates')||'{}')||{}}catch(e){S.ownerRates[co.id]={}}})}
+const OWNER_COMPANY_WATCHED={};
+function watchOwnerCompany(co){
+  if(!co||OWNER_COMPANY_WATCHED[co.id])return;
+  OWNER_COMPANY_WATCHED[co.id]=true;
+  try{S.owner=S.owner||{};S.owner[co.id]=Object.values(JSON.parse(localStorage.getItem(ownerPrefix(co)+'jobs')||'{}')||{})}catch(e){S.owner[co.id]=[]}
+  try{S.ownerTime=S.ownerTime||{};S.ownerTime[co.id]=Object.values(JSON.parse(localStorage.getItem(ownerPrefix(co)+'time')||'{}')||{})}catch(e){S.ownerTime[co.id]=[]}
+  try{S.ownerRates=S.ownerRates||{};S.ownerRates[co.id]=JSON.parse(localStorage.getItem(ownerPrefix(co)+'payrates')||'{}')||{}}catch(e){S.ownerRates[co.id]={}}
+  firebase.database().ref(ownerNode(co)).child('jobs').on('value',s=>{S.owner=S.owner||{};S.owner[co.id]=Object.values(s.val()||{});syncStatus('ok','Live · all companies');render()});
+  firebase.database().ref(ownerNode(co)).child('time').on('value',s=>{S.ownerTime=S.ownerTime||{};S.ownerTime[co.id]=Object.values(s.val()||{});render()});
+  firebase.database().ref(ownerNode(co)).child('payrates').on('value',s=>{S.ownerRates=S.ownerRates||{};S.ownerRates[co.id]=s.val()||{};render()});
+}
+function listenCompanyRegistry(){
+  if(!(typeof firebase!=='undefined'&&firebase.apps&&firebase.apps.length))return;
+  try{
+    firebase.database().ref('companies').on('value',s=>{
+      const next=normalizeCompanyRegistry(s.val()||{});
+      COMPANIES=next;
+      saveCompanyRegistryLocal(COMPANIES);
+      if(OWNER_MODE)Object.values(COMPANIES).forEach(watchOwnerCompany);
+      if(typeof render==='function'&&$('content'))render();
+    });
+  }catch(e){}
+}
 function ownerInitFB(cfg){
   try{
     if(!firebase.apps.length)firebase.initializeApp(cfg);
     syncStatus('pulse','Connecting…');
-    Object.values(COMPANIES).forEach(co=>{
-      firebase.database().ref(ownerNode(co)).child('jobs').on('value',s=>{S.owner=S.owner||{};S.owner[co.id]=Object.values(s.val()||{});syncStatus('ok','Live · all companies');render()});
-      firebase.database().ref(ownerNode(co)).child('time').on('value',s=>{S.ownerTime=S.ownerTime||{};S.ownerTime[co.id]=Object.values(s.val()||{});render()});
-      firebase.database().ref(ownerNode(co)).child('payrates').on('value',s=>{S.ownerRates=S.ownerRates||{};S.ownerRates[co.id]=s.val()||{};render()});
-    });
+    listenCompanyRegistry();
+    Object.values(COMPANIES).forEach(watchOwnerCompany);
     firebase.database().ref('owner_schedule').on('value',s=>{S.ownerSchedule=s.val()||{};saveOwnerScheduleLocal();render()});
     firebase.database().ref('.info/connected').on('value',s=>{if(!s.val())syncStatus('err','Reconnecting…')});
     return true;
@@ -415,5 +435,5 @@ function inputToMin(v){if(!v)return null;const p=String(v).split(':');return (Nu
 
 function loadAndConnect(){
   if(OWNER_MODE){ownerLoadLocal();if(FIREBASE_CONFIG)ownerInitFB(FIREBASE_CONFIG);}
-  else{LOCAL.load();if(FIREBASE_CONFIG)initFB(FIREBASE_CONFIG);}
+  else{LOCAL.load();if(FIREBASE_CONFIG){initFB(FIREBASE_CONFIG);listenCompanyRegistry();}}
 }

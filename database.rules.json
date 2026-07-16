@@ -19,6 +19,14 @@
       }
     },
 
+    "companies": {
+      ".read": "auth != null",
+      ".write": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'owner'",
+      "$companyId": {
+        ".validate": "newData.hasChildren(['id', 'ns', 'label']) && newData.child('id').isString() && newData.child('id').val() === $companyId && newData.child('ns').isString() && newData.child('label').isString()"
+      }
+    },
+
     "$company": {
       "jobs": {
         ".read": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'owner' || root.child('users').child(auth.uid).child('role').val() === 'manager' || root.child('users').child(auth.uid).child('company').val() === $company || $company === root.child('users').child(auth.uid).child('company').val() + '_dev')",

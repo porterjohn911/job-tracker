@@ -67,7 +67,7 @@ const OWNER_NAV = `
   <button class="nav-btn" data-view="o_hours">${_navIcon('M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z')}Hours</button>
 `;
 
-const COMPANIES = {
+const DEFAULT_COMPANIES = {
   wfs: { id:'wfs', ns:'wfs', label:'Waterfront Solutions',           tag:'Construction & Waterfront Services',
          inv:{ band:'linear-gradient(135deg,#0a3d2e 0%,#1a6e55 100%)', primary:'#0a3d2e', link:'#0f5040', notesBar:'#1a6e55', rule:'#0a3d2e' } },
   mhs: { id:'mhs', ns:'mhs', label:'Manufactured Housing Solutions', tag:'Full Service Construction', logoSvg:MHS_LOGO, logoFull:MHS_LOGO_FULL,
@@ -75,6 +75,42 @@ const COMPANIES = {
          inv:{ band:'linear-gradient(135deg,#0a0e16 0%,#202c3d 100%)', primary:'#1f2a3a', link:'#33506f', notesBar:'#e8a830', rule:'#e8a830' } },
   nlr: { id:'nlr', ns:'nlr', label:'Norris Lake Roofing',            tag:'Roofing & Exteriors' },
 };
+const COMPANY_REGISTRY_KEY='jt_companies'+(ENV==='dev'?'_dev':'');
+function normalizeCompanyRecord(id,rec){
+  rec=rec||{};
+  const base=DEFAULT_COMPANIES[id]||{};
+  const rawId=String(rec.id||id||'').toLowerCase().replace(/[^a-z0-9_-]/g,'').slice(0,24);
+  if(!rawId)return null;
+  const ns=String(rec.ns||base.ns||rawId).toLowerCase().replace(/[^a-z0-9_-]/g,'').slice(0,24);
+  if(!ns)return null;
+  return {
+    ...base,
+    ...rec,
+    id:rawId,
+    ns,
+    label:String(rec.label||base.label||rawId.toUpperCase()).trim(),
+    tag:String(rec.tag||base.tag||'').trim(),
+    active:rec.active!==false
+  };
+}
+function normalizeCompanyRegistry(input){
+  const out={};
+  Object.entries({...DEFAULT_COMPANIES,...(input||{})}).forEach(([id,rec])=>{
+    const co=normalizeCompanyRecord(id,rec);
+    if(co&&co.active!==false)out[co.id]=co;
+  });
+  return out;
+}
+function loadCompanyRegistryLocal(){
+  try{
+    const saved=JSON.parse(localStorage.getItem(COMPANY_REGISTRY_KEY)||'null');
+    return normalizeCompanyRegistry(saved);
+  }catch(e){return normalizeCompanyRegistry(DEFAULT_COMPANIES)}
+}
+function saveCompanyRegistryLocal(companies){
+  try{localStorage.setItem(COMPANY_REGISTRY_KEY,JSON.stringify(companies||{}))}catch(e){}
+}
+let COMPANIES=loadCompanyRegistryLocal();
 // Invoice palette helpers — default matches Waterfront so other companies
 // (and any without an override) keep the original green invoice styling.
 const INV_DEFAULT={ band:'linear-gradient(135deg,#0a3d2e 0%,#1a6e55 100%)', primary:'#0a3d2e', link:'#0f5040', notesBar:'#1a6e55', rule:'#0a3d2e' };
