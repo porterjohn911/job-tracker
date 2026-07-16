@@ -37,7 +37,7 @@ service firebase.storage {
     }
 
     function validCompany(company) {
-      return company.matches('^(wfs|mhs|nlr)(_dev)?$');
+      return company.matches('^[a-z0-9_-]{2,24}(_dev)?$');
     }
 
     function validKind(kind) {
@@ -82,6 +82,17 @@ service firebase.storage {
       allow read: if signedIn() && validCompany(company) && validKind(kind);
       allow create, update: if signedIn() && validCompany(company) && validKind(kind) && reasonableUpload(kind);
       allow delete: if signedIn() && validCompany(company) && validKind(kind);
+    }
+
+    match /{company}/logos/{kind}/{fileName} {
+      allow read: if signedIn() && validCompany(company) && kind.matches('^(app|invoice)$');
+      allow create, update: if signedIn()
+        && validCompany(company)
+        && kind.matches('^(app|invoice)$')
+        && request.resource != null
+        && request.resource.size < 5 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
+      allow delete: if signedIn() && validCompany(company) && kind.matches('^(app|invoice)$');
     }
 
     match /{allPaths=**} {

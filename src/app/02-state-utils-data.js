@@ -109,6 +109,8 @@ function invoiceStatus(inv){
   return inv.status||'draft';
 }
 function getBrandLogoSrc(){
+  const configured=(typeof companyAppLogoSrc==='function')?companyAppLogoSrc():'';
+  if(configured)return configured;
   const el=document.querySelector('.brand-logo');
   return el?el.src:'';
 }
@@ -312,6 +314,26 @@ async function uploadToStorage(blobOrFile,subpath,ext){
   }catch(e){return null}
 }
 async function deleteStoragePath(path){if(!path||!storageReady())return;try{await firebase.storage().ref(path).delete()}catch(e){}}
+async function uploadCompanyLogoFile(file,kind){
+  if(!file)return null;
+  if(!/^image\//.test(file.type||'')){toast('Logo must be an image file','');return null}
+  if(file.size>5*1024*1024){toast('Logo must be under 5 MB','');return null}
+  const ext=((file.name||'').split('.').pop()||'png').toLowerCase();
+  const up=await uploadToStorage(file,'logos/'+kind,ext);
+  if(!up){toast('Could not upload logo - check Firebase Storage','');return null}
+  return up;
+}
+async function writeCompanyRegistryRecord(co){
+  if(!co||!co.id)return;
+  const next=normalizeCompanyRecord(co.id,co);
+  if(!next)return;
+  COMPANIES={...COMPANIES,[next.id]:next};
+  if(typeof COMPANY_ID!=='undefined'&&next.id===COMPANY_ID&&typeof ACTIVE_CO!=='undefined')Object.assign(ACTIVE_CO,next);
+  saveCompanyRegistryLocal(COMPANIES);
+  if(typeof firebase!=='undefined'&&firebase.apps&&firebase.apps.length){
+    await firebase.database().ref('companies/'+next.id).set(next);
+  }
+}
 function initFB(cfg){
   try{
     if(!firebase.apps.length)firebase.initializeApp(cfg);
