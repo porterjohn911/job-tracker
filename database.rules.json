@@ -23,7 +23,7 @@
       ".read": "auth != null",
       ".write": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'owner'",
       "$companyId": {
-        ".validate": "newData.hasChildren(['id', 'ns', 'label']) && newData.child('id').isString() && newData.child('id').val() === $companyId && newData.child('ns').isString() && newData.child('label').isString()"
+        ".validate": "newData.hasChildren(['id', 'ns', 'label']) && newData.child('id').isString() && newData.child('id').val() === $companyId && newData.child('id').val().matches(/^[a-z0-9_-]{2,24}$/) && newData.child('ns').isString() && newData.child('ns').val().matches(/^[a-z0-9_-]{2,24}$/) && newData.child('label').isString() && newData.child('label').val().matches(/^.{1,80}$/) && (!newData.child('tag').exists() || (newData.child('tag').isString() && newData.child('tag').val().matches(/^.{0,120}$/))) && (!newData.child('active').exists() || newData.child('active').isBoolean()) && (!newData.child('createdAt').exists() || newData.child('createdAt').isNumber()) && (!newData.child('updatedAt').exists() || newData.child('updatedAt').isNumber()) && (!newData.child('appLogoUrl').exists() || newData.child('appLogoUrl').isString()) && (!newData.child('invoiceLogoUrl').exists() || newData.child('invoiceLogoUrl').isString()) && (!newData.child('appLogoPath').exists() || (newData.child('appLogoPath').isString() && newData.child('appLogoPath').val().matches(/^[a-z0-9_-]{2,24}(_dev)?\\/logos\\/app\\/[A-Za-z0-9._-]{1,120}$/))) && (!newData.child('invoiceLogoPath').exists() || (newData.child('invoiceLogoPath').isString() && newData.child('invoiceLogoPath').val().matches(/^[a-z0-9_-]{2,24}(_dev)?\\/logos\\/invoice\\/[A-Za-z0-9._-]{1,120}$/)))"
       }
     },
 
