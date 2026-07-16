@@ -3,6 +3,9 @@
 // ══ Company / settings modal ══
 function showSettingsModal(){
   const c={...COMPANY};
+  const canEditBrand=!gateOn()||isOwnerRole(SESSION);
+  const appLogo=companyAppLogoSrc();
+  const invoiceLogo=brandLogoFull();
   $('modal-root').innerHTML=`<div class="modal-bd" id="mbd" role="dialog" aria-modal="true" aria-label="Settings"><div class="modal"><div class="modal-handle"></div>
     <div class="modal-head"><div class="modal-title">Settings</div><button class="modal-close" id="mc" aria-label="Close"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button></div>
     <div class="modal-body">
@@ -20,6 +23,26 @@ function showSettingsModal(){
       </div>
       <div class="form-group"><label class="form-label">Default Tax Rate (%)</label><input class="form-input" type="number" step="0.01" id="set-co-tax" value="${esc(c.taxRate||'')}"></div>
       <div class="form-group"><label class="form-label">Default Invoice Terms</label><textarea class="form-textarea" id="set-co-terms">${esc(c.terms||'')}</textarea></div>
+      ${canEditBrand?`<div style="margin:14px 0 10px;padding-top:14px;border-top:1px solid var(--border)"><div class="form-label" style="font-size:12px">Company Branding</div></div>
+      <div class="tt-hint" style="margin-bottom:10px">Upload a compact app logo for the header and a wider invoice logo for invoices, estimates, PDFs, and emails.</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">App logo</label>
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+            <img id="brand-app-preview" src="${esc(appLogo||'')}" alt="" style="width:52px;height:52px;object-fit:contain;border:1px solid var(--border);border-radius:8px;background:var(--surface)">
+            <label class="btn-sm" style="cursor:pointer">Upload<input type="file" id="brand-app-file" accept="image/*" style="display:none"></label>
+            ${ACTIVE_CO.appLogoUrl?'<button class="btn-mini" id="brand-app-remove" type="button">Remove</button>':''}
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Invoice logo</label>
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+            <img id="brand-invoice-preview" src="${esc(invoiceLogo||appLogo||'')}" alt="" style="width:120px;height:52px;object-fit:contain;border:1px solid var(--border);border-radius:8px;background:var(--surface)">
+            <label class="btn-sm" style="cursor:pointer">Upload<input type="file" id="brand-invoice-file" accept="image/*" style="display:none"></label>
+            ${ACTIVE_CO.invoiceLogoUrl?'<button class="btn-mini" id="brand-invoice-remove" type="button">Remove</button>':''}
+          </div>
+        </div>
+      </div>`:''}
       <div style="margin:14px 0 10px;padding-top:14px;border-top:1px solid var(--border)"><div class="form-label" style="font-size:12px">Email sending (Gmail API)</div></div>
       <div id="gm-panel" style="margin-bottom:6px"></div>
       ${typeof renderStorageSettings==='function'?renderStorageSettings():''}
@@ -36,6 +59,38 @@ function showSettingsModal(){
   $('mbd').onclick=e=>{if(e.target===e.currentTarget)closeModal()};
   $('set-access')?.addEventListener('click',()=>{closeModal();showAccessModal()});
   $('set-signout')?.addEventListener('click',()=>{if(confirm('Sign out of this device?'))signOut()});
+  async function saveBrandLogo(kind,file){
+    const up=await uploadCompanyLogoFile(file,kind);
+    if(!up)return;
+    const co={...(COMPANIES[COMPANY_ID]||ACTIVE_CO)};
+    if(kind==='app'){co.appLogoUrl=up.url;co.appLogoPath=up.path}
+    else{co.invoiceLogoUrl=up.url;co.invoiceLogoPath=up.path}
+    try{
+      await writeCompanyRegistryRecord(co);
+      applyCompanyBranding();
+      const img=$(kind==='app'?'brand-app-preview':'brand-invoice-preview');
+      if(img)img.src=up.url;
+      toast(kind==='app'?'App logo saved':'Invoice logo saved');
+    }catch(e){toast('Could not save logo','')}
+  }
+  async function removeBrandLogo(kind){
+    const co={...(COMPANIES[COMPANY_ID]||ACTIVE_CO)};
+    const path=kind==='app'?co.appLogoPath:co.invoiceLogoPath;
+    if(kind==='app'){delete co.appLogoUrl;delete co.appLogoPath}
+    else{delete co.invoiceLogoUrl;delete co.invoiceLogoPath}
+    try{
+      await writeCompanyRegistryRecord(co);
+      await deleteStoragePath(path);
+      applyCompanyBranding();
+      const img=$(kind==='app'?'brand-app-preview':'brand-invoice-preview');
+      if(img)img.src=kind==='app'?(companyAppLogoSrc()||''):(brandLogoFull()||companyAppLogoSrc()||'');
+      toast(kind==='app'?'App logo removed':'Invoice logo removed');
+    }catch(e){toast('Could not remove logo','')}
+  }
+  $('brand-app-file')?.addEventListener('change',function(){const f=this.files&&this.files[0];if(f)saveBrandLogo('app',f)});
+  $('brand-invoice-file')?.addEventListener('change',function(){const f=this.files&&this.files[0];if(f)saveBrandLogo('invoice',f)});
+  $('brand-app-remove')?.addEventListener('click',()=>removeBrandLogo('app'));
+  $('brand-invoice-remove')?.addEventListener('click',()=>removeBrandLogo('invoice'));
   function renderGmailPanel(){
     const cfg=gmailLoad();const connected=gmailConnected();
     const okOrigin=gmailOriginOk();const reason=gmailOriginReason();

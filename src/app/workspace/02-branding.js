@@ -2,11 +2,11 @@
 // Generated from src/app/09-settings-access-command-voice.js.
 // Apply the active company's logo + color theme (logo/theme are optional;
 // Waterfront has none, so it keeps its original logo and green header).
+const DEFAULT_APP_LOGO_SRC=(()=>{const img=document.querySelector('.brand-logo');return img?img.src:''})();
 function applyCompanyBranding(){
-  if(ACTIVE_CO.logoSvg){
-    const img=document.querySelector('.brand-logo');
-    if(img){img.src='data:image/svg+xml;utf8,'+encodeURIComponent(ACTIVE_CO.logoSvg);img.alt=ACTIVE_CO.label;}
-  }
+  const logo=companyAppLogoSrc();
+  const img=document.querySelector('.brand-logo');
+  if(img){img.src=logo||DEFAULT_APP_LOGO_SRC;img.alt=ACTIVE_CO.label;}
   const t=ACTIVE_CO.theme;
   if(t&&!document.getElementById('co-theme')){
     let css='';

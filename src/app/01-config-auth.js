@@ -115,7 +115,9 @@ let COMPANIES=loadCompanyRegistryLocal();
 // (and any without an override) keep the original green invoice styling.
 const INV_DEFAULT={ band:'linear-gradient(135deg,#0a3d2e 0%,#1a6e55 100%)', primary:'#0a3d2e', link:'#0f5040', notesBar:'#1a6e55', rule:'#0a3d2e' };
 function invTheme(){ return ACTIVE_CO.inv||INV_DEFAULT }
-function brandLogoFull(){ return ACTIVE_CO.logoFull?'data:image/svg+xml;utf8,'+encodeURIComponent(ACTIVE_CO.logoFull):'' }
+function svgDataUrl(svg){return svg?'data:image/svg+xml;utf8,'+encodeURIComponent(svg):''}
+function companyAppLogoSrc(){return ACTIVE_CO.appLogoUrl||ACTIVE_CO.logoUrl||svgDataUrl(ACTIVE_CO.logoSvg)}
+function brandLogoFull(){ return ACTIVE_CO.invoiceLogoUrl||ACTIVE_CO.logoFullUrl||svgDataUrl(ACTIVE_CO.logoFull)||companyAppLogoSrc() }
 const _stored = (() => { try { return localStorage.getItem('jt_company'); } catch (e) { return null; } })();
 
 // ── Access control (passcode gate; per-user roles) ──────────────────
