@@ -235,8 +235,8 @@ async function removeDB(path,label){
 // cache would be the only copy.
 function slimJobsForLocal(jobsObj){
   const big=u=>typeof u==='string'&&u.slice(0,5)==='data:';
-  const hasBig=arr=>Array.isArray(arr)&&arr.some(p=>p&&big(p.url));
-  const slimArr=arr=>hasBig(arr)?arr.map(p=>(p&&big(p.url))?{...p,url:''}:p):arr;
+  const hasBig=arr=>Array.isArray(arr)&&arr.some(p=>p&&(big(p.url)||big(p.poster)));
+  const slimArr=arr=>hasBig(arr)?arr.map(p=>{if(!p)return p;const o={...p};if(big(o.url))o.url='';if(big(o.poster))delete o.poster;return o;}):arr;
   const slimInvs=arr=>Array.isArray(arr)&&arr.some(inv=>inv&&hasBig(inv.photos))
     ?arr.map(inv=>(inv&&hasBig(inv.photos))?{...inv,photos:slimArr(inv.photos)}:inv):arr;
   const out={};
@@ -271,6 +271,34 @@ function syncStatus(state,msg){const d=$('sync-dot'),t=$('sync-text');d.classNam
 // nothing is ever lost.
 function storageReady(){try{return !!(FIREBASE_CONFIG&&typeof firebase!=='undefined'&&firebase.storage&&firebase.apps.length)}catch(e){return false}}
 function canvasToBlob(canvas,type,quality){return new Promise(res=>{try{canvas.toBlob(b=>res(b),type,quality)}catch(e){res(null)}})}
+// Grab a small poster frame from a video file (first frame, downscaled). The
+// resulting data URL is stored on the record so grids show a real still rather
+// than a generic play icon. Rejects on any failure; callers treat that as "no poster".
+function videoPoster(file){
+  return new Promise((resolve,reject)=>{
+    let done=false;
+    const v=document.createElement('video');
+    const url=URL.createObjectURL(file);
+    const cleanup=()=>{try{URL.revokeObjectURL(url)}catch(e){}};
+    const fail=()=>{if(done)return;done=true;cleanup();reject(new Error('poster failed'))};
+    v.preload='metadata';v.muted=true;v.playsInline=true;
+    v.onerror=fail;
+    v.onloadedmetadata=()=>{try{v.currentTime=Math.min(0.1,(v.duration||1)/2)}catch(e){fail()}};
+    v.onseeked=()=>{
+      if(done)return;done=true;
+      try{
+        let w=v.videoWidth,h=v.videoHeight;const MAX=480;
+        if(!w||!h){cleanup();return reject(new Error('no frame'))}
+        if(w>MAX||h>MAX){if(w>h){h=Math.round(h*MAX/w);w=MAX}else{w=Math.round(w*MAX/h);h=MAX}}
+        const c=document.createElement('canvas');c.width=w;c.height=h;
+        c.getContext('2d').drawImage(v,0,0,w,h);
+        cleanup();resolve(c.toDataURL('image/jpeg',0.7));
+      }catch(e){cleanup();reject(e)}
+    };
+    v.src=url;
+    setTimeout(fail,8000);
+  });
+}
 async function uploadToStorage(blobOrFile,subpath,ext){
   if(!storageReady()||!blobOrFile)return null;
   try{
