@@ -85,6 +85,7 @@ The app keeps data separated by company and environment.
 - Local browser storage is still used as a local cache/fallback.
 - Firebase is the shared team source when connected and authenticated.
 - Company registry writes are owner-only, and Firebase rules validate company IDs, namespaces, labels, active flags, timestamps, and logo storage paths.
+- Company branding can store per-company logos and a header color; the same color is used for the app header and invoice/estimate letterhead.
 
 Core records include:
 

@@ -14,7 +14,12 @@ async function urlToDataURL(url){
   if(!url)return null;if(/^data:/.test(url))return url;
   try{const r=await fetch(url,{mode:'cors'});const b=await r.blob();return await new Promise(res=>{const fr=new FileReader();fr.onload=()=>res(fr.result);fr.readAsDataURL(b)})}catch(e){return null}
 }
-function _hex2rgb(h){h=String(h||'').replace('#','');if(h.length===3)h=h.split('').map(c=>c+c).join('');const n=parseInt(h||'0',16);return [(n>>16)&255,(n>>8)&255,n&255]}
+function _hex2rgb(h){
+  h=(typeof normalizeHexColor==='function'&&normalizeHexColor(h))||(typeof firstHexColor==='function'&&firstHexColor(h))||'#000000';
+  h=String(h).replace('#','');
+  const n=parseInt(h||'0',16);
+  return [(n>>16)&255,(n>>8)&255,n&255];
+}
 function _imgFmt(du){return /^data:image\/png/i.test(du)?'PNG':'JPEG'}
 async function _pdfImageData(src){
   const du=await urlToDataURL(src);if(!du)return null;

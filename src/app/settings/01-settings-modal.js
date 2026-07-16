@@ -6,6 +6,7 @@ function showSettingsModal(){
   const canEditBrand=!gateOn()||isOwnerRole(SESSION);
   const appLogo=companyAppLogoSrc();
   const invoiceLogo=brandLogoFull();
+  const headerColor=companyHeaderColor();
   $('modal-root').innerHTML=`<div class="modal-bd" id="mbd" role="dialog" aria-modal="true" aria-label="Settings"><div class="modal"><div class="modal-handle"></div>
     <div class="modal-head"><div class="modal-title">Settings</div><button class="modal-close" id="mc" aria-label="Close"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button></div>
     <div class="modal-body">
@@ -25,6 +26,14 @@ function showSettingsModal(){
       <div class="form-group"><label class="form-label">Default Invoice Terms</label><textarea class="form-textarea" id="set-co-terms">${esc(c.terms||'')}</textarea></div>
       ${canEditBrand?`<div style="margin:14px 0 10px;padding-top:14px;border-top:1px solid var(--border)"><div class="form-label" style="font-size:12px">Company Branding</div></div>
       <div class="tt-hint" style="margin-bottom:10px">Upload a compact app logo for the header and a wider invoice logo for invoices, estimates, PDFs, and emails.</div>
+      <div class="form-group">
+        <label class="form-label">Header / invoice color</label>
+        <div style="display:flex;align-items:center;gap:10px">
+          <input id="brand-header-color" type="color" value="${esc(headerColor)}" aria-label="Header and invoice color" style="width:52px;height:42px;padding:2px;border:1px solid var(--border);border-radius:8px;background:var(--surface);cursor:pointer">
+          <input class="form-input" id="brand-header-color-text" value="${esc(headerColor)}" maxlength="7" spellcheck="false" autocapitalize="off" style="font-family:monospace;max-width:120px">
+          <div id="brand-header-swatch" aria-hidden="true" style="width:42px;height:42px;border-radius:8px;border:1px solid var(--border);background:${esc(headerColor)}"></div>
+        </div>
+      </div>
       <div class="form-row">
         <div class="form-group">
           <label class="form-label">App logo</label>
@@ -55,9 +64,10 @@ function showSettingsModal(){
     </div>
     <div class="modal-foot"><button class="btn-cancel" id="btn-cx">Cancel</button><button class="btn-save" id="btn-set-save">Save</button></div>
   </div></div>`;
-  $('mc').onclick=$('btn-cx').onclick=closeModal;
-  $('mbd').onclick=e=>{if(e.target===e.currentTarget)closeModal()};
-  $('set-access')?.addEventListener('click',()=>{closeModal();showAccessModal()});
+  const closeSettings=()=>{if(typeof applyCompanyBranding==='function')applyCompanyBranding();closeModal()};
+  $('mc').onclick=$('btn-cx').onclick=closeSettings;
+  $('mbd').onclick=e=>{if(e.target===e.currentTarget)closeSettings()};
+  $('set-access')?.addEventListener('click',()=>{closeSettings();showAccessModal()});
   $('set-signout')?.addEventListener('click',()=>{if(confirm('Sign out of this device?'))signOut()});
   async function saveBrandLogo(kind,file){
     const up=await uploadCompanyLogoFile(file,kind);
@@ -91,6 +101,27 @@ function showSettingsModal(){
   $('brand-invoice-file')?.addEventListener('change',function(){const f=this.files&&this.files[0];if(f)saveBrandLogo('invoice',f)});
   $('brand-app-remove')?.addEventListener('click',()=>removeBrandLogo('app'));
   $('brand-invoice-remove')?.addEventListener('click',()=>removeBrandLogo('invoice'));
+  function previewHeaderColor(raw){
+    const color=normalizeHexColor(raw);
+    if(!color)return;
+    const sw=$('brand-header-swatch');
+    if(sw)sw.style.background=color;
+    if(typeof applyCompanyBranding==='function')applyCompanyBranding({...ACTIVE_CO,theme:{...(ACTIVE_CO.theme||{}),headerColor:color}});
+  }
+  $('brand-header-color')?.addEventListener('input',e=>{
+    const color=normalizeHexColor(e.target.value);
+    if(!color)return;
+    const text=$('brand-header-color-text');
+    if(text)text.value=color;
+    previewHeaderColor(color);
+  });
+  $('brand-header-color-text')?.addEventListener('input',e=>{
+    const color=normalizeHexColor(e.target.value);
+    if(!color)return;
+    const picker=$('brand-header-color');
+    if(picker)picker.value=color;
+    previewHeaderColor(color);
+  });
   function renderGmailPanel(){
     const cfg=gmailLoad();const connected=gmailConnected();
     const okOrigin=gmailOriginOk();const reason=gmailOriginReason();
@@ -120,9 +151,21 @@ function showSettingsModal(){
   }
   renderGmailPanel();
   if(typeof wireStorageSettings==='function')wireStorageSettings();
-  $('btn-set-save').onclick=()=>{
+  $('btn-set-save').onclick=async()=>{
     const newUser=$('set-user').value.trim();
     if(newUser!==S.user){S.user=newUser;localStorage.setItem(LS('user'),S.user)}
+    let savedBrand=false;
+    if(canEditBrand){
+      const picked=normalizeHexColor(($('brand-header-color-text')?.value||$('brand-header-color')?.value||'').trim());
+      if(!picked){toast('Use a valid hex color like #0a3d2e','');return}
+      const current=normalizeHexColor(ACTIVE_CO.theme&&ACTIVE_CO.theme.headerColor)||companyHeaderColor();
+      if(picked!==current){
+        const co={...(COMPANIES[COMPANY_ID]||ACTIVE_CO)};
+        co.theme={...(co.theme||{}),headerColor:picked};
+        try{await writeCompanyRegistryRecord(co);savedBrand=true}
+        catch(e){toast('Could not save brand color','');return}
+      }
+    }
     COMPANY={
       name:$('set-co-name').value.trim()||COMPANY_DEFAULT.name,
       address:$('set-co-addr').value.trim(),
@@ -134,6 +177,7 @@ function showSettingsModal(){
       terms:$('set-co-terms').value.trim(),
     };
     saveCompany(COMPANY);
+    if(savedBrand&&typeof applyCompanyBranding==='function')applyCompanyBranding();
     closeModal();render();toast('Settings saved');
   };
 }
