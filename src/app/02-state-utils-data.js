@@ -325,6 +325,10 @@ async function uploadCompanyLogoFile(file,kind){
 }
 async function writeCompanyRegistryRecord(co){
   if(!co||!co.id)return;
+  if(gateOn()&&!isOwnerRole(SESSION)){
+    toast('Only owners can manage companies','');
+    throw new Error('Owner role required to manage companies');
+  }
   const next=normalizeCompanyRecord(co.id,co);
   if(!next)return;
   if(next.active===false){

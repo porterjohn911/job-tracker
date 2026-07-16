@@ -84,6 +84,7 @@ The app keeps data separated by company and environment.
 - Company namespaces keep Waterfront Solutions, Manufactured Housing Solutions, and other companies separated.
 - Local browser storage is still used as a local cache/fallback.
 - Firebase is the shared team source when connected and authenticated.
+- Company registry writes are owner-only, and Firebase rules validate company IDs, namespaces, labels, active flags, timestamps, and logo storage paths.
 
 Core records include:
 

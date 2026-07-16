@@ -1,6 +1,9 @@
 // Company and owner workspace switcher
 // Generated from src/app/09-settings-access-command-voice.js.
 // ══ Company Switcher ══
+function canManageCompanies(){
+  return !gateOn()||isOwnerRole(SESSION);
+}
 function showCompanySwitcher(){
   if(gateOn()&&!canSeeAll(SESSION)){toast('You only have access to '+ACTIVE_CO.label,'');return}
   const cur=OWNER_MODE?'owner':COMPANY_ID;
@@ -19,7 +22,7 @@ function showCompanySwitcher(){
         <div><div class="co-pick-name">Owner</div><div class="co-pick-tag">Analytics &amp; reports across all companies</div></div>
         ${ownerActive?'<span class="co-pick-badge">Current</span>':'<span class="co-pick-badge">All</span>'}
       </button>
-      ${isOwnerRole(SESSION)||!gateOn()?'<button class="btn-sm" id="co-manage" type="button" style="margin-top:12px;width:100%">Manage companies</button>':''}
+      ${canManageCompanies()?'<button class="btn-sm" id="co-manage" type="button" style="margin-top:12px;width:100%">Manage companies</button>':''}
     </div>
   </div></div>`;
   $('mc').onclick=closeModal;
@@ -45,7 +48,7 @@ function uniqueCompanyId(base){
   return id;
 }
 function showCompanyManagerModal(){
-  if(gateOn()&&!isOwnerRole(SESSION)){toast('Only owners can manage companies','');return}
+  if(!canManageCompanies()){toast('Only owners can manage companies','');return}
   const rows=Object.values(COMPANIES).sort((a,b)=>(a.label||'').localeCompare(b.label||'')).map(co=>`
     <div class="acc-row" style="gap:10px">
       <div class="acc-ava">${initials(co.label)}</div>
@@ -68,7 +71,7 @@ function showCompanyManagerModal(){
   document.querySelectorAll('[data-co-open]').forEach(b=>b.onclick=()=>{try{localStorage.setItem('jt_company',b.dataset.coOpen)}catch(e){};location.reload()});
 }
 function showCompanyEditorModal(co){
-  if(gateOn()&&!isOwnerRole(SESSION)){toast('Only owners can manage companies','');return}
+  if(!canManageCompanies()){toast('Only owners can manage companies','');return}
   const editing=!!co;
   const current=co||{};
   $('modal-root').innerHTML=`<div class="modal-bd" id="mbd" role="dialog" aria-modal="true" aria-label="${editing?'Edit':'Add'} company"><div class="modal"><div class="modal-handle"></div>

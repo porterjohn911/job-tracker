@@ -78,6 +78,20 @@ service firebase.storage {
         && typeOkFor(kind);
     }
 
+    function validLogoKind(kind) {
+      return kind.matches('^(app|invoice)$');
+    }
+
+    function validLogoName(fileName) {
+      return fileName.matches('^[A-Za-z0-9._-]{1,120}$');
+    }
+
+    function reasonableLogoUpload() {
+      return request.resource != null
+        && request.resource.size < 5 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
+    }
+
     match /{company}/jobs/{jobId}/{kind}/{fileName} {
       allow read: if signedIn() && validCompany(company) && validKind(kind);
       allow create, update: if signedIn() && validCompany(company) && validKind(kind) && reasonableUpload(kind);
@@ -85,14 +99,9 @@ service firebase.storage {
     }
 
     match /{company}/logos/{kind}/{fileName} {
-      allow read: if signedIn() && validCompany(company) && kind.matches('^(app|invoice)$');
-      allow create, update: if signedIn()
-        && validCompany(company)
-        && kind.matches('^(app|invoice)$')
-        && request.resource != null
-        && request.resource.size < 5 * 1024 * 1024
-        && request.resource.contentType.matches('image/.*');
-      allow delete: if signedIn() && validCompany(company) && kind.matches('^(app|invoice)$');
+      allow read: if signedIn() && validCompany(company) && validLogoKind(kind) && validLogoName(fileName);
+      allow create, update: if signedIn() && validCompany(company) && validLogoKind(kind) && validLogoName(fileName) && reasonableLogoUpload();
+      allow delete: if signedIn() && validCompany(company) && validLogoKind(kind) && validLogoName(fileName);
     }
 
     match /{allPaths=**} {

@@ -37,7 +37,7 @@ function onKey(e){
     const target=map[k.toLowerCase()];
     if(target){
       KBD_BUFFER='';clearTimeout(KBD_BUFFER_T);e.preventDefault();
-      if(!canOpenView(target)){toast(target==='reports'?'Reports are manager/owner only':'Owner-only','');return}
+      if(!canOpenView(target)){toast(target==='reports'?'Reports are owner-only':'Owner-only','');return}
       S.view=target;S.detail=null;render();
     }
   }
