@@ -420,7 +420,9 @@ function ownerCompanies(){
       <div class="kpi-card"><div class="kpi-label">Jobs</div><div class="kpi-value">${m.total}</div><div class="kpi-sub">${m.complete} complete</div></div>
       <div class="kpi-card"><div class="kpi-label">Win rate</div><div class="kpi-value">${m.winRate.toFixed(0)}%</div><div class="kpi-sub">avg ${money(m.avg)}</div></div>
     </div></div>`}).join('');
-  return `${ownerTitle('Companies')}<div class="kpi-sub" style="margin:-6px 0 12px">Open any company to manage it in its own workspace.</div>${cards}<div class="report-x-pad"></div>`;
+  return `${ownerTitle('Companies')}<div class="kpi-sub" style="margin:-6px 0 12px">Open any company to manage it in its own workspace.</div>
+    <button class="btn-add" id="owner-manage-companies" type="button" style="width:100%;justify-content:center;margin-bottom:12px">Manage Companies</button>
+    ${cards}<div class="report-x-pad"></div>`;
 }
 function applyOwnerChrome(){
   if(!OWNER_MODE)return;

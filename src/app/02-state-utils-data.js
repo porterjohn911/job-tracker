@@ -327,9 +327,16 @@ async function writeCompanyRegistryRecord(co){
   if(!co||!co.id)return;
   const next=normalizeCompanyRecord(co.id,co);
   if(!next)return;
-  COMPANIES={...COMPANIES,[next.id]:next};
+  if(next.active===false){
+    const copy={...COMPANIES};
+    delete copy[next.id];
+    COMPANIES=copy;
+  }else{
+    COMPANIES={...COMPANIES,[next.id]:next};
+  }
   if(typeof COMPANY_ID!=='undefined'&&next.id===COMPANY_ID&&typeof ACTIVE_CO!=='undefined')Object.assign(ACTIVE_CO,next);
-  saveCompanyRegistryLocal(COMPANIES);
+  const saved={...loadCompanyRegistryLocal(),[next.id]:next};
+  saveCompanyRegistryLocal(saved);
   if(typeof firebase!=='undefined'&&firebase.apps&&firebase.apps.length){
     await firebase.database().ref('companies/'+next.id).set(next);
   }
