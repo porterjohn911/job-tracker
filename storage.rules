@@ -15,7 +15,7 @@ rules_version = '2';
 // The checks below are "interim hardening" only. They:
 //   • require a real (non-anonymous) signed-in account,
 //   • keep the company namespace + path shape constrained,
-//   • require photo uploads to actually be images, and
+//   • require photo uploads to be images or videos, and
 //   • deny everything outside the known job-asset paths.
 //
 // They DO NOT, and cannot, stop a signed-in user of company A from reading
@@ -56,18 +56,25 @@ service firebase.storage {
         || request.resource.contentType == 'application/octet-stream';
     }
 
-    // The app always re-encodes photos to image/jpeg before upload, so the
-    // photos/ path only ever holds images. Enforcing that here stops the
-    // photos/ folder from being used to stash arbitrary binaries.
+    // The photos/ path holds job media: client re-encoded images (image/jpeg)
+    // and short videos uploaded raw (the browser can't transcode video). Both
+    // are constrained by content type so the folder can't stash arbitrary binaries.
     function typeOkFor(kind) {
       return kind == 'photos'
-        ? request.resource.contentType.matches('image/.*')
+        ? (request.resource.contentType.matches('image/.*')
+           || request.resource.contentType.matches('video/.*'))
         : docType();
+    }
+
+    // Videos are much larger than the ~150 KB client-compressed photos, so the
+    // photos/ path gets extra headroom. Docs/receipts stay at the tighter limit.
+    function sizeCapFor(kind) {
+      return kind == 'photos' ? 60 * 1024 * 1024 : 25 * 1024 * 1024;
     }
 
     function reasonableUpload(kind) {
       return request.resource != null
-        && request.resource.size < 25 * 1024 * 1024
+        && request.resource.size < sizeCapFor(kind)
         && typeOkFor(kind);
     }
 
