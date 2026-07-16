@@ -33,7 +33,7 @@ function render(){
 
 function renderRestrictedView(view){
   const msg=view==='reports'
-    ? 'Reports are only available to managers and owners.'
+    ? 'Reports are owner-only.'
     : 'This area is owner-only.';
   return `<div class="tt-empty" style="padding:40px 16px"><p style="font-size:14px;color:var(--text-2);line-height:1.6">${esc(msg)}</p></div>`;
 }

@@ -97,7 +97,7 @@ function isOwnerRole(m){return !!(m&&m.role==='owner')}
 function canSeeFinancials(m=SESSION){return !gateOn()||canSeeAll(m)}
 function canSeeBank(m=SESSION){return !gateOn()||isOwnerRole(m)}
 function canOpenView(v){
-  if(v==='reports')return canSeeFinancials();
+  if(v==='reports')return canSeeBank();
   if(v==='bank')return canSeeBank();
   return true;
 }
