@@ -37,6 +37,9 @@ async function stampTimeLocation(entryId,phase){
 
 function attachFinancialTeamTimeHandlers(){
   // Receipts & expenses
+  // Quick receipt entry (dashboard) + view-all (bank)
+  $('btn-dash-receipt')?.addEventListener('click',()=>showReceiptModal());
+  $('btn-all-receipts')?.addEventListener('click',showAllReceiptsModal);
   $('rcpt-upload')?.addEventListener('change',function(){const l=$('rcpt-file-label');if(l)l.textContent=this.files&&this.files[0]?this.files[0].name:'Attach receipt photo or PDF (optional)'});
   $('btn-add-receipt')?.addEventListener('click',async()=>{
     const j=S.jobs[S.detail];if(!j)return;

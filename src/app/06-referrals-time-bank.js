@@ -452,6 +452,83 @@ function renderReconciliation(){
       ${d.matched.length?`<details class="recon-details"><summary>Matched (${d.matched.length})</summary>${d.matched.slice(0,60).map(m=>`<div class="recon-row"><div style="flex:1;min-width:0"><div class="recon-title">${money2(Math.abs(Number(m.txn.amount)||0))} · ${esc(m.txn.description||'')}</div><div class="recon-meta">✓ ${esc(m.rec.vendor||m.rec.job.name)} · ${esc(fmtDate(m.txn.date)||m.txn.date||'')}</div></div><button class="btn-remove" data-recon-unmatch="${esc(m.txn.id)}" type="button">Unmatch</button></div>`).join('')}</details>`:''}
     </div>`;
 }
+// ── Quick receipt capture (global; camera-first; job optional) ──
+// Resize an image and upload to Storage, resolving the extra receipt fields.
+// Falls back to inline base64 when Storage isn't available (mirrors the job flow).
+function processReceiptFile(file,subpath){
+  return new Promise(resolve=>{
+    if(!file)return resolve({});
+    if(file.type.startsWith('image/')){
+      const r=new FileReader();
+      r.onload=e=>{const img=new Image();img.onload=async()=>{const c=document.createElement('canvas');const MAX=1400;let w=img.width,h=img.height;if(w>MAX||h>MAX){if(w>h){h=Math.round(h*MAX/w);w=MAX}else{w=Math.round(w*MAX/h);h=MAX}}c.width=w;c.height=h;c.getContext('2d').drawImage(img,0,0,w,h);const blob=await canvasToBlob(c,'image/jpeg',0.8);const up=blob?await uploadToStorage(blob,subpath,'jpg'):null;resolve(up?{name:file.name,type:file.type,url:up.url,storagePath:up.path}:{name:file.name,type:file.type,url:c.toDataURL('image/jpeg',0.8)})};img.src=e.target.result};
+      r.readAsDataURL(file);
+    }else{
+      (async()=>{const ext=(file.name.split('.').pop()||'').toLowerCase();const up=await uploadToStorage(file,subpath,ext);if(up)resolve({name:file.name,type:file.type,url:up.url,storagePath:up.path,size:(file.size/1024).toFixed(0)+' KB'});else{const r=new FileReader();r.onload=e=>resolve({name:file.name,type:file.type,url:e.target.result,size:(file.size/1024).toFixed(0)+' KB'});r.readAsDataURL(file)}})();
+    }
+  });
+}
+function showReceiptModal(prefillJobId){
+  const today=dateKey(new Date());
+  const catOpts=RECEIPT_CATS.map(c=>`<option value="${esc(c)}"${c==='Materials'?' selected':''}>${esc(c)}</option>`).join('');
+  const jobOpts=jobs().slice().sort((a,b)=>(a.name||'').localeCompare(b.name||'')).map(j=>`<option value="${esc(j.id)}" ${prefillJobId===j.id?'selected':''}>${esc(j.name)}</option>`).join('');
+  $('modal-root').innerHTML=`<div class="modal-bd" id="mbd" role="dialog" aria-modal="true" aria-label="Add receipt"><div class="modal"><div class="modal-handle"></div>
+    <div class="modal-head"><div class="modal-title">Add Receipt</div><button class="modal-close" id="mc" aria-label="Close"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button></div>
+    <div class="modal-body">
+      <label class="rcpt-photo-btn" for="grcpt-upload"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z"/><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0z"/></svg>Take a photo / attach</label>
+      <input type="file" id="grcpt-upload" accept="image/*" capture="environment" style="display:none">
+      <div id="grcpt-file" class="rcpt-file-name"></div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Amount</label><input class="form-input" id="grcpt-amount" type="number" inputmode="decimal" step="0.01" placeholder="0.00"></div>
+        <div class="form-group"><label class="form-label">Date</label><input class="form-input" id="grcpt-date" type="date" value="${today}"></div>
+      </div>
+      <div class="form-group"><label class="form-label">Category</label><select class="form-select" id="grcpt-cat">${catOpts}</select></div>
+      <div class="form-group"><label class="form-label">Vendor (optional)</label><input class="form-input" id="grcpt-vendor" placeholder="e.g. Shell, Home Depot"></div>
+      <div class="form-group"><label class="form-label">Job (optional — leave blank for fuel, tools &amp; other overhead)</label><select class="form-select" id="grcpt-job"><option value="">— No job / overhead —</option>${jobOpts}</select></div>
+      <div class="form-group"><label class="form-label">Note (optional)</label><input class="form-input" id="grcpt-note"></div>
+    </div>
+    <div class="modal-foot"><button class="btn-cancel" id="btn-cx">Cancel</button><button class="btn-save" id="grcpt-save">Save receipt</button></div>
+  </div></div>`;
+  $('mc').onclick=$('btn-cx').onclick=closeModal;
+  $('mbd').onclick=e=>{if(e.target===e.currentTarget)closeModal()};
+  $('grcpt-upload').onchange=function(){const f=$('grcpt-file');if(f)f.textContent=this.files&&this.files[0]?('📎 '+this.files[0].name):''};
+  $('grcpt-save').onclick=saveReceiptFromModal;
+}
+async function saveReceiptFromModal(){
+  const amount=parseFloat($('grcpt-amount').value);
+  if(!(amount>0)){toast('Enter the receipt amount','');return}
+  const jobId=$('grcpt-job').value;
+  const base={id:'rc_'+Date.now()+'_'+Math.random().toString(36).slice(2,6),amount,vendor:$('grcpt-vendor').value.trim(),category:$('grcpt-cat').value,note:$('grcpt-note').value.trim(),date:$('grcpt-date').value||dateKey(new Date()),user:S.user,uploaded:Date.now()};
+  const fileInput=$('grcpt-upload');const file=fileInput&&fileInput.files&&fileInput.files[0];
+  if(file&&storageReady())toast('Uploading…');
+  const extra=await processReceiptFile(file,jobId?('jobs/'+jobId+'/receipts'):'receipts');
+  const rec={...base,...extra};
+  if(jobId&&S.jobs[jobId]){const j=S.jobs[jobId];j.receipts=j.receipts||[];j.receipts.push(rec);await writeJob(j);try{await logAct('added a receipt ('+money2(amount)+') to',j.name)}catch(e){}}
+  else{rec.jobId='';try{await writeReceipt(rec)}catch(e){}try{await logAct('added an overhead receipt ('+money2(amount)+')','')}catch(e){}}
+  closeModal();render();toast('Receipt added');
+}
+// Every receipt: each job's receipts + the standalone overhead node, newest first.
+function allReceiptsFlat(){
+  const out=[];
+  Object.values(S.jobs||{}).forEach(j=>{(j.receipts||[]).forEach(r=>out.push({r,jobName:j.name,src:'job'}))});
+  overheadReceipts().forEach(r=>out.push({r,jobName:'',src:'overhead'}));
+  out.sort((a,b)=>((b.r.date||'')+'').localeCompare((a.r.date||'')+''));
+  return out;
+}
+function showAllReceiptsModal(){
+  const all=allReceiptsFlat();
+  const total=all.reduce((s,x)=>s+Number(x.r.amount||0),0);
+  const rows=all.length?all.map(x=>{const r=x.r,img=r.url&&r.type&&r.type.startsWith('image/');return `<div class="rcptall-row">
+    ${r.url?`<a href="${esc(r.url)}" target="_blank" rel="noopener" class="rcptall-thumb"${img?` style="background-image:url('${esc(r.url)}')"`:''}>${img?'':'📄'}</a>`:`<div class="rcptall-thumb">🧾</div>`}
+    <div style="flex:1;min-width:0"><div style="font-weight:600">${money2(r.amount)} · ${esc(r.category||'Other')}</div><div class="rcptall-meta">${esc(fmtDate(r.date)||r.date||'')}${r.vendor?' · '+esc(r.vendor):''} · ${x.src==='overhead'?'<span class="rcptall-tag">Overhead</span>':esc(x.jobName||'Job')}</div></div>
+  </div>`}).join(''):`<div class="tt-empty" style="padding:16px 0">No receipts yet.</div>`;
+  $('modal-root').innerHTML=`<div class="modal-bd" id="mbd" role="dialog" aria-modal="true" aria-label="All receipts"><div class="modal"><div class="modal-handle"></div>
+    <div class="modal-head"><div class="modal-title">All Receipts</div><button class="modal-close" id="mc" aria-label="Close"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button></div>
+    <div class="modal-body"><div class="rcptall-total">${all.length} receipt${all.length!==1?'s':''} · <strong>${money2(total)}</strong></div>${rows}</div>
+    <div class="modal-foot"><button class="btn-cancel" id="btn-cx">Close</button></div>
+  </div></div>`;
+  $('mc').onclick=$('btn-cx').onclick=closeModal;
+  $('mbd').onclick=e=>{if(e.target===e.currentTarget)closeModal()};
+}
 function renderBank(){
   if(gateOn()&&!isOwnerRole(SESSION)) return `<div class="tt-empty" style="padding:40px 16px"><p style="font-size:14px;color:var(--text-2);line-height:1.6">Bank &amp; cash flow is owner-only.</p></div>`;
   const t=bankTotals();
@@ -475,6 +552,7 @@ function renderBank(){
     </div>
     <div class="toolbar" style="margin-bottom:14px">
       <button class="btn-add" id="bank-import"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"/></svg>Import CSV / OFX</button>
+      <button class="btn-add" id="btn-all-receipts"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25z"/></svg>View all receipts</button>
       ${all.length?`<button class="btn-mini" id="bank-clear" style="margin-left:auto">Clear all</button>`:''}
     </div>
     ${cats.length?`<div class="section-hd">Spending by category</div><div class="rcpt-cats" style="margin-bottom:16px">${cats.map(([c,v])=>`<span class="rcpt-cat-chip">${esc(c)} · ${money2(v)}</span>`).join('')}</div>`:''}
