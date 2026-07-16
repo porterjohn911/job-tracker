@@ -3,7 +3,7 @@
 // ══ State ══
 let DB=null;
 let MAP=null,MAP_MARKERS=[];
-const S={jobs:{},activity:[],members:[],view:'dashboard',detail:null,detailTab:'overview',filter:'all',search:'',photoCat:'all',calMonth:new Date().getMonth(),calYear:new Date().getFullYear(),calSelected:null,calMode:localStorage.getItem(LS('calmode'))||'month',reportRange:'90',sort:localStorage.getItem(LS('sort'))||'newest',sortOpen:false,bulkMode:false,bulkSel:new Set(),invFilter:'all',invSearch:'',invSort:'date',user:localStorage.getItem(LS('user'))||'',notifReadAt:parseInt(localStorage.getItem(LS('notif_read'))||'0',10),refFilter:'all',referrals:{},timeEntries:{},payRates:{},transactions:{},timeOff:{},owner:{}};
+const S={jobs:{},activity:[],members:[],view:'dashboard',detail:null,detailTab:'overview',filter:'all',search:'',photoCat:'all',calMonth:new Date().getMonth(),calYear:new Date().getFullYear(),calSelected:null,calMode:localStorage.getItem(LS('calmode'))||'month',reportRange:'90',sort:localStorage.getItem(LS('sort'))||'newest',sortOpen:false,bulkMode:false,bulkSel:new Set(),invFilter:'all',invSearch:'',invSort:'date',user:localStorage.getItem(LS('user'))||'',notifReadAt:parseInt(localStorage.getItem(LS('notif_read'))||'0',10),refFilter:'all',referrals:{},timeEntries:{},payRates:{},transactions:{},timeOff:{},receipts:{},owner:{}};
 const UNDO={stack:[],push(op){this.stack.push(op);if(this.stack.length>20)this.stack.shift()},pop(){return this.stack.pop()}};
 
 // ── Company info for invoice letterhead (editable via Settings)
@@ -178,6 +178,21 @@ async function deleteTimeOff(id){
   if(!localOk&&!DB)throw new Error('Local time-off delete failed');
 }
 
+// ── Standalone / overhead receipts (not tied to a job — fuel, tools, etc.) ──
+function overheadReceipts(){return Object.values(S.receipts||{})}
+async function writeReceipt(r){
+  S.receipts=S.receipts||{};S.receipts[r.id]=r;
+  const localOk=LOCAL.saveReceipts(!DB);
+  await writeDB('receipts/'+r.id,r,'receipt');
+  if(!localOk&&!DB)throw new Error('Local receipt save failed');
+}
+async function deleteReceipt(id){
+  if(S.receipts)delete S.receipts[id];
+  const localOk=LOCAL.saveReceipts(!DB);
+  await removeDB('receipts/'+id,'receipt');
+  if(!localOk&&!DB)throw new Error('Local receipt delete failed');
+}
+
 // ══ DB layer ══
 const SYNC={pendingJobs:{}};
 function reportLocalSaveError(label,e,required){
@@ -233,7 +248,7 @@ function slimJobsForLocal(jobsObj){
   return out;
 }
 const LOCAL={
-  load(){try{S.jobs=JSON.parse(localStorage.getItem(LS('jobs'))||'{}')}catch(e){S.jobs={}}try{S.activity=JSON.parse(localStorage.getItem(LS('activity'))||'[]')}catch(e){S.activity=[]}try{S.members=JSON.parse(localStorage.getItem(LS('members'))||'[]')}catch(e){S.members=[]}try{S.referrals=JSON.parse(localStorage.getItem(LS('referrals'))||'{}')}catch(e){S.referrals={}}try{S.timeEntries=JSON.parse(localStorage.getItem(LS('time'))||'{}')}catch(e){S.timeEntries={}}try{S.payRates=canSeeFinancials()?JSON.parse(localStorage.getItem(LS('payrates'))||'{}'):{};}catch(e){S.payRates={}}try{S.transactions=canSeeBank()?JSON.parse(localStorage.getItem(LS('transactions'))||'{}'):{};}catch(e){S.transactions={}}try{S.timeOff=JSON.parse(localStorage.getItem(LS('timeoff'))||'{}')}catch(e){S.timeOff={}}},
+  load(){try{S.jobs=JSON.parse(localStorage.getItem(LS('jobs'))||'{}')}catch(e){S.jobs={}}try{S.activity=JSON.parse(localStorage.getItem(LS('activity'))||'[]')}catch(e){S.activity=[]}try{S.members=JSON.parse(localStorage.getItem(LS('members'))||'[]')}catch(e){S.members=[]}try{S.referrals=JSON.parse(localStorage.getItem(LS('referrals'))||'{}')}catch(e){S.referrals={}}try{S.timeEntries=JSON.parse(localStorage.getItem(LS('time'))||'{}')}catch(e){S.timeEntries={}}try{S.payRates=canSeeFinancials()?JSON.parse(localStorage.getItem(LS('payrates'))||'{}'):{};}catch(e){S.payRates={}}try{S.transactions=canSeeBank()?JSON.parse(localStorage.getItem(LS('transactions'))||'{}'):{};}catch(e){S.transactions={}}try{S.timeOff=JSON.parse(localStorage.getItem(LS('timeoff'))||'{}')}catch(e){S.timeOff={}}try{S.receipts=JSON.parse(localStorage.getItem(LS('receipts'))||'{}')}catch(e){S.receipts={}}},
   saveJobs(required){return saveLocalValue(LS('jobs'),DB?slimJobsForLocal(S.jobs):S.jobs,'jobs',required)},
   saveActivity(required){return saveLocalValue(LS('activity'),S.activity.slice(0,300),'activity',required)},
   saveMembers(required){return saveLocalValue(LS('members'),S.members,'team members',required)},
@@ -241,7 +256,8 @@ const LOCAL={
   saveTime(required){return saveLocalValue(LS('time'),S.timeEntries,'time entries',required)},
   savePayRates(required){return saveLocalValue(LS('payrates'),S.payRates,'pay rates',required)},
   saveTransactions(required){return saveLocalValue(LS('transactions'),S.transactions,'bank transactions',required)},
-  saveTimeOff(required){return saveLocalValue(LS('timeoff'),S.timeOff,'time off',required)}
+  saveTimeOff(required){return saveLocalValue(LS('timeoff'),S.timeOff,'time off',required)},
+  saveReceipts(required){return saveLocalValue(LS('receipts'),S.receipts,'receipts',required)}
 };
 function syncStatus(state,msg){const d=$('sync-dot'),t=$('sync-text');d.className='sync-dot '+state;t.textContent=msg}
 
@@ -277,6 +293,7 @@ function initFB(cfg){
     DB.child('activity').on('value',s=>{const r=s.val();S.activity=r?Object.values(r).sort((a,b)=>b.time-a.time):[];LOCAL.saveActivity()});
     DB.child('members').on('value',s=>{S.members=s.val()||[];LOCAL.saveMembers();render()});
     DB.child('timeoff').on('value',s=>{S.timeOff=s.val()||{};LOCAL.saveTimeOff();render()});
+    DB.child('receipts').on('value',s=>{S.receipts=s.val()||{};LOCAL.saveReceipts();render()});
     DB.child('referrals').on('value',s=>{S.referrals=s.val()||{};LOCAL.saveReferrals();render()});
     DB.child('time').on('value',s=>{S.timeEntries=s.val()||{};LOCAL.saveTime();render()});
     if(canSeeFinancials())DB.child('payrates').on('value',s=>{S.payRates=s.val()||{};LOCAL.savePayRates();render()});

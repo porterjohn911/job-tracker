@@ -86,6 +86,14 @@
         }
       },
 
+      "receipts": {
+        ".read": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'owner' || root.child('users').child(auth.uid).child('role').val() === 'manager' || root.child('users').child(auth.uid).child('company').val() === $company || $company === root.child('users').child(auth.uid).child('company').val() + '_dev')",
+        ".write": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'owner' || root.child('users').child(auth.uid).child('role').val() === 'manager' || root.child('users').child(auth.uid).child('company').val() === $company || $company === root.child('users').child(auth.uid).child('company').val() + '_dev')",
+        "$receiptId": {
+          ".validate": "newData.hasChildren(['id', 'amount']) && newData.child('id').isString() && newData.child('id').val() === $receiptId && newData.child('amount').isNumber()"
+        }
+      },
+
       "$other": {
         ".validate": false
       }
