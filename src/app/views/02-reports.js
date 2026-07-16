@@ -1,9 +1,113 @@
 // Reports view
 // Generated from src/app/05-owner-reports-map-notifications.js lines 270-425.
+function reportRangeCutoff(){
+  const range=parseInt(S.reportRange||'90',10);
+  return range>0?Date.now()-range*86400000:0;
+}
+function bankReportDateMs(t){
+  if(!t||!t.date)return 0;
+  const d=new Date(String(t.date).slice(0,10)+'T00:00:00');
+  const ms=d.getTime();
+  return isNaN(ms)?0:ms;
+}
+function bankReportTxns(){
+  const cutoff=reportRangeCutoff();
+  const all=(typeof txnList==='function'?txnList():Object.values(S.transactions||{}));
+  return all.filter(t=>!cutoff||bankReportDateMs(t)>=cutoff).sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+}
+function bankReportMonthly(txns){
+  const byMonth={};
+  txns.forEach(t=>{
+    const key=String(t.date||'').slice(0,7)||'Unknown';
+    const row=byMonth[key]||(byMonth[key]={key,label:key,inSum:0,outSum:0,net:0});
+    const amt=Number(t.amount||0);
+    if(amt>0)row.inSum+=amt;
+    else row.outSum+=Math.abs(amt);
+    row.net+=amt;
+  });
+  return Object.values(byMonth).sort((a,b)=>a.key.localeCompare(b.key)).slice(-12);
+}
+function renderBankReports(){
+  const txns=bankReportTxns();
+  if(!txns.length){
+    return `<div class="report-section">
+      <div class="report-hd">Bank Cash Flow <span class="kpi-sub">actual imported transactions</span></div>
+      <p style="font-size:13px;color:var(--text-3);padding:6px 0">No bank transactions found in this report range. Import transactions on the Bank page to see real cash flow here.</p>
+    </div>`;
+  }
+
+  const inSum=txns.filter(t=>Number(t.amount)>0).reduce((s,t)=>s+Number(t.amount||0),0);
+  const outSum=txns.filter(t=>Number(t.amount)<0).reduce((s,t)=>s+Math.abs(Number(t.amount||0)),0);
+  const net=inSum-outSum;
+  const expenses=txns.filter(t=>Number(t.amount)<0);
+  const byCat={};
+  expenses.forEach(t=>{
+    const c=t.category||'Other';
+    byCat[c]=(byCat[c]||0)+Math.abs(Number(t.amount||0));
+  });
+  const catRows=(typeof BANK_CATS!=='undefined'?BANK_CATS:Object.keys(byCat))
+    .map(c=>({cat:c,total:byCat[c]||0,pct:outSum>0?((byCat[c]||0)/outSum)*100:0}))
+    .filter(r=>r.total>0)
+    .sort((a,b)=>b.total-a.total);
+  const maxCat=Math.max(1,...catRows.map(r=>r.total));
+
+  const byJob={};
+  expenses.forEach(t=>{
+    const key=t.jobId||'';
+    const row=byJob[key]||(byJob[key]={jobId:key,name:key&&S.jobs[key]?S.jobs[key].name:'Unlinked',total:0,count:0});
+    row.total+=Math.abs(Number(t.amount||0));row.count++;
+  });
+  const jobRows=Object.values(byJob).sort((a,b)=>b.total-a.total).slice(0,8);
+  const unlinked=expenses.filter(t=>!t.jobId).reduce((s,t)=>s+Math.abs(Number(t.amount||0)),0);
+  const other=(byCat.Other||0);
+  const large=expenses.filter(t=>Math.abs(Number(t.amount||0))>=500).length;
+  const months=bankReportMonthly(txns);
+  const maxMonth=Math.max(1,...months.map(m=>Math.max(m.inSum,m.outSum)));
+
+  return `
+    <div class="report-section">
+      <div class="report-hd">Bank Cash Flow <span class="kpi-sub">${txns.length} imported transaction${txns.length!==1?'s':''}</span></div>
+      <div class="kpi-grid" style="margin-bottom:12px">
+        <div class="kpi-card"><div class="kpi-label">Bank Money In</div><div class="kpi-value" style="color:var(--green-700)">${money2(inSum)}</div><div class="kpi-sub">actual deposits</div></div>
+        <div class="kpi-card"><div class="kpi-label">Bank Money Out</div><div class="kpi-value" style="color:var(--orange)">${money2(outSum)}</div><div class="kpi-sub">actual spending</div></div>
+        <div class="kpi-card accent"><div class="kpi-label">Net Cash Flow</div><div class="kpi-value" style="color:${net>=0?'var(--green-700)':'var(--red)'}">${net<0?'&minus;':''}${money2(Math.abs(net))}</div><div class="kpi-sub">money in minus out</div></div>
+      </div>
+      <div class="report-hd" style="margin-top:8px">Spending by Category</div>
+      <div class="bar-chart">
+        ${catRows.length?catRows.map(r=>`<div class="bar-row">
+          <div class="bar-row-label" style="flex-basis:110px">${esc(r.cat)}</div>
+          <div class="bar-row-track"><div class="bar-row-fill" style="width:${(r.total/maxCat*100).toFixed(1)}%;background:var(--green-600)"></div></div>
+          <div class="bar-row-val" style="min-width:92px">${money2(r.total)} · ${r.pct.toFixed(0)}%</div>
+        </div>`).join(''):'<p style="font-size:13px;color:var(--text-3);padding:4px 0">No expenses in this range.</p>'}
+      </div>
+    </div>
+
+    <div class="report-section">
+      <div class="report-hd">Monthly Bank Flow <span class="kpi-sub">money in vs. out</span></div>
+      <div class="bar-chart">
+        ${months.length?months.map(m=>`<div class="bar-row">
+          <div class="bar-row-label">${esc(m.label)}</div>
+          <div class="bar-row-track"><div class="bar-row-fill" style="width:${(m.inSum/maxMonth*100).toFixed(1)}%;background:var(--green-600)"></div></div>
+          <div class="bar-row-val" style="min-width:92px">${money2(m.inSum)} in</div>
+          <div class="bar-row-track"><div class="bar-row-fill" style="width:${(m.outSum/maxMonth*100).toFixed(1)}%;background:var(--orange)"></div></div>
+          <div class="bar-row-val" style="min-width:92px">${money2(m.outSum)} out</div>
+        </div>`).join(''):'<p style="font-size:13px;color:var(--text-3);padding:4px 0">No monthly bank data in this range.</p>'}
+      </div>
+    </div>
+
+    <div class="report-section">
+      <div class="report-hd">Bank Spending by Job <span class="kpi-sub">linked transactions</span></div>
+      ${jobRows.length?`<div style="display:flex;flex-direction:column">${jobRows.map(r=>`<div ${r.jobId?`data-open="${esc(r.jobId)}"`:''} style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);${r.jobId?'cursor:pointer':''}">
+        <div style="flex:1;min-width:0"><div style="font-weight:600;font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(r.name)}</div><div style="font-size:11px;color:var(--text-3)">${r.count} transaction${r.count!==1?'s':''}</div></div>
+        <div style="font-weight:700;font-size:14px;color:var(--orange)">${money2(r.total)}</div>
+      </div>`).join('')}</div>`:'<p style="font-size:13px;color:var(--text-3);padding:4px 0">No job-linked bank spending in this range.</p>'}
+      <div style="font-size:11px;color:var(--text-3);margin-top:10px;line-height:1.5">Needs review: ${money2(unlinked)} unlinked expense spending · ${money2(other)} categorized as Other · ${large} expense${large!==1?'s':''} over $500.</div>
+    </div>`;
+}
 function renderReports(){
   const all=jobs();
   const range=parseInt(S.reportRange||'90',10);
-  const cutoff=range>0?Date.now()-range*86400000:0;
+  const cutoff=reportRangeCutoff();
   const inRange=all.filter(j=>(j.created||0)>=cutoff);
   // Win rate: completed jobs vs explicitly lost jobs. On-hold work stays out of decided outcomes.
   const totalLeads=all.filter(j=>j.created>=cutoff).length;
@@ -83,6 +187,8 @@ function renderReports(){
       <div class="kpi-card"><div class="kpi-label">Avg Job Size</div><div class="kpi-value">${money(avgDeal)}</div><div class="kpi-sub">across won jobs</div></div>
       <div class="kpi-card"><div class="kpi-label">Collected</div><div class="kpi-value">${money(collected)}</div><div class="kpi-sub">${revenue>0?((collected/revenue)*100).toFixed(0):0}% of revenue</div></div>
     </div>
+
+    ${renderBankReports()}
 
     ${typeof renderJobCosting==='function'?renderJobCosting():''}
 
