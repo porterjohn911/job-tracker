@@ -27,6 +27,11 @@
       }
     },
 
+    "api_keys": {
+      ".read": false,
+      ".write": false
+    },
+
     "$company": {
       "jobs": {
         ".read": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'owner' || root.child('users').child(auth.uid).child('role').val() === 'manager' || root.child('users').child(auth.uid).child('company').val() === $company || $company === root.child('users').child(auth.uid).child('company').val() + '_dev')",

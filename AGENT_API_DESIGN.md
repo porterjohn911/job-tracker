@@ -1,10 +1,18 @@
 # Agent API Keys & Automation — Design Doc
 
-**Status:** Draft for review (not yet built)
+**Status:** Phase 1 built (review); later phases still planned
 **Branch:** `claude/agent-api-key-invoicing-i3zyzl`
 **Goal:** Let an AI agent access the app with a scoped, revocable API key so it can send invoices, help schedule, and organize financials — safely.
 
-> This is a **plan to review**, not finished work. Nothing here is wired up yet. The point is to agree on the shape before writing code. Open questions are collected at the end.
+> The point of this doc is to agree on the shape. **Phase 1** (§10) is now implemented in this branch; everything from Phase 2 on is still just a plan. Open questions from the first review are resolved below.
+
+### Decisions locked in (first review)
+
+1. **Admin SDK** for server-side data access (not a bot-user). ✅
+2. **Approve-before-send** for invoices — a human okays every send. ✅
+3. **Pilot company: `wfs`** (Waterfront). ✅
+4. **Financials stay read-only** in v1 (`financials:read` only; no `sensitive`). ✅
+5. **No QuickBooks** integration for now — email-PDF is enough. ✅
 
 ---
 
@@ -57,18 +65,20 @@ Key fact for scoping: **the financial nodes are already tiered** — `transactio
 
 ## 4. The API-key data model
 
-New Realtime Database node, **not** namespaced per company (keys are a global admin concern), readable/writable by owners only via rules, but in practice only ever touched by the Admin SDK:
+New Realtime Database node, **not** namespaced per company (keys are a global admin concern). It is **default-deny in `database.rules.json`** — the browser can never read or write it; only the Admin SDK (server-side) touches it.
+
+**Implementation refinement (built):** each key is stored under `/api_keys/{sha256(rawKey)}` — the SHA-256 hash *is* the node key. This makes lookup O(1) (no scan, no index) and means the raw key is never stored. The hash is one-way, so it's safe to hand back to an authenticated owner as the `id` used for revocation.
 
 ```
-/api_keys/{keyId}
-  ├─ hash:        "<sha-256 of the raw key>"   // NEVER store the raw key
-  ├─ prefix:      "sk_live_a1b2"               // first ~8 chars, for display/identification
+/api_keys/{sha256(rawKey)}
+  ├─ prefix:      "sk_live_a1b2"               // first 12 chars, for display
   ├─ label:       "Invoicing agent"           // human-set name
-  ├─ company:     "mhs"                        // the namespace this key is scoped to
-  ├─ scopes:      ["invoices:write", "schedule:write", "financials:read"]
+  ├─ company:     "wfs"                        // company id the key is scoped to
+  ├─ ns:          "wfs"                        // resolved DB namespace (from /companies/{id}/ns)
+  ├─ scopes:      ["invoices:read"]
   ├─ createdBy:   "<uid of the owner who minted it>"
   ├─ createdAt:   1737200000000
-  ├─ lastUsedAt:  1737300000000               // updated on each call
+  ├─ lastUsedAt:  1737300000000               // best-effort stamp on each call
   ├─ expiresAt:   null                        // optional hard expiry
   └─ revoked:     false
 ```
@@ -197,8 +207,8 @@ Mirrors the existing access-management UI patterns in `src/app/access/01-access-
 
 | Phase | Deliverable | Outcome |
 |---|---|---|
-| **0. This doc** | Agree on scopes, endpoints, gating | Shared plan |
-| **1. Auth + one endpoint** | `apiKeyAuth.js` + `/api/invoices` (read) + `/api_keys` schema + "Generate key" UI | Real key you can mint and test end-to-end, read-only |
+| **0. This doc** | Agree on scopes, endpoints, gating | ✅ Shared plan + decisions locked |
+| **1. Auth + one endpoint** ✅ **built** | Admin SDK init + `apiKeyAuth.js` + `api-invoices.js` (read) + `/api_keys` deny rule + owner "Manage API keys" UI | Real key you can mint from Settings and use to read invoices, read-only |
 | **2. Write endpoints** | `create_invoice`, `send_invoice` (gated), `add_schedule_entry` | Agent can act, with approval gate |
 | **3. MCP + Managed Agent** | MCP wrapper + a scheduled deployment | "Every morning, chase overdue invoices" runs itself |
 | **4. Financials + loosen gates** | `financials:read` summary; later `sensitive` + auto-send once trusted | Full organize-financials story |
@@ -207,11 +217,23 @@ Each phase is independently shippable and reviewable.
 
 ---
 
-## 11. Open questions for you
+## 11. Open questions — resolved
 
-1. **Scope ladder** — happy with the six scopes in §4, or do you want finer/coarser buckets?
-2. **Admin SDK vs bot-user** (§5) — I recommend the Admin SDK service account. OK to introduce that one server secret?
-3. **Invoice-send gate** (§7) — prefer (a) email-summary-then-approve, or (b) an in-session approval pause? (a) is simpler and works over email you already read.
-4. **Which company first?** Keys scope to one namespace (`wfs`/`mhs`/`nlr`). Which do we pilot with?
-5. **Financials in v1** — keep it strictly read-only to start? (My strong recommendation: yes.)
-6. **QuickBooks** — do you want invoices to also flow into QuickBooks, or is email-PDF (today's behavior) enough for v1?
+All six from the first review are now decided (see the Decisions box at the top):
+
+1. **Scope ladder** — keeping the six scopes in §4 as-is.
+2. **Admin SDK vs bot-user** → **Admin SDK** (service account in Netlify env `FIREBASE_SERVICE_ACCOUNT`).
+3. **Invoice-send gate** → **approve-before-send** (built in Phase 2).
+4. **Pilot company** → **`wfs`**.
+5. **Financials in v1** → **read-only**.
+6. **QuickBooks** → **not now**.
+
+## 12. Setup needed to run Phase 1
+
+Before an owner can mint a key, one Netlify env var must be set (Site config → Environment variables):
+
+- **`FIREBASE_SERVICE_ACCOUNT`** — the service-account JSON (Firebase console → Project settings → Service accounts → *Generate new private key*), pasted as a single-line string.
+- `FIREBASE_DB_URL` — optional; defaults to the project's public RTDB URL.
+- `ALLOWED_ORIGINS` — optional; comma-separated site origins to lock CORS down to (recommended once live).
+
+`firebase-admin` is added to `package.json` and marked `external_node_modules` in `netlify.toml` so Netlify installs it at runtime rather than bundling it. Until `FIREBASE_SERVICE_ACCOUNT` is set, the key endpoints return a clear "not configured" error and nothing else changes in the app.

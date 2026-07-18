@@ -61,6 +61,11 @@ function showSettingsModal(){
            <div style="display:flex;gap:8px;flex-wrap:wrap">${isOwnerRole(SESSION)?'<button class="btn-sm" id="set-access" type="button">Manage team access</button>':''}<button class="btn-sm" id="set-signout" type="button">Sign out</button></div>`
         : `<div class="tt-hint" style="margin-bottom:10px">Access control is <strong>off</strong> — anyone can open any company. Turn it on to lock each worker to their company and give owners &amp; managers the full view.</div>
            <button class="btn-sm" id="set-access" type="button">Set up team access</button>`}
+      ${(typeof canManageApiKeys === 'function' && canManageApiKeys())
+        ? `<div style="margin:14px 0 10px;padding-top:14px;border-top:1px solid var(--border)"><div class="form-label" style="font-size:12px">Agent API Keys</div></div>
+           <div class="tt-hint" style="margin-bottom:10px">Give an automated agent scoped, revocable access to this app.</div>
+           <button class="btn-sm" id="set-apikeys" type="button">Manage API keys</button>`
+        : ''}
     </div>
     <div class="modal-foot"><button class="btn-cancel" id="btn-cx">Cancel</button><button class="btn-save" id="btn-set-save">Save</button></div>
   </div></div>`;
@@ -68,6 +73,7 @@ function showSettingsModal(){
   $('mc').onclick=$('btn-cx').onclick=closeSettings;
   $('mbd').onclick=e=>{if(e.target===e.currentTarget)closeSettings()};
   $('set-access')?.addEventListener('click',()=>{closeSettings();showAccessModal()});
+  $('set-apikeys')?.addEventListener('click',()=>{closeSettings();showApiKeysModal()});
   $('set-signout')?.addEventListener('click',()=>{if(confirm('Sign out of this device?'))signOut()});
   async function saveBrandLogo(kind,file){
     const up=await uploadCompanyLogoFile(file,kind);

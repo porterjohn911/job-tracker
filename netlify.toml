@@ -12,6 +12,9 @@
 [functions]
   directory = "netlify/functions"
   node_bundler = "esbuild"
+  # firebase-admin has dynamic requires / optional native deps that esbuild
+  # can't bundle cleanly — install it at runtime instead of inlining it.
+  external_node_modules = ["firebase-admin"]
 
 # Serve the app for any unknown path (SPA-style fallback). Real files that
 # exist (like the dev sandbox) are still served directly.
