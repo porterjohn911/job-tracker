@@ -41,7 +41,15 @@ scripts.forEach((file) => {
 for (const file of scripts.filter((file) => file.endsWith('.js'))) {
   execFileSync('node', ['--check', file], { cwd: root, stdio: 'inherit' });
 }
-execFileSync('node', ['--check', 'netlify/functions/send-invoice.js'], { cwd: root, stdio: 'inherit' });
+for (const fn of [
+  'netlify/functions/send-invoice.js',
+  'netlify/functions/api-keys.js',
+  'netlify/functions/api-invoices.js',
+  'netlify/functions/_lib/firebaseAdmin.js',
+  'netlify/functions/_lib/apiKeyAuth.js',
+]) {
+  execFileSync('node', ['--check', fn], { cwd: root, stdio: 'inherit' });
+}
 
 const pdfSend = readFileSync(join(root, 'src/app/invoices/04-invoice-pdf-send.js'), 'utf8');
 if (pdfSend.includes('html2canvas')) {
