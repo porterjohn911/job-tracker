@@ -167,11 +167,11 @@ Two trigger modes:
 
 ## 7. Guardrails on money-moving actions
 
-For v1:
+For v1 (**built** in Phase 2 as an in-app approval queue):
 
-- **Send-invoice is confirm-before-send.** The agent proposes; a human approves. Options:
-  - (a) the agent emails *you* a summary and only sends after you reply/click, or
-  - (b) Managed Agents' `always_ask` permission on the `send_invoice` tool, which pauses the session for your approval.
+- **Send-invoice is confirm-before-send.** The agent's `send_invoice` call does **not** email — it records a **pending send** under `{ns}/pending_sends`. An owner reviews the queue in **Settings → Agent send requests** and either **Review & send** (which opens the app's normal send composer — the owner's existing Gmail/PDF path — so the actual email always goes through the proven, owner-driven flow) or **Dismiss** (marks it rejected). The agent can never email on its own.
+- `pending_sends` is server-only (Admin SDK) in the rules; the owner UI reads/writes it through the owner-authed `api-pending-sends` endpoint.
+- Alternative mechanisms considered but not used: emailing the owner a summary link, or Managed Agents' `always_ask` pause (Phase 3 could add that on top).
 - **Financials are read-only** in v1 (`financials:read` only). `financials:sensitive` (bank + payroll) is **not** granted to the first agent.
 - **Per-key rate limits** on the endpoints (extend the best-effort limiter already in `send-invoice.js`, ideally backed by a small RTDB counter so it's not per-container).
 
@@ -209,7 +209,7 @@ Mirrors the existing access-management UI patterns in `src/app/access/01-access-
 |---|---|---|
 | **0. This doc** | Agree on scopes, endpoints, gating | ✅ Shared plan + decisions locked |
 | **1. Auth + one endpoint** ✅ **built** | Admin SDK init + `apiKeyAuth.js` + `api-invoices.js` (read) + `/api_keys` deny rule + owner "Manage API keys" UI | Real key you can mint from Settings and use to read invoices, read-only |
-| **2. Write endpoints** | `create_invoice`, `send_invoice` (gated), `add_schedule_entry` | Agent can act, with approval gate |
+| **2. Write endpoints** ✅ **built** | `create_invoice` (POST `api-invoices`), `add_schedule_entry` (`api-schedule`), `send_invoice` queued for approval (`api-invoice-send`), owner approval endpoint + UI (`api-pending-sends`, "Agent send requests") | Agent can draft invoices & schedule; sends are queued and only go out when an owner approves |
 | **3. MCP + Managed Agent** | MCP wrapper + a scheduled deployment | "Every morning, chase overdue invoices" runs itself |
 | **4. Financials + loosen gates** | `financials:read` summary; later `sensitive` + auto-send once trusted | Full organize-financials story |
 

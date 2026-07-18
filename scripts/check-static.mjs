@@ -45,6 +45,9 @@ for (const fn of [
   'netlify/functions/send-invoice.js',
   'netlify/functions/api-keys.js',
   'netlify/functions/api-invoices.js',
+  'netlify/functions/api-schedule.js',
+  'netlify/functions/api-invoice-send.js',
+  'netlify/functions/api-pending-sends.js',
   'netlify/functions/_lib/firebaseAdmin.js',
   'netlify/functions/_lib/apiKeyAuth.js',
 ]) {

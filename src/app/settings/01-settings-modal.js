@@ -64,7 +64,7 @@ function showSettingsModal(){
       ${(typeof canManageApiKeys === 'function' && canManageApiKeys())
         ? `<div style="margin:14px 0 10px;padding-top:14px;border-top:1px solid var(--border)"><div class="form-label" style="font-size:12px">Agent API Keys</div></div>
            <div class="tt-hint" style="margin-bottom:10px">Give an automated agent scoped, revocable access to this app.</div>
-           <button class="btn-sm" id="set-apikeys" type="button">Manage API keys</button>`
+           <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn-sm" id="set-apikeys" type="button">Manage API keys</button><button class="btn-sm" id="set-agent-sends" type="button">Agent send requests</button></div>`
         : ''}
     </div>
     <div class="modal-foot"><button class="btn-cancel" id="btn-cx">Cancel</button><button class="btn-save" id="btn-set-save">Save</button></div>
@@ -74,6 +74,7 @@ function showSettingsModal(){
   $('mbd').onclick=e=>{if(e.target===e.currentTarget)closeSettings()};
   $('set-access')?.addEventListener('click',()=>{closeSettings();showAccessModal()});
   $('set-apikeys')?.addEventListener('click',()=>{closeSettings();showApiKeysModal()});
+  $('set-agent-sends')?.addEventListener('click',()=>{closeSettings();showAgentSendsModal()});
   $('set-signout')?.addEventListener('click',()=>{if(confirm('Sign out of this device?'))signOut()});
   async function saveBrandLogo(kind,file){
     const up=await uploadCompanyLogoFile(file,kind);
