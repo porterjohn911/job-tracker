@@ -109,11 +109,19 @@ async function authenticateApiKey(event, requiredScope) {
     return { error: { statusCode: 401, message: 'Missing or malformed API key' } };
   }
   const hash = sha256(raw);
+  let ref;
+  try {
+    ref = db().ref('api_keys/' + hash);
+  } catch (e) {
+    console.error('[api] Admin SDK init failed:', e.message);
+    return { error: { statusCode: 500, message: 'Server not configured: ' + e.message } };
+  }
   let snap;
   try {
-    snap = await db().ref('api_keys/' + hash).get();
+    snap = await ref.get();
   } catch (e) {
-    return { error: { statusCode: 500, message: 'Key lookup failed' } };
+    console.error('[api] key lookup failed:', e.message);
+    return { error: { statusCode: 500, message: 'Key lookup failed: ' + e.message } };
   }
   if (!snap.exists()) {
     return { error: { statusCode: 401, message: 'Invalid API key' } };
@@ -143,18 +151,33 @@ async function authenticateApiKey(event, requiredScope) {
 async function verifyOwner(event) {
   const token = parseBearer(event);
   if (!token) return { error: { statusCode: 401, message: 'Sign in as an owner to manage API keys' } };
+
+  // Distinct failure modes so the cause is visible instead of a catch-all:
+  //   500 -> the server (Admin SDK / service account) isn't configured
+  //   401 -> the Firebase ID token itself was rejected (often a project mismatch)
+  let adminAuth;
+  try {
+    adminAuth = auth();
+  } catch (e) {
+    console.error('[api-keys] Admin SDK init failed:', e.message);
+    return { error: { statusCode: 500, message: 'Server not configured: ' + e.message } };
+  }
+
   let decoded;
   try {
-    decoded = await auth().verifyIdToken(token);
+    decoded = await adminAuth.verifyIdToken(token);
   } catch (e) {
-    return { error: { statusCode: 401, message: 'Not authorized — please sign in again' } };
+    console.error('[api-keys] verifyIdToken failed:', e.message);
+    return { error: { statusCode: 401, message: 'Sign-in token rejected: ' + (e.message || 'invalid token') } };
   }
+
   let rec;
   try {
     const snap = await db().ref('users/' + decoded.uid).get();
     rec = snap.val();
   } catch (e) {
-    return { error: { statusCode: 500, message: 'User lookup failed' } };
+    console.error('[api-keys] user lookup failed:', e.message);
+    return { error: { statusCode: 500, message: 'User lookup failed: ' + e.message } };
   }
   if (!rec || rec.role !== 'owner') {
     return { error: { statusCode: 403, message: 'Only owners can manage API keys' } };

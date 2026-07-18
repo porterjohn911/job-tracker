@@ -16,7 +16,11 @@
 // This is the one high-value server secret in the design. Keep it in Netlify
 // env only — never commit it, never expose it to the browser.
 
-const admin = require('firebase-admin');
+// firebase-admin v14 uses the modular subpath API — the legacy namespaced
+// surface (admin.apps / admin.credential) is not exported and throws.
+const { initializeApp, getApps, cert } = require('firebase-admin/app');
+const { getDatabase } = require('firebase-admin/database');
+const { getAuth } = require('firebase-admin/auth');
 
 const PUBLIC_FIREBASE_DB_URL = 'https://witport-constructionservices-default-rtdb.firebaseio.com';
 
@@ -26,38 +30,47 @@ let cachedApp = null;
 // account is not configured. Reused across warm invocations.
 function getAdminApp() {
   if (cachedApp) return cachedApp;
-  if (admin.apps.length) {
-    cachedApp = admin.apps[0];
+  const existing = getApps();
+  if (existing.length) {
+    cachedApp = existing[0];
     return cachedApp;
   }
 
-  const raw = process.env.FIREBASE_SERVICE_ACCOUNT;
-  if (!raw) {
+  let raw = process.env.FIREBASE_SERVICE_ACCOUNT;
+  if (!raw || !raw.trim()) {
     throw new Error('FIREBASE_SERVICE_ACCOUNT is not set — add the service-account JSON to Netlify env vars');
+  }
+  raw = raw.trim();
+  // Tolerate a value accidentally wrapped in an extra pair of quotes on paste.
+  if ((raw.startsWith('"') && raw.endsWith('"')) || (raw.startsWith("'") && raw.endsWith("'"))) {
+    raw = raw.slice(1, -1);
   }
 
   let serviceAccount;
   try {
     serviceAccount = JSON.parse(raw);
   } catch (e) {
-    throw new Error('FIREBASE_SERVICE_ACCOUNT is not valid JSON');
+    throw new Error('FIREBASE_SERVICE_ACCOUNT is not valid JSON (check the paste was not truncated): ' + e.message);
+  }
+  if (!serviceAccount.project_id || !serviceAccount.private_key || !serviceAccount.client_email) {
+    throw new Error('FIREBASE_SERVICE_ACCOUNT is missing project_id/private_key/client_email — is this the service-account JSON?');
   }
 
   const databaseURL = (process.env.FIREBASE_DB_URL || PUBLIC_FIREBASE_DB_URL).replace(/\/+$/, '');
 
-  cachedApp = admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount),
+  cachedApp = initializeApp({
+    credential: cert(serviceAccount),
     databaseURL,
   });
   return cachedApp;
 }
 
 function db() {
-  return getAdminApp().database();
+  return getDatabase(getAdminApp());
 }
 
 function auth() {
-  return getAdminApp().auth();
+  return getAuth(getAdminApp());
 }
 
-module.exports = { admin, getAdminApp, db, auth };
+module.exports = { getAdminApp, db, auth };
