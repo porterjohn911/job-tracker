@@ -54,6 +54,9 @@ function attachJobAssetHandlers(){
     const restore=async()=>{if(restored)return;restored=true;const jj=S.jobs[j.id];if(jj&&removed){jj.photos=jj.photos||[];jj.photos.splice(i,0,removed);await writeJob(jj);render();toast('Photo restored')}};
     UNDO.push(restore);
     toast('Photo removed','undo',restore);
+    // Once the undo window has passed, free the cloud file so deleted media
+    // doesn't linger in Storage as an orphan. Restore cancels this.
+    if(removed&&removed.storagePath)setTimeout(()=>{if(!restored)deleteStoragePath(removed.storagePath)},7000);
   });
   document.querySelectorAll('[data-view-photo]').forEach(el=>el.onclick=e=>{
     e.stopPropagation();const j=S.jobs[S.detail];if(!j)return;
@@ -137,5 +140,7 @@ function attachJobAssetHandlers(){
     const restore=async()=>{if(restored)return;restored=true;const jj=S.jobs[j.id];if(jj){jj.documents=jj.documents||[];jj.documents.splice(i,0,removed);await writeJob(jj);render();toast('File restored')}};
     UNDO.push(restore);
     toast('File removed','undo',restore);
+    // Free the cloud file after the undo window (see photo delete above).
+    if(removed&&removed.storagePath)setTimeout(()=>{if(!restored)deleteStoragePath(removed.storagePath)},7000);
   });
 }

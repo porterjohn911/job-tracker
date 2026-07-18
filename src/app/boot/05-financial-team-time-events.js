@@ -69,6 +69,8 @@ function attachFinancialTeamTimeHandlers(){
     const restore=async()=>{if(restored)return;restored=true;const jj=S.jobs[j.id];if(jj){jj.receipts=jj.receipts||[];jj.receipts.splice(i,0,removed);await writeJob(jj);render();toast('Receipt restored')}};
     UNDO.push(restore);
     toast('Receipt removed','undo',restore);
+    // Free the cloud file after the undo window (see photo delete).
+    if(removed&&removed.storagePath)setTimeout(()=>{if(!restored)deleteStoragePath(removed.storagePath)},7000);
   });
 
   // Financials
