@@ -119,7 +119,7 @@ Proposed surface (v1):
 | `/api/invoices/send` | POST | `invoices:write` | Send — reuses `send-invoice.js` internals; **gated** (§7) |
 | `/api/schedule` | GET | `schedule:read` | Read schedule entries |
 | `/api/schedule` | POST | `schedule:write` | Create/update a schedule entry |
-| `/api/financials/summary` | GET | `financials:read` | Job costing / AR / receipts summary |
+| `/api/overview` (`api-overview`) | GET | `financials:read` | Owner-level rollups: pipeline, A/R + overdue, estimates, expenses by category, hours (labor **cost** only with `financials:sensitive`) |
 | `/api/keys` | GET/POST/DELETE | owner session (not an API key) | Mint/list/revoke keys from the UI |
 
 > `/api/keys` is managed by a signed-in **owner** through the settings UI (§8), not by an agent key — an agent should never be able to mint more keys.
