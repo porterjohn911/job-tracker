@@ -7,7 +7,10 @@
   command = "echo 'No build needed — static site'"
 
 [build.environment]
-  NODE_VERSION = "18"
+  # Node 22: firebase-admin's transitive dep `jose` is ESM-only, and require()
+  # of an ES module is only supported on Node 20.19+/22+. Node 18 throws
+  # ERR_REQUIRE_ESM at function load. Keep this at 22 for the functions runtime.
+  NODE_VERSION = "22"
 
 [functions]
   directory = "netlify/functions"
