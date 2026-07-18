@@ -54,6 +54,16 @@ exports.handler = async (event) => {
   if (event.httpMethod === 'OPTIONS') return { statusCode: 200, headers: corsHeaders(origin), body: '{}' };
   if (event.httpMethod !== 'GET') return json(405, { error: 'GET only' });
 
+  try {
+    return await handle(event, json);
+  } catch (e) {
+    console.error('[api-invoices] unhandled:', e && e.stack ? e.stack : e);
+    return json(500, { error: 'Unexpected server error: ' + ((e && e.message) || 'unknown') });
+  }
+};
+
+async function handle(event, json) {
+
   const authed = await authenticateApiKey(event, 'invoices:read');
   if (authed.error) return json(authed.error.statusCode, { error: authed.error.message });
 

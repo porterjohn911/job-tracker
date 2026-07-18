@@ -18,11 +18,26 @@
 
 // firebase-admin v14 uses the modular subpath API — the legacy namespaced
 // surface (admin.apps / admin.credential) is not exported and throws.
-const { initializeApp, getApps, cert } = require('firebase-admin/app');
-const { getDatabase } = require('firebase-admin/database');
-const { getAuth } = require('firebase-admin/auth');
-
+//
+// The modules are require()d lazily (inside loadAdmin, not at file top) so a
+// bundling/runtime resolution failure surfaces as a handled JSON 500 from the
+// endpoint instead of an opaque platform 502.
 const PUBLIC_FIREBASE_DB_URL = 'https://witport-constructionservices-default-rtdb.firebaseio.com';
+
+let mods = null;
+function loadAdmin() {
+  if (mods) return mods;
+  try {
+    mods = {
+      app: require('firebase-admin/app'),
+      database: require('firebase-admin/database'),
+      auth: require('firebase-admin/auth'),
+    };
+  } catch (e) {
+    throw new Error('firebase-admin failed to load in the function runtime: ' + e.message);
+  }
+  return mods;
+}
 
 let cachedApp = null;
 
@@ -30,6 +45,7 @@ let cachedApp = null;
 // account is not configured. Reused across warm invocations.
 function getAdminApp() {
   if (cachedApp) return cachedApp;
+  const { getApps } = loadAdmin().app;
   const existing = getApps();
   if (existing.length) {
     cachedApp = existing[0];
@@ -58,6 +74,7 @@ function getAdminApp() {
 
   const databaseURL = (process.env.FIREBASE_DB_URL || PUBLIC_FIREBASE_DB_URL).replace(/\/+$/, '');
 
+  const { initializeApp, cert } = loadAdmin().app;
   cachedApp = initializeApp({
     credential: cert(serviceAccount),
     databaseURL,
@@ -66,11 +83,11 @@ function getAdminApp() {
 }
 
 function db() {
-  return getDatabase(getAdminApp());
+  return loadAdmin().database.getDatabase(getAdminApp());
 }
 
 function auth() {
-  return getAuth(getAdminApp());
+  return loadAdmin().auth.getAuth(getAdminApp());
 }
 
 module.exports = { getAdminApp, db, auth };

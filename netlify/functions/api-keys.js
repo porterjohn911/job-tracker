@@ -46,6 +46,16 @@ exports.handler = async (event) => {
 
   if (event.httpMethod === 'OPTIONS') return { statusCode: 200, headers: corsHeaders(origin), body: '{}' };
 
+  try {
+    return await handle(event, json);
+  } catch (e) {
+    // Last-resort guard: never let an unexpected throw become an opaque 502.
+    console.error('[api-keys] unhandled:', e && e.stack ? e.stack : e);
+    return json(500, { error: 'Unexpected server error: ' + ((e && e.message) || 'unknown') });
+  }
+};
+
+async function handle(event, json) {
   const authed = await verifyOwner(event);
   if (authed.error) return json(authed.error.statusCode, { error: authed.error.message });
 
