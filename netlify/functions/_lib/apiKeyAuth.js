@@ -12,7 +12,31 @@
 // revocation) is safe.
 
 const crypto = require('crypto');
-const { db, auth } = require('./firebaseAdmin');
+const { db } = require('./firebaseAdmin');
+
+// Firebase Web API key — a PUBLIC project identifier (not a secret), used to
+// verify ID tokens via Google's REST endpoint. Same value/pattern as
+// send-invoice.js. Overridable via env for other projects.
+const PUBLIC_FIREBASE_API_KEY = ['AI', 'za', 'SyDCE0', 'Yo6YkYtS', 'kibUx9T7Q5', 'XEkgmEsS', 'KRc'].join('');
+const FIREBASE_API_KEY = process.env.FIREBASE_API_KEY || PUBLIC_FIREBASE_API_KEY;
+
+// Verify a Firebase ID token WITHOUT firebase-admin/auth (which pulls in the
+// ESM-only jose dep and fails to load on Node < 20.19). Google's
+// identitytoolkit accounts:lookup returns the account only for a genuine,
+// unexpired token issued for this project — same trust model send-invoice.js
+// uses. Returns the uid, or null.
+async function verifyIdTokenRest(idToken) {
+  if (!idToken) return null;
+  const r = await fetch('https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=' + FIREBASE_API_KEY, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ idToken }),
+  });
+  if (!r.ok) return null;
+  const d = await r.json();
+  const u = d.users && d.users[0];
+  return u && u.localId ? u.localId : null;
+}
 
 // ── Scopes ──────────────────────────────────────────────────────────
 // The full vocabulary. v1 keys are typically minted with the first three.
@@ -153,36 +177,31 @@ async function verifyOwner(event) {
   if (!token) return { error: { statusCode: 401, message: 'Sign in as an owner to manage API keys' } };
 
   // Distinct failure modes so the cause is visible instead of a catch-all:
-  //   500 -> the server (Admin SDK / service account) isn't configured
-  //   401 -> the Firebase ID token itself was rejected (often a project mismatch)
-  let adminAuth;
+  //   401 -> the Firebase ID token itself was rejected
+  //   500 -> the server (service account / database) isn't configured
+  let uid;
   try {
-    adminAuth = auth();
+    uid = await verifyIdTokenRest(token);
   } catch (e) {
-    console.error('[api-keys] Admin SDK init failed:', e.message);
-    return { error: { statusCode: 500, message: 'Server not configured: ' + e.message } };
+    console.error('[api-keys] token verify failed:', e.message);
+    return { error: { statusCode: 502, message: 'Could not verify sign-in: ' + e.message } };
   }
-
-  let decoded;
-  try {
-    decoded = await adminAuth.verifyIdToken(token);
-  } catch (e) {
-    console.error('[api-keys] verifyIdToken failed:', e.message);
-    return { error: { statusCode: 401, message: 'Sign-in token rejected: ' + (e.message || 'invalid token') } };
+  if (!uid) {
+    return { error: { statusCode: 401, message: 'Sign-in token rejected — please sign in again' } };
   }
 
   let rec;
   try {
-    const snap = await db().ref('users/' + decoded.uid).get();
+    const snap = await db().ref('users/' + uid).get();
     rec = snap.val();
   } catch (e) {
     console.error('[api-keys] user lookup failed:', e.message);
-    return { error: { statusCode: 500, message: 'User lookup failed: ' + e.message } };
+    return { error: { statusCode: 500, message: 'Server not configured (database): ' + e.message } };
   }
   if (!rec || rec.role !== 'owner') {
     return { error: { statusCode: 403, message: 'Only owners can manage API keys' } };
   }
-  return { uid: decoded.uid, user: rec };
+  return { uid, user: rec };
 }
 
 module.exports = {

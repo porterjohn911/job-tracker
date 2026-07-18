@@ -28,10 +28,13 @@ let mods = null;
 function loadAdmin() {
   if (mods) return mods;
   try {
+    // Only the app + database modules. NOT firebase-admin/auth — that pulls in
+    // jwks-rsa -> jose (ESM-only), which fails to require() on Node < 20.19
+    // (Netlify's functions runtime). ID tokens are verified via Google's REST
+    // endpoint instead (see verifyIdTokenRest in apiKeyAuth.js).
     mods = {
       app: require('firebase-admin/app'),
       database: require('firebase-admin/database'),
-      auth: require('firebase-admin/auth'),
     };
   } catch (e) {
     throw new Error('firebase-admin failed to load in the function runtime: ' + e.message);
@@ -86,8 +89,4 @@ function db() {
   return loadAdmin().database.getDatabase(getAdminApp());
 }
 
-function auth() {
-  return loadAdmin().auth.getAuth(getAdminApp());
-}
-
-module.exports = { getAdminApp, db, auth };
+module.exports = { getAdminApp, db };
