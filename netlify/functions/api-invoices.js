@@ -1,17 +1,15 @@
-// Agent-facing invoice READ endpoint (see AGENT_API_DESIGN.md §5).
+// Agent-facing invoice endpoint (see AGENT_API_DESIGN.md §5, Phase 2).
 //
-//   GET /.netlify/functions/api-invoices
+//   GET  /.netlify/functions/api-invoices    -> list invoices  (scope invoices:read)
+//   POST /.netlify/functions/api-invoices    -> create a draft  (scope invoices:write)
 //   Authorization: Bearer sk_live_...
-//   Requires scope: invoices:read
 //
-// Query params (all optional):
-//   status = draft | sent | paid | overdue   (filter)
-//   limit  = max rows to return (default 100, max 500)
+// GET query params (optional): status = draft|sent|paid|overdue, limit (<=500).
+// POST body: { jobId, items:[{desc,qty,rate}], taxRate?, date?, dueDate?, notes?, terms? }
 //
-// Read-only. Invoices live on each job as job.invoices[]; this flattens them
-// across the key's company namespace and returns them with light job context.
-// This mirrors the client-side helpers in src/app/02-state-utils-data.js
-// (calcInvoice / invoiceStatus) so statuses match what owners see in the app.
+// Invoices live on each job as job.invoices[]. Creating one appends a draft and
+// mirrors the shape produced by defaultInvoice() in the client. Sending is a
+// separate, approval-gated endpoint (api-invoice-send.js) — creating never emails.
 
 const { db } = require('./_lib/firebaseAdmin');
 const { corsHeaders, jsonResponder, authenticateApiKey } = require('./_lib/apiKeyAuth');
@@ -47,23 +45,39 @@ function invoiceStatus(inv) {
   return inv.status || 'draft';
 }
 
+// Mirror of nextInvoiceNumber() in the client — scan every job's invoices.
+function nextInvoiceNumber(jobs) {
+  let max = 1000;
+  for (const jobId of Object.keys(jobs)) {
+    const invs = (jobs[jobId] && jobs[jobId].invoices) || [];
+    for (const inv of invs) {
+      const m = String(inv.number || '').match(/(\d+)/);
+      if (m) { const n = parseInt(m[1], 10); if (n > max) max = n; }
+    }
+  }
+  return 'INV-' + (max + 1);
+}
+
+function todayKey() {
+  return new Date().toISOString().slice(0, 10);
+}
+
 exports.handler = async (event) => {
   const origin = event.headers && (event.headers.origin || event.headers.Origin);
   const json = jsonResponder(origin);
 
   if (event.httpMethod === 'OPTIONS') return { statusCode: 200, headers: corsHeaders(origin), body: '{}' };
-  if (event.httpMethod !== 'GET') return json(405, { error: 'GET only' });
+  if (event.httpMethod !== 'GET' && event.httpMethod !== 'POST') return json(405, { error: 'GET or POST only' });
 
   try {
-    return await handle(event, json);
+    return event.httpMethod === 'POST' ? await create(event, json) : await list(event, json);
   } catch (e) {
     console.error('[api-invoices] unhandled:', e && e.stack ? e.stack : e);
     return json(500, { error: 'Unexpected server error: ' + ((e && e.message) || 'unknown') });
   }
 };
 
-async function handle(event, json) {
-
+async function list(event, json) {
   const authed = await authenticateApiKey(event, 'invoices:read');
   if (authed.error) return json(authed.error.statusCode, { error: authed.error.message });
 
@@ -81,7 +95,7 @@ async function handle(event, json) {
     const snap = await db().ref(ns + '/jobs').get();
     jobs = snap.val() || {};
   } catch (e) {
-    return json(500, { error: 'Could not read invoices' });
+    return json(500, { error: 'Could not read invoices: ' + e.message });
   }
 
   const out = [];
@@ -102,19 +116,89 @@ async function handle(event, json) {
         paid: Math.round(c.paid * 100) / 100,
         balance: Math.round(c.balance * 100) / 100,
         job: { id: jobId, name: j.name || '' },
-        customer: {
-          name: j.customerName || '',
-          email: j.customerEmail || '',
-          phone: j.customerPhone || '',
-        },
+        customer: { name: j.customerName || '', email: j.customerEmail || '', phone: j.customerPhone || '' },
       });
     }
   }
 
-  // Newest first by date, then cap.
   out.sort((a, b) => String(b.date).localeCompare(String(a.date)));
   const total = out.length;
-  const rows = out.slice(0, limit);
+  return json(200, { company: authed.key.company, count: Math.min(total, limit), total, invoices: out.slice(0, limit) });
+}
 
-  return json(200, { company: authed.key.company, count: rows.length, total, invoices: rows });
-};
+async function create(event, json) {
+  const authed = await authenticateApiKey(event, 'invoices:write');
+  if (authed.error) return json(authed.error.statusCode, { error: authed.error.message });
+
+  const ns = authed.key.ns || authed.key.company;
+  if (!ns) return json(500, { error: 'Key is not bound to a company' });
+
+  let body;
+  try { body = JSON.parse(event.body || '{}'); } catch (e) { return json(400, { error: 'Bad request' }); }
+
+  const jobId = String(body.jobId || '').trim();
+  if (!jobId) return json(400, { error: 'jobId is required' });
+
+  const items = Array.isArray(body.items) ? body.items : null;
+  if (!items || !items.length) return json(400, { error: 'items[] is required (at least one line)' });
+  const cleanItems = [];
+  for (const it of items) {
+    if (!it || typeof it.desc !== 'string' || !it.desc.trim()) {
+      return json(400, { error: 'each item needs a non-empty desc' });
+    }
+    cleanItems.push({ desc: it.desc.trim(), qty: num(it.qty) || 1, rate: num(it.rate) });
+  }
+
+  let jobs;
+  try {
+    const snap = await db().ref(ns + '/jobs').get();
+    jobs = snap.val() || {};
+  } catch (e) {
+    return json(500, { error: 'Could not read jobs: ' + e.message });
+  }
+  const job = jobs[jobId];
+  if (!job) return json(404, { error: 'No job with id ' + jobId });
+
+  const invoice = {
+    id: 'inv_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
+    number: nextInvoiceNumber(jobs),
+    date: (body.date && String(body.date)) || todayKey(),
+    dueDate: (body.dueDate && String(body.dueDate)) || '',
+    items: cleanItems,
+    taxRate: body.taxRate == null ? '' : num(body.taxRate),
+    notes: body.notes ? String(body.notes) : '',
+    terms: body.terms ? String(body.terms) : '',
+    deposit: 0,
+    paid: 0,
+    status: 'draft',
+  };
+
+  const invoices = Array.isArray(job.invoices) ? job.invoices.slice() : [];
+  invoices.push(invoice);
+
+  try {
+    await db().ref(ns + '/jobs/' + jobId + '/invoices').set(invoices);
+  } catch (e) {
+    return json(500, { error: 'Could not save invoice: ' + e.message });
+  }
+
+  // Audit trail (same activity feed owners already see).
+  db().ref(ns + '/activity').push({
+    user: 'Agent · ' + (authed.key.label || authed.key.prefix || 'API key'),
+    action: 'created draft invoice ' + invoice.number + ' for',
+    job: job.name || '',
+    jobId,
+    time: Date.now(),
+  }).catch(() => {});
+
+  const c = calcInvoice(invoice);
+  return json(201, {
+    company: authed.key.company,
+    invoice: {
+      id: invoice.id, number: invoice.number, status: 'draft',
+      date: invoice.date, dueDate: invoice.dueDate,
+      total: Math.round(c.total * 100) / 100,
+      job: { id: jobId, name: job.name || '' },
+    },
+  });
+}
