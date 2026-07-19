@@ -55,6 +55,7 @@ for (const fn of [
   'netlify/functions/api-time.js',
   'netlify/functions/api-receivables.js',
   'netlify/functions/api-job-profit.js',
+  'netlify/functions/api-transactions.js',
   'netlify/functions/weekly-report.js',
   'netlify/functions/report-run.js',
   'netlify/functions/mcp.js',

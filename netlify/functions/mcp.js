@@ -202,6 +202,31 @@ const TOOLS = [
       jobId: { type: 'string' }, date: { type: 'string', description: 'YYYY-MM-DD' },
     }, required: ['member', 'hours'] },
   },
+
+  // ── Bank transactions: read financials + recategorize ───────────────
+  {
+    name: 'list_transactions',
+    description: "List imported bank/card transactions with their category, amount, and date. amount is negative for money out (expenses) and positive for money in (income). Use this to review spending, find uncategorized items (uncategorized:true), or locate transactions to recategorize (e.g. search:\"Home Depot\"). Needs the financials:sensitive scope.",
+    kind: 'GET', path: '/.netlify/functions/api-transactions',
+    inputSchema: { type: 'object', properties: {
+      category: { type: 'string', description: 'filter to one category: Income | Materials | Fuel / Travel | Subcontractor | Equipment | Payroll | Office / Admin | Insurance | Taxes / Fees | Bank / Transfer | Other' },
+      uncategorized: { type: 'boolean', description: 'true = only transactions still in the catch-all "Other" category' },
+      search: { type: 'string', description: 'match text in the transaction description, e.g. a vendor name' },
+      from: { type: 'string', description: 'earliest date YYYY-MM-DD (inclusive)' },
+      to: { type: 'string', description: 'latest date YYYY-MM-DD (inclusive)' },
+      limit: { type: 'integer', description: 'max rows (default 200, max 1000)' },
+    } },
+  },
+  {
+    name: 'categorize_transaction',
+    description: "Change a transaction's category (and optionally link it to a job). Get the transactionId from list_transactions. category must be one of the app's fixed categories. Pass jobId to link it to a job, or jobId:\"\" to unlink. This edits a financial record — confirm the change with the user first. Needs the financials:write scope.",
+    kind: 'PATCH', path: '/.netlify/functions/api-transactions',
+    inputSchema: { type: 'object', properties: {
+      transactionId: { type: 'string', description: 'id from list_transactions' },
+      category: { type: 'string', description: 'Income | Materials | Fuel / Travel | Subcontractor | Equipment | Payroll | Office / Admin | Insurance | Taxes / Fees | Bank / Transfer | Other' },
+      jobId: { type: 'string', description: 'link the transaction to this job id, or "" to unlink' },
+    }, required: ['transactionId'] },
+  },
 ];
 
 function baseUrl(event) {
