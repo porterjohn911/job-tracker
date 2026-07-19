@@ -212,7 +212,8 @@ Mirrors the existing access-management UI patterns in `src/app/access/01-access-
 | **1. Auth + one endpoint** ✅ **built** | Admin SDK init + `apiKeyAuth.js` + `api-invoices.js` (read) + `/api_keys` deny rule + owner "Manage API keys" UI | Real key you can mint from Settings and use to read invoices, read-only |
 | **2. Write endpoints** ✅ **built** | `create_invoice` (POST `api-invoices`), `add_schedule_entry` (`api-schedule`), `send_invoice` queued for approval (`api-invoice-send`), owner approval endpoint + UI (`api-pending-sends`, "Agent send requests") | Agent can draft invoices & schedule; sends are queued and only go out when an owner approves |
 | **3. Scheduled weekly report** ✅ **built** | Netlify Scheduled Function `weekly-report.js` (Fridays) → computes the breakdown via the Admin SDK (no agent key), adds a Claude-written summary, emails it, and stores a weekly snapshot for week-over-week deltas | A financial report + breakdown lands in the owner's inbox every Friday, automatically |
-| **3b. MCP + Managed Agent** *(optional/future)* | MCP wrapper + a Managed-Agent cron deployment | For a more autonomous/conversational agent doing varied tasks — not needed for the scheduled report |
+| **3b. MCP adapter** ✅ **built** | `mcp.js` — an MCP (JSON-RPC/Streamable-HTTP) server that exposes the REST endpoints as native tools and forwards the caller's API key. Connect it as a custom connector in Claude Cowork/Desktop | On-demand agent sessions get clean typed tools (list/create/send/schedule/overview) instead of ad-hoc curl; key lives in the connector, not pasted |
+| **3c. Managed Agent** *(optional/future)* | The MCP server + a Managed-Agent cron deployment | For a fully autonomous agent acting on its own over time — not needed for on-demand use or the scheduled report |
 | **4. Loosen gates** | later: `financials:sensitive` + auto-send once trusted | Full organize-financials story |
 
 Each phase is independently shippable and reviewable.

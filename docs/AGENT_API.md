@@ -165,6 +165,15 @@ curl -s -H "Authorization: Bearer $JOB_TRACKER_API_KEY" \
 - **Don't invent `jobId`/`invoiceId` values** — always get them from `api-jobs` / `api-invoices` first.
 - If a call returns an error, show the user the message rather than retrying blindly.
 
+## MCP connector (recommended for Claude Cowork / Claude Desktop)
+
+Instead of calling the endpoints via curl, connect the built-in **MCP server** so the agent gets these as native, typed tools (`list_jobs`, `list_invoices`, `get_overview`, `create_invoice`, `queue_invoice_send`, `list_schedule`, `add_schedule_entry`).
+
+- **Server URL:** `$JOB_TRACKER_URL/.netlify/functions/mcp`
+- **Auth:** your API key as a **Bearer token** in the connector's auth field. If the connector can't set a header, append the key to the URL instead: `…/mcp?key=sk_live_…`
+
+The key's scopes still bound what the tools can do, and `queue_invoice_send` still only **queues** for owner approval. Add it in Claude as a custom/remote connector, then in a Cowork session the tools appear automatically — no cheat-sheet needed.
+
 ## Error codes
 
 | Status | Meaning | What to do |
