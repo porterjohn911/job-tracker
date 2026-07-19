@@ -19,6 +19,10 @@
   # can't bundle cleanly — install it at runtime instead of inlining it.
   external_node_modules = ["firebase-admin"]
 
+# Weekly financial report — Fridays at 13:00 UTC (cron is UTC; adjust as needed).
+[functions."weekly-report"]
+  schedule = "0 13 * * 5"
+
 # Serve the app for any unknown path (SPA-style fallback). Real files that
 # exist (like the dev sandbox) are still served directly.
 [[redirects]]

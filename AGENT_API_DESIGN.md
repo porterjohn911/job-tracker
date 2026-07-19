@@ -211,8 +211,9 @@ Mirrors the existing access-management UI patterns in `src/app/access/01-access-
 | **0. This doc** | Agree on scopes, endpoints, gating | ✅ Shared plan + decisions locked |
 | **1. Auth + one endpoint** ✅ **built** | Admin SDK init + `apiKeyAuth.js` + `api-invoices.js` (read) + `/api_keys` deny rule + owner "Manage API keys" UI | Real key you can mint from Settings and use to read invoices, read-only |
 | **2. Write endpoints** ✅ **built** | `create_invoice` (POST `api-invoices`), `add_schedule_entry` (`api-schedule`), `send_invoice` queued for approval (`api-invoice-send`), owner approval endpoint + UI (`api-pending-sends`, "Agent send requests") | Agent can draft invoices & schedule; sends are queued and only go out when an owner approves |
-| **3. MCP + Managed Agent** | MCP wrapper + a scheduled deployment | "Every morning, chase overdue invoices" runs itself |
-| **4. Financials + loosen gates** | `financials:read` summary; later `sensitive` + auto-send once trusted | Full organize-financials story |
+| **3. Scheduled weekly report** ✅ **built** | Netlify Scheduled Function `weekly-report.js` (Fridays) → computes the breakdown via the Admin SDK (no agent key), adds a Claude-written summary, emails it, and stores a weekly snapshot for week-over-week deltas | A financial report + breakdown lands in the owner's inbox every Friday, automatically |
+| **3b. MCP + Managed Agent** *(optional/future)* | MCP wrapper + a Managed-Agent cron deployment | For a more autonomous/conversational agent doing varied tasks — not needed for the scheduled report |
+| **4. Loosen gates** | later: `financials:sensitive` + auto-send once trusted | Full organize-financials story |
 
 Each phase is independently shippable and reviewable.
 
@@ -238,3 +239,14 @@ Before an owner can mint a key, one Netlify env var must be set (Site config →
 - `ALLOWED_ORIGINS` — optional; comma-separated site origins to lock CORS down to (recommended once live).
 
 `firebase-admin` is added to `package.json` and marked `external_node_modules` in `netlify.toml` so Netlify installs it at runtime rather than bundling it. Until `FIREBASE_SERVICE_ACCOUNT` is set, the key endpoints return a clear "not configured" error and nothing else changes in the app.
+
+### Extra env vars for the weekly report (Phase 3)
+
+The Friday `weekly-report` scheduled function reuses `FIREBASE_SERVICE_ACCOUNT` for data (no agent key needed). To email it, also set:
+
+- **`REPORT_TO`** — recipient email (required to actually send).
+- **`SMTP_USER` / `SMTP_PASS`** — SMTP creds (same ones `send-invoice` uses; e.g. a Gmail App Password). Required to send.
+- **`ANTHROPIC_API_KEY`** — enables the Claude-written narrative summary (optional; omit → numbers only).
+- **`REPORT_COMPANY`** — company id to report on (default `wfs`); **`REPORT_FROM`** — optional From address (defaults to `SMTP_USER`).
+
+Schedule is `netlify.toml` → `[functions."weekly-report"] schedule = "0 13 * * 5"` (Fridays 13:00 UTC; cron is UTC — adjust for your timezone). Missing `REPORT_TO`/SMTP → the function computes and logs but sends nothing (no crash).
