@@ -123,14 +123,28 @@ curl -s -H "Authorization: Bearer $JOB_TRACKER_API_KEY" \
   "$JOB_TRACKER_URL/.netlify/functions/api-schedule"
 ```
 
-### Add a schedule entry — `POST api-schedule`  · scope `schedule:write`
+### Add a schedule entry / time block — `POST api-schedule`  · scope `schedule:write`
 
-Adds to the owner's shared calendar. Body: `{ date, title, notes? }`.
+Adds to the owner's shared calendar. To draw a real **time block** (a colored block on the day/week grid, not just an all-day chip), include `start` and `end` — clock times like `"8am"`, `"4pm"`, or `"16:00"`.
+
+Body: `{ date | dates[], start?, end?, type?, title?, desc?, assignee?, jobId?, notes? }`
+
+- `type` — what the block is: `onsite` (default, on-site job hours), `meeting`, `estimating`, `delivering`, `admin`.
+- `dates[]` — create the **same block on many days** in one call (e.g. 8–4 every weekday). Use instead of `date`.
+- `assignee` — color-codes the block by person.
+- Omit `start`/`end` for an untimed all-day entry (the old behavior).
 
 ```bash
+# One 8am–4pm on-site block:
 curl -s -X POST -H "Authorization: Bearer $JOB_TRACKER_API_KEY" \
   -H "Content-Type: application/json" \
-  -d '{"date":"2026-07-28","title":"Site visit — Johnson Deck","notes":"Measure railings"}' \
+  -d '{"date":"2026-07-28","start":"8am","end":"4pm","type":"onsite","assignee":"John"}' \
+  "$JOB_TRACKER_URL/.netlify/functions/api-schedule"
+
+# Same block, all week (one call):
+curl -s -X POST -H "Authorization: Bearer $JOB_TRACKER_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"dates":["2026-07-27","2026-07-28","2026-07-29","2026-07-30","2026-07-31"],"start":"8:00","end":"16:00","type":"onsite"}' \
   "$JOB_TRACKER_URL/.netlify/functions/api-schedule"
 ```
 
@@ -197,7 +211,8 @@ Every recategorization is written to the company activity feed. Confirm the chan
 | "Categorize my bank transactions / put the Home Depot charges under Materials" | `GET api-transactions?uncategorized=true` (or `search=…`) → confirm → `PATCH api-transactions` per item |
 | "Draft an invoice for the Johnson job for $4,200" | `GET api-jobs?search=johnson` → confirm the job → `POST api-invoices` |
 | "Send invoice INV-1042" | find it via `GET api-invoices` → `POST api-invoice-send` → tell them it's **queued for approval** |
-| "Add a site visit for the Johnson deck next Tuesday" | `POST api-schedule` |
+| "Add a site visit for the Johnson deck next Tuesday" | `POST api-schedule` with `start`/`end` |
+| "Block me on-site 8–4 every day this week" | `POST api-schedule` with `dates:[…]`, `start:"8am"`, `end:"4pm"`, `type:"onsite"` (one call) |
 | "What's on the schedule?" | `GET api-schedule` |
 
 ## Guardrails & etiquette
