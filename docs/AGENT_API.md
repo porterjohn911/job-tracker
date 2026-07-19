@@ -26,9 +26,17 @@ The key must be minted with the **scopes** the tasks need:
 |---|---|
 | `invoices:read` | List jobs & invoices, read overview reports |
 | `invoices:write` | Create draft invoices, queue sends |
-| `schedule:read` / `schedule:write` | Read / add owner-schedule entries |
+| `schedule:read` / `schedule:write` | Read / add / edit owner-schedule entries |
 | `financials:read` | The overview/reports rollup |
 | `financials:sensitive` | *Optional* — adds labor cost + bank/payroll reads (high-risk) |
+| `jobs:write` | Create & update jobs (stage, status, value, customer, …) |
+| `expenses:write` | Log expenses / receipts |
+| `time:write` | Log time entries |
+| `delete` | Delete jobs, invoices/estimates, schedule entries (high-risk) |
+
+Read-only insight tools: `get_receivables` (who owes money) and `get_job_profit` (per-job P&L) use `invoices:read` / `financials:read`. Creating an estimate is `create_invoice` with `kind: "estimate"` (`invoices:write`).
+
+Recording a payment on an invoice uses `invoices:write`. Deletes and updates are logged to the company activity feed, and the agent should confirm before deleting.
 
 ## Conventions
 

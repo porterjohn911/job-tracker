@@ -47,6 +47,10 @@ const SCOPES = [
   'schedule:write',
   'financials:read',
   'financials:sensitive',
+  'jobs:write',
+  'expenses:write',
+  'time:write',
+  'delete',
 ];
 
 const KEY_PREFIX = 'sk_live_';

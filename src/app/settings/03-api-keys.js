@@ -10,6 +10,10 @@ const API_KEY_SCOPES = [
   { id: 'schedule:write', label: 'Add / edit schedule entries' },
   { id: 'financials:read', label: 'Read financial summaries' },
   { id: 'financials:sensitive', label: 'Read bank & payroll (high risk)', sensitive: true },
+  { id: 'jobs:write', label: 'Create & update jobs (stage, status, details)' },
+  { id: 'expenses:write', label: 'Log expenses / receipts' },
+  { id: 'time:write', label: 'Log time entries' },
+  { id: 'delete', label: 'Delete jobs, invoices & schedule entries (high risk)', sensitive: true },
 ];
 
 // True only when real Firebase logins are on AND the current user is an owner

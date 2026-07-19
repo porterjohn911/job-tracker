@@ -45,17 +45,20 @@ function invoiceStatus(inv) {
   return inv.status || 'draft';
 }
 
-// Mirror of nextInvoiceNumber() in the client — scan every job's invoices.
-function nextInvoiceNumber(jobs) {
+// Mirror of nextInvoiceNumber()/nextEstimateNumber() in the client — scan every
+// job's docs of that kind and increment the max.
+function nextNumber(jobs, kind) {
+  const field = kind === 'estimate' ? 'estimates' : 'invoices';
+  const prefix = kind === 'estimate' ? 'EST-' : 'INV-';
   let max = 1000;
   for (const jobId of Object.keys(jobs)) {
-    const invs = (jobs[jobId] && jobs[jobId].invoices) || [];
-    for (const inv of invs) {
-      const m = String(inv.number || '').match(/(\d+)/);
+    const arr = (jobs[jobId] && jobs[jobId][field]) || [];
+    for (const d of arr) {
+      const m = String(d.number || '').match(/(\d+)/);
       if (m) { const n = parseInt(m[1], 10); if (n > max) max = n; }
     }
   }
-  return 'INV-' + (max + 1);
+  return prefix + (max + 1);
 }
 
 function todayKey() {
@@ -67,15 +70,96 @@ exports.handler = async (event) => {
   const json = jsonResponder(origin);
 
   if (event.httpMethod === 'OPTIONS') return { statusCode: 200, headers: corsHeaders(origin), body: '{}' };
-  if (event.httpMethod !== 'GET' && event.httpMethod !== 'POST') return json(405, { error: 'GET or POST only' });
-
   try {
-    return event.httpMethod === 'POST' ? await create(event, json) : await list(event, json);
+    if (event.httpMethod === 'GET') return await list(event, json);
+    if (event.httpMethod === 'POST') return await create(event, json);
+    if (event.httpMethod === 'PATCH') return await recordPayment(event, json);
+    if (event.httpMethod === 'DELETE') return await remove(event, json);
+    return json(405, { error: 'GET, POST, PATCH, or DELETE' });
   } catch (e) {
     console.error('[api-invoices] unhandled:', e && e.stack ? e.stack : e);
     return json(500, { error: 'Unexpected server error: ' + ((e && e.message) || 'unknown') });
   }
 };
+
+// Find the invoice/estimate + its index on a job. kind = 'invoice' | 'estimate'.
+function findDoc(job, kind, docId) {
+  const arr = Array.isArray(kind === 'estimate' ? job.estimates : job.invoices)
+    ? (kind === 'estimate' ? job.estimates : job.invoices) : [];
+  const idx = arr.findIndex((d) => d && d.id === docId);
+  return { arr, idx };
+}
+
+// Record a payment against an invoice. amount adds to paid; omit amount to mark
+// fully paid (paid = total).
+async function recordPayment(event, json) {
+  const authed = await authenticateApiKey(event, 'invoices:write');
+  if (authed.error) return json(authed.error.statusCode, { error: authed.error.message });
+  const ns = authed.key.ns || authed.key.company;
+  if (!ns) return json(500, { error: 'Key is not bound to a company' });
+
+  let body;
+  try { body = JSON.parse(event.body || '{}'); } catch (e) { return json(400, { error: 'Bad request' }); }
+  const jobId = String(body.jobId || '').trim();
+  const invoiceId = String(body.invoiceId || '').trim();
+  if (!jobId || !invoiceId) return json(400, { error: 'jobId and invoiceId are required' });
+
+  let job;
+  try { job = (await db().ref(ns + '/jobs/' + jobId).get()).val(); } catch (e) { return json(500, { error: 'Read failed: ' + e.message }); }
+  if (!job) return json(404, { error: 'No job with id ' + jobId });
+  const { arr, idx } = findDoc(job, 'invoice', invoiceId);
+  if (idx < 0) return json(404, { error: 'No invoice with id ' + invoiceId + ' on that job' });
+
+  const inv = arr[idx];
+  const c = calcInvoice(inv);
+  const addAmount = body.amount != null ? num(body.amount) : null;
+  const newPaid = addAmount != null ? num(inv.paid) + addAmount : c.total;
+  const paid = Math.round(newPaid * 100) / 100;
+  arr[idx] = { ...inv, paid, status: paid >= c.total - 0.005 ? 'paid' : (inv.status || 'sent') };
+
+  try { await db().ref(ns + '/jobs/' + jobId + '/invoices').set(arr); }
+  catch (e) { return json(500, { error: 'Save failed: ' + e.message }); }
+
+  db().ref(ns + '/activity').push({
+    user: 'Agent · ' + (authed.key.label || authed.key.prefix || 'API key'),
+    action: 'recorded payment on invoice ' + (inv.number || '') + ' for',
+    job: job.name || '', jobId, time: Date.now(),
+  }).catch(() => {});
+
+  const nc = calcInvoice(arr[idx]);
+  return json(200, { ok: true, invoiceId, number: inv.number || '', paid, balance: Math.round(nc.balance * 100) / 100, status: arr[idx].status });
+}
+
+async function remove(event, json) {
+  const authed = await authenticateApiKey(event, 'delete');
+  if (authed.error) return json(authed.error.statusCode, { error: authed.error.message });
+  const ns = authed.key.ns || authed.key.company;
+  if (!ns) return json(500, { error: 'Key is not bound to a company' });
+
+  const p = event.queryStringParameters || {};
+  const jobId = String(p.jobId || '').trim();
+  const invoiceId = String(p.invoiceId || '').trim();
+  const kind = p.kind === 'estimate' ? 'estimate' : 'invoice';
+  if (!jobId || !invoiceId) return json(400, { error: 'jobId and invoiceId are required' });
+
+  let job;
+  try { job = (await db().ref(ns + '/jobs/' + jobId).get()).val(); } catch (e) { return json(500, { error: 'Read failed: ' + e.message }); }
+  if (!job) return json(404, { error: 'No job with id ' + jobId });
+  const { arr, idx } = findDoc(job, kind, invoiceId);
+  if (idx < 0) return json(404, { error: 'No ' + kind + ' with id ' + invoiceId + ' on that job' });
+
+  const doc = arr[idx];
+  arr.splice(idx, 1);
+  try { await db().ref(ns + '/jobs/' + jobId + '/' + (kind === 'estimate' ? 'estimates' : 'invoices')).set(arr); }
+  catch (e) { return json(500, { error: 'Delete failed: ' + e.message }); }
+
+  db().ref(ns + '/activity').push({
+    user: 'Agent · ' + (authed.key.label || authed.key.prefix || 'API key'),
+    action: 'DELETED ' + kind + ' ' + (doc.number || ''), job: job.name || '', jobId, time: Date.now(),
+  }).catch(() => {});
+
+  return json(200, { ok: true, deleted: kind, id: invoiceId, number: doc.number || '' });
+}
 
 async function list(event, json) {
   const authed = await authenticateApiKey(event, 'invoices:read');
@@ -159,9 +243,11 @@ async function create(event, json) {
   const job = jobs[jobId];
   if (!job) return json(404, { error: 'No job with id ' + jobId });
 
+  const kind = body.kind === 'estimate' ? 'estimate' : 'invoice';
+  const field = kind === 'estimate' ? 'estimates' : 'invoices';
   const invoice = {
-    id: 'inv_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
-    number: nextInvoiceNumber(jobs),
+    id: (kind === 'estimate' ? 'est_' : 'inv_') + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
+    number: nextNumber(jobs, kind),
     date: (body.date && String(body.date)) || todayKey(),
     dueDate: (body.dueDate && String(body.dueDate)) || '',
     items: cleanItems,
@@ -173,19 +259,19 @@ async function create(event, json) {
     status: 'draft',
   };
 
-  const invoices = Array.isArray(job.invoices) ? job.invoices.slice() : [];
-  invoices.push(invoice);
+  const arr = Array.isArray(job[field]) ? job[field].slice() : [];
+  arr.push(invoice);
 
   try {
-    await db().ref(ns + '/jobs/' + jobId + '/invoices').set(invoices);
+    await db().ref(ns + '/jobs/' + jobId + '/' + field).set(arr);
   } catch (e) {
-    return json(500, { error: 'Could not save invoice: ' + e.message });
+    return json(500, { error: 'Could not save ' + kind + ': ' + e.message });
   }
 
   // Audit trail (same activity feed owners already see).
   db().ref(ns + '/activity').push({
     user: 'Agent · ' + (authed.key.label || authed.key.prefix || 'API key'),
-    action: 'created draft invoice ' + invoice.number + ' for',
+    action: 'created draft ' + kind + ' ' + invoice.number + ' for',
     job: job.name || '',
     jobId,
     time: Date.now(),
