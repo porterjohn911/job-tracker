@@ -19,9 +19,11 @@
   # can't bundle cleanly — install it at runtime instead of inlining it.
   external_node_modules = ["firebase-admin"]
 
-# Weekly financial report — Fridays at 13:00 UTC (cron is UTC; adjust as needed).
+# Weekly financial report — targets 7 AM US Eastern on Fridays. Netlify cron is
+# UTC-only and can't track DST, so we fire at BOTH 11:00 and 12:00 UTC and the
+# function itself only proceeds at 7 AM ET (see weekly-report.js).
 [functions."weekly-report"]
-  schedule = "0 13 * * 5"
+  schedule = "0 11,12 * * 5"
 
 # Serve the app for any unknown path (SPA-style fallback). Real files that
 # exist (like the dev sandbox) are still served directly.

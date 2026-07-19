@@ -248,5 +248,8 @@ The Friday `weekly-report` scheduled function reuses `FIREBASE_SERVICE_ACCOUNT` 
 - **`SMTP_USER` / `SMTP_PASS`** — SMTP creds (same ones `send-invoice` uses; e.g. a Gmail App Password). Required to send.
 - **`ANTHROPIC_API_KEY`** — enables the Claude-written narrative summary (optional; omit → numbers only).
 - **`REPORT_COMPANY`** — company id to report on (default `wfs`); **`REPORT_FROM`** — optional From address (defaults to `SMTP_USER`).
+- **`REPORT_TRIGGER_TOKEN`** — enables the manual test trigger (`report-run`). Set it to any random string; unset = manual trigger disabled.
 
-Schedule is `netlify.toml` → `[functions."weekly-report"] schedule = "0 13 * * 5"` (Fridays 13:00 UTC; cron is UTC — adjust for your timezone). Missing `REPORT_TO`/SMTP → the function computes and logs but sends nothing (no crash).
+**Schedule:** targets **7 AM US Eastern on Fridays**. Netlify cron is UTC-only and can't track daylight saving, so `netlify.toml` fires at **both 11:00 and 12:00 UTC** (`0 11,12 * * 5`) and `weekly-report.js` only proceeds when it's actually 7 AM ET — so exactly one send happens each Friday year-round. Missing `REPORT_TO`/SMTP → the function computes + snapshots but sends nothing (no crash).
+
+**Manual test:** `GET $SITE/.netlify/functions/report-run?token=$REPORT_TRIGGER_TOKEN` runs the same report immediately (no time gate).
