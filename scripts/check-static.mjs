@@ -52,6 +52,7 @@ for (const fn of [
   'netlify/functions/api-overview.js',
   'netlify/functions/weekly-report.js',
   'netlify/functions/report-run.js',
+  'netlify/functions/mcp.js',
   'netlify/functions/_lib/firebaseAdmin.js',
   'netlify/functions/_lib/apiKeyAuth.js',
   'netlify/functions/_lib/reports.js',
