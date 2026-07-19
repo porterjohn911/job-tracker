@@ -48,6 +48,13 @@ function clockToMin(v) {
   return h * 60 + mm;
 }
 
+// Normalize an assignee to a single string. Accepts assignees:[] (joined with
+// " & ") or a plain assignee string; 2+ names color-code as "shared" client-side.
+function normalizeAssignee(body) {
+  if (Array.isArray(body.assignees)) return body.assignees.map((s) => String(s).trim()).filter(Boolean).join(' & ');
+  return body.assignee != null ? String(body.assignee).trim() : '';
+}
+
 // Explicit minutes (0..1439) or, failing that, a clock string.
 function resolveMin(minField, clockField) {
   if (minField != null && minField !== '') {
@@ -93,7 +100,7 @@ async function update(event, json) {
   if (body.title !== undefined) updates.title = String(body.title);
   if (body.desc !== undefined) updates.desc = String(body.desc);
   if (body.notes !== undefined) updates.notes = String(body.notes);
-  if (body.assignee !== undefined) updates.assignee = String(body.assignee);
+  if (body.assignees !== undefined || body.assignee !== undefined) updates.assignee = normalizeAssignee(body);
 
   if (body.type !== undefined) {
     const t = canonicalType(body.type);
@@ -255,7 +262,9 @@ async function add(event, json) {
     title,
     desc: body.desc ? String(body.desc).trim() : '',
     notes: body.notes ? String(body.notes).trim() : '',
-    assignee: body.assignee ? String(body.assignee).trim() : '',
+    // One person, or several (pass assignees:[] or "John & Mike") — 2+ people
+    // render in the shared "both owners" color on the calendar.
+    assignee: normalizeAssignee(body),
     jobId: body.jobId ? String(body.jobId).trim() : '',
     startMin, endMin,
   };

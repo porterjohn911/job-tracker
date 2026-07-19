@@ -131,7 +131,8 @@ Body: `{ date | dates[], start?, end?, type?, title?, desc?, assignee?, jobId?, 
 
 - `type` — what the block is: `onsite` (default, on-site job hours), `meeting`, `estimating`, `delivering`, `admin`.
 - `dates[]` — create the **same block on many days** in one call (e.g. 8–4 every weekday). Use instead of `date`.
-- `assignee` — color-codes the block by person.
+- `assignee` — **the owner/person the block is for; this sets its color.** Each distinct name gets its own stable color, so always use the same spelling for the same owner.
+- `assignees[]` — **two or more people sharing a block** (e.g. both owners on the same job). Shared blocks render in a distinct third color. You can also write this as `assignee:"John & Mike"`.
 - Omit `start`/`end` for an untimed all-day entry (the old behavior).
 
 ```bash

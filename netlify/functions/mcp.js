@@ -90,7 +90,7 @@ const TOOLS = [
   },
   {
     name: 'add_schedule_entry',
-    description: "Add a TIME BLOCK to the owner's shared calendar. To actually block out hours (so it shows as a colored block, not a bare all-day chip), pass start and end times, e.g. start:\"8am\", end:\"4pm\". Use type to say what the block is (onsite = on-site job hours, the default). For the same block on multiple days (e.g. 8–4 every weekday), pass dates:[] with all the YYYY-MM-DD dates in ONE call instead of calling repeatedly. assignee color-codes the block by person.",
+    description: "Add a TIME BLOCK to the owner's shared calendar. To actually block out hours (so it shows as a colored block, not a bare all-day chip), pass start and end times, e.g. start:\"8am\", end:\"4pm\". Use type to say what the block is (onsite = on-site job hours, the default). For the same block on multiple days (e.g. 8–4 every weekday), pass dates:[] with all the YYYY-MM-DD dates in ONE call instead of calling repeatedly. ALWAYS set the owner's name in assignee so each owner's blocks get their own color — use the owner's exact name consistently. For something BOTH owners share, pass both names in assignees:[\"John\",\"Mike\"] (or assignee:\"John & Mike\"); the calendar renders shared blocks in a distinct third color.",
     kind: 'POST', path: '/.netlify/functions/api-schedule',
     inputSchema: { type: 'object', properties: {
       date: { type: 'string', description: 'YYYY-MM-DD (for a single day)' },
@@ -100,7 +100,8 @@ const TOOLS = [
       type: { type: 'string', description: 'onsite (default) | meeting | estimating | delivering | admin' },
       title: { type: 'string', description: 'optional label; defaults to the type (e.g. "On site")' },
       desc: { type: 'string', description: 'optional detail shown under the title' },
-      assignee: { type: 'string', description: 'person the block is for (color-codes it)' },
+      assignee: { type: 'string', description: 'the owner/person the block is for — sets its color. Consistent name = consistent color.' },
+      assignees: { type: 'array', items: { type: 'string' }, description: 'two+ people sharing the block (e.g. both owners) — renders in the distinct shared color' },
       jobId: { type: 'string', description: 'optional linked job id from list_jobs' },
       notes: { type: 'string' },
     }, required: [] },
@@ -139,7 +140,8 @@ const TOOLS = [
       start: { type: 'string', description: 'e.g. "8am" or "16:00"' },
       end: { type: 'string', description: 'e.g. "4pm" or "16:00"' },
       type: { type: 'string', description: 'onsite | meeting | estimating | delivering | admin' },
-      assignee: { type: 'string' },
+      assignee: { type: 'string', description: 'the owner/person (sets the block color)' },
+      assignees: { type: 'array', items: { type: 'string' }, description: 'two+ people → shared color' },
       title: { type: 'string' }, desc: { type: 'string' }, notes: { type: 'string' },
     }, required: ['id'] },
   },

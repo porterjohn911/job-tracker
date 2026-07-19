@@ -97,6 +97,17 @@ function oschTypeLabel(t){return ({onsite:'On site',meeting:'Meeting',estimating
 function oschEventDetail(ev){return ev.desc||((ev.title&&ev.title!==oschTypeLabel(ev.type))?ev.title:'')}
 // Stable color per person so each owner keeps the same color everywhere.
 function ownerPersonColor(name){if(!name)return '#94a3b8';const palette=['#2a9070','#e8a830','#3ab5c8','#8b5cf6','#dc2626','#0284c7','#d97706','#db2777','#0891b2','#65a30d'];let h=0;for(let i=0;i<name.length;i++)h=(h*31+name.charCodeAt(i))>>>0;return palette[h%palette.length]}
+// A reserved color for blocks shared by 2+ people (e.g. both owners together),
+// deliberately OUTSIDE ownerPersonColor's palette so it never collides with a
+// single person's color.
+const OSCH_SHARED_COLOR='#334155';
+// Split an assignee value ("John", "John & Mike", "John, Mike") into names.
+function oschAssigneeNames(ev){const s=String((ev&&ev.assignee)||'').trim();if(!s)return [];return s.split(/\s*(?:,|&|\/|\+|\band\b)\s*/i).map(x=>x.trim()).filter(Boolean)}
+// Shared when it names 2+ people, or is an explicit "both/all/team/everyone".
+function oschIsShared(ev){const s=String((ev&&ev.assignee)||'').trim().toLowerCase();if(/^(both|all|team|everyone)\b/.test(s))return true;return oschAssigneeNames(ev).length>=2}
+// The color a block/chip should use: the shared color if 2+ people, else the
+// single person's stable color.
+function oschColor(ev){return oschIsShared(ev)?OSCH_SHARED_COLOR:ownerPersonColor(oschAssigneeNames(ev)[0]||'')}
 // 15-minute time options for the start/end pickers.
 function oschTimeOptions(sel){let out='';for(let mn=0;mn<1440;mn+=15)out+=`<option value="${mn}" ${sel===mn?'selected':''}>${minToLabel(mn)}</option>`;return out}
 function renderOwnerSchedule(){
@@ -109,8 +120,11 @@ function renderOwnerSchedule(){
   if(mode==='month')navLabel=new Date(S.ocalYear,S.ocalMonth,1).toLocaleDateString(undefined,{month:'long',year:'numeric'});
   else if(mode==='day')navLabel=new Date(S.ocalDate+'T00:00:00').toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'});
   else{const d=new Date(S.ocalDate+'T00:00:00'),su=new Date(d);su.setDate(d.getDate()-d.getDay());const sa=new Date(su);sa.setDate(su.getDate()+6);navLabel=su.toLocaleDateString(undefined,{month:'short',day:'numeric'})+' – '+sa.toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'});}
-  const people=[...new Set(ownerScheduleList().map(e=>e.assignee).filter(Boolean))].sort();
-  const legend=people.length?`<div class="cal-legend">${people.map(p=>{const c=ownerPersonColor(p);return `<div class="cal-legend-item"><div class="cal-legend-sw" style="background:${c}1a;border-left:3px solid ${c}"></div>${esc(p)}</div>`}).join('')}</div>`:'';
+  const evList=ownerScheduleList();
+  const people=[...new Set(evList.filter(e=>!oschIsShared(e)).flatMap(oschAssigneeNames))].sort();
+  const legendItems=people.map(p=>({label:p,color:ownerPersonColor(p)}));
+  if(evList.some(oschIsShared))legendItems.push({label:'Both / shared',color:OSCH_SHARED_COLOR});
+  const legend=legendItems.length?`<div class="cal-legend">${legendItems.map(it=>`<div class="cal-legend-item"><div class="cal-legend-sw" style="background:${it.color}1a;border-left:3px solid ${it.color}"></div>${esc(it.label)}</div>`).join('')}</div>`:'';
   const body=mode==='day'?renderOschDay():mode==='week'?renderOschWeek():renderOschMonth();
   return `${ownerTitle('Schedule')}
     <div class="cal-view-toggle" role="tablist" style="margin-bottom:10px">
@@ -133,7 +147,7 @@ function renderOschMonth(){
   const first=new Date(y,m,1),daysInMonth=new Date(y,m+1,0).getDate(),startDow=first.getDay();
   const cell=(k,dnum,other)=>{
     const list=byDay[k]||[],isToday=k===today,isSel=k===sel;
-    const chips=list.slice(0,3).map(ev=>{const c=ownerPersonColor(ev.assignee);return `<div class="cal-chip osch-chip" style="border-left-color:${c};background:${c}1a;color:${c}" data-osch-edit="${esc(ev.id)}" title="${esc(oschTypeLabel(ev.type))}${ev.assignee?' · '+esc(ev.assignee):''} · ${minToLabel(ev.startMin)}">${minToLabel(ev.startMin)} ${esc(oschTypeLabel(ev.type))}</div>`}).join('');
+    const chips=list.slice(0,3).map(ev=>{const c=oschColor(ev);return `<div class="cal-chip osch-chip" style="border-left-color:${c};background:${c}1a;color:${c}" data-osch-edit="${esc(ev.id)}" title="${esc(oschTypeLabel(ev.type))}${ev.assignee?' · '+esc(ev.assignee):''} · ${minToLabel(ev.startMin)}">${minToLabel(ev.startMin)} ${esc(oschTypeLabel(ev.type))}</div>`}).join('');
     const more=list.length>3?`<div class="cal-day-more">+${list.length-3}</div>`:'';
     return `<div class="cal-day${isToday?' today':''}${isSel?' selected':''}${other?' other-month':''}" data-osch-day="${k}"><div class="cal-day-num"><span>${dnum}</span></div><div class="cal-day-chips">${chips}${more}</div></div>`;
   };
@@ -148,7 +162,7 @@ function renderOschMonth(){
   const dayHtml=selList.length?selList.map(ev=>{const jl=ownerEventJobLabel(ev),co=ev.company?((COMPANIES[ev.company]||{}).label||ev.company):'',detail=oschEventDetail(ev);const meta=[ev.assignee,detail,jl,co].filter(Boolean).join(' · ');return `<div class="osch-row" data-osch-edit="${esc(ev.id)}">
     <div class="osch-time">${minToLabel(ev.startMin)}${ev.endMin!=null?'–'+minToLabel(ev.endMin):''}</div>
     <div style="flex:1;min-width:0"><div style="font-weight:600">${esc(oschTypeLabel(ev.type))}</div>${meta?`<div class="osch-meta">${esc(meta)}</div>`:''}</div>
-    <span class="osch-dot" style="background:${ownerPersonColor(ev.assignee)}"></span>
+    <span class="osch-dot" style="background:${oschColor(ev)}"></span>
   </div>`}).join(''):`<div class="tt-empty" style="padding:16px 0">Nothing scheduled. Tap a day or “New event”.</div>`;
   return `<div class="cal-grid">${cells}</div>
     <div class="cal-day-list"><div class="cal-day-list-hd"><span>${esc(dayLbl)}</span><span class="kpi-sub">${selList.length} event${selList.length!==1?'s':''}</span></div>${dayHtml}</div>`;
@@ -172,7 +186,7 @@ function renderOschTimeGrid(dayKeys){
   let lines='';for(let mn=winStart;mn<=winEnd;mn+=60)lines+=`<div class="osch-line" style="top:${(mn-winStart)*PPM}px"></div>`;
   const cols=dayKeys.map(k=>{
     const laid=layoutDayEvents(evs.filter(e=>e.date===k),winStart,PPM);
-    const blocks=laid.map(L=>{const ev=L.e,c=ownerPersonColor(ev.assignee);return `<div class="osch-block" data-osch-edit="${esc(ev.id)}" style="top:${L.top}px;height:${L.height}px;left:calc(${L.leftPct}% + 1px);width:calc(${L.widthPct}% - 2px);background:${c}22;border-left:3px solid ${c};color:${c}"><div class="osch-block-t">${esc(oschTypeLabel(ev.type))}</div><div class="osch-block-m">${minToLabel(ev.startMin)}${ev.assignee?' · '+esc(ev.assignee):''}</div></div>`}).join('');
+    const blocks=laid.map(L=>{const ev=L.e,c=oschColor(ev);return `<div class="osch-block" data-osch-edit="${esc(ev.id)}" style="top:${L.top}px;height:${L.height}px;left:calc(${L.leftPct}% + 1px);width:calc(${L.widthPct}% - 2px);background:${c}22;border-left:3px solid ${c};color:${c}"><div class="osch-block-t">${esc(oschTypeLabel(ev.type))}</div><div class="osch-block-m">${minToLabel(ev.startMin)}${ev.assignee?' · '+esc(ev.assignee):''}</div></div>`}).join('');
     return `<div class="osch-daycol" data-osch-daycol="${k}" data-win-start="${winStart}" data-ppm="${PPM}">${blocks}</div>`;
   }).join('');
   return `<div class="osch-view-scroll"><div class="osch-grid"><div class="osch-gutter" style="height:${totalH}px">${gutter}</div><div class="osch-cols" style="height:${totalH}px">${lines}${cols}</div></div></div>`;
@@ -195,7 +209,7 @@ function showOwnerEventModal(ev){
     <div class="modal-head"><div class="modal-title">${editing?'Edit event':'New event'}</div><button class="modal-close" id="mc" aria-label="Close"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button></div>
     <div class="modal-body">
       <div class="form-group"><label class="form-label">What's scheduled</label><select class="form-select" id="oev-type">${typeOpt('onsite','On site')}${typeOpt('meeting','Meeting')}${typeOpt('estimating','Estimating')}${typeOpt('delivering','Delivering materials')}${typeOpt('admin','Admin work')}</select></div>
-      <div class="form-group"><label class="form-label">Who</label><input class="form-input" id="oev-assignee" list="oev-assignees" value="${esc(ev.assignee||'')}" placeholder="Name"><datalist id="oev-assignees">${assignees.map(a=>`<option value="${esc(a)}"></option>`).join('')}</datalist></div>
+      <div class="form-group"><label class="form-label">Who</label><input class="form-input" id="oev-assignee" list="oev-assignees" value="${esc(ev.assignee||'')}" placeholder="Name — or two (e.g. John & Mike) for a shared block"><datalist id="oev-assignees">${assignees.map(a=>`<option value="${esc(a)}"></option>`).join('')}</datalist></div>
       <div class="form-group"><label class="form-label">Date</label><input class="form-input" id="oev-date" type="date" value="${esc(ev.date||dflt)}"></div>
       <div class="form-row">
         <div class="form-group"><label class="form-label">Start</label><select class="form-select" id="oev-start">${oschTimeOptions(ev.startMin!=null?Math.round(ev.startMin/15)*15:480)}</select></div>
