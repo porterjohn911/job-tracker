@@ -66,12 +66,16 @@ function showNotificationsModal(){
       </div>`).join('')+'</div>';
   $('modal-root').innerHTML=`<div class="modal-bd" id="mbd"><div class="modal"><div class="modal-handle"></div>
     <div class="modal-head"><div class="modal-title">Notifications ${notifs.length?'<span style="font-weight:400;color:var(--text-3);font-size:13px">· '+notifs.length+'</span>':''}</div>
-      <div style="display:flex;gap:4px;align-items:center">${notifs.length?'<button class="notif-clear" id="notif-mark">Mark all read</button>':''}<button class="modal-close" id="mc"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button></div>
+      <div style="display:flex;gap:4px;align-items:center">${(typeof pushCanPrompt==='function'&&pushCanPrompt())?'<button class="notif-clear" id="notif-enable">🔔 Enable on this device</button>':''}${notifs.length?'<button class="notif-clear" id="notif-mark">Mark all read</button>':''}<button class="modal-close" id="mc"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button></div>
     </div>
     <div class="modal-body" style="padding:0 20px 20px">${body}</div>
   </div></div>`;
   $('mc').onclick=closeModal;
   $('mbd').onclick=e=>{if(e.target===e.currentTarget)closeModal()};
+  $('notif-enable')?.addEventListener('click',async()=>{
+    const ok=await enablePushNotifications();
+    if(ok){closeModal();}
+  });
   $('notif-mark')?.addEventListener('click',()=>{
     S.notifReadAt=Date.now();
     localStorage.setItem(LS('notif_read'),String(S.notifReadAt));

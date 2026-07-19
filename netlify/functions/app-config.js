@@ -7,6 +7,10 @@ const CONFIG_KEYS = [
   ['messagingSenderId', 'FIREBASE_MESSAGING_SENDER_ID'],
   ['appId', 'FIREBASE_APP_ID'],
   ['measurementId', 'FIREBASE_MEASUREMENT_ID'],
+  // Public VAPID key for web push (Firebase console -> Cloud Messaging ->
+  // Web Push certificates -> "Key pair"). No baked fallback: without this env
+  // var the client simply leaves push notifications disabled.
+  ['vapidKey', 'FIREBASE_VAPID_KEY'],
 ];
 
 function publicFallbackConfig() {

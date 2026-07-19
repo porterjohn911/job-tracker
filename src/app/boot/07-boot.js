@@ -10,6 +10,7 @@ function bootApp(){
   loadAndConnect();
   if(OWNER_MODE)applyOwnerChrome();else applyCompanyBranding();
   render();
+  if(typeof initPush==='function')try{initPush()}catch(e){}
 }
 async function startApp(){
   await loadRuntimeFirebaseConfig();
