@@ -25,6 +25,30 @@
 [functions."weekly-report"]
   schedule = "0 11,12 * * 5"
 
+# OAuth discovery must 404 (these MUST come before the SPA catch-all below).
+# Without this, the "/*" rule answers /.well-known/oauth-* probes with the app
+# HTML at 200, so MCP clients (e.g. Claude connectors) think an OAuth server
+# lives here and then fail dynamic client registration. Returning 404 tells the
+# client there is no OAuth here, so it connects to the MCP server unauthenticated
+# (the mcp function takes the API key via ?key= / Authorization). See mcp.js.
+[[redirects]]
+  from = "/.well-known/oauth-authorization-server*"
+  to = "/mcp-no-oauth"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/.well-known/oauth-protected-resource*"
+  to = "/mcp-no-oauth"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/.well-known/openid-configuration*"
+  to = "/mcp-no-oauth"
+  status = 404
+  force = true
+
 # Serve the app for any unknown path (SPA-style fallback). Real files that
 # exist (like the dev sandbox) are still served directly.
 [[redirects]]
