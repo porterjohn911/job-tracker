@@ -46,13 +46,14 @@ const TOOLS = [
   },
   {
     name: 'create_invoice',
-    description: 'Create a DRAFT invoice on a job. Does NOT send anything. Get jobId from list_jobs first, and confirm the line items and amounts with the user before creating.',
+    description: 'Create a DRAFT invoice (or estimate) on a job. Does NOT send anything. Set kind:"estimate" for an estimate. Get jobId from list_jobs first, and confirm the line items and amounts with the user before creating.',
     kind: 'POST', path: '/.netlify/functions/api-invoices',
     inputSchema: { type: 'object', properties: {
       jobId: { type: 'string', description: 'id from list_jobs' },
       items: { type: 'array', description: 'line items', items: { type: 'object', properties: {
         desc: { type: 'string' }, qty: { type: 'number' }, rate: { type: 'number' },
       }, required: ['desc'] } },
+      kind: { type: 'string', description: 'invoice (default) or estimate' },
       taxRate: { type: 'number', description: 'percent, e.g. 8.25' },
       date: { type: 'string', description: 'YYYY-MM-DD (defaults to today)' },
       dueDate: { type: 'string', description: 'YYYY-MM-DD' },
@@ -142,6 +143,53 @@ const TOOLS = [
     description: 'Permanently delete an entire job and everything on it (invoices, estimates, photos, receipts). This is destructive and cannot be undone — ALWAYS confirm explicitly with the user before calling. Get jobId from list_jobs.',
     kind: 'DELETE', path: '/.netlify/functions/api-jobs',
     inputSchema: { type: 'object', properties: { jobId: { type: 'string' } }, required: ['jobId'] },
+  },
+
+  // ── Capture new work (Phase 4 part 2) ───────────────────────────────
+  {
+    name: 'create_job',
+    description: 'Create a new job or lead from a description (e.g. a phone call). Only name is required; defaults to stage "Lead" / status "lead".',
+    kind: 'POST', path: '/.netlify/functions/api-jobs',
+    inputSchema: { type: 'object', properties: {
+      name: { type: 'string' },
+      customerName: { type: 'string' }, customerEmail: { type: 'string' }, customerPhone: { type: 'string' },
+      address: { type: 'string' }, value: { type: 'number' },
+      stage: { type: 'string' }, status: { type: 'string' },
+      leadSource: { type: 'string' }, description: { type: 'string' },
+    }, required: ['name'] },
+  },
+
+  // ── Money insights & logging (Phase 4 part 2) ───────────────────────
+  {
+    name: 'get_receivables',
+    description: 'Answer "who owes me money?" — outstanding invoice balances grouped by customer, largest first, with overdue flags.',
+    kind: 'GET', path: '/.netlify/functions/api-receivables',
+    inputSchema: { type: 'object', properties: {} },
+  },
+  {
+    name: 'get_job_profit',
+    description: 'Profit/loss for one job: invoiced, collected, expenses, labor hours, and profit (revenue − expenses − labor cost). Get jobId from list_jobs.',
+    kind: 'GET', path: '/.netlify/functions/api-job-profit',
+    inputSchema: { type: 'object', properties: { jobId: { type: 'string' } }, required: ['jobId'] },
+  },
+  {
+    name: 'log_expense',
+    description: 'Log an expense/receipt. Attach to a job with jobId, or omit it for an overhead expense. Category is one of the app\'s categories (defaults to Other).',
+    kind: 'POST', path: '/.netlify/functions/api-expenses',
+    inputSchema: { type: 'object', properties: {
+      amount: { type: 'number' }, jobId: { type: 'string' },
+      category: { type: 'string', description: 'Materials | Tools / Equipment | Fuel / Travel | Subcontractor | Permits / Fees | Labor | Meals | Other' },
+      note: { type: 'string' }, date: { type: 'string', description: 'YYYY-MM-DD' },
+    }, required: ['amount'] },
+  },
+  {
+    name: 'log_time',
+    description: 'Log time for a worker. Provide member + hours (with optional date and jobId), e.g. "clock Mike 6 hours on the block wall job".',
+    kind: 'POST', path: '/.netlify/functions/api-time',
+    inputSchema: { type: 'object', properties: {
+      member: { type: 'string' }, hours: { type: 'number' },
+      jobId: { type: 'string' }, date: { type: 'string', description: 'YYYY-MM-DD' },
+    }, required: ['member', 'hours'] },
   },
 ];
 

@@ -39,17 +39,47 @@ exports.handler = async (event) => {
 
   try {
     if (event.httpMethod === 'GET') return await list(event, json);
+    if (event.httpMethod === 'POST') return await create(event, json);
     if (event.httpMethod === 'PATCH') return await update(event, json);
     if (event.httpMethod === 'DELETE') return await remove(event, json);
-    return json(405, { error: 'GET, PATCH, or DELETE' });
+    return json(405, { error: 'GET, POST, PATCH, or DELETE' });
   } catch (e) {
     console.error('[api-jobs] unhandled:', e && e.stack ? e.stack : e);
     return json(500, { error: 'Unexpected server error: ' + ((e && e.message) || 'unknown') });
   }
 };
 
-// Fields an agent may update on a job. Stage/status drive the pipeline.
+// Fields an agent may set/update on a job. Stage/status drive the pipeline.
 const UPDATABLE = ['name', 'stage', 'status', 'value', 'address', 'customerName', 'customerEmail', 'customerPhone', 'description', 'leadSource'];
+
+async function create(event, json) {
+  const authed = await authenticateApiKey(event, 'jobs:write');
+  if (authed.error) return json(authed.error.statusCode, { error: authed.error.message });
+  const ns = authed.key.ns || authed.key.company;
+  if (!ns) return json(500, { error: 'Key is not bound to a company' });
+
+  let body;
+  try { body = JSON.parse(event.body || '{}'); } catch (e) { return json(400, { error: 'Bad request' }); }
+  const name = String(body.name || '').trim();
+  if (!name) return json(400, { error: 'name is required' });
+
+  const id = 'j_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+  const job = { id, name, stage: body.stage ? String(body.stage) : 'Lead', status: body.status ? String(body.status) : 'lead' };
+  for (const f of UPDATABLE) {
+    if (f === 'name') continue;
+    if (body[f] !== undefined) job[f] = f === 'value' ? num(body[f]) : String(body[f]);
+  }
+
+  try { await db().ref(ns + '/jobs/' + id).set(job); }
+  catch (e) { return json(500, { error: 'Could not create job: ' + e.message }); }
+
+  db().ref(ns + '/activity').push({
+    user: 'Agent · ' + (authed.key.label || authed.key.prefix || 'API key'),
+    action: 'created job', job: name, jobId: id, time: Date.now(),
+  }).catch(() => {});
+
+  return json(201, { ok: true, job: { id, name, stage: job.stage, status: job.status, value: num(job.value) } });
+}
 
 async function update(event, json) {
   const authed = await authenticateApiKey(event, 'jobs:write');

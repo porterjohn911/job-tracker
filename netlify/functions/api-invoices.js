@@ -45,17 +45,20 @@ function invoiceStatus(inv) {
   return inv.status || 'draft';
 }
 
-// Mirror of nextInvoiceNumber() in the client — scan every job's invoices.
-function nextInvoiceNumber(jobs) {
+// Mirror of nextInvoiceNumber()/nextEstimateNumber() in the client — scan every
+// job's docs of that kind and increment the max.
+function nextNumber(jobs, kind) {
+  const field = kind === 'estimate' ? 'estimates' : 'invoices';
+  const prefix = kind === 'estimate' ? 'EST-' : 'INV-';
   let max = 1000;
   for (const jobId of Object.keys(jobs)) {
-    const invs = (jobs[jobId] && jobs[jobId].invoices) || [];
-    for (const inv of invs) {
-      const m = String(inv.number || '').match(/(\d+)/);
+    const arr = (jobs[jobId] && jobs[jobId][field]) || [];
+    for (const d of arr) {
+      const m = String(d.number || '').match(/(\d+)/);
       if (m) { const n = parseInt(m[1], 10); if (n > max) max = n; }
     }
   }
-  return 'INV-' + (max + 1);
+  return prefix + (max + 1);
 }
 
 function todayKey() {
@@ -240,9 +243,11 @@ async function create(event, json) {
   const job = jobs[jobId];
   if (!job) return json(404, { error: 'No job with id ' + jobId });
 
+  const kind = body.kind === 'estimate' ? 'estimate' : 'invoice';
+  const field = kind === 'estimate' ? 'estimates' : 'invoices';
   const invoice = {
-    id: 'inv_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
-    number: nextInvoiceNumber(jobs),
+    id: (kind === 'estimate' ? 'est_' : 'inv_') + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
+    number: nextNumber(jobs, kind),
     date: (body.date && String(body.date)) || todayKey(),
     dueDate: (body.dueDate && String(body.dueDate)) || '',
     items: cleanItems,
@@ -254,19 +259,19 @@ async function create(event, json) {
     status: 'draft',
   };
 
-  const invoices = Array.isArray(job.invoices) ? job.invoices.slice() : [];
-  invoices.push(invoice);
+  const arr = Array.isArray(job[field]) ? job[field].slice() : [];
+  arr.push(invoice);
 
   try {
-    await db().ref(ns + '/jobs/' + jobId + '/invoices').set(invoices);
+    await db().ref(ns + '/jobs/' + jobId + '/' + field).set(arr);
   } catch (e) {
-    return json(500, { error: 'Could not save invoice: ' + e.message });
+    return json(500, { error: 'Could not save ' + kind + ': ' + e.message });
   }
 
   // Audit trail (same activity feed owners already see).
   db().ref(ns + '/activity').push({
     user: 'Agent · ' + (authed.key.label || authed.key.prefix || 'API key'),
-    action: 'created draft invoice ' + invoice.number + ' for',
+    action: 'created draft ' + kind + ' ' + invoice.number + ' for',
     job: job.name || '',
     jobId,
     time: Date.now(),
