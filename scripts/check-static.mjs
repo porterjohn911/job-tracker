@@ -48,6 +48,7 @@ for (const fn of [
   'netlify/functions/api-jobs.js',
   'netlify/functions/api-schedule.js',
   'netlify/functions/api-invoice-send.js',
+  'netlify/functions/api-invoice-send-now.js',
   'netlify/functions/api-pending-sends.js',
   'netlify/functions/api-overview.js',
   'netlify/functions/api-expenses.js',
@@ -61,6 +62,7 @@ for (const fn of [
   'netlify/functions/_lib/apiKeyAuth.js',
   'netlify/functions/_lib/reports.js',
   'netlify/functions/_lib/weeklyReport.js',
+  'netlify/functions/_lib/invoicePdf.js',
 ]) {
   execFileSync('node', ['--check', fn], { cwd: root, stdio: 'inherit' });
 }

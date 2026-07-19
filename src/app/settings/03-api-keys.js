@@ -5,7 +5,8 @@
 // All scopes, with a human label and a "sensitive" flag for the high-risk one.
 const API_KEY_SCOPES = [
   { id: 'invoices:read', label: 'Read invoices & estimates' },
-  { id: 'invoices:write', label: 'Create / send invoices (send is gated)' },
+  { id: 'invoices:write', label: 'Create invoices / queue sends for approval' },
+  { id: 'invoices:send', label: 'Email invoices & estimates directly to customers (high risk)', sensitive: true },
   { id: 'schedule:read', label: 'Read the schedule' },
   { id: 'schedule:write', label: 'Add / edit schedule entries' },
   { id: 'financials:read', label: 'Read financial summaries' },

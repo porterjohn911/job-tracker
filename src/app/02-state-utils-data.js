@@ -21,7 +21,11 @@ const COMPANY_DEFAULT={
   terms:'Payment due upon receipt unless otherwise noted. Thank you for your business.',
 };
 function loadCompany(){try{const s=localStorage.getItem(LS('company'));return s?{...COMPANY_DEFAULT,...JSON.parse(s)}:{...COMPANY_DEFAULT}}catch(e){return{...COMPANY_DEFAULT}}}
-function saveCompany(c){return saveLocalValue(LS('company'),c,'company settings',true)}
+function saveCompany(c){const ok=saveLocalValue(LS('company'),c,'company settings',true);
+  // Mirror the company profile to Firebase so it survives across devices and can
+  // be read server-side (e.g. the agent's direct invoice send).
+  if(typeof DB!=='undefined'&&DB){try{DB.child('company').set(c)}catch(e){}}
+  return ok}
 let COMPANY=loadCompany();
 
 // ── Workflow stages (BuilderTrend / AccuLynx style)
@@ -356,6 +360,11 @@ function initFB(cfg){
     DB.child('timeoff').on('value',s=>{S.timeOff=s.val()||{};LOCAL.saveTimeOff();render()});
     DB.child('receipts').on('value',s=>{S.receipts=s.val()||{};LOCAL.saveReceipts();render()});
     DB.child('referrals').on('value',s=>{S.referrals=s.val()||{};LOCAL.saveReferrals();render()});
+    DB.child('company').on('value',s=>{const v=s.val();
+      if(v){COMPANY={...COMPANY_DEFAULT,...v};try{localStorage.setItem(LS('company'),JSON.stringify(COMPANY))}catch(e){}if(typeof render==='function')render();}
+      else{ // first run with no cloud profile: seed it from this device's saved company info
+        try{const local=loadCompany();if(JSON.stringify(local)!==JSON.stringify(COMPANY_DEFAULT))DB.child('company').set(local)}catch(e){}
+      }});
     DB.child('time').on('value',s=>{S.timeEntries=s.val()||{};LOCAL.saveTime();render()});
     if(canSeeFinancials())DB.child('payrates').on('value',s=>{S.payRates=s.val()||{};LOCAL.savePayRates();render()});
     else S.payRates={};

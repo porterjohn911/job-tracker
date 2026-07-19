@@ -43,6 +43,11 @@
         ".write": false
       },
 
+      "company": {
+        ".read": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'owner' || root.child('users').child(auth.uid).child('role').val() === 'manager' || root.child('users').child(auth.uid).child('company').val() === $company || $company === root.child('users').child(auth.uid).child('company').val() + '_dev')",
+        ".write": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'owner' || root.child('users').child(auth.uid).child('role').val() === 'manager')"
+      },
+
       "jobs": {
         ".read": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'owner' || root.child('users').child(auth.uid).child('role').val() === 'manager' || root.child('users').child(auth.uid).child('company').val() === $company || $company === root.child('users').child(auth.uid).child('company').val() + '_dev')",
         ".write": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'owner' || root.child('users').child(auth.uid).child('role').val() === 'manager' || root.child('users').child(auth.uid).child('company').val() === $company || $company === root.child('users').child(auth.uid).child('company').val() + '_dev')",
