@@ -26,9 +26,13 @@ The key must be minted with the **scopes** the tasks need:
 |---|---|
 | `invoices:read` | List jobs & invoices, read overview reports |
 | `invoices:write` | Create draft invoices, queue sends |
-| `schedule:read` / `schedule:write` | Read / add owner-schedule entries |
+| `schedule:read` / `schedule:write` | Read / add / edit owner-schedule entries |
 | `financials:read` | The overview/reports rollup |
 | `financials:sensitive` | *Optional* — adds labor cost + bank/payroll reads (high-risk) |
+| `jobs:write` | Update jobs (stage, status, value, customer, …) |
+| `delete` | Delete jobs, invoices/estimates, schedule entries (high-risk) |
+
+Recording a payment on an invoice uses `invoices:write`. Deletes and updates are logged to the company activity feed, and the agent should confirm before deleting.
 
 ## Conventions
 

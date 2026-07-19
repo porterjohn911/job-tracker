@@ -36,15 +36,78 @@ exports.handler = async (event) => {
   const json = jsonResponder(origin);
 
   if (event.httpMethod === 'OPTIONS') return { statusCode: 200, headers: corsHeaders(origin), body: '{}' };
-  if (event.httpMethod !== 'GET') return json(405, { error: 'GET only' });
 
   try {
-    return await list(event, json);
+    if (event.httpMethod === 'GET') return await list(event, json);
+    if (event.httpMethod === 'PATCH') return await update(event, json);
+    if (event.httpMethod === 'DELETE') return await remove(event, json);
+    return json(405, { error: 'GET, PATCH, or DELETE' });
   } catch (e) {
     console.error('[api-jobs] unhandled:', e && e.stack ? e.stack : e);
     return json(500, { error: 'Unexpected server error: ' + ((e && e.message) || 'unknown') });
   }
 };
+
+// Fields an agent may update on a job. Stage/status drive the pipeline.
+const UPDATABLE = ['name', 'stage', 'status', 'value', 'address', 'customerName', 'customerEmail', 'customerPhone', 'description', 'leadSource'];
+
+async function update(event, json) {
+  const authed = await authenticateApiKey(event, 'jobs:write');
+  if (authed.error) return json(authed.error.statusCode, { error: authed.error.message });
+  const ns = authed.key.ns || authed.key.company;
+  if (!ns) return json(500, { error: 'Key is not bound to a company' });
+
+  let body;
+  try { body = JSON.parse(event.body || '{}'); } catch (e) { return json(400, { error: 'Bad request' }); }
+  const jobId = String(body.jobId || '').trim();
+  if (!jobId) return json(400, { error: 'jobId is required' });
+
+  let job;
+  try { job = (await db().ref(ns + '/jobs/' + jobId).get()).val(); } catch (e) { return json(500, { error: 'Read failed: ' + e.message }); }
+  if (!job) return json(404, { error: 'No job with id ' + jobId });
+
+  const updates = {};
+  for (const f of UPDATABLE) {
+    if (body[f] !== undefined) updates[f] = f === 'value' ? num(body[f]) : String(body[f]);
+  }
+  if (!Object.keys(updates).length) return json(400, { error: 'Nothing to update — provide at least one of: ' + UPDATABLE.join(', ') });
+
+  try {
+    await db().ref(ns + '/jobs/' + jobId).update(updates);
+  } catch (e) { return json(500, { error: 'Update failed: ' + e.message }); }
+
+  db().ref(ns + '/activity').push({
+    user: 'Agent · ' + (authed.key.label || authed.key.prefix || 'API key'),
+    action: 'updated ' + Object.keys(updates).join(', ') + ' on',
+    job: updates.name || job.name || '', jobId, time: Date.now(),
+  }).catch(() => {});
+
+  return json(200, { ok: true, jobId, updated: Object.keys(updates) });
+}
+
+async function remove(event, json) {
+  const authed = await authenticateApiKey(event, 'delete');
+  if (authed.error) return json(authed.error.statusCode, { error: authed.error.message });
+  const ns = authed.key.ns || authed.key.company;
+  if (!ns) return json(500, { error: 'Key is not bound to a company' });
+
+  const p = event.queryStringParameters || {};
+  const jobId = String(p.id || p.jobId || '').trim();
+  if (!jobId) return json(400, { error: 'id (jobId) is required' });
+
+  let job;
+  try { job = (await db().ref(ns + '/jobs/' + jobId).get()).val(); } catch (e) { return json(500, { error: 'Read failed: ' + e.message }); }
+  if (!job) return json(404, { error: 'No job with id ' + jobId });
+
+  try { await db().ref(ns + '/jobs/' + jobId).remove(); } catch (e) { return json(500, { error: 'Delete failed: ' + e.message }); }
+
+  db().ref(ns + '/activity').push({
+    user: 'Agent · ' + (authed.key.label || authed.key.prefix || 'API key'),
+    action: 'DELETED job', job: job.name || '', jobId, time: Date.now(),
+  }).catch(() => {});
+
+  return json(200, { ok: true, deleted: 'job', id: jobId, name: job.name || '' });
+}
 
 async function list(event, json) {
   const authed = await authenticateApiKey(event, 'invoices:read');
