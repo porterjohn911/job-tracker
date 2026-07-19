@@ -50,8 +50,12 @@ for (const fn of [
   'netlify/functions/api-invoice-send.js',
   'netlify/functions/api-pending-sends.js',
   'netlify/functions/api-overview.js',
+  'netlify/functions/weekly-report.js',
+  'netlify/functions/report-run.js',
   'netlify/functions/_lib/firebaseAdmin.js',
   'netlify/functions/_lib/apiKeyAuth.js',
+  'netlify/functions/_lib/reports.js',
+  'netlify/functions/_lib/weeklyReport.js',
 ]) {
   execFileSync('node', ['--check', fn], { cwd: root, stdio: 'inherit' });
 }
