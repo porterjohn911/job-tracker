@@ -29,7 +29,8 @@ The key must be minted with the **scopes** the tasks need:
 | `invoices:send` | **Directly email** invoices/estimates to customers (high-risk) |
 | `schedule:read` / `schedule:write` | Read / add / edit owner-schedule entries |
 | `financials:read` | The overview/reports rollup |
-| `financials:sensitive` | *Optional* — adds labor cost + bank/payroll reads (high-risk) |
+| `financials:sensitive` | *Optional* — adds labor cost + bank/payroll/transaction reads (high-risk) |
+| `financials:write` | Recategorize / edit bank transactions (high-risk) |
 | `jobs:write` | Create & update jobs (stage, status, value, customer, …) |
 | `expenses:write` | Log expenses / receipts |
 | `time:write` | Log time entries |
@@ -153,6 +154,38 @@ curl -s -H "Authorization: Bearer $JOB_TRACKER_API_KEY" \
 
 `labor.cost` is `null` unless the key has `financials:sensitive`.
 
+### List bank transactions — `GET api-transactions`  · scope `financials:sensitive`
+
+Imported bank/card lines. `amount` is negative for money out (expenses), positive for money in (income). `category` is one of: `Income, Materials, Fuel / Travel, Subcontractor, Equipment, Payroll, Office / Admin, Insurance, Taxes / Fees, Bank / Transfer, Other`.
+
+Query params (optional): `category`, `uncategorized=true` (only "Other"), `search` (description text), `from`/`to` (`YYYY-MM-DD`, inclusive), `limit` (≤1000).
+
+```bash
+curl -s -H "Authorization: Bearer $JOB_TRACKER_API_KEY" \
+  "$JOB_TRACKER_URL/.netlify/functions/api-transactions?search=home%20depot"
+```
+
+```json
+{ "company": "wfs", "categories": ["Income", "Materials", …], "count": 2, "total": 2, "transactions": [
+  { "id": "b_…", "date": "2026-07-10", "description": "HOME DEPOT #4123", "amount": -284.19,
+    "direction": "out", "category": "Other", "jobId": "", "job": "" } ] }
+```
+
+### Recategorize a transaction — `PATCH api-transactions`  · scope `financials:write`
+
+Change a transaction's `category` (validated against the list above) and/or link it to a job. Get `transactionId` from the list call.
+
+Body: `{ transactionId, category?, jobId? }` — pass `jobId:""` to unlink. At least one of `category`/`jobId` is required.
+
+```bash
+curl -s -X PATCH -H "Authorization: Bearer $JOB_TRACKER_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"transactionId":"b_123","category":"Materials"}' \
+  "$JOB_TRACKER_URL/.netlify/functions/api-transactions"
+```
+
+Every recategorization is written to the company activity feed. Confirm the change with the user first.
+
 ---
 
 ## Common requests → what to call
@@ -161,6 +194,7 @@ curl -s -H "Authorization: Bearer $JOB_TRACKER_API_KEY" \
 |---|---|
 | "What's overdue?" | `GET api-invoices?status=overdue` |
 | "Give me a financial overview / how's the business doing" | `GET api-overview` and summarize |
+| "Categorize my bank transactions / put the Home Depot charges under Materials" | `GET api-transactions?uncategorized=true` (or `search=…`) → confirm → `PATCH api-transactions` per item |
 | "Draft an invoice for the Johnson job for $4,200" | `GET api-jobs?search=johnson` → confirm the job → `POST api-invoices` |
 | "Send invoice INV-1042" | find it via `GET api-invoices` → `POST api-invoice-send` → tell them it's **queued for approval** |
 | "Add a site visit for the Johnson deck next Tuesday" | `POST api-schedule` |
@@ -176,7 +210,7 @@ curl -s -H "Authorization: Bearer $JOB_TRACKER_API_KEY" \
 
 ## MCP connector (recommended for Claude Cowork / Claude Desktop)
 
-Instead of calling the endpoints via curl, connect the built-in **MCP server** so the agent gets these as native, typed tools (`list_jobs`, `list_invoices`, `get_overview`, `create_invoice`, `queue_invoice_send`, `list_schedule`, `add_schedule_entry`).
+Instead of calling the endpoints via curl, connect the built-in **MCP server** so the agent gets these as native, typed tools (`list_jobs`, `list_invoices`, `get_overview`, `create_invoice`, `queue_invoice_send`, `send_invoice`, `list_schedule`, `add_schedule_entry`, `list_transactions`, `categorize_transaction`, plus the update/delete/create/logging tools).
 
 - **Server URL:** `$JOB_TRACKER_URL/.netlify/functions/mcp`
 - **Auth:** your API key as a **Bearer token** in the connector's auth field. If the connector can't set a header, append the key to the URL instead: `…/mcp?key=sk_live_…`

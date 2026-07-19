@@ -48,6 +48,7 @@ const SCOPES = [
   'schedule:write',
   'financials:read',
   'financials:sensitive',
+  'financials:write',
   'jobs:write',
   'expenses:write',
   'time:write',
