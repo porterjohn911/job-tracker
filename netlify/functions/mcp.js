@@ -72,6 +72,17 @@ const TOOLS = [
     }, required: ['jobId', 'invoiceId'] },
   },
   {
+    name: 'send_invoice',
+    description: "ACTUALLY email an invoice or estimate to the customer (builds the PDF and sends it). This is different from queue_invoice_send, which only queues for in-app approval. Because this sends a real email to a real customer, you MUST get the user's explicit confirmation before calling it. Get jobId + invoiceId from list_jobs / list_invoices.",
+    kind: 'POST', path: '/.netlify/functions/api-invoice-send-now',
+    inputSchema: { type: 'object', properties: {
+      jobId: { type: 'string' }, invoiceId: { type: 'string' },
+      kind: { type: 'string', description: 'invoice (default) or estimate' },
+      to: { type: 'string', description: 'recipient email (defaults to the job customer email)' },
+      subject: { type: 'string' }, message: { type: 'string', description: 'email body (optional)' },
+    }, required: ['jobId', 'invoiceId'] },
+  },
+  {
     name: 'list_schedule',
     description: "List entries on the owner's shared schedule.",
     kind: 'GET', path: '/.netlify/functions/api-schedule',

@@ -25,7 +25,8 @@ The key must be minted with the **scopes** the tasks need:
 | Scope | Enables |
 |---|---|
 | `invoices:read` | List jobs & invoices, read overview reports |
-| `invoices:write` | Create draft invoices, queue sends |
+| `invoices:write` | Create draft invoices, queue sends for approval |
+| `invoices:send` | **Directly email** invoices/estimates to customers (high-risk) |
 | `schedule:read` / `schedule:write` | Read / add / edit owner-schedule entries |
 | `financials:read` | The overview/reports rollup |
 | `financials:sensitive` | *Optional* — adds labor cost + bank/payroll reads (high-risk) |

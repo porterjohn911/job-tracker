@@ -43,6 +43,7 @@ async function verifyIdTokenRest(idToken) {
 const SCOPES = [
   'invoices:read',
   'invoices:write',
+  'invoices:send',
   'schedule:read',
   'schedule:write',
   'financials:read',
