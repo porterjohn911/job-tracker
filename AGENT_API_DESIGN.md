@@ -114,6 +114,7 @@ Proposed surface (v1):
 
 | Endpoint | Method | Scope required | Notes |
 |---|---|---|---|
+| `/api/jobs` (`api-jobs`) | GET | `invoices:read` | List/search jobs + ids (to invoice or report on) |
 | `/api/invoices` | GET | `invoices:read` | List/filter invoices (e.g. overdue) |
 | `/api/invoices` | POST | `invoices:write` | Create an invoice/estimate |
 | `/api/invoices/send` | POST | `invoices:write` | Send — reuses `send-invoice.js` internals; **gated** (§7) |
