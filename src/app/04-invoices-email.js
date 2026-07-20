@@ -632,6 +632,38 @@ async function buildInvoicePDFFile(j,inv,kind){
   const filename=(kind==='estimate'?'Estimate':'Invoice')+'-'+(inv.number||'draft')+'.pdf';
   return new File([blob],filename,{type:'application/pdf'});
 }
+// The signed-in Firebase team member, or null when access control is off / not
+// signed in. Direct SMTP send requires one (the function verifies the token).
+function _firebaseUser(){
+  try{return (typeof firebase!=='undefined'&&firebase.apps&&firebase.apps.length&&firebase.auth&&firebase.auth().currentUser)||null}catch(e){return null}
+}
+// Direct server-side send via netlify/functions/send-invoice, using the
+// SMTP_USER / SMTP_PASS configured in Netlify. Emails the branded PDF + HTML
+// straight to the customer — no Gmail sign-in, no OS share sheet.
+async function smtpInvoiceSend(o){
+  const user=_firebaseUser();
+  if(!user)throw new Error('Sign in with your team account to send email directly');
+  const idToken=await user.getIdToken();
+  const pdfBase64=await _fileToB64(o.file);
+  const r=await fetch('/.netlify/functions/send-invoice',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({
+      idToken,
+      to:o.to,
+      subject:o.subject,
+      message:o.text,
+      html:o.html,
+      pdfBase64,
+      filename:o.file.name,
+      fromName:o.fromName||'',
+      replyTo:o.replyTo||undefined,
+    }),
+  });
+  let data={};try{data=await r.json()}catch(e){}
+  if(!r.ok)throw new Error(data.error||('Send failed ('+r.status+')'));
+  return data;
+}
 async function sendInvoicePDF(j,inv,kind,opts){
   opts=opts||{};kind=kind||'invoice';const EST=kind==='estimate';
   const to=opts.to||j.customerEmail||'';
@@ -653,6 +685,20 @@ async function sendInvoicePDF(j,inv,kind,opts){
       toast('Sent · check your Gmail Sent folder');
       return;
     }catch(e){toast('Gmail send failed: '+((e&&e.message)||e)+' — using fallback','')}
+  }
+  // Direct SMTP send (uses the SMTP creds set in Netlify). Primary one-click
+  // path when Gmail OAuth isn't connected and the user is signed in as a team
+  // member. On failure, surface the real reason and drop to the manual fallback.
+  if(_firebaseUser()){
+    try{
+      toast('Sending…','');
+      const htmlBody=buildInvoiceEmailHTML(j,inv,message,kind);
+      await smtpInvoiceSend({to,subject,text,html:htmlBody,file,fromName:COMPANY.name||'',replyTo:COMPANY.email||''});
+      if(!inv.sent){inv.sent=Date.now();if(inv.status==='draft')inv.status='sent';await writeJob(j)}
+      await logAct((EST?'emailed estimate ':'emailed invoice ')+(inv.number||'')+' to '+to+' for',j.name);
+      toast('Sent to '+to);
+      return;
+    }catch(e){toast('Direct send failed: '+((e&&e.message)||e)+' — using fallback','')}
   }
   // Skip navigator.share on desktop — Chrome's desktop share sheet IS the OS
   // "Open with" picker the user wants to avoid. Only use it on real mobile.
