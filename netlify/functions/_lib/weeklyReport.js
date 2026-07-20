@@ -146,7 +146,11 @@ async function generateAndSend() {
     console.error('[weekly-report] REPORT_TO is not set — computed the report but cannot email it.');
     return { ok: true, sent: false, reason: 'REPORT_TO not set' };
   }
-  const user = process.env.SMTP_USER, pass = process.env.SMTP_PASS;
+  // Strip stray whitespace from the credentials — the spaces Google shows in an
+  // App Password ("abcd efgh ijkl mnop") or a trailing newline pasted into
+  // Netlify are a classic cause of 535-5.7.8 BadCredentials.
+  const user = String(process.env.SMTP_USER || '').trim();
+  const pass = String(process.env.SMTP_PASS || '').replace(/\s+/g, '');
   if (!user || !pass) {
     console.error('[weekly-report] SMTP_USER/SMTP_PASS not set — cannot email the report.');
     return { ok: true, sent: false, reason: 'SMTP not configured' };

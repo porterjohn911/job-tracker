@@ -121,7 +121,13 @@ exports.handler = async (event) => {
   if (!member) return json(403, { error: 'Your account is not approved to send email yet' });
   if (rateLimited(uid)) return json(429, { error: 'Too many messages — please try again in a few minutes' });
 
-  const user = process.env.SMTP_USER, pass = process.env.SMTP_PASS;
+  // Clean the credentials: strip stray whitespace that survives a copy-paste
+  // into Netlify. A Gmail App Password is 16 lowercase letters that Google
+  // DISPLAYS in four space-separated groups ("abcd efgh ijkl mnop") — pasting
+  // those spaces (or a trailing newline) is a classic cause of 535-5.7.8
+  // BadCredentials even when the password itself is correct.
+  const user = String(process.env.SMTP_USER || '').trim();
+  const pass = String(process.env.SMTP_PASS || '').replace(/\s+/g, '');
   if (!user || !pass) return json(500, { error: 'Email not set up yet (SMTP_USER / SMTP_PASS missing in Netlify)' });
 
   let pdfBuf;

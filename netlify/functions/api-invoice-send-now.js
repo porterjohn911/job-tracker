@@ -29,7 +29,11 @@ exports.handler = async (event) => {
     const ns = authed.key.ns || authed.key.company;
     if (!ns) return json(500, { error: 'Key is not bound to a company' });
 
-    const user = process.env.SMTP_USER, pass = process.env.SMTP_PASS;
+    // Strip stray whitespace from the credentials — the spaces Google shows in
+    // an App Password ("abcd efgh ijkl mnop") or a trailing newline pasted into
+    // Netlify are a classic cause of 535-5.7.8 BadCredentials.
+    const user = String(process.env.SMTP_USER || '').trim();
+    const pass = String(process.env.SMTP_PASS || '').replace(/\s+/g, '');
     if (!user || !pass) return json(500, { error: 'Email not set up (SMTP_USER / SMTP_PASS missing in Netlify)' });
 
     let body;
