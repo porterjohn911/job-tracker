@@ -56,6 +56,7 @@ for (const fn of [
   'netlify/functions/api-receivables.js',
   'netlify/functions/api-job-profit.js',
   'netlify/functions/api-transactions.js',
+  'netlify/functions/api-push-send.js',
   'netlify/functions/weekly-report.js',
   'netlify/functions/report-run.js',
   'netlify/functions/mcp.js',
@@ -64,6 +65,7 @@ for (const fn of [
   'netlify/functions/_lib/reports.js',
   'netlify/functions/_lib/weeklyReport.js',
   'netlify/functions/_lib/invoicePdf.js',
+  'firebase-messaging-sw.js',
 ]) {
   execFileSync('node', ['--check', fn], { cwd: root, stdio: 'inherit' });
 }

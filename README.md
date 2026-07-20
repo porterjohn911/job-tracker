@@ -57,6 +57,7 @@ The app depends on these browser/service integrations:
 - Leaflet for the map view.
 - Netlify Functions for server-side invoice/estimate email sending.
 - Google Workspace SMTP credentials in Netlify environment variables for outbound email.
+- Firebase Cloud Messaging (FCM) for phone/desktop push notifications on new notes and daily-log entries.
 
 Firebase config is loaded at runtime from Netlify environment variables through `netlify/functions/app-config.js` so deploy secret scanning does not flag committed source files.
 
@@ -72,8 +73,40 @@ Required Netlify environment variables:
 - `FIREBASE_MEASUREMENT_ID`
 - `SMTP_USER`
 - `SMTP_PASS`
+- `FIREBASE_VAPID_KEY` — public Web Push key for push notifications (optional; push stays disabled until set)
 
 The Firebase web config values are public client configuration, but access protection still comes from Firebase Auth and Firebase Database/Storage rules.
+
+### Push notifications (notes & daily logs)
+
+When a team member posts a note or a daily-log entry on a job, the app sends a
+push notification to that job's assigned member and anyone `@`-mentioned in the
+text (never to the person who wrote it). Notifications work on Android/desktop
+Chrome in a normal tab, and on iPhone once the app is installed to the Home
+Screen (Add to Home Screen, iOS 16.4+).
+
+How it fits together:
+
+- `firebase-messaging-sw.js` (repo root) — the FCM service worker that shows
+  notifications while the app is backgrounded. Must stay at the site root.
+- `src/app/push/01-push-notifications.js` — registers the device, stores its
+  FCM token, and fans out on note/log writes.
+- `netlify/functions/api-push-send.js` — verifies the caller's Firebase ID
+  token, resolves recipients to device tokens (read server-side via the Admin
+  SDK), and sends via FCM. Reuses the existing `FIREBASE_SERVICE_ACCOUNT`.
+- `push_tokens` node in `database.rules.json` — each browser writes only its
+  own tokens (`push_tokens/$uid`, guarded by `auth.uid === $uid`).
+
+One-time setup to turn it on:
+
+1. In the Firebase console → Project settings → Cloud Messaging → **Web Push
+   certificates**, generate (or copy) the key pair and set its public key as the
+   Netlify env var `FIREBASE_VAPID_KEY`.
+2. Deploy the updated database rules (`firebase deploy --only database`, or paste
+   `database.rules.json` into the console) so the `push_tokens` node is writable.
+3. Users click **🔔 Enable on this device** in the notifications (bell) panel and
+   accept the browser permission prompt. iPhone users must Add to Home Screen
+   first, then enable from the installed app.
 
 ## Data Model Overview
 

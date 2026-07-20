@@ -122,6 +122,16 @@
         }
       },
 
+      "push_tokens": {
+        "$uid": {
+          ".read": "auth != null && auth.uid === $uid",
+          ".write": "auth != null && auth.uid === $uid",
+          "$hash": {
+            ".validate": "newData.hasChildren(['token', 'nameKey', 'ts']) && newData.child('token').isString() && newData.child('nameKey').isString() && newData.child('ts').isNumber() && (!newData.child('name').exists() || newData.child('name').isString()) && (!newData.child('ua').exists() || newData.child('ua').isString())"
+          }
+        }
+      },
+
       "$other": {
         ".validate": false
       }

@@ -220,4 +220,5 @@ module.exports = {
   parseBearer,
   authenticateApiKey,
   verifyOwner,
+  verifyIdTokenRest,
 };
