@@ -1,5 +1,17 @@
 // Emails an invoice/estimate as a PDF attachment, sent from your Google
-// Workspace business email via SMTP. Called by the app's "Email it now" button.
+// Workspace business email via SMTP. Called by the app's "Email it now" button
+// (src/app/invoices/04-invoice-pdf-send.js → smtpInvoiceSend).
+//
+// Request body (all posted by the client):
+//   idToken                  Firebase ID token of the signed-in team member
+//   to, subject, message     recipient + plain-text body
+//   html        (optional)   rich HTML body (the app's branded email markup)
+//   pdfBase64   (optional)   base64 of a client-built PDF to attach as-is; when
+//                            omitted, the server builds a plain PDF from `doc`
+//   fromName, filename, replyTo (optional) — sender display name / attachment
+//                            name / reply-to address
+//   doc         (optional when pdfBase64 is present) — invoice data for the
+//                            server-side PDF builder (see _lib/invoicePdf.js)
 //
 // Required Netlify env vars (Site config -> Environment variables):
 //   SMTP_USER  = the Workspace email address to send from
@@ -100,9 +112,9 @@ exports.handler = async (event) => {
 
   let body;
   try { body = JSON.parse(event.body || '{}'); } catch (e) { return json(400, { error: 'Bad request' }); }
-  const { idToken, to, subject, message, doc } = body;
+  const { idToken, to, subject, message, html, pdfBase64, fromName, filename, replyTo, doc } = body;
   if (!to) return json(400, { error: 'Missing recipient email' });
-  if (!doc) return json(400, { error: 'Missing invoice data' });
+  if (!pdfBase64 && !doc) return json(400, { error: 'Missing invoice data' });
   const uid = await verifyToken(idToken);
   if (!uid) return json(401, { error: 'Not authorized — please sign in again' });
   const member = await authorizedMember(idToken, uid);
@@ -113,7 +125,14 @@ exports.handler = async (event) => {
   if (!user || !pass) return json(500, { error: 'Email not set up yet (SMTP_USER / SMTP_PASS missing in Netlify)' });
 
   let pdfBuf;
-  try { pdfBuf = await buildPdf(doc); } catch (e) { return json(500, { error: 'PDF generation failed: ' + e.message }); }
+  if (pdfBase64) {
+    try {
+      pdfBuf = Buffer.from(String(pdfBase64), 'base64');
+      if (!pdfBuf.length) throw new Error('empty attachment');
+    } catch (e) { return json(400, { error: 'Bad PDF attachment data' }); }
+  } else {
+    try { pdfBuf = await buildPdf(doc); } catch (e) { return json(500, { error: 'PDF generation failed: ' + e.message }); }
+  }
 
   const transporter = nodemailer.createTransport({
     host: process.env.SMTP_HOST || 'smtp.gmail.com',
@@ -122,17 +141,19 @@ exports.handler = async (event) => {
     auth: { user, pass },
   });
 
-  const fromName = (doc.company && doc.company.name) || 'Invoices';
-  const label = (doc.kind === 'estimate' ? 'Estimate' : 'Invoice') + ' ' + (doc.number || '');
+  const d = doc || {};
+  const senderName = fromName || (d.company && d.company.name) || 'Invoices';
+  const label = (d.kind === 'estimate' ? 'Estimate' : 'Invoice') + ' ' + (d.number || '');
+  const attachName = filename || (label.replace(/\s+/g, '-') + '.pdf');
   try {
     await transporter.sendMail({
-      from: `"${fromName}" <${user}>`,
+      from: `"${senderName}" <${user}>`,
       to,
-      replyTo: (doc.company && doc.company.email) || undefined,
+      replyTo: replyTo || (d.company && d.company.email) || undefined,
       subject: subject || label,
       text: message || ('Please find ' + label + ' attached.'),
-      html: message ? ('<p>' + String(message).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/\n/g, '<br>') + '</p>') : ('<p>Please find <strong>' + label + '</strong> attached.</p>'),
-      attachments: [{ filename: label.replace(/\s+/g, '-') + '.pdf', content: pdfBuf, contentType: 'application/pdf' }],
+      html: html || (message ? ('<p>' + String(message).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/\n/g, '<br>') + '</p>') : ('<p>Please find <strong>' + label + '</strong> attached.</p>')),
+      attachments: [{ filename: attachName, content: pdfBuf, contentType: 'application/pdf' }],
     });
   } catch (e) {
     return json(502, { error: 'Send failed: ' + e.message });
