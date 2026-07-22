@@ -500,7 +500,11 @@ async function saveReceiptFromModal(){
   const base={id:'rc_'+Date.now()+'_'+Math.random().toString(36).slice(2,6),amount,vendor:$('grcpt-vendor').value.trim(),category:$('grcpt-cat').value,note:$('grcpt-note').value.trim(),date:$('grcpt-date').value||dateKey(new Date()),user:S.user,uploaded:Date.now()};
   const fileInput=$('grcpt-upload');const file=fileInput&&fileInput.files&&fileInput.files[0];
   if(file&&storageReady())toast('Uploading…');
-  const extra=await processReceiptFile(file,jobId?('jobs/'+jobId+'/receipts'):'receipts');
+  // Overhead (no-job) receipts upload under jobs/_overhead/receipts rather than
+  // a bare receipts/ path: Storage rules only permit uploads beneath
+  // {company}/jobs/{jobId}/{photos|docs|receipts}/, so a top-level receipts/
+  // path is rejected and the image silently falls back to inline base64.
+  const extra=await processReceiptFile(file,jobId?('jobs/'+jobId+'/receipts'):'jobs/_overhead/receipts');
   const rec={...base,...extra};
   if(jobId&&S.jobs[jobId]){const j=S.jobs[jobId];j.receipts=j.receipts||[];j.receipts.push(rec);await writeJob(j);try{await logAct('added a receipt ('+money2(amount)+') to',j.name)}catch(e){}}
   else{rec.jobId='';try{await writeReceipt(rec)}catch(e){}try{await logAct('added an overhead receipt ('+money2(amount)+')','')}catch(e){}}

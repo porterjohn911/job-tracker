@@ -39,6 +39,8 @@ async function photoMigrationScan(){
     (j.invoices||[]).forEach(inv=>scan(inv&&inv.photos));
     (j.estimates||[]).forEach(inv=>scan(inv&&inv.photos));
   });
+  // Overhead receipts (no job) live in their own node, keyed by id.
+  Object.values((typeof S!=='undefined'&&S.receipts)||{}).forEach(r=>{if(r&&_isBase64Url(r.url)){count++;bytes+=r.url.length}});
   const mb=(bytes/1048576).toFixed(2);
   console.log('[photo-migration] '+count+' embedded file(s), ~'+mb+' MB of base64 to move.');
   if(typeof toast==='function')toast(count?count+' photos to migrate (~'+mb+' MB)':'No embedded photos to migrate','');
@@ -60,6 +62,7 @@ async function photoMigrationRun(opts){
     (j.invoices||[]).forEach(inv=>countArr(inv&&inv.photos));
     (j.estimates||[]).forEach(inv=>countArr(inv&&inv.photos));
   });
+  Object.values((typeof S!=='undefined'&&S.receipts)||{}).forEach(r=>{if(r&&_isBase64Url(r.url))toMove++});
   let migrated=0,failed=0,jobsTouched=0;
   if(onProgress)onProgress(0,toMove);
   const migrateArr=async(arr,jobId,kind)=>{
@@ -89,6 +92,22 @@ async function photoMigrationRun(opts){
       try{await writeJob(j);jobsTouched++;console.log('[photo-migration] updated '+(j.name||j.id));}
       catch(e){console.error('[photo-migration] could not save job '+(j.name||j.id),e);}
     }
+  }
+  // Overhead receipts: same treatment, but each is saved through writeReceipt
+  // (its own node) rather than as part of a job. Uploads go under the
+  // jobs/_overhead/receipts path so the Storage rules permit them.
+  const overhead=Object.values((typeof S!=='undefined'&&S.receipts)||{});
+  for(const r of overhead){
+    if(!r||!_isBase64Url(r.url))continue;
+    try{
+      const up=await uploadToStorage(_dataURLtoBlob(r.url),'jobs/_overhead/receipts',_extFromDataURL(r.url));
+      if(up&&up.url){
+        r.url=up.url;r.storagePath=up.path;migrated++;
+        try{await writeReceipt(r);console.log('[photo-migration] updated overhead receipt '+r.id);}
+        catch(e){console.error('[photo-migration] could not save overhead receipt '+r.id,e);}
+      }else{failed++;console.warn('[photo-migration] upload returned nothing for an overhead receipt');}
+    }catch(e){failed++;console.warn('[photo-migration] failed one overhead receipt',e);}
+    if(onProgress)onProgress(migrated+failed,toMove);
   }
   console.log('[photo-migration] DONE — '+migrated+' file(s) moved to Storage, '+jobsTouched+' job(s) updated, '+failed+' failed.');
   if(typeof toast==='function')toast('Migration done: '+migrated+' moved'+(failed?', '+failed+' failed':''),'');
