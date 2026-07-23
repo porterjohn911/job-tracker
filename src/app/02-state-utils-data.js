@@ -253,6 +253,22 @@ function slimJobsForLocal(jobsObj){
   }
   return out;
 }
+// Overhead receipts (S.receipts, keyed by id) get the same base64-stripping as
+// job assets, so a receipt image that fell back to inline base64 (e.g. before
+// Firebase Storage was reachable) doesn't sit in the browser cache. The full
+// copy still lives in the cloud and re-syncs into memory on load; the photo
+// migration tool moves it up to Storage permanently.
+function slimReceiptsForLocal(receiptsObj){
+  const big=u=>typeof u==='string'&&u.slice(0,5)==='data:';
+  const out={};
+  for(const id in receiptsObj){
+    const r=receiptsObj[id];
+    if(!r||typeof r!=='object'){out[id]=r;continue}
+    if(big(r.url)){const o={...r};o.url='';out[id]=o}
+    else out[id]=r;
+  }
+  return out;
+}
 const LOCAL={
   load(){try{S.jobs=JSON.parse(localStorage.getItem(LS('jobs'))||'{}')}catch(e){S.jobs={}}try{S.activity=JSON.parse(localStorage.getItem(LS('activity'))||'[]')}catch(e){S.activity=[]}try{S.members=JSON.parse(localStorage.getItem(LS('members'))||'[]')}catch(e){S.members=[]}try{S.referrals=JSON.parse(localStorage.getItem(LS('referrals'))||'{}')}catch(e){S.referrals={}}try{S.timeEntries=JSON.parse(localStorage.getItem(LS('time'))||'{}')}catch(e){S.timeEntries={}}try{S.payRates=canSeeFinancials()?JSON.parse(localStorage.getItem(LS('payrates'))||'{}'):{};}catch(e){S.payRates={}}try{S.transactions=canSeeBank()?JSON.parse(localStorage.getItem(LS('transactions'))||'{}'):{};}catch(e){S.transactions={}}try{S.timeOff=JSON.parse(localStorage.getItem(LS('timeoff'))||'{}')}catch(e){S.timeOff={}}try{S.receipts=JSON.parse(localStorage.getItem(LS('receipts'))||'{}')}catch(e){S.receipts={}}},
   saveJobs(required){return saveLocalValue(LS('jobs'),DB?slimJobsForLocal(S.jobs):S.jobs,'jobs',required)},
@@ -263,7 +279,7 @@ const LOCAL={
   savePayRates(required){return saveLocalValue(LS('payrates'),S.payRates,'pay rates',required)},
   saveTransactions(required){return saveLocalValue(LS('transactions'),S.transactions,'bank transactions',required)},
   saveTimeOff(required){return saveLocalValue(LS('timeoff'),S.timeOff,'time off',required)},
-  saveReceipts(required){return saveLocalValue(LS('receipts'),S.receipts,'receipts',required)}
+  saveReceipts(required){return saveLocalValue(LS('receipts'),DB?slimReceiptsForLocal(S.receipts):S.receipts,'receipts',required)}
 };
 function syncStatus(state,msg){const d=$('sync-dot'),t=$('sync-text');d.className='sync-dot '+state;t.textContent=msg}
 

@@ -18,7 +18,23 @@ function _storageBase64Stats(){
     (j.invoices||[]).forEach(inv=>scan(inv&&inv.photos));
     (j.estimates||[]).forEach(inv=>scan(inv&&inv.photos));
   });
+  // Overhead receipts (no job) live in their own node.
+  Object.values((typeof S!=='undefined'&&S.receipts)||{}).forEach(r=>{if(r&&big(r.url)){count++;bytes+=r.url.length}});
   return {count,bytes};
+}
+// Every localStorage key with its byte size, biggest first — the raw answer to
+// "what else is filling up storage." Keys keep their company-namespace prefix on
+// purpose, so an old company's cached data is visible as its own line.
+function _storageKeyBreakdown(){
+  const out=[];
+  try{for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k==null)continue;out.push({key:k,bytes:k.length+((localStorage.getItem(k)||'').length)})}}catch(e){}
+  out.sort((a,b)=>b.bytes-a.bytes);
+  return out;
+}
+function _fmtStorageBytes(b){
+  if(b>=1048576)return (b/1048576).toFixed(1)+' MB';
+  if(b>=1024)return Math.round(b/1024)+' KB';
+  return b+' B';
 }
 // Rough size of everything this app has in localStorage.
 function _localStorageBytes(){
@@ -54,9 +70,30 @@ function _storageSectionInner(){
     <div style="margin:14px 0 10px;padding-top:14px;border-top:1px solid var(--border)"><div class="form-label" style="font-size:12px">Photo Storage</div></div>
     <div style="font-size:11.5px;color:var(--text-3);display:flex;justify-content:space-between;margin-bottom:4px"><span>Browser cache</span><span>~${usedMB.toFixed(1)} MB of ~${cap} MB</span></div>
     <div style="height:8px;background:var(--surface-3);border-radius:999px;overflow:hidden"><div style="height:100%;width:${pct}%;background:${barColor};transition:width .2s"></div></div>
-    ${body}`;
+    ${body}
+    ${_storageBreakdownHTML()}`;
 }
 
+// Collapsible list of the largest localStorage keys, with a proportional bar.
+function _storageBreakdownHTML(){
+  const rows=_storageKeyBreakdown();
+  if(!rows.length)return '';
+  const total=rows.reduce((s,r)=>s+r.bytes,0);
+  const top=rows.slice(0,8);
+  const rest=rows.slice(8);
+  const restBytes=rest.reduce((s,r)=>s+r.bytes,0);
+  const maxB=rows[0].bytes||1;
+  const line=r=>`<div style="display:flex;align-items:center;gap:8px;margin:4px 0">
+    <div style="flex:1;min-width:0;font-size:11.5px;color:var(--text-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(r.key)}">${esc(r.key)}</div>
+    <div style="width:64px;height:6px;background:var(--surface-3);border-radius:999px;overflow:hidden;flex:none"><div style="height:100%;width:${Math.max(3,Math.round(r.bytes/maxB*100))}%;background:var(--text-3)"></div></div>
+    <div style="width:56px;text-align:right;font-size:11px;color:var(--text-3);flex:none">${_fmtStorageBytes(r.bytes)}</div>
+  </div>`;
+  return `<details style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border)">
+    <summary style="cursor:pointer;font-size:12px;color:var(--text-2)">What's using this space — ${_fmtStorageBytes(total)} across ${rows.length} item${rows.length!==1?'s':''}</summary>
+    <div style="margin-top:10px">${top.map(line).join('')}${restBytes?`<div style="font-size:11px;color:var(--text-3);margin-top:6px">+ ${rest.length} smaller item${rest.length!==1?'s':''} · ${_fmtStorageBytes(restBytes)}</div>`:''}</div>
+    <div style="font-size:11px;color:var(--text-3);margin-top:8px">Each line is one stored dataset. A prefix like a company name means that company's cached data — switching companies leaves a separate copy behind.</div>
+  </details>`;
+}
 function renderStorageSettings(){
   return `<div id="sm-section">${_storageSectionInner()}</div>`;
 }
