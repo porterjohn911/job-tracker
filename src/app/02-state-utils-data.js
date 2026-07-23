@@ -321,17 +321,40 @@ function videoPoster(file){
     setTimeout(fail,8000);
   });
 }
+// The most recent Storage upload failure, as a short string (e.g. an error code
+// like 'storage/unauthorized', or 'storage/timeout'). Callers surface this so an
+// upload that fails no longer does so silently. Cleared on the next success.
+let STORAGE_LAST_ERROR=null;
+function storageLastError(){return (typeof STORAGE_LAST_ERROR==='string')?STORAGE_LAST_ERROR:''}
+function _storageErrText(e){return (e&&(e.code||e.message))||'unknown error'}
 async function uploadToStorage(blobOrFile,subpath,ext){
   if(!storageReady()||!blobOrFile)return null;
+  // Cap how long we'll wait on a single upload. A misconfigured or unreachable
+  // Storage bucket makes put() hang and retry indefinitely — which showed up as
+  // a photo that simply never uploaded, with no error at all. Timing out lets
+  // the caller fall back to inline base64 and tell the user what happened.
+  const UPLOAD_TIMEOUT=30000;
+  const ns=(DB_NS||'data').replace(/[^a-zA-Z0-9_-]/g,'');
+  const safeExt=(ext||'').replace(/[^a-zA-Z0-9]/g,'').slice(0,8);
+  const path=ns+'/'+subpath+'/'+Date.now()+'_'+Math.random().toString(36).slice(2,8)+(safeExt?'.'+safeExt:'');
+  let timer=null;
   try{
-    const ns=(DB_NS||'data').replace(/[^a-zA-Z0-9_-]/g,'');
-    const safeExt=(ext||'').replace(/[^a-zA-Z0-9]/g,'').slice(0,8);
-    const path=ns+'/'+subpath+'/'+Date.now()+'_'+Math.random().toString(36).slice(2,8)+(safeExt?'.'+safeExt:'');
     const ref=firebase.storage().ref(path);
-    const snap=await ref.put(blobOrFile);
-    const url=await snap.ref.getDownloadURL();
-    return {url,path};
-  }catch(e){return null}
+    const uploadPromise=(async()=>{const snap=await ref.put(blobOrFile);return {url:await snap.ref.getDownloadURL(),path}})();
+    uploadPromise.catch(()=>{}); // if the timeout wins the race, don't leave this as an unhandled rejection
+    const result=await Promise.race([
+      uploadPromise,
+      new Promise((_,rej)=>{timer=setTimeout(()=>rej(new Error('storage/timeout')),UPLOAD_TIMEOUT)})
+    ]);
+    if(timer)clearTimeout(timer);
+    STORAGE_LAST_ERROR=null;
+    return result;
+  }catch(e){
+    if(timer)clearTimeout(timer);
+    STORAGE_LAST_ERROR=_storageErrText(e);
+    console.warn('[storage] upload failed ('+STORAGE_LAST_ERROR+') for '+path,e);
+    return null;
+  }
 }
 async function deleteStoragePath(path){if(!path||!storageReady())return;try{await firebase.storage().ref(path).delete()}catch(e){}}
 async function uploadCompanyLogoFile(file,kind){
