@@ -9,10 +9,11 @@ function attachJobAssetHandlers(){
     const files=Array.from(this.files);if(!files.length)return;
     const cat=S.photoCat&&S.photoCat!=='all'?S.photoCat:'';
     const VIDEO_CAP=50*1024*1024;
-    const total=files.length;let done=0,added=0,skipped=0;
+    const total=files.length;let done=0,added=0,skipped=0,cloudFailed=0;
+    const errSuffix=()=>{const e=(typeof storageLastError==='function')?storageLastError():'';return e?' ('+e+')':''};
     const finishOne=()=>{if(++done===total){
-      if(added){writeJob(j).then(()=>{logAct('added '+added+' item(s) to',j.name);render();let m=added+' item'+(added>1?'s':'')+' added';if(skipped)m+=' · '+skipped+' skipped';toast(m,'photo')})}
-      else{render();toast(skipped?'Video needs cloud sync and must be under 50MB':'Nothing added','')}
+      if(added){writeJob(j).then(()=>{logAct('added '+added+' item(s) to',j.name);render();let m=added+' item'+(added>1?'s':'')+' added';if(skipped)m+=' · '+skipped+' skipped';if(cloudFailed)m+=' · cloud upload failed'+errSuffix()+', saved on device';toast(m,'photo')}).catch(err=>{render();toast('Could not save photo to team sync'+(err&&err.message?' ('+err.message+')':''),'')})}
+      else{render();toast(skipped?('Video upload failed'+errSuffix()+' — needs cloud sync & under 50MB'):'Nothing added','')}
     }};
     if(storageReady())toast('Uploading '+total+' item'+(total>1?'s':'')+'…','photo');
     files.forEach(file=>{
@@ -25,23 +26,31 @@ function attachJobAssetHandlers(){
           const ext=(file.name.split('.').pop()||'mp4').toLowerCase();
           const up=await uploadToStorage(file,'jobs/'+j.id+'/photos',ext);
           if(up){const rec={cat:cat,user:S.user,time:Date.now(),type:'video',mime:file.type,url:up.url,storagePath:up.path};if(poster)rec.poster=poster;j.photos.push(rec);added++}
-          else{skipped++}
+          else{skipped++;cloudFailed++}
           finishOne();
         })();
         return;
       }
-      const r=new FileReader();r.onload=e=>{
-      const img=new Image();img.onload=async()=>{
-        const c=document.createElement('canvas');const MAX=1400;
-        let w=img.width,h=img.height;
-        if(w>MAX||h>MAX){if(w>h){h=Math.round(h*MAX/w);w=MAX}else{w=Math.round(w*MAX/h);h=MAX}}
-        c.width=w;c.height=h;c.getContext('2d').drawImage(img,0,0,w,h);
-        const blob=await canvasToBlob(c,'image/jpeg',0.78);
-        const up=blob?await uploadToStorage(blob,'jobs/'+j.id+'/photos','jpg'):null;
-        const rec={cat:cat,user:S.user,time:Date.now()};
-        if(up){rec.url=up.url;rec.storagePath=up.path}
-        else{rec.url=c.toDataURL('image/jpeg',0.78)}
-        j.photos.push(rec);added++;
+      const r=new FileReader();
+      // Any read/decode/encode failure must still advance the counter, or the
+      // whole batch stalls with no toast and the photo silently never appears.
+      r.onerror=()=>{skipped++;console.warn('[photo] could not read file');finishOne()};
+      r.onload=e=>{
+      const img=new Image();
+      img.onerror=()=>{skipped++;console.warn('[photo] could not decode image');finishOne()};
+      img.onload=async()=>{
+        try{
+          const c=document.createElement('canvas');const MAX=1400;
+          let w=img.width,h=img.height;
+          if(w>MAX||h>MAX){if(w>h){h=Math.round(h*MAX/w);w=MAX}else{w=Math.round(w*MAX/h);h=MAX}}
+          c.width=w;c.height=h;c.getContext('2d').drawImage(img,0,0,w,h);
+          const blob=await canvasToBlob(c,'image/jpeg',0.78);
+          const up=blob?await uploadToStorage(blob,'jobs/'+j.id+'/photos','jpg'):null;
+          const rec={cat:cat,user:S.user,time:Date.now()};
+          if(up){rec.url=up.url;rec.storagePath=up.path}
+          else{rec.url=c.toDataURL('image/jpeg',0.78);if(storageReady())cloudFailed++}
+          j.photos.push(rec);added++;
+        }catch(err){skipped++;console.warn('[photo] processing failed',err)}
         finishOne();
       };img.src=e.target.result
     };r.readAsDataURL(file)});
