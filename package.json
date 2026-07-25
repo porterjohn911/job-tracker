@@ -4,7 +4,8 @@
   "description": "Serverless function deps for emailing invoices/estimates (the app itself is static).",
   "scripts": {
     "check": "node scripts/check-static.mjs",
-    "test:smoke": "playwright test"
+    "test:smoke": "playwright test tests/app-smoke.spec.js",
+    "audit:ux": "playwright test tests/usability-audit.spec.js"
   },
   "engines": {
     "node": ">=20.19"
@@ -16,6 +17,7 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.53.0",
+    "axe-core": "^4.12.1",
     "http-server": "^14.1.1"
   }
 }
