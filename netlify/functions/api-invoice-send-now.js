@@ -10,10 +10,10 @@
 // SMTP_PASS (same creds the weekly report uses) and the company profile synced
 // to {ns}/company (the app writes this when Settings are saved).
 
-const nodemailer = require('nodemailer');
 const { db } = require('./_lib/firebaseAdmin');
 const { corsHeaders, jsonResponder, authenticateApiKey } = require('./_lib/apiKeyAuth');
 const { buildPdf } = require('./_lib/invoicePdf');
+const { smtpConfig, makeTransport, describeSmtpError } = require('./_lib/smtp');
 
 function num(v) { return Number(v || 0); }
 
@@ -29,8 +29,9 @@ exports.handler = async (event) => {
     const ns = authed.key.ns || authed.key.company;
     if (!ns) return json(500, { error: 'Key is not bound to a company' });
 
-    const user = process.env.SMTP_USER, pass = process.env.SMTP_PASS;
-    if (!user || !pass) return json(500, { error: 'Email not set up (SMTP_USER / SMTP_PASS missing in Netlify)' });
+    const smtp = smtpConfig();
+    if (!smtp) return json(500, { error: 'Email not set up (SMTP_USER / SMTP_PASS missing in Netlify)' });
+    const user = smtp.user;
 
     let body;
     try { body = JSON.parse(event.body || '{}'); } catch (e) { return json(400, { error: 'Bad request' }); }
@@ -88,12 +89,8 @@ exports.handler = async (event) => {
     const subject = body.subject ? String(body.subject) : (label + ' from ' + (company.name || 'us'));
     const message = body.message ? String(body.message) : ('Please find ' + label + ' attached.');
 
-    const transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST || 'smtp.gmail.com',
-      port: Number(process.env.SMTP_PORT || 465),
-      secure: true,
-      auth: { user, pass },
-    });
+    const transporter = makeTransport();
+    if (!transporter) return json(500, { error: 'Email not set up (SMTP_USER / SMTP_PASS missing in Netlify)' });
     try {
       await transporter.sendMail({
         from: '"' + (company.name || 'Invoices') + '" <' + user + '>',
@@ -105,7 +102,7 @@ exports.handler = async (event) => {
         attachments: [{ filename: label.replace(/\s+/g, '-') + '.pdf', content: pdfBuf, contentType: 'application/pdf' }],
       });
     } catch (e) {
-      return json(502, { error: 'Send failed: ' + e.message });
+      return json(502, { error: describeSmtpError(e) });
     }
 
     // Mark sent (mirrors the client: inv.sent + status).

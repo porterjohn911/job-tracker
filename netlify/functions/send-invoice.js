@@ -30,8 +30,8 @@
 // This stops the function from acting as an open mail relay: simply having a
 // Firebase account for the project is no longer enough to send mail.
 
-const nodemailer = require('nodemailer');
 const { buildPdf } = require('./_lib/invoicePdf');
+const { smtpConfig, makeTransport, describeSmtpError } = require('./_lib/smtp');
 
 const PUBLIC_FIREBASE_API_KEY = ['AI', 'za', 'SyDCE0', 'Yo6YkYtS', 'kibUx9T7Q5', 'XEkgmEsS', 'KRc'].join('');
 const PUBLIC_FIREBASE_DB_URL = 'https://witport-constructionservices-default-rtdb.firebaseio.com';
@@ -121,8 +121,9 @@ exports.handler = async (event) => {
   if (!member) return json(403, { error: 'Your account is not approved to send email yet' });
   if (rateLimited(uid)) return json(429, { error: 'Too many messages — please try again in a few minutes' });
 
-  const user = process.env.SMTP_USER, pass = process.env.SMTP_PASS;
-  if (!user || !pass) return json(500, { error: 'Email not set up yet (SMTP_USER / SMTP_PASS missing in Netlify)' });
+  const smtp = smtpConfig();
+  if (!smtp) return json(500, { error: 'Email not set up yet (SMTP_USER / SMTP_PASS missing in Netlify)' });
+  const user = smtp.user;
 
   let pdfBuf;
   if (pdfBase64) {
@@ -134,12 +135,7 @@ exports.handler = async (event) => {
     try { pdfBuf = await buildPdf(doc); } catch (e) { return json(500, { error: 'PDF generation failed: ' + e.message }); }
   }
 
-  const transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST || 'smtp.gmail.com',
-    port: Number(process.env.SMTP_PORT || 465),
-    secure: true,
-    auth: { user, pass },
-  });
+  const transporter = makeTransport();
 
   const d = doc || {};
   const senderName = fromName || (d.company && d.company.name) || 'Invoices';
@@ -156,7 +152,7 @@ exports.handler = async (event) => {
       attachments: [{ filename: attachName, content: pdfBuf, contentType: 'application/pdf' }],
     });
   } catch (e) {
-    return json(502, { error: 'Send failed: ' + e.message });
+    return json(502, { error: describeSmtpError(e) });
   }
   return json(200, { ok: true });
 };
