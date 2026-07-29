@@ -9,7 +9,7 @@
 ### Decisions locked in (first review)
 
 1. **Admin SDK** for server-side data access (not a bot-user). ✅
-2. **Approve-before-send** for invoices — a human okays every send. ✅
+2. **Approve-before-send** for invoices via `invoices:write` + `queue_invoice_send` (a human okays each queued send). ✅ A separate, opt-in **direct send** path (`invoices:send` scope → `send_invoice` / `api-invoice-send-now`) lets a trusted key email customers immediately with no approval step — grant it only to keys you trust to send autonomously.
 3. **Pilot company: `wfs`** (Waterfront). ✅
 4. **Financials stay read-only** in v1 (`financials:read` only; no `sensitive`). ✅
 5. **No QuickBooks** integration for now — email-PDF is enough. ✅

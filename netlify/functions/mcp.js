@@ -73,7 +73,7 @@ const TOOLS = [
   },
   {
     name: 'send_invoice',
-    description: "ACTUALLY email an invoice or estimate to the customer (builds the PDF and sends it). This is different from queue_invoice_send, which only queues for in-app approval. Because this sends a real email to a real customer, you MUST get the user's explicit confirmation before calling it. Get jobId + invoiceId from list_jobs / list_invoices.",
+    description: "Email an invoice or estimate to the customer NOW — builds the branded PDF and sends it from the company email via SMTP, then marks it sent. This sends a real email immediately, with no in-app approval step (use queue_invoice_send instead if a human should approve first). Get jobId + invoiceId from list_jobs / list_invoices. Requires the invoices:send scope and working SMTP; if a send fails, run test_email_connection to diagnose.",
     kind: 'POST', path: '/.netlify/functions/api-invoice-send-now',
     inputSchema: { type: 'object', properties: {
       jobId: { type: 'string' }, invoiceId: { type: 'string' },
@@ -81,6 +81,12 @@ const TOOLS = [
       to: { type: 'string', description: 'recipient email (defaults to the job customer email)' },
       subject: { type: 'string' }, message: { type: 'string', description: 'email body (optional)' },
     }, required: ['jobId', 'invoiceId'] },
+  },
+  {
+    name: 'test_email_connection',
+    description: "Check whether email sending (SMTP) actually works, WITHOUT sending any email — it just logs in to the mail server and reports success or a specific reason for failure (e.g. wrong App Password, 2FA off, missing env vars). Call this when send_invoice fails or the user says email 'won't work'. Requires the invoices:send scope.",
+    kind: 'GET', path: '/.netlify/functions/api-smtp-test',
+    inputSchema: { type: 'object', properties: {} },
   },
   {
     name: 'list_schedule',
