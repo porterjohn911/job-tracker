@@ -128,13 +128,16 @@ function autoGrowTextareas(root=document){
   });
 }
 
-function toast(msg,icon='check',undoFn){
+// ms overrides how long the toast stays up. Diagnostics ("the logo/photos were
+// left off the PDF, here's why") need long enough to actually read — the default
+// 2.6s is fine for "Saved" but too quick for a sentence explaining a failure.
+function toast(msg,icon='check',undoFn,ms){
   const t=$('toast');
   const icons={check:'<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>',photo:'📷',note:'💬',undo:'↩'};
   t.classList.toggle('undo',!!undoFn);
   t.innerHTML=(icons[icon]||'')+'<span>'+esc(msg)+'</span>'+(undoFn?'<button class="toast-action" id="toast-undo">Undo</button>':'');
   t.classList.add('show');
-  clearTimeout(t._t);t._t=setTimeout(()=>{t.classList.remove('show','undo')},undoFn?6000:2600);
+  clearTimeout(t._t);t._t=setTimeout(()=>{t.classList.remove('show','undo')},ms||(undoFn?6000:2600));
   if(undoFn){
     const btn=document.getElementById('toast-undo');
     if(btn)btn.onclick=()=>{clearTimeout(t._t);t.classList.remove('show','undo');undoFn()};

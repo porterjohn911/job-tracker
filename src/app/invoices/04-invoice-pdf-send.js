@@ -75,7 +75,7 @@ async function buildInvoicePDFFile(j,inv,kind){
   if(_logoWarn){
     try{console.warn('[invoice-pdf] '+_logoWarn)}catch(e){}
     // Show it just after the "Sending…"/"Building" toast so it isn't buried.
-    if(typeof toast==='function')setTimeout(()=>toast(_logoWarn,''),1400);
+    if(typeof toast==='function')setTimeout(()=>toast(_logoWarn,'',null,10000),1400);
   }
   pdf.setFont('times','bold');pdf.setFontSize(20);pdf.setTextColor(255,255,255);
   pdf.text(co.name||'Waterfront Solutions',cardX+cardW/2,cardY+106,{align:'center'});
@@ -162,10 +162,11 @@ async function buildInvoicePDFFile(j,inv,kind){
     if(ph.caption){pdf.setFont('helvetica','normal');pdf.setFontSize(10);pdf.setTextColor(61,99,88);pdf.text(String(ph.caption).slice(0,200),36,60+h+22,{maxWidth:pageW-72})}
   }
   if(_photoSkipped){
-    const m=_photoSkipped+(_photoSkipped>1?' photos were':' photo was')+" left off the PDF — couldn't load "+(_photoSkipped>1?'them':'it')+' from storage.';
+    const m=_photoSkipped+(_photoSkipped>1?' photos were':' photo was')+" left off the PDF — couldn't load "+(_photoSkipped>1?'them':'it')+' from storage. See docs/STORAGE_CORS.md.';
     try{console.warn('[invoice-pdf] '+m)}catch(e){}
-    // Staggered past the logo warning so the two don't overwrite each other.
-    if(typeof toast==='function')setTimeout(()=>toast(m,''),4200);
+    // Staggered past the logo warning so the two don't overwrite each other,
+    // and held long enough to read (the default toast is gone in 2.6s).
+    if(typeof toast==='function')setTimeout(()=>toast(m,'',null,10000),4200);
   }
   const blob=pdf.output('blob');
   const filename=(kind==='estimate'?'Estimate':'Invoice')+'-'+(inv.number||'draft')+'.pdf';
