@@ -143,17 +143,29 @@ async function buildInvoicePDFFile(j,inv,kind){
   pdf.setFont('helvetica','normal');pdf.setFontSize(9.5);setColor(muted);
   pdf.text('This '+(EST?'estimate':'invoice')+' was sent from your '+(co.name||'Waterfront Solutions')+' job tracker.',pageW/2,footY+34,{align:'center'});
 
+  // Photos uploaded to Firebase Storage are held as remote https URLs, so each
+  // one has to be fetched to embed it. That cross-origin fetch is the same step
+  // that was dropping the logo; when it fails the photo is skipped, so count the
+  // skips and say so rather than quietly shipping a PDF with photos missing.
   const photos=(inv.photos||[]).filter(p=>p&&p.url);
+  let _photoSkipped=0;
   for(const ph of photos){
-    const du=await urlToDataURL(ph.url);if(!du)continue;
+    const du=await urlToDataURL(ph.url);
+    if(!du){_photoSkipped++;try{console.warn('[invoice-pdf] photo skipped — could not load '+String(ph.url).slice(0,120))}catch(e){}continue}
     const img=new Image();await new Promise(r=>{img.onload=img.onerror=r;img.src=du;setTimeout(r,3000)});
-    if(!img.width)continue;
+    if(!img.width){_photoSkipped++;try{console.warn('[invoice-pdf] photo skipped — image did not decode')}catch(e){}continue}
     const maxW=pageW-72,maxH=pageH-120;let w=img.width,h=img.height;const k=Math.min(maxW/w,maxH/h,1);w*=k;h*=k;
     pdf.addPage();
     pdf.setFont('helvetica','bold');pdf.setFontSize(11);pdf.setTextColor(10,61,46);
     pdf.text((kind==='estimate'?'Estimate':'Invoice')+' '+(inv.number||'')+' — Photos',36,40);
     pdf.addImage(du,_imgFmt(du),(pageW-w)/2,60,w,h);
     if(ph.caption){pdf.setFont('helvetica','normal');pdf.setFontSize(10);pdf.setTextColor(61,99,88);pdf.text(String(ph.caption).slice(0,200),36,60+h+22,{maxWidth:pageW-72})}
+  }
+  if(_photoSkipped){
+    const m=_photoSkipped+(_photoSkipped>1?' photos were':' photo was')+" left off the PDF — couldn't load "+(_photoSkipped>1?'them':'it')+' from storage.';
+    try{console.warn('[invoice-pdf] '+m)}catch(e){}
+    // Staggered past the logo warning so the two don't overwrite each other.
+    if(typeof toast==='function')setTimeout(()=>toast(m,''),4200);
   }
   const blob=pdf.output('blob');
   const filename=(kind==='estimate'?'Estimate':'Invoice')+'-'+(inv.number||'draft')+'.pdf';
