@@ -56,6 +56,10 @@ function renderInvoiceModal(jobId,isEdit,kind){
           <span>Add Photos</span>
           <input type="file" accept="image/*" multiple id="inv-photo-upload" style="display:none">
         </label>
+        <button class="photo-add-btn" id="inv-photo-fromjob" type="button" style="aspect-ratio:auto;padding:12px;flex-direction:row;gap:8px;margin-top:8px;width:100%">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>
+          <span>Add Job Photos</span>
+        </button>
       </div>
     </div>
     <div class="modal-foot">
@@ -137,6 +141,20 @@ function renderInvoiceModal(jobId,isEdit,kind){
     autoGrowTextareas(wrap);
   }
   renderInvPhotos();
+  // Job photos are auto-attached when an invoice is first created, so an invoice
+  // written before the photos were taken has none. Pull them in on demand rather
+  // than making the user re-create the invoice.
+  $('inv-photo-fromjob')?.addEventListener('click',()=>{
+    const fromJob=(typeof invoicePhotosFromJob==='function')?invoicePhotosFromJob(S.jobs[jobId]):[];
+    if(!fromJob.length){toast('This job has no photos yet','');return}
+    INV_DRAFT.photos=INV_DRAFT.photos||[];
+    const have=new Set(INV_DRAFT.photos.map(p=>p&&p.url).filter(Boolean));
+    const add=fromJob.filter(p=>!have.has(p.url));
+    if(!add.length){toast('Job photos are already attached','');return}
+    INV_DRAFT.photos.push(...add);
+    renderInvPhotos();
+    toast(add.length+' job photo'+(add.length>1?'s':'')+' added');
+  });
   $('inv-photo-upload')?.addEventListener('change',function(){
     const files=Array.from(this.files||[]);if(!files.length)return;
     INV_DRAFT.photos=INV_DRAFT.photos||[];

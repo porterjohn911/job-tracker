@@ -9,15 +9,23 @@ let INV_DRAFT=null; // current draft being edited
 // printed invoice, and the emailed PDF already render inv.photos + captions.
 function invoicePhotosFromJob(j){
   const label={before:'Before',during:'During',after:'After'};
+  // A PDF page can't hold a video, so clips are left for the app to show.
+  const isVideo=p=>!!(p&&(p.type==='video'||/^video\//.test(p.mime||'')));
+  const all=((j&&j.photos)||[]);
   const out=[];
+  const add=(p,stage)=>{
+    const url=(typeof photoURL==='function')?photoURL(p):(typeof p==='string'?p:(p&&p.url)||'');
+    if(!url)return;
+    const st=label[stage]||'';
+    out.push({url,caption:st?(p.caption?st+' — '+p.caption:st):(p.caption||'')});
+  };
   ['before','during','after'].forEach(stage=>{
-    (((j&&j.photos)||[])).forEach(p=>{
-      if(!p||(p.cat||'')!==stage)return;
-      const url=(typeof photoURL==='function')?photoURL(p):(typeof p==='string'?p:(p&&p.url)||'');
-      if(!url)return;
-      out.push({url,caption:p.caption?label[stage]+' — '+p.caption:label[stage]});
-    });
+    all.forEach(p=>{if(p&&!isVideo(p)&&(p.cat||'')===stage)add(p,stage)});
   });
+  // Photos uploaded from the "All" tab are stored with no category. They were
+  // being dropped from invoices entirely — include them (after the staged ones,
+  // with no stage label) so they still reach the customer.
+  all.forEach(p=>{if(p&&!isVideo(p)&&!(p.cat||''))add(p,'')});
   return out;
 }
 

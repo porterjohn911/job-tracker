@@ -139,7 +139,7 @@ function renderDetailTab(j,tab){
             <input type="file" accept="image/*,video/*" multiple id="photo-upload" style="display:none">
           </label>
         </div>
-        <p style="font-size:11.5px;color:var(--text-3);margin-top:10px">Tip: Upload tags media as “${cat==='all'?'before':cat}”. Switch tabs first to choose a category. Videos need cloud sync and must be under 50&nbsp;MB (keep clips short).</p>
+        <p style="font-size:11.5px;color:var(--text-3);margin-top:10px">${cat==='all'?'Tip: Uploads from the “All” tab are saved without a stage. Switch to Before, During or After first so invoices group them by stage.':`Tip: Upload tags media as “${cat}”.`} Videos need cloud sync and must be under 50&nbsp;MB (keep clips short).</p>
       </div>`;
   }
   if(tab==='docs'){
