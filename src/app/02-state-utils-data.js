@@ -366,6 +366,36 @@ async function uploadCompanyLogoFile(file,kind){
   if(!up){toast('Could not upload logo - check Firebase Storage','');return null}
   return up;
 }
+// Downscale an uploaded image File to a compact PNG data URL, so the invoice
+// PDF can embed the logo directly instead of fetching the Storage URL
+// cross-origin (that fetch is blocked by the browser and was silently dropping
+// the logo from every generated PDF). We read the user's own file locally, so
+// the canvas is never tainted. maxDim caps the longest side to keep the stored
+// base64 small. Resolves to '' if the image can't be read.
+function imageFileToDataUrl(file,maxDim){
+  return new Promise(res=>{
+    if(!file){res('');return}
+    maxDim=maxDim||512;
+    let url='';try{url=URL.createObjectURL(file)}catch(e){res('');return}
+    const img=new Image();
+    let settled=false;
+    const done=v=>{if(settled)return;settled=true;try{URL.revokeObjectURL(url)}catch(e){}res(v||'')};
+    img.onload=()=>{
+      try{
+        let w=img.naturalWidth||img.width,h=img.naturalHeight||img.height;
+        if(!w||!h){done('');return}
+        const k=Math.min(1,maxDim/Math.max(w,h));
+        w=Math.max(1,Math.round(w*k));h=Math.max(1,Math.round(h*k));
+        const c=document.createElement('canvas');c.width=w;c.height=h;
+        c.getContext('2d').drawImage(img,0,0,w,h);
+        done(c.toDataURL('image/png'));
+      }catch(e){done('')}
+    };
+    img.onerror=()=>done('');
+    setTimeout(()=>done(''),5000);
+    img.src=url;
+  });
+}
 async function writeCompanyRegistryRecord(co){
   if(!co||!co.id)return;
   if(gateOn()&&!isOwnerRole(SESSION)){

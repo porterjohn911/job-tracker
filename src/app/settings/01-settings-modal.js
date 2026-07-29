@@ -79,9 +79,13 @@ function showSettingsModal(){
   async function saveBrandLogo(kind,file){
     const up=await uploadCompanyLogoFile(file,kind);
     if(!up)return;
+    // Also keep a small inline copy of the image. The invoice PDF embeds this
+    // directly, so it never has to fetch the Storage URL cross-origin (which the
+    // browser blocks — that was silently dropping the logo from PDFs).
+    const dataUrl=(typeof imageFileToDataUrl==='function')?await imageFileToDataUrl(file,kind==='invoice'?512:256):'';
     const co={...(COMPANIES[COMPANY_ID]||ACTIVE_CO)};
-    if(kind==='app'){co.appLogoUrl=up.url;co.appLogoPath=up.path}
-    else{co.invoiceLogoUrl=up.url;co.invoiceLogoPath=up.path}
+    if(kind==='app'){co.appLogoUrl=up.url;co.appLogoPath=up.path;if(dataUrl)co.appLogoData=dataUrl;else delete co.appLogoData}
+    else{co.invoiceLogoUrl=up.url;co.invoiceLogoPath=up.path;if(dataUrl)co.invoiceLogoData=dataUrl;else delete co.invoiceLogoData}
     try{
       await writeCompanyRegistryRecord(co);
       applyCompanyBranding();
@@ -93,8 +97,8 @@ function showSettingsModal(){
   async function removeBrandLogo(kind){
     const co={...(COMPANIES[COMPANY_ID]||ACTIVE_CO)};
     const path=kind==='app'?co.appLogoPath:co.invoiceLogoPath;
-    if(kind==='app'){delete co.appLogoUrl;delete co.appLogoPath}
-    else{delete co.invoiceLogoUrl;delete co.invoiceLogoPath}
+    if(kind==='app'){delete co.appLogoUrl;delete co.appLogoPath;delete co.appLogoData}
+    else{delete co.invoiceLogoUrl;delete co.invoiceLogoPath;delete co.invoiceLogoData}
     try{
       await writeCompanyRegistryRecord(co);
       await deleteStoragePath(path);

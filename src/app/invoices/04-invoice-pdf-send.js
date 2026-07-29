@@ -53,13 +53,30 @@ async function buildInvoicePDFFile(j,inv,kind){
   fill(paper);pdf.rect(0,0,pageW,pageH,'F');
   fill(cardBg);pdf.roundedRect(cardX,cardY,cardW,cardBottom-cardY,9,9,'F');
   fill(band);pdf.roundedRect(cardX,cardY,cardW,138,9,9,'F');pdf.rect(cardX,cardY+120,cardW,18,'F');
+  // Prefer the inline data-URL copy of the logo (saved at upload time) so the
+  // PDF embeds it with no network fetch. Fall back to the remote Storage URL /
+  // header logo for logos uploaded before that copy existed. If the logo still
+  // can't be embedded, say why instead of silently dropping it.
+  let _logoWarn='';
   try{
-    const logo=await _pdfImageData((typeof brandLogoFull==='function'&&brandLogoFull())||((typeof getBrandLogoSrc==='function')?getBrandLogoSrc():''));
+    const _logoSrc=(typeof ACTIVE_CO!=='undefined'&&ACTIVE_CO&&(ACTIVE_CO.invoiceLogoData||ACTIVE_CO.appLogoData))||(typeof brandLogoFull==='function'&&brandLogoFull())||((typeof getBrandLogoSrc==='function')?getBrandLogoSrc():'');
+    const logo=_logoSrc?await _pdfImageData(_logoSrc):null;
     if(logo){
       const lh=62,lw=lh*(logo.w/logo.h);
       pdf.addImage(logo.du,logo.fmt,cardX+(cardW-lw)/2,cardY+20,lw,lh);
+    }else if(_logoSrc){
+      _logoWarn=/^https?:/i.test(_logoSrc)
+        ? "Logo left off the PDF — couldn't load it from storage. Re-upload the invoice logo in Settings to embed it directly."
+        : "Logo left off the PDF — the image couldn't be read.";
     }
-  }catch(e){}
+  }catch(e){
+    _logoWarn='Logo left off the PDF: '+((e&&e.message)||e);
+  }
+  if(_logoWarn){
+    try{console.warn('[invoice-pdf] '+_logoWarn)}catch(e){}
+    // Show it just after the "Sending…"/"Building" toast so it isn't buried.
+    if(typeof toast==='function')setTimeout(()=>toast(_logoWarn,''),1400);
+  }
   pdf.setFont('times','bold');pdf.setFontSize(20);pdf.setTextColor(255,255,255);
   pdf.text(co.name||'Waterfront Solutions',cardX+cardW/2,cardY+106,{align:'center'});
   pdf.setFont('helvetica','normal');pdf.setFontSize(9.5);pdf.setTextColor(210,229,222);
