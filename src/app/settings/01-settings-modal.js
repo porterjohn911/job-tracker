@@ -77,21 +77,31 @@ function showSettingsModal(){
   $('set-agent-sends')?.addEventListener('click',()=>{closeSettings();showAgentSendsModal()});
   $('set-signout')?.addEventListener('click',()=>{if(confirm('Sign out of this device?'))signOut()});
   async function saveBrandLogo(kind,file){
-    const up=await uploadCompanyLogoFile(file,kind);
-    if(!up)return;
-    // Also keep a small inline copy of the image. The invoice PDF embeds this
-    // directly, so it never has to fetch the Storage URL cross-origin (which the
-    // browser blocks — that was silently dropping the logo from PDFs).
+    // Build the inline copy first, straight from the chosen file — no network.
+    // The invoice PDF and the in-app logo use this, so the logo still works even
+    // when the Storage upload (only needed for the emailed logo image) fails.
     const dataUrl=(typeof imageFileToDataUrl==='function')?await imageFileToDataUrl(file,kind==='invoice'?512:256):'';
+    // Upload a hosted copy too — the HTML email links to it by URL (it can't
+    // embed a data URL). This may fail if Storage is misconfigured or the user
+    // isn't signed in; that no longer blocks saving the inline copy.
+    const up=await uploadCompanyLogoFile(file,kind);
+    const storeErr=(!up&&typeof storageLastError==='function')?storageLastError():'';
+    if(!up&&!dataUrl)return; // both failed — uploadCompanyLogoFile already said why
     const co={...(COMPANIES[COMPANY_ID]||ACTIVE_CO)};
-    if(kind==='app'){co.appLogoUrl=up.url;co.appLogoPath=up.path;if(dataUrl)co.appLogoData=dataUrl;else delete co.appLogoData}
-    else{co.invoiceLogoUrl=up.url;co.invoiceLogoPath=up.path;if(dataUrl)co.invoiceLogoData=dataUrl;else delete co.invoiceLogoData}
+    if(kind==='app'){
+      if(up){co.appLogoUrl=up.url;co.appLogoPath=up.path}
+      if(dataUrl)co.appLogoData=dataUrl;else if(up)delete co.appLogoData;
+    }else{
+      if(up){co.invoiceLogoUrl=up.url;co.invoiceLogoPath=up.path}
+      if(dataUrl)co.invoiceLogoData=dataUrl;else if(up)delete co.invoiceLogoData;
+    }
     try{
       await writeCompanyRegistryRecord(co);
       applyCompanyBranding();
       const img=$(kind==='app'?'brand-app-preview':'brand-invoice-preview');
-      if(img)img.src=up.url;
-      toast(kind==='app'?'App logo saved':'Invoice logo saved');
+      if(img)img.src=(up&&up.url)||dataUrl;
+      if(up)toast(kind==='app'?'App logo saved':'Invoice logo saved');
+      else toast('Logo saved for invoices & PDFs. Hosted copy for emails failed'+(storeErr?' ('+storeErr+')':'')+' — check Firebase Storage / sign-in.','');
     }catch(e){toast('Could not save logo','')}
   }
   async function removeBrandLogo(kind){
