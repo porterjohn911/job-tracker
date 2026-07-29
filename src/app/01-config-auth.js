@@ -152,7 +152,7 @@ function invTheme(){
   return header?{...base,band:header,primary:header,link:header,notesBar:header,rule:header}:base;
 }
 function svgDataUrl(svg){return svg?'data:image/svg+xml;utf8,'+encodeURIComponent(svg):''}
-function companyAppLogoSrc(){return ACTIVE_CO.appLogoUrl||ACTIVE_CO.logoUrl||svgDataUrl(ACTIVE_CO.logoSvg)}
+function companyAppLogoSrc(){return ACTIVE_CO.appLogoUrl||ACTIVE_CO.logoUrl||svgDataUrl(ACTIVE_CO.logoSvg)||ACTIVE_CO.appLogoData||''}
 function brandLogoFull(){ return ACTIVE_CO.invoiceLogoUrl||ACTIVE_CO.logoFullUrl||svgDataUrl(ACTIVE_CO.logoFull)||companyAppLogoSrc() }
 const _stored = (() => { try { return localStorage.getItem('jt_company'); } catch (e) { return null; } })();
 
