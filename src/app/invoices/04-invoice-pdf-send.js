@@ -77,9 +77,13 @@ async function buildInvoicePDFFile(j,inv,kind){
     // Show it just after the "Sending…"/"Building" toast so it isn't buried.
     if(typeof toast==='function')setTimeout(()=>toast(_logoWarn,''),1400);
   }
-  pdf.setFont('times','bold');pdf.setFontSize(20);pdf.setTextColor(255,255,255);
+  // Company name + address sit on the theme band, so their ink has to follow the
+  // band's luminance — hardcoded white made both invisible whenever the header
+  // color was set to white or a pale tone.
+  const ink=bandInk(P.band);
+  pdf.setFont('times','bold');pdf.setFontSize(20);setColor(ink.textRgb);
   pdf.text(co.name||'Waterfront Solutions',cardX+cardW/2,cardY+106,{align:'center'});
-  pdf.setFont('helvetica','normal');pdf.setFontSize(9.5);pdf.setTextColor(210,229,222);
+  pdf.setFont('helvetica','normal');pdf.setFontSize(9.5);setColor(ink.mutedRgb);
   if(BIZ_ADDRESS)pdf.text(String(BIZ_ADDRESS).replace(/\n/g,' · '),cardX+cardW/2,cardY+122,{align:'center'});
 
   let y=cardY+168;

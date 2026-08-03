@@ -7,6 +7,7 @@ function buildInvoiceEmailHTML(j,inv,customMsg,kind){/* amounts use money2 (cent
   const co=COMPANY;
   const logoSrc=getBrandLogoSrc();
   const P=invTheme();
+  const INK=bandInk(P.band);
   const logoFull=brandLogoFull();
   const firstName=((j.customerName||'').trim().split(/\s+/)[0])||'there';
   const itemsRows=(inv.items||[]).map(it=>{
@@ -44,8 +45,8 @@ function buildInvoiceEmailHTML(j,inv,customMsg,kind){/* amounts use money2 (cent
         ${logoFull
           ?`<img src="${logoFull}" alt="${esc(co.name||'')}" width="380" style="display:inline-block;width:100%;max-width:380px;height:auto">`
           :`${logoSrc?`<img src="${logoSrc}" alt="${esc(co.name||'Waterfront Solutions')}" width="84" height="84" style="display:inline-block;width:84px;height:84px;object-fit:contain;filter:drop-shadow(0 2px 6px rgba(0,0,0,0.25))">`:''}
-        <div style="font-family:Georgia,'Times New Roman',serif;font-size:22px;font-weight:600;color:#ffffff;letter-spacing:0.01em;margin-top:10px">${esc(co.name||'Waterfront Solutions')}</div>`}
-        ${BIZ_ADDRESS?`<div style="font-size:11.5px;color:rgba(255,255,255,0.75);margin-top:${logoFull?'12':'4'}px;letter-spacing:0.02em">${esc(BIZ_ADDRESS.replace(/\n/g,' · '))}</div>`:''}
+        <div style="font-family:Georgia,'Times New Roman',serif;font-size:22px;font-weight:600;color:${INK.text};letter-spacing:0.01em;margin-top:10px">${esc(co.name||'Waterfront Solutions')}</div>`}
+        ${BIZ_ADDRESS?`<div style="font-size:11.5px;color:${INK.muted};margin-top:${logoFull?'12':'4'}px;letter-spacing:0.02em">${esc(BIZ_ADDRESS.replace(/\n/g,' · '))}</div>`:''}
       </td></tr>
       <tr><td style="padding:28px 32px 8px">
         <div style="font-size:11px;font-weight:700;color:#7aa898;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:6px">${EST?'Estimate':'Invoice'} ${esc(inv.number||'')}</div>

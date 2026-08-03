@@ -138,6 +138,19 @@ function readableOn(hex){
   const lum=(0.299*rgb.r+0.587*rgb.g+0.114*rgb.b)/255;
   return lum>0.62?'#0a1f18':'#ffffff';
 }
+// Ink colors for text printed ON TOP of the invoice header band (company name +
+// business address, in both the emailed HTML and the PDF attachment). Those were
+// hardcoded white, so picking a white or pale "Header / invoice color" in
+// Settings made the letterhead vanish into its own background — while the app
+// chrome stayed legible, because that path already runs through readableOn().
+// The band may be a gradient rather than a flat hex, so pull the first stop out
+// of it before measuring luminance.
+function bandInk(band){
+  const hex=normalizeHexColor(band)||firstHexColor(band)||INV_DEFAULT.primary;
+  return readableOn(hex)==='#ffffff'
+    ? {text:'#ffffff',muted:'rgba(255,255,255,0.75)',textRgb:[255,255,255],mutedRgb:[210,229,222]}
+    : {text:'#0a1f18',muted:'#2d3d37',textRgb:[10,31,24],mutedRgb:[45,61,55]};
+}
 function companyHeaderColor(co=ACTIVE_CO){
   const t=(co&&co.theme)||{};
   return normalizeHexColor(t.headerColor)||firstHexColor(t.headerBg)||normalizeHexColor(co&&co.inv&&co.inv.primary)||INV_DEFAULT.primary;
