@@ -293,6 +293,15 @@ async function buildInvoicePDFFile(j,inv,kind){
   const filename=(kind==='estimate'?'Estimate':'Invoice')+'-'+(inv.number||'draft')+'.pdf';
   return new File([blob],filename,{type:'application/pdf'});
 }
+// Hand a built PDF File to the browser's downloader. Shared by the explicit
+// "Download PDF" action and by the desktop send fallback, so both save the
+// identical file that would otherwise be attached to the email.
+function savePdfFile(file){
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(file);a.download=file.name;a.rel='noopener';
+  document.body.appendChild(a);a.click();
+  setTimeout(()=>{try{URL.revokeObjectURL(a.href)}catch(e){}a.remove()},2000);
+}
 // The signed-in Firebase team member, or null when access control is off / not
 // signed in. Direct SMTP send requires one (the function verifies the token).
 function _firebaseUser(){
@@ -383,10 +392,8 @@ async function sendInvoicePDF(j,inv,kind,opts){
     }catch(e){if(e&&e.name==='AbortError')return;}
   }
   // Desktop: download the PDF, then go straight to Gmail Web compose (no OS picker, no mailto handoff).
-  try{
-    const a=document.createElement('a');a.href=URL.createObjectURL(file);a.download=file.name;a.rel='noopener';document.body.appendChild(a);a.click();
-    setTimeout(()=>{try{URL.revokeObjectURL(a.href)}catch(e){}a.remove()},2000);
-  }catch(e){toast('Download failed: '+((e&&e.message)||e),'');return}
+  try{savePdfFile(file)}
+  catch(e){toast('Download failed: '+((e&&e.message)||e),'');return}
   const enc=encodeURIComponent;
   const gmailUrl='https://mail.google.com/mail/?view=cm&fs=1&to='+enc(to)+'&su='+enc(subject)+'&body='+enc(text);
   try{window.open(gmailUrl,'_blank','noopener')}catch(e){}
@@ -416,6 +423,10 @@ function showSendInvoiceModal(j,inv,kind){
       <button class="email-send-btn primary" id="em-send-now" type="button" style="width:100%;margin-bottom:8px">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5"/></svg>
         <span>Email PDF — one tap<span class="email-send-sub">Branded PDF + photos · sends via Gmail when connected · opens Gmail Web on desktop, share sheet on mobile</span></span>
+      </button>
+      <button class="email-send-btn" id="em-download" type="button" style="width:100%;margin-bottom:8px">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"/></svg>
+        <span>Download PDF — don't send<span class="email-send-sub">Saves the exact branded PDF that would be attached · nothing is emailed and the ${EST?'estimate':'invoice'} stays unsent</span></span>
       </button>
       <div class="email-send-grid">
         <a class="email-send-btn primary" id="em-mailto" href="#">
@@ -505,6 +516,23 @@ function showSendInvoiceModal(j,inv,kind){
     toast('.eml downloaded — open it to send');
   };
   $('em-print').onclick=()=>printInvoice(j,inv,kind);
+  // Build the same PDF the send paths attach and hand it straight to the
+  // browser. Deliberately does NOT touch inv.sent or the status: the point of
+  // this button is to get the file without the document counting as sent, so
+  // marking it would misreport where the invoice actually stands.
+  $('em-download').onclick=async()=>{
+    const btn=$('em-download'),lbl=btn.querySelector('span');
+    const old=lbl?lbl.innerHTML:'';
+    btn.disabled=true;if(lbl)lbl.textContent='Building PDF…';
+    try{
+      const _builder=window.buildInvoicePDFFile||buildInvoicePDFFile;
+      const file=await _builder(j,inv,kind);
+      savePdfFile(file);
+      await logAct('downloaded '+(EST?'estimate':'invoice')+' '+(inv.number||'')+' PDF for',j.name);
+      toast('PDF downloaded — nothing was emailed');
+    }catch(e){toast('PDF build failed: '+((e&&e.message)||e),'')}
+    finally{btn.disabled=false;if(lbl)lbl.innerHTML=old}
+  };
   $('em-send-now').onclick=async()=>{
     const to=currentTo();
     if(!to){toast('Add a recipient email first','');return}
