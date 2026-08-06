@@ -10,6 +10,24 @@ const UNDO={stack:[],push(op){this.stack.push(op);if(this.stack.length>20)this.s
 // Shared business mailing address — the same for every company, shown on all
 // invoice & estimate templates.
 const BIZ_ADDRESS='189 Ross Estates Rd. Kingston, TN 37763';
+// ── Customer-side letterhead: where the work was done.
+// Jobs carry a job-site address plus an optional billing address whose field
+// hint is "leave blank if same as job site", so an empty j.address with a
+// billing address filled in still describes the site — fall back to it rather
+// than printing an empty block. Returns null when the job has neither, so each
+// template can omit the block entirely instead of leaving a stray heading.
+// Shared by the emailed HTML, its plain-text alternative, and the PDF so the
+// three can't drift apart.
+function invoiceSiteLines(j){
+  j=j||{};
+  const addr=String(j.address||j.billingAddress||'').split(/\n+/).map(s=>s.trim()).filter(Boolean);
+  // The block exists to name a location, so an address is what makes it worth
+  // printing — a job with a customer but no address would otherwise render a
+  // "Job Site" heading over nothing but a person's name.
+  if(!addr.length)return null;
+  const name=String(j.customerName||'').trim();
+  return name?[name,...addr]:addr;
+}
 const COMPANY_DEFAULT={
   name:ACTIVE_CO.label,
   address:'LaFollette, TN',

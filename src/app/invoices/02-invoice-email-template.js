@@ -8,6 +8,7 @@ function buildInvoiceEmailHTML(j,inv,customMsg,kind){/* amounts use money2 (cent
   const logoSrc=getBrandLogoSrc();
   const P=invTheme();
   const INK=bandInk(P.band);
+  const siteLines=invoiceSiteLines(j);
   const logoFull=brandLogoFull();
   const firstName=((j.customerName||'').trim().split(/\s+/)[0])||'there';
   const itemsRows=(inv.items||[]).map(it=>{
@@ -69,6 +70,10 @@ function buildInvoiceEmailHTML(j,inv,customMsg,kind){/* amounts use money2 (cent
                 <td style="font-size:13.5px;color:#0a1f18;font-weight:600;text-align:right;padding-top:2px">${inv.dueDate?fmtDate(inv.dueDate):''}</td>
               </tr>
             </table>
+            ${siteLines?`<div style="margin-top:12px;padding-top:11px;border-top:1px solid #e6f0eb">
+              <div style="font-size:11px;font-weight:700;color:#7aa898;text-transform:uppercase;letter-spacing:0.06em">Job Site</div>
+              <div style="font-size:13px;color:#0a1f18;line-height:1.45;padding-top:3px">${siteLines.map(esc).join('<br>')}</div>
+            </div>`:''}
           </td></tr>
           <tr><td style="padding:4px 8px 8px">
             <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
@@ -119,6 +124,7 @@ function buildInvoiceEmailText(j,inv,customMsg,kind){
   const c=calcInvoice(inv);
   const co=COMPANY;
   const firstName=((j.customerName||'').trim().split(/\s+/)[0])||'there';
+  const siteLines=invoiceSiteLines(j);
   const intro=customMsg||(EST?`Thanks for considering ${co.name||'us'} for ${j.name||'your project'}. Your estimate is ready — details below. Let us know if you'd like to move forward.`:`Thanks for letting ${co.name||'us'} work with you on ${j.name||'your project'}. Your invoice is ready — details below.`);
   const items=(inv.items||[]).map(it=>{
     const amt=Number(it.qty||0)*Number(it.rate||0);
@@ -130,6 +136,7 @@ function buildInvoiceEmailText(j,inv,customMsg,kind){
     `${EST?'ESTIMATE':'INVOICE'} ${inv.number||''}`,
     `Date: ${fmtDate(inv.date)||''}`,
     inv.dueDate?`${EST?'Valid until':'Due'}:  ${fmtDate(inv.dueDate)}`:'',
+    ...(siteLines?['','Job Site:',...siteLines.map(l=>'  '+l)]:[]),
     '','Line Items:',items||'  (none)','',
     `Subtotal:   ${money2(c.sub)}`,
     `Tax (${Number(inv.taxRate||0)}%):  ${money2(c.tax)}`,
