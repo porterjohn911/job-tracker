@@ -49,17 +49,22 @@ async function buildInvoicePDFFile(j,inv,kind){
   const setColor=rgb=>pdf.setTextColor(rgb[0],rgb[1],rgb[2]);
   const fill=rgb=>pdf.setFillColor(rgb[0],rgb[1],rgb[2]);
   const line=rgb=>pdf.setDrawColor(rgb[0],rgb[1],rgb[2]);
-  const textLines=(txt,x,y,w,lh,opts)=>{const lines=pdf.splitTextToSize(String(txt||''),w);lines.forEach((ln,i)=>pdf.text(ln,x,y+i*lh,opts||{}));return y+lines.length*lh};
 
   // ── Layout budget ──────────────────────────────────────────────────────────
-  // The card, the terms and the page footer all used hardcoded offsets, so any
-  // invoice carrying terms (the default company profile ships some) printed
-  // them straddling the card's bottom edge and overlapping the footer. Adding
-  // the job-site block pushes that further, so the whole tail is measured up
-  // front instead: wrap the two variable-length passages here, derive where the
-  // card has to end from where the content actually ends, then draw. The same
-  // wrapped line arrays are reused when drawing so the measurement can't drift
-  // from what is painted.
+  // Everything under the header band used to sit at hardcoded offsets: the
+  // details box was a fixed 218pt tall with the totals nailed to boxY+156, so
+  // the row loop simply ran past them — the third line item landed on the
+  // "Subtotal" line and anything beyond overprinted the totals entirely. The
+  // terms and page footer were pinned the same way and straddled the card's
+  // bottom edge.
+  //
+  // So nothing is drawn until the whole document has been measured: wrap every
+  // variable-length passage, measure each item row, then pack the rows into
+  // pages. The wrapped line arrays are reused when drawing, so the measurement
+  // cannot drift from what is painted. The paddings around the preamble and the
+  // tail are also a few points tighter than the originals, which buys back about
+  // one line-item row per page — the card is only 420pt wide and carries a tall
+  // branded header, so rows are the scarce resource here.
   const intro=EST
     ?`Thank you for considering ${co.name||'us'} for ${j.name||'your project'}. Here is your estimate - the details are below. Let us know if you'd like to move forward.`
     :`Thank you for letting ${co.name||'us'} work with you on ${j.name||'your project'}. Your invoice is ready and the details are below.`;
@@ -67,20 +72,68 @@ async function buildInvoicePDFFile(j,inv,kind){
   const introLines=pdf.splitTextToSize(intro,innerW);
   pdf.setFont('helvetica','italic');pdf.setFontSize(9);
   const termsLines=inv.terms?pdf.splitTextToSize(String(inv.terms),innerW):[];
+  // Row height mirrors the draw loop: the description wraps at 240pt, and the
+  // row is at least 20pt tall before its 14pt divider gap.
+  pdf.setFont('helvetica','normal');pdf.setFontSize(10.5);
+  const itemRows=(inv.items||[]).map((it)=>{
+    const lines=pdf.splitTextToSize(String(it.desc||''),240);
+    return {it,lines,h:Math.max(lines.length*13,20)+14};
+  });
 
   const siteLines=(invoiceSiteLines(j)||[]).slice(0,3);
   const siteH=siteLines.length?(18+siteLines.length*11):0;
   const stripH=42+siteH;
-  // Mirrors the drawing flow below: label(+24) → greeting(+30) → intro(+22) → banner(+76).
-  const boxY=cardY+168+24+30+introLines.length*17+22+76;
-  const signY=boxY+stripH+204;                       // "Thanks," baseline
-  const termsRuleY=signY+32;                         // divider under the signature
-  const contentEnd=termsLines.length?(termsRuleY+14+termsLines.length*11):signY+16;
-  // Keep the card clear of the content, the footer clear of the card, and the
-  // closing line on the page.
-  const cardBottom=Math.max(696,contentEnd+10);
-  const footY=Math.min(cardBottom+14,pageH-30);
-  const footNoteY=Math.min(footY+24,pageH-10);
+  // Mirrors the drawing flow below: label(+24) → greeting(+30) → intro(+16) → banner(+68).
+  const boxY=cardY+168+24+30+introLines.length*17+16+68;
+  const firstItemsTop=boxY+stripH+24;
+  const contBoxY=cardY+46;                           // continuation pages carry no band
+  const contItemsTop=contBoxY+24;
+  // Height from the end of the last row to the end of the printed content:
+  // totals gap(16) + totals(43) + box padding(14) + gap(22) + signature/terms.
+  const tailH=termsLines.length?(135+termsLines.length*11):111;
+  // The closing footer line has to stay on the page, and footY = cardBottom+14
+  // with cardBottom = contentEnd+10, so content can never pass this.
+  const maxContentEnd=pageH-54;
+
+  // Pack the rows into pages. The tail (totals, signature, terms) is treated as
+  // one atomic block that still has to land somewhere: if it will not fit under
+  // the last page's rows it starts a page of its own rather than overprinting
+  // them, which is exactly the failure this replaces.
+  const flow=(itemRows.length?itemRows.slice():[{empty:true,h:28}]).concat([{tail:true,h:tailH}]);
+  const pages=[];
+  let rows=[],top=firstItemsTop,cursor=top;
+  for(const r of flow){
+    if(rows.length&&cursor+r.h>maxContentEnd){
+      pages.push({top,rows});
+      top=contItemsTop;cursor=top;rows=[];
+    }
+    rows.push(r);cursor+=r.h;
+  }
+  pages.push({top,rows});
+
+  pages.forEach((pg,idx)=>{
+    pg.items=pg.rows.filter((r)=>!r.tail);
+    pg.tail=pg.rows.some((r)=>r.tail);
+    pg.boxY=idx===0?boxY:contBoxY;
+    pg.itemsEnd=pg.top+pg.items.reduce((h,r)=>h+r.h,0);
+    if(pg.tail){
+      pg.totalsY=pg.itemsEnd+16;
+      pg.boxBottom=pg.totalsY+57;
+      pg.signY=pg.boxBottom+22;
+      pg.termsRuleY=pg.signY+26;
+      pg.contentEnd=termsLines.length?(pg.termsRuleY+14+termsLines.length*11):pg.signY+16;
+    }else{
+      pg.boxBottom=pg.itemsEnd+8;
+      pg.contentEnd=pg.boxBottom;
+    }
+    // Page one keeps the original 696pt minimum so a short invoice still fills
+    // the card rather than shrinking to a stub.
+    pg.cardBottom=Math.max(idx===0?696:0,pg.contentEnd+10);
+    pg.footY=Math.min(pg.cardBottom+14,pageH-30);
+    pg.footNoteY=Math.min(pg.footY+24,pageH-10);
+  });
+  const page1=pages[0];
+  const cardBottom=page1.cardBottom;
   fill(paper);pdf.rect(0,0,pageW,pageH,'F');
   fill(cardBg);pdf.roundedRect(cardX,cardY,cardW,cardBottom-cardY,9,9,'F');
   fill(band);pdf.roundedRect(cardX,cardY,cardW,138,9,9,'F');pdf.rect(cardX,cardY+120,cardW,18,'F');
@@ -127,7 +180,7 @@ async function buildInvoicePDFFile(j,inv,kind){
   y+=30;
   pdf.setFont('helvetica','normal');pdf.setFontSize(12);setColor(mid);
   introLines.forEach((ln,i)=>pdf.text(ln,innerX,y+i*17));
-  y+=introLines.length*17+22;
+  y+=introLines.length*17+16;
 
   const bannerFill=EST?[230,247,241]:(c.balance<=0.005?[220,252,231]:[254,243,199]);
   const bannerText=EST?[10,61,46]:(c.balance<=0.005?[22,101,52]:[146,64,14]);
@@ -136,53 +189,81 @@ async function buildInvoicePDFFile(j,inv,kind){
   const bannerLabel=EST?('ESTIMATED TOTAL'+(inv.dueDate?' · VALID UNTIL '+String(fmtDate(inv.dueDate)).toUpperCase():'')):(c.balance<=0.005?'PAID IN FULL - THANK YOU':'BALANCE DUE'+(inv.dueDate?' BY '+String(fmtDate(inv.dueDate)).toUpperCase():''));
   pdf.text(bannerLabel,innerX+innerW/2,y+18,{align:'center'});
   pdf.setFontSize(22);pdf.text(EST?money2(c.total):(c.balance<=0.005?'':money2(c.balance)),innerX+innerW/2,y+42,{align:'center'});
-  y+=76;
+  y+=68;
 
-  fill([250,253,251]);line([230,240,235]);pdf.roundedRect(innerX,boxY,innerW,stripH+176,8,8,'FD');
-  fill(paper);pdf.rect(innerX,boxY,innerW,stripH,'F');line([230,240,235]);pdf.line(innerX,boxY+stripH,innerX+innerW,boxY+stripH);
-  pdf.setFont('helvetica','bold');pdf.setFontSize(9);setColor(muted);
-  pdf.text(EST?'ESTIMATE DATE':'INVOICE DATE',innerX+12,boxY+18);
-  pdf.text(inv.dueDate?(EST?'VALID UNTIL':'DUE DATE'):'',innerX+innerW-12,boxY+18,{align:'right'});
-  pdf.setFontSize(11);setColor(dark);
-  pdf.text(fmtDate(inv.date)||'-',innerX+12,boxY+32);
-  if(inv.dueDate)pdf.text(fmtDate(inv.dueDate),innerX+innerW-12,boxY+32,{align:'right'});
-  if(siteLines.length){
-    line([230,240,235]);pdf.line(innerX+12,boxY+44,innerX+innerW-12,boxY+44);
-    pdf.setFont('helvetica','bold');pdf.setFontSize(9);setColor(muted);
-    pdf.text('JOB SITE',innerX+12,boxY+58);
-    pdf.setFont('helvetica','normal');pdf.setFontSize(10);setColor(dark);
-    siteLines.forEach((ln,i)=>pdf.text(ln,innerX+12,boxY+70+i*11));
+  // Draws one page's details box: the date/job-site strip (page one only), that
+  // page's share of the item rows, and — on whichever page the tail landed on —
+  // the totals, signature and terms.
+  function drawPage(pg,withStrip){
+    fill([250,253,251]);line([230,240,235]);
+    pdf.roundedRect(innerX,pg.boxY,innerW,pg.boxBottom-pg.boxY,8,8,'FD');
+    if(withStrip){
+      fill(paper);pdf.rect(innerX,pg.boxY,innerW,stripH,'F');
+      line([230,240,235]);pdf.line(innerX,pg.boxY+stripH,innerX+innerW,pg.boxY+stripH);
+      pdf.setFont('helvetica','bold');pdf.setFontSize(9);setColor(muted);
+      pdf.text(EST?'ESTIMATE DATE':'INVOICE DATE',innerX+12,pg.boxY+18);
+      pdf.text(inv.dueDate?(EST?'VALID UNTIL':'DUE DATE'):'',innerX+innerW-12,pg.boxY+18,{align:'right'});
+      pdf.setFontSize(11);setColor(dark);
+      pdf.text(fmtDate(inv.date)||'-',innerX+12,pg.boxY+32);
+      if(inv.dueDate)pdf.text(fmtDate(inv.dueDate),innerX+innerW-12,pg.boxY+32,{align:'right'});
+      if(siteLines.length){
+        line([230,240,235]);pdf.line(innerX+12,pg.boxY+44,innerX+innerW-12,pg.boxY+44);
+        pdf.setFont('helvetica','bold');pdf.setFontSize(9);setColor(muted);
+        pdf.text('JOB SITE',innerX+12,pg.boxY+58);
+        pdf.setFont('helvetica','normal');pdf.setFontSize(10);setColor(dark);
+        siteLines.forEach((ln,i)=>pdf.text(ln,innerX+12,pg.boxY+70+i*11));
+      }
+    }
+    let iy=pg.top;
+    for(const r of pg.items){
+      if(r.empty){
+        pdf.setFont('helvetica','normal');pdf.setFontSize(10);setColor(muted);
+        pdf.text('No line items',innerX+innerW/2,iy,{align:'center'});iy+=r.h;continue;
+      }
+      const amt=Number(r.it.qty||0)*Number(r.it.rate||0);
+      pdf.setFont('helvetica','normal');pdf.setFontSize(10.5);setColor(dark);
+      r.lines.forEach((ln,i)=>pdf.text(ln,innerX+12,iy+i*13));
+      setColor(mid);pdf.text((r.it.qty??'')+' x '+money2(Number(r.it.rate||0)),innerX+innerW-74,iy,{align:'right'});
+      pdf.setFont('helvetica','bold');setColor(dark);pdf.text(money2(amt),innerX+innerW-12,iy,{align:'right'});
+      line([238,243,241]);pdf.line(innerX+8,iy+r.h-14,innerX+innerW-8,iy+r.h-14);
+      iy+=r.h;
+    }
+    if(!pg.tail)return;
+    pdf.setFont('helvetica','normal');pdf.setFontSize(10.5);setColor(mid);
+    pdf.text('Subtotal',innerX+12,pg.totalsY);pdf.text(money2(c.sub),innerX+innerW-12,pg.totalsY,{align:'right'});
+    pdf.text('Tax ('+Number(inv.taxRate||0)+'%)',innerX+12,pg.totalsY+17);pdf.text(money2(c.tax),innerX+innerW-12,pg.totalsY+17,{align:'right'});
+    line(rule);pdf.setLineWidth(1.5);pdf.line(innerX+12,pg.totalsY+24,innerX+innerW-12,pg.totalsY+24);
+    // Restore the hairline width, or every rule drawn after this one — the terms
+    // divider, and the box outlines on any later page — inherits the heavy stroke.
+    pdf.setLineWidth(0.2);
+    pdf.setFont('helvetica','bold');pdf.setFontSize(13);setColor(primary);
+    pdf.text('Total',innerX+12,pg.totalsY+43);pdf.text(money2(c.total),innerX+innerW-12,pg.totalsY+43,{align:'right'});
+    pdf.setFont('helvetica','normal');pdf.setFontSize(12);setColor(dark);
+    pdf.text('Thanks,',innerX,pg.signY);
+    pdf.setFont('helvetica','bold');setColor(primary);
+    pdf.text(S.user||co.name||'The Waterfront Solutions Team',innerX,pg.signY+16);
+    if(termsLines.length){
+      line([230,240,235]);pdf.line(innerX,pg.termsRuleY,innerX+innerW,pg.termsRuleY);
+      pdf.setFont('helvetica','italic');pdf.setFontSize(9);setColor(muted);
+      termsLines.forEach((ln,i)=>pdf.text(ln,innerX,pg.termsRuleY+14+i*11));
+    }
+    pdf.setFont('times','bold');pdf.setFontSize(12);setColor(primary);
+    pdf.text(co.name||'Waterfront Solutions',pageW/2,pg.footY,{align:'center'});
+    pdf.setFont('helvetica','normal');pdf.setFontSize(9.5);setColor(muted);
+    pdf.text('This '+(EST?'estimate':'invoice')+' was sent from your '+(co.name||'Waterfront Solutions')+' job tracker.',pageW/2,pg.footNoteY,{align:'center'});
   }
-  y=boxY+stripH+24;
-  (inv.items||[]).forEach(it=>{
-    const amt=Number(it.qty||0)*Number(it.rate||0);
-    pdf.setFont('helvetica','normal');pdf.setFontSize(10.5);setColor(dark);
-    const nextY=textLines(it.desc||'',innerX+12,y,240,13);
-    setColor(mid);pdf.text((it.qty??'')+' x '+money2(Number(it.rate||0)),innerX+innerW-74,y,{align:'right'});
-    pdf.setFont('helvetica','bold');setColor(dark);pdf.text(money2(amt),innerX+innerW-12,y,{align:'right'});
-    y=Math.max(nextY,y+20);line([238,243,241]);pdf.line(innerX+8,y,innerX+innerW-8,y);y+=14;
+
+  drawPage(page1,true);
+  // Rows that did not fit continue on their own cards — no header band, just the
+  // document's identity so a detached page is still traceable to the invoice.
+  pages.slice(1).forEach((pg)=>{
+    pdf.addPage();
+    fill(paper);pdf.rect(0,0,pageW,pageH,'F');
+    fill(cardBg);pdf.roundedRect(cardX,cardY,cardW,pg.cardBottom-cardY,9,9,'F');
+    pdf.setFont('helvetica','bold');pdf.setFontSize(9.5);setColor(muted);
+    pdf.text((EST?'ESTIMATE ':'INVOICE ')+(inv.number||'')+' · CONTINUED',innerX,cardY+30);
+    drawPage(pg,false);
   });
-  if(!(inv.items||[]).length){pdf.setFont('helvetica','normal');pdf.setFontSize(10);setColor(muted);pdf.text('No line items',innerX+innerW/2,y,{align:'center'});y+=28}
-  const totalsY=boxY+stripH+114;
-  pdf.setFont('helvetica','normal');pdf.setFontSize(10.5);setColor(mid);
-  pdf.text('Subtotal',innerX+12,totalsY);pdf.text(money2(c.sub),innerX+innerW-12,totalsY,{align:'right'});
-  pdf.text('Tax ('+Number(inv.taxRate||0)+'%)',innerX+12,totalsY+17);pdf.text(money2(c.tax),innerX+innerW-12,totalsY+17,{align:'right'});
-  line(rule);pdf.setLineWidth(1.5);pdf.line(innerX+12,totalsY+24,innerX+innerW-12,totalsY+24);
-  pdf.setFont('helvetica','bold');pdf.setFontSize(13);setColor(primary);
-  pdf.text('Total',innerX+12,totalsY+43);pdf.text(money2(c.total),innerX+innerW-12,totalsY+43,{align:'right'});
-  pdf.setFont('helvetica','normal');pdf.setFontSize(12);setColor(dark);
-  pdf.text('Thanks,',innerX,signY);
-  pdf.setFont('helvetica','bold');setColor(primary);pdf.text(S.user||co.name||'The Waterfront Solutions Team',innerX,signY+16);
-  if(termsLines.length){
-    line([230,240,235]);pdf.line(innerX,termsRuleY,innerX+innerW,termsRuleY);
-    pdf.setFont('helvetica','italic');pdf.setFontSize(9);setColor(muted);
-    termsLines.forEach((ln,i)=>pdf.text(ln,innerX,termsRuleY+14+i*11));
-  }
-
-  pdf.setFont('times','bold');pdf.setFontSize(12);setColor(primary);
-  pdf.text(co.name||'Waterfront Solutions',pageW/2,footY,{align:'center'});
-  pdf.setFont('helvetica','normal');pdf.setFontSize(9.5);setColor(muted);
-  pdf.text('This '+(EST?'estimate':'invoice')+' was sent from your '+(co.name||'Waterfront Solutions')+' job tracker.',pageW/2,footNoteY,{align:'center'});
 
   // Photos uploaded to Firebase Storage are held as remote https URLs, so each
   // one has to be fetched to embed it. That cross-origin fetch is the same step
