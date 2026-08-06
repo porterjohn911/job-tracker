@@ -126,3 +126,51 @@ test.describe('PDF layout budget', () => {
     });
   }
 });
+
+test.describe('line items never run into the totals', () => {
+  // The details box used to be a fixed 218pt with the totals nailed to
+  // boxY+156, so the row loop drew straight through them: the third item landed
+  // on "Subtotal" and later ones buried the totals entirely. Rows now drive the
+  // box height and spill onto continuation pages, so page count is the visible
+  // proxy — if the fixed box ever comes back, a long invoice silently collapses
+  // to one page again and these fail.
+  const DESCS = ['Dock decking replacement', 'Piling repair', 'Galvanized hardware kit',
+    'Demolition and haul-off of existing decking, including disposal fees', 'Floating swim platform',
+    'Handrail fabrication', 'Electrical rough-in', 'Permit filing', 'Mobilization', 'Site cleanup'];
+  const withItems = (n) => ({
+    ...INV,
+    items: Array.from({ length: n }, (_, i) => ({ desc: DESCS[i % DESCS.length], qty: 1, rate: 100 * (i + 1) })),
+  });
+  const JOB = { name: 'Dock Rebuild', customerName: 'Dale Whitaker', address: SITE };
+
+  async function pageCount(page, n) {
+    await page.route('https://cdnjs.cloudflare.com/ajax/libs/jspdf/**', (route) => route.fulfill({
+      contentType: 'application/javascript',
+      body: require('fs').readFileSync(require.resolve('jspdf/dist/jspdf.umd.min.js'), 'utf8'),
+    }));
+    return page.evaluate(async ({ job, inv }) => {
+      const text = await (await buildInvoicePDFFile(job, inv, 'invoice')).text();
+      return (text.match(/\/Type\s*\/Page[^s]/g) || []).length;
+    }, { job: JOB, inv: withItems(n) });
+  }
+
+  // A job-site block costs a row's worth of height, so these counts are for the
+  // heavier of the two layouts.
+  for (const n of [0, 1, 2, 3]) {
+    test(`${n} items stay on one page`, async ({ page }) => {
+      await boot(page);
+      expect(await pageCount(page, n)).toBe(1);
+    });
+  }
+
+  for (const n of [4, 8, 20]) {
+    test(`${n} items continue onto another page rather than overprinting`, async ({ page }) => {
+      await boot(page);
+      const pages = await pageCount(page, n);
+      expect(pages).toBeGreaterThan(1);
+      // Guards the other direction too: rows must still pack densely onto the
+      // continuation pages instead of trickling out one per page.
+      expect(pages).toBeLessThanOrEqual(4);
+    });
+  }
+});
