@@ -22,16 +22,6 @@ const legacyRuntimeFiles = new Set([
   'src/app/10-handlers-boot.js',
 ]);
 
-// Recurring-contract code: syntax-checked like everything else, but held out of
-// index.html until the feature is complete. See the loop below.
-const unwiredPrefix = 'src/app/contracts/';
-const unwiredScripts = [
-  'src/app/contracts/01-contract-periods.js',
-  'src/app/contracts/02-contract-store.js',
-  'src/app/contracts/03-contract-list.js',
-  'src/app/contracts/04-contract-editor.js',
-];
-
 function fail(message) {
   console.error(message);
   process.exitCode = 1;
@@ -46,26 +36,7 @@ requiredFirst.forEach((file, index) => {
 scripts.forEach((file) => {
   if (!existsSync(join(root, file))) fail(`Missing runtime script: ${file}`);
   if (legacyRuntimeFiles.has(file)) fail(`Legacy generated source is loaded by index.html: ${file}`);
-  if (file.startsWith(unwiredPrefix)) {
-    fail(
-      `${file} is loaded by index.html, but ${unwiredPrefix} is still being built ` +
-        `unwired. Nothing under that folder should reach production until the ` +
-        `feature is finished — remove this guard in the same commit that wires it up.`,
-    );
-  }
 });
-
-// Feature code that lives in the repo but must NOT be loaded by the running app
-// yet. Recurring contracts are built and tested in isolation first, so a
-// half-finished feature cannot affect the live app: a file index.html never
-// references is a file the browser never fetches. Its tests inject it directly.
-//
-// Deleting these four lines is what turns the feature on, which keeps that a
-// deliberate, reviewable, single-commit decision.
-for (const file of unwiredScripts) {
-  if (!existsSync(join(root, file))) fail(`Missing unwired script: ${file}`);
-  execFileSync('node', ['--check', file], { cwd: root, stdio: 'inherit' });
-}
 
 for (const file of scripts.filter((file) => file.endsWith('.js'))) {
   execFileSync('node', ['--check', file], { cwd: root, stdio: 'inherit' });

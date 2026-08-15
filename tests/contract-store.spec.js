@@ -1,10 +1,9 @@
 // Contract records: normalization, the local cache, sync, and writes.
 //
-// Neither file under test is loaded by index.html — both are injected here.
-// Unlike the period-math spec, this one boots the real app shell first, because
-// the store deliberately reuses the app's own LS() company namespacing, S state
-// and DB ref. Loading the shell proves it integrates with those for real while
-// index.html still never references the feature.
+// index.html now loads the contract scripts, so these no longer inject them —
+// re-injecting would re-execute the files and throw on the redeclared top-level
+// consts. Booting the shell is enough, and it exercises the store against the
+// app's real LS() company namespacing, S state and DB ref.
 //
 // The emphasis is on failing closed. A contract is the only record in this app
 // that raises invoices by itself, so the cases below lean on what happens when
@@ -14,14 +13,10 @@
 const { expect, test } = require('@playwright/test');
 const { stubExternals } = require('./_stubs');
 
-const SRC = ['src/app/contracts/01-contract-periods.js', 'src/app/contracts/02-contract-store.js'];
-
 async function load(page) {
   await stubExternals(page);
   await page.addInitScript(() => localStorage.setItem('jt_company', 'wfs'));
   await page.goto('/');
-  await page.waitForFunction(() => typeof window.renderJobs === 'function');
-  for (const path of SRC) await page.addScriptTag({ path });
   await page.waitForFunction(() => typeof window.ctSaveContract === 'function');
   // Start every test from an empty store regardless of what the shell cached.
   await page.evaluate(() => { S.contracts = {}; S._ctWired = false; ctSaveContractsLocal(); });
@@ -436,19 +431,23 @@ test.describe('reads', () => {
   });
 });
 
-test.describe('the live app is untouched', () => {
-  test('the shell boots and works with the contract code absent', async ({ page }) => {
+test.describe('the shell still works with the code loaded', () => {
+  test('a project company boots normally and syncs no contracts', async ({ page }) => {
     await stubExternals(page);
     await page.addInitScript(() => localStorage.setItem('jt_company', 'wfs'));
     await page.goto('/');
     await page.waitForFunction(() => typeof window.renderJobs === 'function');
     const r = await page.evaluate(() => ({
-      contractCode: typeof window.ctSaveContract,
       appAlive: typeof window.renderJobs === 'function' && typeof window.buildInvoiceEmailHTML === 'function',
-      noContractState: typeof S.contracts,
+      type: ACTIVE_CO.type,
+      enabled: ctEnabled(),
+      // The listener must not attach for a company that does not use contracts:
+      // the Firebase rules gate that node, so it would only earn a denial.
+      wired: !!S._ctWired,
     }));
-    expect(r.contractCode).toBe('undefined');
     expect(r.appAlive).toBe(true);
-    expect(r.noContractState).toBe('undefined');
+    expect(r.type).toBe('project');
+    expect(r.enabled).toBe(false);
+    expect(r.wired).toBe(false);
   });
 });

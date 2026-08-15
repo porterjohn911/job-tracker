@@ -90,8 +90,18 @@ function normalizeCompanyRecord(id,rec){
     ns,
     label:String(rec.label||base.label||rawId.toUpperCase()).trim(),
     tag:String(rec.tag||base.tag||'').trim(),
+    // How this company operates: 'project' (jobs that start and finish — the
+    // default and every existing company), 'maintenance' (repeat visits and
+    // recurring billing) or 'management' (recurring billing only). Anything
+    // unrecognized falls back to 'project', so a bad value can only ever turn
+    // extra features off.
+    type:companyType(rec.type||base.type),
     active:rec.active!==false
   };
+}
+function companyType(v){
+  const t=String(v||'').toLowerCase();
+  return ['project','maintenance','management'].indexOf(t)>=0?t:'project';
 }
 function normalizeCompanyRegistry(input){
   const out={};
@@ -187,6 +197,9 @@ function canSeeBank(m=SESSION){return !gateOn()||isOwnerRole(m)}
 function canOpenView(v){
   if(v==='reports')return canSeeBank();
   if(v==='bank')return canSeeBank();
+  // Guarded so the app still routes correctly if the contracts scripts are
+  // absent — an unknown view then simply stays closed.
+  if(v==='contracts')return typeof ctEnabled==='function'&&ctEnabled();
   return true;
 }
 let SESSION=accessEnabled()?(()=>{try{return findMember(localStorage.getItem(SESSION_KEY))}catch(e){return null}})():null;
