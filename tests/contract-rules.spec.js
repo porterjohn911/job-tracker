@@ -91,7 +91,8 @@ test.describe('validation', () => {
   });
 
   test('dates are either empty or YYYY-MM-DD', async () => {
-    for (const v of [CONTRACT.startDate['.validate'], CONTRACT.endDate['.validate'], CONTRACT.addons.$addonId.date['.validate']]) {
+    for (const v of [CONTRACT.startDate['.validate'], CONTRACT.endDate['.validate'],
+      CONTRACT.visitsThrough['.validate'], CONTRACT.addons.$addonId.date['.validate']]) {
       expect(v).toContain("newData.val() === ''");
       expect(v).toContain('[0-9]{4}-[0-9]{2}-[0-9]{2}');
     }
@@ -114,7 +115,7 @@ test.describe('validation', () => {
   // will silently fail to sync. This is the check most likely to catch a
   // mismatch introduced later on either side.
   test('every field the client writes is permitted', async () => {
-    const written = ['id', 'name', 'customerId', 'status', 'startDate', 'endDate',
+    const written = ['id', 'name', 'customerId', 'status', 'startDate', 'endDate', 'visitsThrough',
       'visits', 'billing', 'addons', 'notes', 'created', 'updatedAt', 'updatedBy'];
     written.forEach(f => expect(CONTRACT[f], `missing rule for "${f}"`).toBeTruthy());
 

@@ -1,9 +1,7 @@
 // Recurring contracts — period math and idempotency keys.
 //
-// NOT LOADED BY index.html. This file is deliberately absent from the app's
-// script list: it is pure logic with no DOM, no Firebase, and no app state, so
-// it can be proven correct in isolation before anything in the running app is
-// asked to depend on it. tests/contract-periods.spec.js loads it directly.
+// Pure logic: no DOM, no Firebase, no app state. tests/contract-periods.spec.js
+// loads it into a blank page for that reason — nothing here needs the app.
 //
 // A contract carries two INDEPENDENT schedules:
 //
@@ -129,16 +127,20 @@ function ctIsActive(contract, atTs) {
 
 // ── Due periods ─────────────────────────────────────────────────────────────
 
-// Every occurrence falling on or before (today + horizonDays), bounded by the
-// contract's own end date.
+// Every occurrence falling on or before a limit, bounded by the contract's own
+// end date.
 //
-// horizonDays is how far AHEAD to generate, and the two kinds want different
-// answers: visits look forward so the calendar and the map show upcoming work
-// (callers pass something like 60), while billing passes 0 because you do not
-// raise an invoice for a period that has not started.
+// `bound` is either a NUMBER of days ahead of today, or an absolute date
+// ('YYYY-MM-DD' or a Date) to stop at. The two kinds want different answers:
+//
+//   billing passes 0 — you do not raise an invoice for a period that has not
+//   started yet.
+//
+//   visits pass the contract's visitsThrough date, because a visit exists only
+//   because someone paid for it. See ctVisitLimit().
 //
 // Returns [{index, date, dateKey, key}] oldest first.
-function ctDuePeriods(contract, kind, nowTs, horizonDays) {
+function ctDuePeriods(contract, kind, nowTs, bound) {
   if (!contract || !CT_KINDS[kind]) return [];
   if (!ctIsActive(contract, nowTs)) return [];
 
@@ -148,8 +150,18 @@ function ctDuePeriods(contract, kind, nowTs, horizonDays) {
   const start = ctParseDate(contract.startDate);
   if (!start) return [];
 
-  const horizon = Number.isFinite(Number(horizonDays)) ? Math.max(0, Math.floor(Number(horizonDays))) : 0;
-  const limit = ctAddDays(ctStartOfDay(nowTs == null ? Date.now() : nowTs), horizon);
+  const today = ctStartOfDay(nowTs == null ? Date.now() : nowTs);
+  let limit;
+  if (typeof bound === 'string' || bound instanceof Date) {
+    // An absolute limit is used verbatim, including when it is in the past. A
+    // paid-through date that has already passed still means those visits were
+    // paid for and should exist; it does not mean generate up to today.
+    limit = ctParseDate(bound);
+    if (!limit) return [];
+  } else {
+    const days = Number.isFinite(Number(bound)) ? Math.max(0, Math.floor(Number(bound))) : 0;
+    limit = ctAddDays(today, days);
+  }
   const end = ctParseDate(contract.endDate);
 
   const out = [];
@@ -221,6 +233,29 @@ function ctAddonsTotal(addons) {
   return (addons || []).reduce((sum, a) => sum + (Number(a && a.amount) || 0), 0);
 }
 
+// ── How far visits are scheduled ────────────────────────────────────────────
+
+// Visits are created because a customer paid for them, not because a rolling
+// window moved. `visitsThrough` is the date their prepayment covers, entered
+// per contract, and it is the only thing that lets a visit be scheduled ahead.
+//
+// Returns '' when nothing is paid for, and '' means NO visits are generated at
+// all — not even overdue ones. Unpaid work does not belong on the calendar, and
+// a contract that has run past what was paid should stop scheduling until
+// someone renews it rather than quietly keep booking crews.
+//
+// Renewal is just pushing this date out: already-created visits keep their
+// period keys, so extending it adds only the new ones.
+function ctVisitLimit(contract) {
+  return (contract && ctParseDate(contract.visitsThrough)) ? ctDateKey(ctParseDate(contract.visitsThrough)) : '';
+}
+
+// Visits that fall on or before the paid-through date. Empty when unpaid.
+function ctVisitPeriods(contract, nowTs) {
+  const limit = ctVisitLimit(contract);
+  return limit ? ctDuePeriods(contract, 'visit', nowTs, limit) : [];
+}
+
 // ── Planning ────────────────────────────────────────────────────────────────
 
 // What a generation run WOULD create for one contract. Pure: it reads state and
@@ -228,9 +263,8 @@ function ctAddonsTotal(addons) {
 function ctPlan(contract, opts) {
   const o = opts || {};
   const now = o.now == null ? Date.now() : o.now;
-  const visitHorizon = o.visitHorizonDays == null ? 60 : o.visitHorizonDays;
 
-  const visits = ctMissingPeriods(ctDuePeriods(contract, 'visit', now, visitHorizon), o.existingJobKeys);
+  const visits = ctMissingPeriods(ctVisitPeriods(contract, now), o.existingJobKeys);
   const billing = ctMissingPeriods(ctDuePeriods(contract, 'billing', now, 0), o.existingInvoiceKeys);
   const addons = ctPendingAddons(contract);
 
@@ -240,6 +274,7 @@ function ctPlan(contract, opts) {
     billing: billing,
     addons: addons,
     addonsTotal: ctAddonsTotal(addons),
+    paidThrough: ctVisitLimit(contract),
     isEmpty: !visits.length && !billing.length && !addons.length,
   };
 }
@@ -250,7 +285,7 @@ if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
     ctDateKey, ctDaysInMonth, ctParseDate, ctAddDays,
     ctNormalizeSchedule, ctOccurrenceDate, ctPeriodKey, ctIsActive,
-    ctDuePeriods, ctMissingPeriods, ctExistingKeys,
+    ctDuePeriods, ctMissingPeriods, ctExistingKeys, ctVisitLimit, ctVisitPeriods,
     ctPendingAddons, ctAddonsTotal, ctPlan,
   };
 }

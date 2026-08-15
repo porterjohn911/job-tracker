@@ -1,16 +1,11 @@
 // Recurring contracts — the editor modal and this tab's handlers.
 //
-// NOT LOADED BY index.html. Held out of the app's script list until the feature
-// is finished; scripts/check-static.mjs fails the build if it appears there.
-//
 // The modal markup follows openCustomerForm() in views/07-customers.js — the
 // same .modal-bd / .modal / .modal-head / .modal-body / .modal-foot shell and
 // the same form classes — so it behaves like every other sheet in the app.
 //
-// Handlers live here rather than in boot/ for now. boot/ IS loaded by
-// index.html, and nothing about this feature may touch a file the live app
-// runs until it is finished. PR 5 adds the one call that invokes
-// attachContractHandlers().
+// Handlers live here rather than in boot/ so the feature stays self-contained;
+// boot/06-attach-handlers.js makes one gated call into attachContractHandlers().
 //
 // Requires 01-contract-periods.js, 02-contract-store.js, 03-contract-list.js.
 
@@ -69,6 +64,19 @@ function ctAddonRows(c) {
   }).join('');
 }
 
+// Live feedback under the paid-through field: exactly what that date buys.
+// Entering a date is otherwise an act of faith — "does 2027-08-01 mean twelve
+// visits or thirteen?" is the question this answers before anything is saved.
+function ctVisitCountHint(c) {
+  if (!c.visits) return 'Pick a visit frequency first.';
+  if (!c.visitsThrough) return 'No visits are scheduled until you set how far ahead the customer has paid.';
+  const periods = ctVisitPeriods(c, Date.now());
+  if (!periods.length) return 'That date is before the first visit — no visits fall inside it.';
+  const first = periods[0], last = periods[periods.length - 1];
+  return periods.length + ' visit' + (periods.length === 1 ? '' : 's') + ', ' +
+    first.dateKey + ' through ' + last.dateKey + '. Push this date out when they renew.';
+}
+
 function ctIssueBanner(c) {
   const issues = ctContractIssues(c);
   if (!issues.length) return '';
@@ -106,6 +114,8 @@ function openContractForm(seed) {
         <div class="form-group"><label class="form-label">Frequency</label>${ctFreqSelect('ct-visit-freq', v.freq)}</div>
         <div class="form-group"><label class="form-label">Every</label><input class="form-input" type="number" min="1" step="1" id="ct-visit-interval" value="${esc(String(v.interval || 1))}"></div>
       </div>
+      <div class="form-group"><label class="form-label">Visits paid through</label><input class="form-input" type="date" id="ct-visits-through" value="${esc(c.visitsThrough)}"></div>
+      <div class="tt-hint" id="ct-visits-count" style="margin-top:-4px">${ctVisitCountHint(c)}</div>
 
       <div class="section-hd" style="margin-top:6px">Billing <span>creates an invoice each time</span></div>
       <div class="form-row">
@@ -133,6 +143,16 @@ function openContractForm(seed) {
 
   $('ct-close').onclick = $('ct-cancel').onclick = closeModal;
   $('ct-bd').onclick = e => { if (e.target === e.currentTarget) closeModal(); };
+
+  // Recompute the visit count as the schedule or the paid-through date change,
+  // reading the form rather than the saved record so it tracks unsaved edits.
+  const refreshCount = () => {
+    const el = $('ct-visits-count');
+    if (el) el.textContent = ctVisitCountHint(ctNormalizeContract(ctReadContractForm(c)) || c);
+  };
+  ['ct-visits-through', 'ct-visit-freq', 'ct-visit-interval', 'ct-start'].forEach(id => {
+    $(id)?.addEventListener('change', refreshCount);
+  });
 
   $('ct-save').onclick = async () => {
     const next = ctReadContractForm(c);
@@ -202,6 +222,7 @@ function ctReadContractForm(base) {
     status: val('ct-status'),
     startDate: val('ct-start'),
     endDate: val('ct-end'),
+    visitsThrough: val('ct-visits-through'),
     visits: sched('ct-visit-freq', 'ct-visit-interval'),
     billing: billing ? Object.assign(billing, { amount: Number(val('ct-bill-amount')) || 0 }) : null,
     notes: val('ct-notes'),
@@ -221,6 +242,10 @@ function attachContractHandlers() {
   });
 
   $('btn-ct-add')?.addEventListener('click', () => openContractForm(ctNewContract()));
+
+  $('btn-ct-generate')?.addEventListener('click', () => {
+    if (typeof openGeneratePreview === 'function') openGeneratePreview();
+  });
 
   document.querySelectorAll('[data-ct]').forEach(el => {
     el.onclick = () => {

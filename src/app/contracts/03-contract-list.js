@@ -1,9 +1,5 @@
 // Recurring contracts — the Contracts view.
 //
-// NOT LOADED BY index.html. Held out of the app's script list until the feature
-// is finished; scripts/check-static.mjs fails the build if it appears there.
-// The tests call renderContracts() directly.
-//
 // Read-only. Nothing in this file writes — it renders state and returns an HTML
 // string, exactly like renderCustomers() and the other views. The editor in
 // 04-contract-editor.js owns every write.
@@ -34,6 +30,8 @@ function ctFreqLabel(schedule) {
 // The kind is validated rather than treated as "visit or else billing": an
 // unrecognized kind must return nothing, not quietly fall through to the
 // billing schedule and report a billing date where a visit was asked for.
+// Visits are additionally bounded by the paid-through date, so the card never
+// promises a visit nobody has paid for.
 function ctNextDate(contract, kind, fromTs) {
   if (kind !== 'visit' && kind !== 'billing') return null;
   if (!contract || !ctIsActive(contract, fromTs)) return null;
@@ -41,10 +39,13 @@ function ctNextDate(contract, kind, fromTs) {
   if (!norm) return null;
   const from = ctStartOfDay(fromTs == null ? Date.now() : fromTs);
   const end = ctParseDate(contract.endDate);
+  const paid = kind === 'visit' ? ctParseDate(ctVisitLimit(contract)) : null;
+  if (kind === 'visit' && !paid) return null;
   for (let n = 0; n < 2000; n++) {
     const d = ctOccurrenceDate(contract.startDate, norm, n);
     if (!d) return null;
     if (end && d > end) return null;
+    if (paid && d > paid) return null;
     if (d > from) return d;
   }
   return null;
@@ -52,9 +53,18 @@ function ctNextDate(contract, kind, fromTs) {
 
 // Occurrences falling inside the window [today, today + days]. Used for the
 // "due soon" count, so past-due periods are deliberately excluded.
+//
+// Visits are additionally capped by what the customer has paid for, so the
+// count only ever promises work that will actually be scheduled. Counting
+// unpaid occurrences here would put visits on the dashboard that no generation
+// run will ever create.
 function ctUpcoming(contract, kind, nowTs, days) {
   const today = ctStartOfDay(nowTs == null ? Date.now() : nowTs);
-  return ctDuePeriods(contract, kind, nowTs, days).filter(p => p.date >= today);
+  const periods = kind === 'visit'
+    ? ctVisitPeriods(contract, nowTs)
+    : ctDuePeriods(contract, kind, nowTs, days);
+  const until = ctAddDays(today, Math.max(0, Math.floor(Number(days) || 0)));
+  return periods.filter(p => p.date >= today && p.date <= until);
 }
 
 function ctStatusStyle(status) {
@@ -86,6 +96,25 @@ function ctCustomerName(customerId) {
   return (rec && rec.name) || '';
 }
 
+// The Generate button carries its own count, so the amount of outstanding work
+// is visible before opening anything. It disappears entirely when there is
+// nothing due — a button that always offers to create records invites pressing
+// it to find out, and this one writes real jobs and invoices.
+//
+// Defined defensively: 05-contract-generate.js loads after this file, and the
+// view must still render if it is missing.
+function ctGenerateButton(nowTs) {
+  if (typeof ctPendingWork !== 'function') return '';
+  let totals;
+  try { totals = ctPendingTotals(ctPendingWork(nowTs)); } catch (e) { return ''; }
+  const n = totals.visits + totals.invoices;
+  if (!n) return '';
+  return `<button class="btn-add" id="btn-ct-generate" style="background:var(--orange)" aria-label="Generate due contract work">
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z"/></svg>
+    Generate ${n}
+  </button>`;
+}
+
 // ── Card ────────────────────────────────────────────────────────────────────
 
 function ctContractCard(c, nowTs) {
@@ -106,6 +135,19 @@ function ctContractCard(c, nowTs) {
     nextBill ? 'next bill ' + ctShortDate(nextBill, now) : '',
   ].filter(Boolean).join(' · ');
 
+  // How much of the schedule is actually paid for. When the paid-through date
+  // has passed, scheduling has stopped — say so plainly, because the contract
+  // still reads "Active" and the crew simply stops being booked otherwise.
+  const paid = ctVisitLimit(c);
+  const paidDate = paid ? ctParseDate(paid) : null;
+  const lapsed = !!(paidDate && paidDate < ctStartOfDay(now));
+  const remaining = c.visits && paid ? ctVisitPeriods(c, now).filter(p => p.date >= ctStartOfDay(now)).length : 0;
+  const paidLine = c.visits && paid
+    ? `<div style="font-size:12px;margin-top:3px;color:${lapsed ? 'var(--orange)' : 'var(--text-3)'}${lapsed ? ';font-weight:600' : ''}">${lapsed
+        ? 'Paid through ' + esc(ctShortDate(paidDate, now)) + ' — renew to keep scheduling visits'
+        : remaining + ' visit' + (remaining === 1 ? '' : 's') + ' paid through ' + esc(ctShortDate(paidDate, now))}</div>`
+    : '';
+
   const addons = ctPendingAddons(c);
   const addonLine = addons.length
     ? `<div style="font-size:12px;color:var(--orange);margin-top:4px;font-weight:600">${addons.length} unbilled add-on${addons.length === 1 ? '' : 's'} · ${money2(ctAddonsTotal(addons))}</div>`
@@ -125,6 +167,7 @@ function ctContractCard(c, nowTs) {
         <div style="font-weight:700;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(c.name || 'Untitled contract')}</div>
         <div style="font-size:12px;color:var(--text-3);margin-top:2px">${customer ? esc(customer) + ' · ' : ''}${esc(schedule)}</div>
         ${next ? `<div style="font-size:12px;color:var(--text-2);margin-top:3px">${esc(next)}</div>` : ''}
+        ${paidLine}
         ${addonLine}
         ${issueLine}
       </div>
@@ -155,10 +198,13 @@ function renderContracts(nowTs) {
         <div style="font-size:11px;color:var(--text-3);text-transform:uppercase;letter-spacing:0.06em;font-weight:700">Recurring Work</div>
         <div style="font-size:20px;font-weight:700;margin-top:2px">Contracts</div>
       </div>
-      <button class="btn-add" id="btn-ct-add" aria-label="Add contract">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
-        Add Contract
-      </button>
+      <div style="display:flex;gap:8px;align-items:center">
+        ${ctGenerateButton(now)}
+        <button class="btn-add" id="btn-ct-add" aria-label="Add contract">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+          Add Contract
+        </button>
+      </div>
     </div>
     <div class="kpi-grid">
       <div class="kpi-card"><div class="kpi-label">Active</div><div class="kpi-value">${active.length}</div><div class="kpi-sub">of ${all.length} contract${all.length === 1 ? '' : 's'}</div></div>
