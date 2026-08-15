@@ -237,11 +237,40 @@ async function ctSaveContract(raw) {
   if (typeof S !== 'undefined') { S.contracts = S.contracts || {}; S.contracts[rec.id] = rec; }
   ctSaveContractsLocal();
 
-  if (typeof DB !== 'undefined' && DB) {
-    try { await DB.child('contracts/' + rec.id).set(rec); } catch (e) {}
-  }
+  // Writes go through writeDB, which reports failures and rethrows, rather than
+  // a swallowed try/catch.
+  //
+  // A swallowed rejection here is invisible AND self-erasing: Firebase applies
+  // the write optimistically so the contract renders, then the server rejects
+  // it, reverts, and the sync listener overwrites S.contracts with server
+  // truth. The contract appears and then vanishes with nothing said. That is
+  // survivable for a customer record; a contract turns into invoices.
+  await ctWriteContract('contracts/' + rec.id, rec, 'set');
   if (typeof logAct === 'function') { try { await logAct('saved contract', rec.name || ''); } catch (e) {} }
   return rec;
+}
+
+// One place for contract writes, so every one of them reports the same way.
+// Throws on failure; callers surface it rather than pretending the save worked.
+async function ctWriteContract(path, value, mode) {
+  if (typeof DB === 'undefined' || !DB) return true;
+  try {
+    if (mode === 'remove') await DB.child(path).remove();
+    else await DB.child(path).set(value);
+    return true;
+  } catch (e) {
+    // A permission denial on this node almost always means one thing, and the
+    // generic "could not save" sends people hunting in the wrong place.
+    const denied = /permission[_ ]denied/i.test(String((e && e.code) || (e && e.message) || ''));
+    if (typeof toast === 'function') {
+      toast(denied
+        ? 'Firebase rejected this contract — the contracts rules may not be deployed yet'
+        : 'Could not save contract to team sync', '');
+    }
+    if (typeof syncStatus === 'function') { try { syncStatus('err', 'Team sync save failed'); } catch (_) {} }
+    console.error('Contract save failed for ' + path, e);
+    throw e;
+  }
 }
 
 async function ctDeleteContract(id) {
@@ -250,9 +279,7 @@ async function ctDeleteContract(id) {
   const rec = (typeof S !== 'undefined' && S.contracts && S.contracts[cid]) || null;
   if (typeof S !== 'undefined' && S.contracts) delete S.contracts[cid];
   ctSaveContractsLocal();
-  if (typeof DB !== 'undefined' && DB) {
-    try { await DB.child('contracts/' + cid).remove(); } catch (e) {}
-  }
+  await ctWriteContract('contracts/' + cid, null, 'remove');
   if (typeof logAct === 'function') { try { await logAct('removed contract', (rec && rec.name) || ''); } catch (e) {} }
   return true;
 }
