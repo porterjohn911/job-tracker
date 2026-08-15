@@ -1,0 +1,184 @@
+// Recurring contracts — the Contracts view.
+//
+// NOT LOADED BY index.html. Held out of the app's script list until the feature
+// is finished; scripts/check-static.mjs fails the build if it appears there.
+// The tests call renderContracts() directly.
+//
+// Read-only. Nothing in this file writes — it renders state and returns an HTML
+// string, exactly like renderCustomers() and the other views. The editor in
+// 04-contract-editor.js owns every write.
+//
+// Layout and classes follow views/07-customers.js so this tab looks like it
+// belongs: the same header block, .kpi-grid, search input and card list.
+//
+// Requires 01-contract-periods.js and 02-contract-store.js.
+
+// ── Display helpers ─────────────────────────────────────────────────────────
+
+// "Weekly", "Every 2 weeks", "Monthly", "Every 3 months", "Annually".
+// Reads the stored freq/interval rather than the reduced {unit, step}, so a
+// quarterly contract reads as "Quarterly" and not "Every 3 months".
+function ctFreqLabel(schedule) {
+  if (!schedule || !ctNormalizeSchedule(schedule)) return '';
+  const freq = String(schedule.freq).toLowerCase();
+  const n = Number(schedule.interval) >= 1 ? Math.floor(Number(schedule.interval)) : 1;
+  const plain = { weekly: 'Weekly', biweekly: 'Every 2 weeks', monthly: 'Monthly', quarterly: 'Quarterly', annual: 'Annually' };
+  if (n === 1) return plain[freq] || freq;
+  const unit = { weekly: 'weeks', biweekly: 'fortnights', monthly: 'months', quarterly: 'quarters', annual: 'years' }[freq] || freq;
+  return 'Every ' + n + ' ' + unit;
+}
+
+// The first occurrence strictly after `fromTs`, or null when the contract has
+// no schedule of that kind, is not active, or has run past its end date.
+//
+// The kind is validated rather than treated as "visit or else billing": an
+// unrecognized kind must return nothing, not quietly fall through to the
+// billing schedule and report a billing date where a visit was asked for.
+function ctNextDate(contract, kind, fromTs) {
+  if (kind !== 'visit' && kind !== 'billing') return null;
+  if (!contract || !ctIsActive(contract, fromTs)) return null;
+  const norm = ctNormalizeSchedule(kind === 'visit' ? contract.visits : contract.billing);
+  if (!norm) return null;
+  const from = ctStartOfDay(fromTs == null ? Date.now() : fromTs);
+  const end = ctParseDate(contract.endDate);
+  for (let n = 0; n < 2000; n++) {
+    const d = ctOccurrenceDate(contract.startDate, norm, n);
+    if (!d) return null;
+    if (end && d > end) return null;
+    if (d > from) return d;
+  }
+  return null;
+}
+
+// Occurrences falling inside the window [today, today + days]. Used for the
+// "due soon" count, so past-due periods are deliberately excluded.
+function ctUpcoming(contract, kind, nowTs, days) {
+  const today = ctStartOfDay(nowTs == null ? Date.now() : nowTs);
+  return ctDuePeriods(contract, kind, nowTs, days).filter(p => p.date >= today);
+}
+
+function ctStatusStyle(status) {
+  return {
+    active: 'background:var(--green-700);color:#fff',
+    paused: 'background:var(--surface-2, #e8e8e8);color:var(--text-2)',
+    ended: 'background:transparent;color:var(--text-3);border:1px solid var(--border)',
+  }[status] || 'background:var(--surface-2, #e8e8e8);color:var(--text-2)';
+}
+
+function ctStatusLabel(status) {
+  return { active: 'Active', paused: 'Paused', ended: 'Ended' }[status] || status;
+}
+
+// "Mar 22" / "Mar 22, 2027" — the year only when it is not the current one.
+function ctShortDate(d, nowTs) {
+  if (!d) return '';
+  const now = new Date(nowTs == null ? Date.now() : nowTs);
+  const opts = { month: 'short', day: 'numeric' };
+  if (d.getFullYear() !== now.getFullYear()) opts.year = 'numeric';
+  return d.toLocaleDateString(undefined, opts);
+}
+
+// The customer's name if there is a saved record, otherwise nothing. Contracts
+// store a customerId; the directory owns the name.
+function ctCustomerName(customerId) {
+  if (!customerId) return '';
+  const rec = (typeof S !== 'undefined' && S.customers && S.customers[customerId]) || null;
+  return (rec && rec.name) || '';
+}
+
+// ── Card ────────────────────────────────────────────────────────────────────
+
+function ctContractCard(c, nowTs) {
+  const now = nowTs == null ? Date.now() : nowTs;
+  const customer = ctCustomerName(c.customerId);
+  const visitLbl = ctFreqLabel(c.visits);
+  const billLbl = ctFreqLabel(c.billing);
+
+  const schedule = [
+    visitLbl ? visitLbl.toLowerCase() + ' visits' : '',
+    billLbl ? 'billed ' + billLbl.toLowerCase() : '',
+  ].filter(Boolean).join(' · ') || 'no schedule set';
+
+  const nextVisit = ctNextDate(c, 'visit', now);
+  const nextBill = ctNextDate(c, 'billing', now);
+  const next = [
+    nextVisit ? 'Next visit ' + ctShortDate(nextVisit, now) : '',
+    nextBill ? 'next bill ' + ctShortDate(nextBill, now) : '',
+  ].filter(Boolean).join(' · ');
+
+  const addons = ctPendingAddons(c);
+  const addonLine = addons.length
+    ? `<div style="font-size:12px;color:var(--orange);margin-top:4px;font-weight:600">${addons.length} unbilled add-on${addons.length === 1 ? '' : 's'} · ${money2(ctAddonsTotal(addons))}</div>`
+    : '';
+
+  // Anything that would stop this contract doing what its author expects is
+  // shown on the card rather than hidden behind an edit click — a contract that
+  // silently generates nothing is the failure most likely to go unnoticed.
+  const issues = ctContractIssues(c);
+  const issueLine = issues.length
+    ? `<div style="font-size:12px;color:var(--orange);margin-top:4px">⚠ ${esc(issues[0])}${issues.length > 1 ? ` <span style="color:var(--text-3)">+${issues.length - 1} more</span>` : ''}</div>`
+    : '';
+
+  return `<div class="section" data-ct="${esc(c.id)}" style="cursor:pointer;margin-bottom:0;padding:12px 14px">
+    <div style="display:flex;align-items:flex-start;gap:10px">
+      <div style="flex:1;min-width:0">
+        <div style="font-weight:700;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(c.name || 'Untitled contract')}</div>
+        <div style="font-size:12px;color:var(--text-3);margin-top:2px">${customer ? esc(customer) + ' · ' : ''}${esc(schedule)}</div>
+        ${next ? `<div style="font-size:12px;color:var(--text-2);margin-top:3px">${esc(next)}</div>` : ''}
+        ${addonLine}
+        ${issueLine}
+      </div>
+      <span class="status-pill" style="${ctStatusStyle(c.status)};flex-shrink:0">${ctStatusLabel(c.status)}</span>
+    </div>
+  </div>`;
+}
+
+// ── View ────────────────────────────────────────────────────────────────────
+
+function renderContracts(nowTs) {
+  const now = nowTs == null ? Date.now() : nowTs;
+  const all = ctContractList();
+  const q = ((typeof S !== 'undefined' && S.ctSearch) || '').trim().toLowerCase();
+  const list = all.filter(c => !q ||
+    (c.name + ' ' + ctCustomerName(c.customerId) + ' ' + (c.notes || '')).toLowerCase().includes(q));
+
+  const active = all.filter(c => c.status === 'active');
+  const dueSoon = active.reduce((n, c) => n + ctUpcoming(c, 'visit', now, 30).length, 0);
+  const pendingAddons = all.reduce((acc, c) => {
+    const a = ctPendingAddons(c);
+    return { count: acc.count + a.length, total: acc.total + ctAddonsTotal(a) };
+  }, { count: 0, total: 0 });
+
+  return `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+      <div>
+        <div style="font-size:11px;color:var(--text-3);text-transform:uppercase;letter-spacing:0.06em;font-weight:700">Recurring Work</div>
+        <div style="font-size:20px;font-weight:700;margin-top:2px">Contracts</div>
+      </div>
+      <button class="btn-add" id="btn-ct-add" aria-label="Add contract">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+        Add Contract
+      </button>
+    </div>
+    <div class="kpi-grid">
+      <div class="kpi-card"><div class="kpi-label">Active</div><div class="kpi-value">${active.length}</div><div class="kpi-sub">of ${all.length} contract${all.length === 1 ? '' : 's'}</div></div>
+      <div class="kpi-card"><div class="kpi-label">Visits Due</div><div class="kpi-value">${dueSoon}</div><div class="kpi-sub">next 30 days</div></div>
+      <div class="kpi-card accent"><div class="kpi-label">Unbilled Add-ons</div><div class="kpi-value" style="color:${pendingAddons.total > 0 ? 'var(--orange)' : 'var(--green-700)'}">${money2(pendingAddons.total)}</div><div class="kpi-sub">${pendingAddons.count} item${pendingAddons.count === 1 ? '' : 's'}</div></div>
+    </div>
+    ${all.length ? `<div style="margin:6px 0 12px">
+      <input class="form-input" id="ct-search" value="${esc((typeof S !== 'undefined' && S.ctSearch) || '')}" placeholder="Search contracts…" style="width:100%">
+    </div>` : ''}
+    ${list.length === 0 ? `<div class="section" style="text-align:center;padding:34px 20px">
+        <p style="font-size:14px;color:var(--text-2);margin-bottom:4px">${all.length === 0 ? 'No contracts yet.' : 'No contracts match your search.'}</p>
+        <p style="font-size:12.5px;color:var(--text-3)">${all.length === 0 ? 'A contract schedules repeat visits, recurring billing, or both — and new contracts start paused until you switch them on.' : 'Try a different name or customer.'}</p>
+      </div>`
+    : `<div style="display:flex;flex-direction:column;gap:8px">${list.map(c => ctContractCard(c, now)).join('')}</div>`}
+  `;
+}
+
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = {
+    ctFreqLabel, ctNextDate, ctUpcoming, ctStatusStyle, ctStatusLabel,
+    ctShortDate, ctCustomerName, ctContractCard, renderContracts,
+  };
+}

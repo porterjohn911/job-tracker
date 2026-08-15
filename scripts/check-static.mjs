@@ -28,6 +28,8 @@ const unwiredPrefix = 'src/app/contracts/';
 const unwiredScripts = [
   'src/app/contracts/01-contract-periods.js',
   'src/app/contracts/02-contract-store.js',
+  'src/app/contracts/03-contract-list.js',
+  'src/app/contracts/04-contract-editor.js',
 ];
 
 function fail(message) {
