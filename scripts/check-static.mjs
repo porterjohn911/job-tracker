@@ -25,7 +25,10 @@ const legacyRuntimeFiles = new Set([
 // Recurring-contract code: syntax-checked like everything else, but held out of
 // index.html until the feature is complete. See the loop below.
 const unwiredPrefix = 'src/app/contracts/';
-const unwiredScripts = ['src/app/contracts/01-contract-periods.js'];
+const unwiredScripts = [
+  'src/app/contracts/01-contract-periods.js',
+  'src/app/contracts/02-contract-store.js',
+];
 
 function fail(message) {
   console.error(message);
