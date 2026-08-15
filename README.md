@@ -6,7 +6,7 @@ The app is deployed as a static Netlify site. Most of the application runs direc
 
 ## Current App Shape
 
-This project used to be one very large `index.html` file. It has been split into smaller JavaScript modules under `src/app/`, while keeping backup files in the repo for safety.
+This project used to be one very large `index.html` file. It has been split into smaller JavaScript modules under `src/app/`. That migration is complete, and the pre-refactor backups and generation scripts have been removed — git history is the rollback path.
 
 ### Current Source Of Truth
 
@@ -14,26 +14,13 @@ The production app is `index.html` plus the ordered runtime scripts it loads fro
 
 When changing app behavior, edit the focused files under nested folders such as `src/app/invoices/`, `src/app/views/`, `src/app/boot/`, `src/app/jobs/`, and `src/app/settings/`.
 
-The older files below are rollback/reference material only and should not be reintroduced into `index.html`:
-
-- `src/app.js`
-- `src/app/04-invoices-email.js`
-- `src/app/05-owner-reports-map-notifications.js`
-- `src/app/07-modals-jobs-share.js`
-- `src/app/08-invoice-editor-print.js`
-- `src/app/09-settings-access-command-voice.js`
-- `src/app/10-handlers-boot.js`
-
-Run `npm run check` before pushing changes. It verifies that `index.html` loads the current modular runtime scripts, not the old generated source chunks.
+Run `npm run check` before pushing changes. It verifies that `index.html` loads the current modular runtime scripts, and fails if any of the old generated source chunks are ever reintroduced.
 
 Important entry files:
 
 - `index.html` is the live production page Netlify serves.
-- `index.legacy.html` is the old full-file backup kept for rollback/reference.
-- `index.modular.html` is the modular test/reference page from the refactor.
 - `waterfront-job-tracker-dev.html` is the dev sandbox page.
 - `src/styles.css` contains the main app styling.
-- `src/app.js` is the older monolithic app script kept as reference.
 - `src/app/**/*.js` contains the current modular app code loaded by `index.html`.
 
 ## Deployment
@@ -238,24 +225,18 @@ When adding or moving code, be careful not to reference a function before the fi
 `database.rules.json` and `storage.rules`
 : Firebase security rules. These matter as much as app code because the browser app talks directly to Firebase.
 
-`tools/`
-: One-time refactor/splitting scripts used during the modular migration. These are not part of the live app runtime.
-
-`.github/workflows/`
-: GitHub Actions workflows used during the refactor and module-generation process. Review before deleting because some may still be useful for future automated checks.
+`.github/workflows/ci.yml`
+: Runs `npm run check` and the Playwright smoke tests on every pull request and on pushes to `main`.
 
 ## Backup And Safety Notes
 
-The live app currently runs from `index.html` plus the modular scripts in `src/app/`.
+The live app runs from `index.html` plus the modular scripts in `src/app/`.
 
-Keep these files until the modular app has been stable long enough that rollback is no longer needed:
+The pre-refactor backups (`index.legacy.html`, `index.modular.html`, `src/app.js`, the `src/app/0*.js` generated chunks) and the `tools/` generation scripts have been removed. The modular app has been in production for months, so git history is the rollback path — `git log --diff-filter=D --` will find them if a reference is ever needed.
 
-- `index.legacy.html`
-- `index.modular.html`
-- `src/app.js`
-- refactor tools/workflows under `tools/` and `.github/workflows/`
+`scripts/check-static.mjs` still lists the removed chunks and fails the build if `index.html` is ever pointed back at one of them.
 
-They may look like bloat, but they are useful rollback/reference material until the app has been proven stable in production.
+Note that `src/app/06-referrals-time-bank.js` shares the numbering of those removed chunks but is **live** — it is loaded by `index.html` and provides referrals, time tracking, and pay rates. Do not remove it.
 
 ## Local Testing
 
@@ -303,7 +284,7 @@ Good next cleanup/functionality passes:
 
 - Move invoice attachment photos out of record data and into Firebase Storage.
 - Add clearer invoice sending states, such as draft/prepared/sent, instead of marking items sent too early.
-- Continue removing old refactor files only after production has stayed stable.
+- Prune dead functions inside the live `src/app/**` files. This needs wider smoke-test coverage first: the scripts share one global scope with no exports, and many handlers are wired through `onclick="..."` strings inside template literals, so a function's only call site can be invisible to static analysis.
 - Add a small automated smoke test that loads the app and checks the main buttons render.
 - Add safer permission checks around owner-only/bank-related actions.
 - Gradually convert shared global scripts into real ES modules once the current modular version has proven stable.
