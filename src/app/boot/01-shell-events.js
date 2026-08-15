@@ -15,6 +15,13 @@ function attachShellHandlers(){
   const _bsw=$('brand-switch');if(_bsw){if(gateOn()&&!canSeeAll(SESSION)){_bsw.style.display='none';}else{_bsw.onclick=showCompanySwitcher;}}
   const _rpt=document.querySelector('.nav-btn[data-view="reports"]');if(_rpt&&!canSeeBank())_rpt.style.display='none';
   const _bnk=document.querySelector('.nav-btn[data-view="bank"]');if(_bnk&&!canSeeBank())_bnk.style.display='none';
+  // Contracts only exist for maintenance/management companies, and only for
+  // managers and owners — the same people the Firebase rules let read the node.
+  // Set both ways rather than only hiding: unlike the role-based buttons above,
+  // a company's type can change mid-session from the company editor, which
+  // updates ACTIVE_CO in place. Hiding only would leave the tab missing until a
+  // reload right after someone switched the company to maintenance.
+  const _ct=document.querySelector('.nav-btn[data-view="contracts"]');if(_ct)_ct.style.display=(typeof ctEnabled==='function'&&ctEnabled())?'':'none';
   $('owner-refresh')?.addEventListener('click',refreshOwnerData);
   $('owner-manage-companies')?.addEventListener('click',showCompanyManagerModal);
   document.querySelectorAll('[data-view-company]').forEach(b=>b.onclick=()=>{

@@ -1,8 +1,9 @@
 // The Contracts view and its editor.
 //
-// Neither file under test is loaded by index.html — all four contract files are
-// injected here, and the view is rendered by calling renderContracts() directly
-// rather than through the app's router, which has no route for it yet.
+// index.html now loads the contract scripts, so these no longer inject them —
+// re-injecting would re-execute the files and throw on the redeclared top-level
+// consts. The view is still rendered by calling renderContracts() directly so
+// each case can pin a fixed date; contract-gate.spec.js covers the real router.
 //
 // Beyond checking that things render, these lean on the two ways a contracts
 // UI misleads someone: showing a contract as running when it will silently
@@ -11,21 +12,12 @@
 const { expect, test } = require('@playwright/test');
 const { stubExternals } = require('./_stubs');
 
-const SRC = [
-  'src/app/contracts/01-contract-periods.js',
-  'src/app/contracts/02-contract-store.js',
-  'src/app/contracts/03-contract-list.js',
-  'src/app/contracts/04-contract-editor.js',
-];
-
 const MARCH = new Date(2026, 2, 15).getTime();
 
 async function load(page) {
   await stubExternals(page);
   await page.addInitScript(() => localStorage.setItem('jt_company', 'wfs'));
   await page.goto('/');
-  await page.waitForFunction(() => typeof window.renderJobs === 'function');
-  for (const path of SRC) await page.addScriptTag({ path });
   await page.waitForFunction(() => typeof window.renderContracts === 'function');
   await page.evaluate(() => { S.contracts = {}; S.ctSearch = ''; S._ctWired = false; ctSaveContractsLocal(); });
 }
@@ -377,24 +369,5 @@ test.describe('the editor', () => {
     const r = await page.evaluate(() => ({ open: !!document.getElementById('ct-bd'), count: ctContractList().length }));
     expect(r.open).toBe(false);
     expect(r.count).toBe(0);
-  });
-});
-
-test.describe('the live app is untouched', () => {
-  test('the shell has no contracts route, nav or code', async ({ page }) => {
-    await stubExternals(page);
-    await page.addInitScript(() => localStorage.setItem('jt_company', 'wfs'));
-    await page.goto('/');
-    await page.waitForFunction(() => typeof window.renderJobs === 'function');
-    const r = await page.evaluate(() => ({
-      view: typeof window.renderContracts,
-      editor: typeof window.openContractForm,
-      nav: document.querySelectorAll('[data-view="contracts"]').length,
-      appAlive: typeof window.renderJobs === 'function' && typeof window.renderCustomers === 'function',
-    }));
-    expect(r.view).toBe('undefined');
-    expect(r.editor).toBe('undefined');
-    expect(r.nav).toBe(0);
-    expect(r.appAlive).toBe(true);
   });
 });

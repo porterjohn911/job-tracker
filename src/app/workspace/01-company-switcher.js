@@ -83,6 +83,11 @@ function showCompanyEditorModal(co){
         <div class="form-group"><label class="form-label">Company ID</label><input class="form-input" id="co-id" value="${esc(current.id||'')}" placeholder="auto-generated" ${editing?'disabled':''}></div>
         <div class="form-group"><label class="form-label">Data namespace</label><input class="form-input" id="co-ns" value="${esc(current.ns||'')}" placeholder="auto-generated" ${editing?'disabled':''}></div>
       </div>
+      <div class="form-group"><label class="form-label">How this company works</label><select class="form-select" id="co-type">
+        ${[['project','Project work — jobs that start and finish'],['maintenance','Maintenance — repeat visits on a schedule'],['management','Management — recurring billing only']]
+          .map(([v,l])=>`<option value="${v}" ${companyType(current.type)===v?'selected':''}>${l}</option>`).join('')}
+      </select></div>
+      <div class="tt-hint">Project is the standard setup. The other two add a Contracts tab for scheduling repeat visits and recurring invoices, visible to managers and owners.</div>
       <div class="tt-hint">The ID and namespace are permanent because they point to this company's saved data. For new companies, leave them blank unless you need a specific short code.</div>
     </div>
     <div class="modal-foot">
@@ -106,7 +111,7 @@ function showCompanyEditorModal(co){
     const ns=editing?current.ns:(companySlug($('co-ns').value.trim())||id);
     if(!/^[a-z0-9_-]{2,24}$/.test(id)||!/^[a-z0-9_-]{2,24}$/.test(ns)){toast('Use 2-24 lowercase letters, numbers, dashes, or underscores for ID/namespace','');return}
     if(!editing&&(COMPANIES[id]||DEFAULT_COMPANIES[id])){toast('That company ID already exists','');return}
-    const next={...current,id,ns,label,tag:$('co-tag').value.trim(),active:true,createdAt:current.createdAt||Date.now(),updatedAt:Date.now()};
+    const next={...current,id,ns,label,tag:$('co-tag').value.trim(),type:companyType($('co-type')?.value),active:true,createdAt:current.createdAt||Date.now(),updatedAt:Date.now()};
     try{await writeCompanyRegistryRecord(next);toast(editing?'Company saved':'Company added');showCompanyManagerModal()}
     catch(e){toast('Could not save company','')}
   };
