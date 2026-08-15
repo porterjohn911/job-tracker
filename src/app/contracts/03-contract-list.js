@@ -180,6 +180,10 @@ function ctContractCard(c, nowTs) {
 
 function renderContracts(nowTs) {
   const now = nowTs == null ? Date.now() : nowTs;
+  // The account page, when one is open. Routed here rather than through the
+  // app's router, exactly as renderCustomers() switches on S.custDetail, so no
+  // shared view or routing code has to know contracts have a detail view.
+  if (S.ctDetail && typeof renderContractDetail === 'function') return renderContractDetail(S.ctDetail, now);
   const all = ctContractList();
   const q = ((typeof S !== 'undefined' && S.ctSearch) || '').trim().toLowerCase();
   const list = all.filter(c => !q ||

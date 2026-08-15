@@ -173,6 +173,8 @@ function openContractForm(seed) {
       if (!confirm('Delete this contract? Jobs and invoices it already created are kept.')) return;
       await ctDeleteContract(c.id);
       closeModal();
+      // Leave the account page if it was showing the contract just deleted.
+      if (S.ctDetail === c.id) S.ctDetail = null;
       if (typeof render === 'function') render();
       toast('Contract deleted');
     };
@@ -247,11 +249,26 @@ function attachContractHandlers() {
     if (typeof openGeneratePreview === 'function') openGeneratePreview();
   });
 
+  // A card opens the account page, not the editor. Editing is one of several
+  // things you might want to do with a contract, and rarely the first — the
+  // questions that come up daily are "is this making money" and "when does it
+  // renew", which live on the detail view.
   document.querySelectorAll('[data-ct]').forEach(el => {
     el.onclick = () => {
-      const rec = ctGetContract(el.dataset.ct);
-      if (rec) openContractForm(rec);
+      if (!ctGetContract(el.dataset.ct)) return;
+      S.ctDetail = el.dataset.ct;
+      if (typeof render === 'function') render();
     };
+  });
+
+  document.querySelector('[data-ct-back]')?.addEventListener('click', () => {
+    S.ctDetail = null;
+    if (typeof render === 'function') render();
+  });
+
+  $('btn-ct-edit')?.addEventListener('click', () => {
+    const rec = ctGetContract(S.ctDetail);
+    if (rec) openContractForm(rec);
   });
 }
 

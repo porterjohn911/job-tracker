@@ -187,8 +187,9 @@ test.describe('what the user sees', () => {
   test('the editor shows what a date buys before anything is saved', async ({ page }) => {
     await load(page);
     await page.evaluate(async (c) => { await ctSaveContract(c); }, monthly({ visitsThrough: '2026-06-01' }));
-    await page.evaluate(() => { document.getElementById('content').innerHTML = renderContracts(); attachContractHandlers(); });
-    await page.click('[data-ct="ct_a"]');
+    // A card now opens the account page; contract-detail.spec.js covers that
+    // navigation. This case is about the editor, so open it directly.
+    await page.evaluate(() => openContractForm(ctGetContract('ct_a')));
     const before = await page.evaluate(() => document.getElementById('ct-visits-count').textContent);
     expect(before).toContain('6 visits');
     expect(before).toContain('2026-01-01 through 2026-06-01');
