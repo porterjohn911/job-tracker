@@ -96,6 +96,25 @@ function ctCustomerName(customerId) {
   return (rec && rec.name) || '';
 }
 
+// The Generate button carries its own count, so the amount of outstanding work
+// is visible before opening anything. It disappears entirely when there is
+// nothing due — a button that always offers to create records invites pressing
+// it to find out, and this one writes real jobs and invoices.
+//
+// Defined defensively: 05-contract-generate.js loads after this file, and the
+// view must still render if it is missing.
+function ctGenerateButton(nowTs) {
+  if (typeof ctPendingWork !== 'function') return '';
+  let totals;
+  try { totals = ctPendingTotals(ctPendingWork(nowTs)); } catch (e) { return ''; }
+  const n = totals.visits + totals.invoices;
+  if (!n) return '';
+  return `<button class="btn-add" id="btn-ct-generate" style="background:var(--orange)" aria-label="Generate due contract work">
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z"/></svg>
+    Generate ${n}
+  </button>`;
+}
+
 // ── Card ────────────────────────────────────────────────────────────────────
 
 function ctContractCard(c, nowTs) {
@@ -179,10 +198,13 @@ function renderContracts(nowTs) {
         <div style="font-size:11px;color:var(--text-3);text-transform:uppercase;letter-spacing:0.06em;font-weight:700">Recurring Work</div>
         <div style="font-size:20px;font-weight:700;margin-top:2px">Contracts</div>
       </div>
-      <button class="btn-add" id="btn-ct-add" aria-label="Add contract">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
-        Add Contract
-      </button>
+      <div style="display:flex;gap:8px;align-items:center">
+        ${ctGenerateButton(now)}
+        <button class="btn-add" id="btn-ct-add" aria-label="Add contract">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+          Add Contract
+        </button>
+      </div>
     </div>
     <div class="kpi-grid">
       <div class="kpi-card"><div class="kpi-label">Active</div><div class="kpi-value">${active.length}</div><div class="kpi-sub">of ${all.length} contract${all.length === 1 ? '' : 's'}</div></div>

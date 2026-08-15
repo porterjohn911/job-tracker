@@ -243,6 +243,10 @@ function attachContractHandlers() {
 
   $('btn-ct-add')?.addEventListener('click', () => openContractForm(ctNewContract()));
 
+  $('btn-ct-generate')?.addEventListener('click', () => {
+    if (typeof openGeneratePreview === 'function') openGeneratePreview();
+  });
+
   document.querySelectorAll('[data-ct]').forEach(el => {
     el.onclick = () => {
       const rec = ctGetContract(el.dataset.ct);
