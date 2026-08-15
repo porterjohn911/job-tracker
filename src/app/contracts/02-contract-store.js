@@ -1,9 +1,5 @@
 // Recurring contracts — record normalization and the data layer.
 //
-// NOT LOADED BY index.html. Like 01-contract-periods.js, this file is held out
-// of the app's script list until the feature is finished; scripts/check-static.mjs
-// fails the build if it appears there. The tests load it explicitly.
-//
 // The storage half deliberately mirrors views/07-customers.js — localStorage
 // cache, a sync listener attached once from the feature's own tab, writes that
 // go to state first and Firebase second behind a typeof guard. That module is
@@ -122,6 +118,10 @@ function ctNormalizeContract(raw, id) {
     status: status,
     startDate: startDate,
     endDate: endDate,
+    // How far the customer has prepaid. Visits are only ever scheduled up to
+    // this date — see ctVisitLimit(). Empty means nothing is paid for, so no
+    // visits get created at all.
+    visitsThrough: ctNormDate(src.visitsThrough),
     visits: ctNormSchedule(src.visits),
     billing: billingRaw && ctNormSchedule(billingRaw)
       ? Object.assign(ctNormSchedule(billingRaw), {
@@ -148,6 +148,10 @@ function ctContractIssues(raw) {
   if (!c.startDate) issues.push('No valid start date, so nothing can be scheduled or billed.');
   if (!c.visits && !c.billing) issues.push('No visit schedule and no billing schedule — this contract does nothing.');
   if (c.billing && !c.billing.amount && !c.billing.items.length) issues.push('Billing is scheduled but has no amount or line items.');
+  // A visit schedule with nothing paid for is the quiet failure this field
+  // exists to prevent: the contract looks scheduled but books nobody.
+  if (c.visits && !c.visitsThrough) issues.push('Visits are scheduled but none are paid for yet — set how far ahead the customer has paid.');
+  if (c.visits && c.visitsThrough && c.startDate && c.visitsThrough < c.startDate) issues.push('Paid through a date before the contract starts, so no visits fall inside it.');
   const rawStatus = ctStr(raw && raw.status).toLowerCase();
   if (rawStatus && CT_STATUSES.indexOf(rawStatus) < 0) issues.push('Unrecognized status "' + rawStatus + '" — held as paused.');
   const s = ctNormDate(raw && raw.startDate), e = ctNormDate(raw && raw.endDate);

@@ -55,7 +55,7 @@ test.describe('labels', () => {
   test('the next date is the next one ahead, not one already passed', async ({ page }) => {
     await load(page);
     const r = await page.evaluate((now) => {
-      const c = ctNormalizeContract({ id: 'c1', status: 'active', startDate: '2026-01-01', billing: { freq: 'monthly' }, visits: { freq: 'weekly' } });
+      const c = ctNormalizeContract({ id: 'c1', status: 'active', startDate: '2026-01-01', billing: { freq: 'monthly' }, visits: { freq: 'weekly' }, visitsThrough: '2026-12-31' });
       return {
         bill: ctDateKey(ctNextDate(c, 'billing', now)),
         visit: ctDateKey(ctNextDate(c, 'visit', now)),
@@ -74,7 +74,7 @@ test.describe('labels', () => {
   test('upcoming counts the window ahead, not overdue history', async ({ page }) => {
     await load(page);
     const r = await page.evaluate((now) => {
-      const c = ctNormalizeContract({ id: 'c1', status: 'active', startDate: '2026-01-01', visits: { freq: 'weekly' } });
+      const c = ctNormalizeContract({ id: 'c1', status: 'active', startDate: '2026-01-01', visits: { freq: 'weekly' }, visitsThrough: '2026-04-14' });
       return {
         // Weekly from Jan 1 to the Apr 14 horizon is 15 occurrences, but only
         // Mar 19 / Mar 26 / Apr 2 / Apr 9 are still ahead on Mar 15.
@@ -101,7 +101,7 @@ test.describe('the view', () => {
     await load(page);
     await seed(page, [{
       id: 'ct_a', name: 'Dock maintenance', status: 'active', startDate: '2026-01-01',
-      visits: { freq: 'monthly' }, billing: { freq: 'annual', amount: 2400 },
+      visits: { freq: 'monthly' }, visitsThrough: '2027-01-01', billing: { freq: 'annual', amount: 2400 },
     }]);
     await mount(page, MARCH);
     const html = await page.evaluate(() => document.getElementById('content').innerHTML);
@@ -115,8 +115,8 @@ test.describe('the view', () => {
   test('KPIs count active contracts, visits due and unbilled add-ons', async ({ page }) => {
     await load(page);
     await seed(page, [
-      { id: 'ct_a', name: 'A', status: 'active', startDate: '2026-01-01', visits: { freq: 'weekly' } },
-      { id: 'ct_b', name: 'B', status: 'paused', startDate: '2026-01-01', visits: { freq: 'weekly' } },
+      { id: 'ct_a', name: 'A', status: 'active', startDate: '2026-01-01', visits: { freq: 'weekly' }, visitsThrough: '2026-12-31' },
+      { id: 'ct_b', name: 'B', status: 'paused', startDate: '2026-01-01', visits: { freq: 'weekly' }, visitsThrough: '2026-12-31' },
     ]);
     await page.evaluate(async () => {
       await ctAddAddon('ct_a', { desc: 'Callout', amount: 450 });

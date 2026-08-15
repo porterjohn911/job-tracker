@@ -226,14 +226,14 @@ test.describe('idempotency', () => {
     const r = await page.evaluate((now) => {
       const c = {
         id: 'ct_1', status: 'active', startDate: '2026-01-01',
-        visits: { freq: 'weekly' }, billing: { freq: 'monthly' },
+        visits: { freq: 'weekly' }, visitsThrough: '2026-05-15', billing: { freq: 'monthly' },
       };
-      const first = ctPlan(c, { now, visitHorizonDays: 60 });
+      const first = ctPlan(c, { now });
       // Pretend the run wrote them: records now carry their period keys.
       const jobs = first.visits.map(p => ({ id: 'j' + p.index, periodKey: p.key }));
       const invoices = first.billing.map(p => ({ id: 'i' + p.index, periodKey: p.key }));
       const second = ctPlan(c, {
-        now, visitHorizonDays: 60,
+        now,
         existingJobKeys: ctExistingKeys(jobs),
         existingInvoiceKeys: ctExistingKeys(invoices),
       });
@@ -360,9 +360,9 @@ test.describe('the two cycles are independent', () => {
     const r = await page.evaluate((now) => {
       const c = {
         id: 'ct_1', status: 'active', startDate: '2026-01-05',
-        visits: { freq: 'weekly' }, billing: { freq: 'annual' },
+        visits: { freq: 'weekly' }, visitsThrough: '2026-03-15', billing: { freq: 'annual' },
       };
-      const plan = ctPlan(c, { now, visitHorizonDays: 0 });
+      const plan = ctPlan(c, { now });
       return {
         visits: plan.visits.length,
         billing: plan.billing.length,
