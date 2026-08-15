@@ -70,6 +70,17 @@ for (const file of unwiredScripts) {
 for (const file of scripts.filter((file) => file.endsWith('.js'))) {
   execFileSync('node', ['--check', file], { cwd: root, stdio: 'inherit' });
 }
+
+// The rules files are hand-maintained and deployed separately from the site
+// (firebase.json has no "database" key), so a syntax error in one would not
+// surface until someone ran a deploy. Parse them here instead.
+for (const file of ['database.rules.json', 'firebase.json']) {
+  try {
+    JSON.parse(readFileSync(join(root, file), 'utf8'));
+  } catch (err) {
+    fail(`${file} is not valid JSON: ${err.message}`);
+  }
+}
 for (const fn of [
   'netlify/functions/send-invoice.js',
   'netlify/functions/api-keys.js',
