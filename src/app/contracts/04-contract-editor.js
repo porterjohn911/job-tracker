@@ -157,7 +157,16 @@ function openContractForm(seed) {
   $('ct-save').onclick = async () => {
     const next = ctReadContractForm(c);
     if (!next.name) { toast('Give the contract a name', ''); return; }
-    const saved = await ctSaveContract(next);
+    // A rejected sync write throws. The modal stays open so the work is not
+    // lost, and ctWriteContract has already said what went wrong — closing here
+    // would leave a contract on screen that is about to be reverted by the
+    // sync listener, which is what "it saved and then disappeared" looks like.
+    let saved;
+    try {
+      saved = await ctSaveContract(next);
+    } catch (e) {
+      return;
+    }
     if (!saved) { toast('Could not save that contract', ''); return; }
     closeModal();
     if (typeof render === 'function') render();
@@ -171,7 +180,11 @@ function openContractForm(seed) {
   if (isEdit) {
     $('ct-del').onclick = async () => {
       if (!confirm('Delete this contract? Jobs and invoices it already created are kept.')) return;
-      await ctDeleteContract(c.id);
+      try {
+        await ctDeleteContract(c.id);
+      } catch (e) {
+        return;
+      }
       closeModal();
       // Leave the account page if it was showing the contract just deleted.
       if (S.ctDetail === c.id) S.ctDetail = null;
@@ -184,8 +197,12 @@ function openContractForm(seed) {
       const amount = Number($('ct-addon-amount').value || 0);
       if (!desc && !amount) { toast('Add a description or an amount', ''); return; }
       // Save the form first so edits in progress are not lost behind the reopen.
-      await ctSaveContract(ctReadContractForm(c));
-      await ctAddAddon(c.id, { desc: desc, amount: amount, date: ctDateKey(new Date()) });
+      try {
+        await ctSaveContract(ctReadContractForm(c));
+        await ctAddAddon(c.id, { desc: desc, amount: amount, date: ctDateKey(new Date()) });
+      } catch (e) {
+        return;
+      }
       openContractForm(ctGetContract(c.id));
       toast('Add-on added');
     };
@@ -200,7 +217,11 @@ function openContractForm(seed) {
         if (cur.addons[id].billedInvoiceId) { toast('That add-on has already been billed', ''); return; }
         const addons = Object.assign({}, cur.addons);
         delete addons[id];
-        await ctSaveContract(Object.assign({}, cur, { addons: addons }));
+        try {
+          await ctSaveContract(Object.assign({}, cur, { addons: addons }));
+        } catch (e) {
+          return;
+        }
         openContractForm(ctGetContract(c.id));
       };
     });
