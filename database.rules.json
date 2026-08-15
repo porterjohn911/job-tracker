@@ -135,6 +135,14 @@
             },
             "$other": { ".validate": false }
           },
+          "checklist": {
+            "$index": {
+              ".validate": "newData.hasChildren(['id', 'text'])",
+              "id": { ".validate": "newData.isString() && newData.val().length <= 64" },
+              "text": { ".validate": "newData.isString() && newData.val().length <= 200" },
+              "$other": { ".validate": false }
+            }
+          },
           "addons": {
             "$addonId": {
               ".validate": "newData.hasChildren(['id'])",

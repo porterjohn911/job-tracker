@@ -77,6 +77,18 @@ function ctVisitCountHint(c) {
     first.dateKey + ' through ' + last.dateKey + '. Push this date out when they renew.';
 }
 
+// The scope of work. Editable only in the contract, so a crew cannot quietly
+// change what the agreement promises — they tick items off on the visit.
+function ctChecklistRows(c) {
+  const items = c.checklist || [];
+  if (!items.length) return `<p style="font-size:12.5px;color:var(--text-3);margin:0 0 8px">Nothing yet. Add what a crew does on each visit — it lands on every generated job as a task list.</p>`;
+  return items.map((it, i) => `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border)">
+    <span style="font-size:11px;color:var(--text-3);min-width:18px;flex-shrink:0">${i + 1}.</span>
+    <div style="flex:1;min-width:0;font-size:13px">${esc(it.text)}</div>
+    <button class="btn-remove" data-ct-check-rm="${esc(it.id)}" aria-label="Remove checklist item">Remove</button>
+  </div>`).join('');
+}
+
 function ctIssueBanner(c) {
   const issues = ctContractIssues(c);
   if (!issues.length) return '';
@@ -117,6 +129,13 @@ function openContractForm(seed) {
       <div class="form-group"><label class="form-label">Visits paid through</label><input class="form-input" type="date" id="ct-visits-through" value="${esc(c.visitsThrough)}"></div>
       <div class="tt-hint" id="ct-visits-count" style="margin-top:-4px">${ctVisitCountHint(c)}</div>
 
+      <div class="section-hd" style="margin-top:10px">Checklist <span>copied onto every visit</span></div>
+      <div id="ct-check-rows" style="margin-bottom:8px">${ctChecklistRows(c)}</div>
+      <div style="display:flex;gap:8px;align-items:flex-end">
+        <div class="form-group" style="flex:1;margin-bottom:0"><input class="form-input" id="ct-check-text" placeholder="Check anodes and hardware"></div>
+        <button class="btn-cancel" id="ct-check-add" style="flex-shrink:0">Add</button>
+      </div>
+
       <div class="section-hd" style="margin-top:6px">Billing <span>creates an invoice each time</span></div>
       <div class="form-row">
         <div class="form-group"><label class="form-label">Frequency</label>${ctFreqSelect('ct-bill-freq', b.freq)}</div>
@@ -153,6 +172,38 @@ function openContractForm(seed) {
   ['ct-visits-through', 'ct-visit-freq', 'ct-visit-interval', 'ct-start'].forEach(id => {
     $(id)?.addEventListener('change', refreshCount);
   });
+
+  // Checklist edits happen against the in-memory record and redraw only their
+  // own rows. Round-tripping through a save would lose whatever else is typed
+  // in the form, and would not work at all on a contract that has never been
+  // saved — where writing the scope down is most natural.
+  const redrawChecklist = () => {
+    const rows = $('ct-check-rows');
+    if (!rows) return;
+    rows.innerHTML = ctChecklistRows(c);
+    rows.querySelectorAll('[data-ct-check-rm]').forEach(btn => {
+      btn.onclick = () => {
+        c.checklist = (c.checklist || []).filter(it => it.id !== btn.dataset.ctCheckRm);
+        redrawChecklist();
+      };
+    });
+  };
+  const addChecklistItem = () => {
+    const input = $('ct-check-text');
+    const text = (input.value || '').trim();
+    if (!text) return;
+    c.checklist = (c.checklist || []).concat([{ id: ctNewCheckId(), text: text.slice(0, 200) }]);
+    input.value = '';
+    input.focus();
+    redrawChecklist();
+  };
+  $('ct-check-add')?.addEventListener('click', addChecklistItem);
+  // Enter adds an item rather than submitting, so a whole scope can be typed
+  // without reaching for the mouse between lines.
+  $('ct-check-text')?.addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); addChecklistItem(); }
+  });
+  redrawChecklist();
 
   $('ct-save').onclick = async () => {
     const next = ctReadContractForm(c);

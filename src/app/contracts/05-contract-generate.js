@@ -108,7 +108,18 @@ function ctBuildVisitJob(contract, period) {
     billingAddress: address,
     leadSource: '',
     progress: 0,
-    notes: [], photos: [], tasks: [], dailyLogs: [], documents: [], comms: [],
+    notes: [], photos: [], dailyLogs: [], documents: [], comms: [],
+    // The contract's checklist becomes this visit's tasks, in the same shape
+    // the job detail's task list already creates and ticks off. That is the
+    // whole point of defining scope on the contract: a generated visit arrives
+    // knowing what the work is, instead of as a name and a date that whoever
+    // opens it on a dock has to interpret.
+    //
+    // Copied, not referenced. Editing the contract later must not rewrite what
+    // a crew already ticked off on a visit they have done.
+    tasks: (contract.checklist || []).map(item => ({
+      text: item.text, due: '', assigned: '', done: false, user: '', time: Date.now(),
+    })),
     created: Date.now(),
     geocodeStatus: address ? 'pending' : 'none',
     // Provenance, and the idempotency stamp.

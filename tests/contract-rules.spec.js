@@ -98,6 +98,13 @@ test.describe('validation', () => {
     }
   });
 
+  test('checklist items carry an id and text, and nothing else', async () => {
+    const item = CONTRACT.checklist.$index;
+    expect(item['.validate']).toContain("hasChildren(['id', 'text'])");
+    expect(item.text['.validate']).toContain('<= 200');
+    expect(item.$other['.validate']).toBe(false);
+  });
+
   test('add-ons carry their own id, matching their key', async () => {
     expect(CONTRACT.addons.$addonId['.validate']).toContain("hasChildren(['id'])");
     expect(CONTRACT.addons.$addonId.id['.validate']).toContain('newData.val() === $addonId');
@@ -116,7 +123,7 @@ test.describe('validation', () => {
   // mismatch introduced later on either side.
   test('every field the client writes is permitted', async () => {
     const written = ['id', 'name', 'customerId', 'status', 'startDate', 'endDate', 'visitsThrough',
-      'visits', 'billing', 'addons', 'notes', 'created', 'updatedAt', 'updatedBy'];
+      'visits', 'checklist', 'billing', 'addons', 'notes', 'created', 'updatedAt', 'updatedBy'];
     written.forEach(f => expect(CONTRACT[f], `missing rule for "${f}"`).toBeTruthy());
 
     const addon = ['id', 'desc', 'amount', 'date', 'billedInvoiceId', 'created'];
