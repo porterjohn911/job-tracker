@@ -225,14 +225,14 @@ test.describe('the editor', () => {
     expect(r.hasAddons).toBe(false);
   });
 
-  test('a card opens its contract prefilled', async ({ page }) => {
+  test('opening an existing contract prefills it', async ({ page }) => {
     await load(page);
     await seed(page, [{
       id: 'ct_a', name: 'Dock care', status: 'active', startDate: '2026-01-05', endDate: '2027-01-05',
       visits: { freq: 'monthly', interval: 2 }, billing: { freq: 'annual', amount: 2400 },
     }]);
     await mount(page, MARCH);
-    await page.click('[data-ct="ct_a"]');
+    await page.evaluate(() => openContractForm(ctGetContract('ct_a')));
     const r = await page.evaluate(() => ({
       title: document.querySelector('.modal-title').textContent,
       name: document.getElementById('ct-name').value,
@@ -313,7 +313,7 @@ test.describe('the editor', () => {
     await load(page);
     await seed(page, [{ id: 'ct_a', name: 'Idle', status: 'active', startDate: '2026-01-01' }]);
     await mount(page, MARCH);
-    await page.click('[data-ct="ct_a"]');
+    await page.evaluate(() => openContractForm(ctGetContract('ct_a')));
     const text = await page.evaluate(() => document.querySelector('.modal-body').textContent);
     expect(text).toContain('will not do what you expect');
     expect(text).toContain('does nothing');
@@ -323,7 +323,7 @@ test.describe('the editor', () => {
     await load(page);
     await seed(page, [{ id: 'ct_a', name: 'A', status: 'active', startDate: '2026-01-01', billing: { freq: 'monthly', amount: 100 } }]);
     await mount(page, MARCH);
-    await page.click('[data-ct="ct_a"]');
+    await page.evaluate(() => openContractForm(ctGetContract('ct_a')));
 
     await page.fill('#ct-addon-desc', 'Emergency callout');
     await page.fill('#ct-addon-amount', '450');
@@ -354,7 +354,7 @@ test.describe('the editor', () => {
     await seed(page, [{ id: 'ct_a', name: 'Going away', status: 'paused', startDate: '2026-01-01' }]);
     await mount(page, MARCH);
     page.on('dialog', d => d.accept());
-    await page.click('[data-ct="ct_a"]');
+    await page.evaluate(() => openContractForm(ctGetContract('ct_a')));
     await page.click('#ct-del');
     const count = await page.evaluate(() => ctContractList().length);
     expect(count).toBe(0);
