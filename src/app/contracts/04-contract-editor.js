@@ -456,6 +456,25 @@ function attachContractHandlers() {
   if (typeof ctAttachBillRunHandlers === 'function') ctAttachBillRunHandlers();
   if (typeof ctAttachProposalHandlers === 'function') ctAttachProposalHandlers();
   if (typeof ctAttachHomeHandlers === 'function') ctAttachHomeHandlers();
+  // The nav lives outside #content, so this folds it once and then only keeps
+  // the More button's active state in step on later renders.
+  if (typeof ctApplyNavOverflow === 'function') ctApplyNavOverflow();
+
+  // Section chips on the account page. scrollIntoView on the section itself
+  // would tuck its heading under the sticky chip bar, so the scroll is done
+  // against the scrolling container with the bar's height taken off.
+  document.querySelectorAll('[data-ct-jump]').forEach(btn => {
+    btn.onclick = () => {
+      const el = document.getElementById(btn.dataset.ctJump);
+      const box = document.getElementById('content');
+      if (!el || !box) return;
+      const chips = document.querySelector('.ct-chips');
+      // The bar's own box plus a little air. Without the extra the section
+      // heading lands flush under the sticky bar and reads as clipped.
+      const offset = (chips ? chips.getBoundingClientRect().height : 0) + 18;
+      box.scrollTo({ top: box.scrollTop + el.getBoundingClientRect().top - box.getBoundingClientRect().top - offset, behavior: 'smooth' });
+    };
+  });
 
   // Reporting is reachable from the account page and the day route, which are
   // the two places someone looks at a finished visit.
