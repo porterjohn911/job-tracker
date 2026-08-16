@@ -269,6 +269,8 @@ function renderContractDetail(contractId, nowTs) {
       </div>
     </div>
 
+    ${typeof ctProposalSection === 'function' ? ctProposalSection(c, now) : ''}
+
     ${typeof ctPricingSection === 'function' ? ctPricingSection(c) : ''}
 
     <div class="section">

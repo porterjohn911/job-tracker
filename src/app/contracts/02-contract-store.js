@@ -119,6 +119,38 @@ function ctNormPricing(raw) {
   return priced ? out : null;
 }
 
+// The customer-facing agreement attached to a contract.
+//
+// Deliberately separate from `pricing`. Pricing is what a visit COSTS US —
+// crew rate, hours, target margin — and it must never reach a customer. The
+// proposal is what the customer is buying and what they pay. Keeping them in
+// different fields is the first half of making that leak impossible; the
+// document builder never reading contract.pricing is the other half.
+//
+// Null means no proposal has been drafted, which is the normal state for a
+// contract someone typed straight in.
+function ctNormProposal(raw) {
+  if (!raw || typeof raw !== 'object') return null;
+  const stamp = v => { const n = Number(v); return Number.isFinite(n) && n > 0 ? Math.floor(n) : 0; };
+  const out = {
+    number: ctStr(raw.number, 32),
+    date: ctNormDate(raw.date),
+    validUntil: ctNormDate(raw.validUntil),
+    intro: ctStr(raw.intro, 1000),
+    exclusions: ctStr(raw.exclusions, 2000),
+    terms: ctStr(raw.terms, 4000),
+    sentAt: stamp(raw.sentAt),
+    acceptedAt: stamp(raw.acceptedAt),
+    acceptedBy: ctStr(raw.acceptedBy, 120),
+    declinedAt: stamp(raw.declinedAt),
+  };
+  // A proposal exists once it has a number or anyone has written anything into
+  // it. An untouched block normalizes away rather than parking an empty
+  // document on every contract that was opened and saved.
+  const real = out.number || out.intro || out.exclusions || out.terms || out.sentAt || out.acceptedAt;
+  return real ? out : null;
+}
+
 function ctNormAddons(raw) {
   const out = {};
   const list = Array.isArray(raw) ? raw : Object.values(raw || {});
@@ -173,6 +205,8 @@ function ctNormalizeContract(raw, id) {
     // The assumptions this contract was priced on, so actuals can be checked
     // against them. Null means it was priced by instinct.
     pricing: ctNormPricing(src.pricing),
+    // What the customer was shown and agreed to. Never carries cost data.
+    proposal: ctNormProposal(src.proposal),
     billing: billingRaw && ctNormSchedule(billingRaw)
       ? Object.assign(ctNormSchedule(billingRaw), {
           amount: ctMoney(billingRaw.amount),
@@ -436,7 +470,7 @@ function ctPlanAll(opts) {
 
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
-    ctNewId, ctNewAddonId, ctNewCheckId, ctNormChecklist, ctNormPricing, ctNormalizeContract, ctContractIssues, ctNewContract,
+    ctNewId, ctNewAddonId, ctNewCheckId, ctNormChecklist, ctNormPricing, ctNormProposal, ctNormalizeContract, ctContractIssues, ctNewContract,
     ctLoadContractsLocal, ctSaveContractsLocal, ctWireContractsData,
     ctSaveContract, ctDeleteContract, ctSetContractStatus,
     ctAddAddon, ctStampAddon, ctUnstampAddon,

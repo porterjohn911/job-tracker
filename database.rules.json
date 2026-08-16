@@ -143,6 +143,19 @@
             "targetMargin": { ".validate": "newData.isNumber() && newData.val() > 0 && newData.val() < 95" },
             "$other": { ".validate": false }
           },
+          "proposal": {
+            "number": { ".validate": "newData.isString() && newData.val().length <= 32" },
+            "date": { ".validate": "newData.isString() && (newData.val() === '' || newData.val().matches(/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/))" },
+            "validUntil": { ".validate": "newData.isString() && (newData.val() === '' || newData.val().matches(/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/))" },
+            "intro": { ".validate": "newData.isString() && newData.val().length <= 1000" },
+            "exclusions": { ".validate": "newData.isString() && newData.val().length <= 2000" },
+            "terms": { ".validate": "newData.isString() && newData.val().length <= 4000" },
+            "sentAt": { ".validate": "newData.isNumber() && newData.val() >= 0" },
+            "acceptedAt": { ".validate": "newData.isNumber() && newData.val() >= 0" },
+            "acceptedBy": { ".validate": "newData.isString() && newData.val().length <= 120" },
+            "declinedAt": { ".validate": "newData.isNumber() && newData.val() >= 0" },
+            "$other": { ".validate": false }
+          },
           "checklist": {
             "$index": {
               ".validate": "newData.hasChildren(['id', 'text'])",
