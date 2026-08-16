@@ -1,3 +1,5 @@
 node_modules/
 test-results/
 playwright-report/
+# Throwaway Playwright configs used to point at a container-local browser.
+pw-*.config.js
