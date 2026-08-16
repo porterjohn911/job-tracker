@@ -40,6 +40,29 @@ function ctPerYear(schedule) {
   return Number.isFinite(per) && per > 0 ? per : null;
 }
 
+// Hours and labour cost per job id, built in ONE pass over the company's time
+// entries. jobLaborStats() answers the same question per job by scanning them
+// all, so asking it about four hundred visits scans four hundred times.
+//
+// Deliberately mirrors jobLaborStats' arithmetic rather than reimplementing it:
+// same duration helper, same pay rate lookup, so the two never disagree about
+// what a visit cost.
+function ctLaborIndex() {
+  const out = {};
+  const list = typeof timeList === 'function' ? timeList() : [];
+  list.forEach(t => {
+    const jobId = (t && t.job) || '';
+    if (!jobId) return;
+    const ms = typeof entryDur === 'function' ? entryDur(t) : 0;
+    const hrs = typeof hoursOf === 'function' ? hoursOf(ms) : ms / 3600000;
+    const rate = typeof rateOf === 'function' ? rateOf(t.member) : 0;
+    const rec = out[jobId] || (out[jobId] = { hours: 0, cost: 0 });
+    rec.hours += hrs;
+    rec.cost += hrs * rate;
+  });
+  return out;
+}
+
 // ── The estimate ────────────────────────────────────────────────────────────
 
 // What the contract says a visit should cost, and what it would have to be
@@ -102,9 +125,16 @@ function ctPricingEstimate(contract) {
 // left out of the average rather than divided by a denominator that excludes
 // the labour they came with — they are reported separately so the number is
 // never quietly understated.
-function ctPricingActual(contract) {
+//
+// `index` is optional. jobLaborStats() rescans every time entry in the company
+// for each job it is asked about, which is fine for one contract and quadratic
+// for a whole book of them. Callers rolling up many contracts pass an index
+// built once by ctLaborIndex(); everyone else omits it and nothing changes.
+function ctPricingActual(contract, index) {
   const jobs = typeof ctContractJobs === 'function' ? ctContractJobs(contract.id) : [];
-  const stats = j => (typeof jobLaborStats === 'function' ? jobLaborStats(j.id) : { hours: 0, cost: 0 });
+  const stats = j => (index
+    ? (index[j.id] || { hours: 0, cost: 0 })
+    : (typeof jobLaborStats === 'function' ? jobLaborStats(j.id) : { hours: 0, cost: 0 }));
   const receipts = j => (typeof receiptTotal === 'function' ? receiptTotal(j) : 0);
 
   let hours = 0, labor = 0, materials = 0, measured = 0;
@@ -150,9 +180,9 @@ function ctPricingActual(contract) {
 // It needs a visit schedule to annualize per-visit costs; without one there is
 // no honest way to turn a visit average into a yearly figure, so it says it
 // cannot rather than guessing.
-function ctPricingVariance(contract) {
+function ctPricingVariance(contract, index) {
   const est = ctPricingEstimate(contract);
-  const act = ctPricingActual(contract);
+  const act = ctPricingActual(contract, index);
 
   const out = {
     estimate: est, actual: act,
@@ -344,7 +374,7 @@ function ctPricingHint(contract) {
 
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
-    ctPerYear, ctPricingEstimate, ctPricingActual, ctPricingVariance,
+    ctPerYear, ctLaborIndex, ctPricingEstimate, ctPricingActual, ctPricingVariance,
     ctPricingVerdictText, ctPricingSection, ctPricingHint,
   };
 }
