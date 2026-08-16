@@ -262,9 +262,14 @@ function renderContracts(nowTs) {
     ${all.length ? `<div style="margin:6px 0 12px">
       <input class="form-input" id="ct-search" value="${esc((typeof S !== 'undefined' && S.ctSearch) || '')}" placeholder="Search contracts…" style="width:100%">
     </div>` : ''}
+    ${typeof ctHasSampleData === 'function' && ctHasSampleData() ? `<div style="text-align:right;margin-bottom:10px">
+      <button id="btn-ct-sample-rm" style="background:none;border:none;padding:0;font-size:11.5px;color:var(--text-3);cursor:pointer;text-decoration:underline">Remove sample data</button>
+    </div>` : ''}
     ${list.length === 0 ? `<div class="section" style="text-align:center;padding:34px 20px">
         <p style="font-size:14px;color:var(--text-2);margin-bottom:4px">${all.length === 0 ? 'No contracts yet.' : 'No contracts match your search.'}</p>
         <p style="font-size:12.5px;color:var(--text-3)">${all.length === 0 ? 'A contract schedules repeat visits, recurring billing, or both — and new contracts start paused until you switch them on.' : 'Try a different name or customer.'}</p>
+        ${all.length === 0 && typeof ctLoadSampleData === 'function' ? `<button class="btn-cancel" id="btn-ct-sample" style="margin-top:14px">Load sample data</button>
+        <p style="font-size:11.5px;color:var(--text-3);margin-top:8px">Five example accounts with visits, hours and invoices, so the numbers have something to show. Removable in one press.</p>` : ''}
       </div>`
     : `<div style="display:flex;flex-direction:column;gap:8px">${list.map(c => ctContractCard(c, now)).join('')}</div>`}
   `;
