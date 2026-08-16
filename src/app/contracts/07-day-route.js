@@ -48,6 +48,9 @@ function ctRouteStop(job) {
     tasksTotal: tasks.length,
     tasksDone: tasks.filter(t => t && t.done).length,
     photos: (job.photos || []).length,
+    // Whether this stop is worth telling the customer about, computed once
+    // here so the row does not have to reason about it.
+    report: typeof ctVisitReportState === 'function' ? ctVisitReportState(job) : null,
     // A stop with nothing ticked and nothing photographed has not been started,
     // which is what the crew and the office both want to see at a glance.
     started: tasks.some(t => t && t.done) || (job.photos || []).length > 0,
@@ -88,6 +91,11 @@ function ctRouteRow(stop, index) {
         ${stop.address
           ? `<a href="${esc(ctMapsHref(stop.address))}" target="_blank" rel="noopener" style="font-size:11.5px;color:var(--green-700);text-decoration:none;display:inline-block;margin-top:3px">${esc(stop.address)} ↗</a>`
           : `<div style="font-size:11.5px;color:var(--text-3);margin-top:3px">No address on this job</div>`}
+        ${stop.report && stop.report.sentAt
+          ? `<div style="font-size:11px;color:var(--green-700);margin-top:5px">Report sent</div>`
+          : (stop.report && stop.report.can
+              ? `<button class="btn-remove" data-ct-report="${esc(j.id)}" style="margin-top:6px">Send report</button>`
+              : '')}
       </div>
     </div>
   </div>`;

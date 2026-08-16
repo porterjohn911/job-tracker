@@ -382,6 +382,15 @@ function attachContractHandlers() {
     if (typeof render === 'function') render();
   });
 
+  // Reporting is reachable from the account page and the day route, which are
+  // the two places someone looks at a finished visit.
+  document.querySelectorAll('[data-ct-report]').forEach(btn => {
+    btn.onclick = e => {
+      e.stopPropagation();
+      if (typeof openVisitReportComposer === 'function') openVisitReportComposer(btn.dataset.ctReport);
+    };
+  });
+
   document.querySelectorAll('[data-ct-route-day]').forEach(btn => {
     btn.onclick = () => {
       S.ctRoute = btn.dataset.ctRouteDay;

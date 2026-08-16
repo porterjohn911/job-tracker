@@ -160,11 +160,19 @@ function ctVisitRows(contract, nowTs) {
     const tasks = j.tasks || [];
     const doneCount = tasks.filter(t => t && t.done).length;
     if (tasks.length) bits.push(doneCount + '/' + tasks.length + ' done');
-    return `<div data-open="${esc(j.id)}" style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);cursor:pointer">
-      <div style="flex:1;min-width:0">
+    // Reporting is offered only where there is something to report, so the
+    // button never invites sending an email that says nothing happened.
+    const report = typeof ctVisitReportState === 'function' ? ctVisitReportState(j) : { can: false };
+    const reportBtn = report.sentAt
+      ? `<span style="font-size:10.5px;color:var(--green-700);flex-shrink:0" title="Reported to ${esc(j.visitReportedTo || '')}">Reported</span>`
+      : (report.can ? `<button class="btn-remove" data-ct-report="${esc(j.id)}" style="flex-shrink:0">Send report</button>` : '');
+
+    return `<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border)">
+      <div data-open="${esc(j.id)}" style="flex:1;min-width:0;cursor:pointer">
         <div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(j.name || 'Visit')}</div>
         <div style="font-size:11.5px;color:var(--text-3)">${esc(j.startDate || 'no date')}${bits.length ? ' · ' + esc(bits.join(' · ')) : (past ? ' · nothing logged' : '')}</div>
       </div>
+      ${reportBtn}
       <span class="status-pill ${spClass(j.status)}" style="font-size:9.5px;flex-shrink:0">${spLabel(j.status)}</span>
     </div>`;
   }).join('');
