@@ -114,7 +114,13 @@ exports.handler = async (event) => {
   try { body = JSON.parse(event.body || '{}'); } catch (e) { return json(400, { error: 'Bad request' }); }
   const { idToken, to, subject, message, html, pdfBase64, fromName, filename, replyTo, doc } = body;
   if (!to) return json(400, { error: 'Missing recipient email' });
-  if (!pdfBase64 && !doc) return json(400, { error: 'Missing invoice data' });
+  // Visit reports are body-only: the checklist and photos ARE the message, and
+  // there is no document to attach. Callers must ask for that explicitly, so
+  // an invoice send that loses its PDF still fails loudly rather than going
+  // out as a bare email.
+  const noAttachment = body.attachment === false;
+  if (!noAttachment && !pdfBase64 && !doc) return json(400, { error: 'Missing invoice data' });
+  if (noAttachment && !html && !message) return json(400, { error: 'Missing message body' });
   const uid = await verifyToken(idToken);
   if (!uid) return json(401, { error: 'Not authorized — please sign in again' });
   const member = await authorizedMember(idToken, uid);
@@ -125,8 +131,10 @@ exports.handler = async (event) => {
   if (!smtp) return json(500, { error: 'Email not set up yet (SMTP_USER / SMTP_PASS missing in Netlify)' });
   const user = smtp.user;
 
-  let pdfBuf;
-  if (pdfBase64) {
+  let pdfBuf = null;
+  if (noAttachment) {
+    pdfBuf = null;
+  } else if (pdfBase64) {
     try {
       pdfBuf = Buffer.from(String(pdfBase64), 'base64');
       if (!pdfBuf.length) throw new Error('empty attachment');
@@ -139,7 +147,9 @@ exports.handler = async (event) => {
 
   const d = doc || {};
   const senderName = fromName || (d.company && d.company.name) || 'Invoices';
-  const label = (d.kind === 'estimate' ? 'Estimate' : 'Invoice') + ' ' + (d.number || '');
+  const label = noAttachment
+    ? (subject || 'Update')
+    : ((d.kind === 'estimate' ? 'Estimate' : 'Invoice') + ' ' + (d.number || ''));
   const attachName = filename || (label.replace(/\s+/g, '-') + '.pdf');
   try {
     await transporter.sendMail({
@@ -149,7 +159,7 @@ exports.handler = async (event) => {
       subject: subject || label,
       text: message || ('Please find ' + label + ' attached.'),
       html: html || (message ? ('<p>' + String(message).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/\n/g, '<br>') + '</p>') : ('<p>Please find <strong>' + label + '</strong> attached.</p>')),
-      attachments: [{ filename: attachName, content: pdfBuf, contentType: 'application/pdf' }],
+      attachments: pdfBuf ? [{ filename: attachName, content: pdfBuf, contentType: 'application/pdf' }] : [],
     });
   } catch (e) {
     return json(502, { error: describeSmtpError(e) });
