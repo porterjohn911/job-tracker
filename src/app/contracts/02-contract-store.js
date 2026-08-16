@@ -86,6 +86,39 @@ function ctNormChecklist(raw) {
     .slice(0, 60);
 }
 
+// What the contract was priced on. Kept as the assumptions rather than a
+// single number, because "we lost money" is only actionable with "because we
+// assumed 2.5 hours and it takes 3.4".
+//
+// Absent is a legitimate state — a contract priced by instinct still works,
+// it just cannot be checked. Zeroes are not treated as "unpriced": someone
+// may genuinely have no materials, so the estimate counts as present once any
+// field is set.
+function ctNormPricing(raw) {
+  if (!raw || typeof raw !== 'object') return null;
+  const num = (v, max) => {
+    const n = Number(v);
+    if (!Number.isFinite(n) || n < 0) return 0;
+    return Math.round(Math.min(n, max) * 100) / 100;
+  };
+  const out = {
+    hoursPerVisit: num(raw.hoursPerVisit, 24),
+    crewRate: num(raw.crewRate, 1000),
+    driveMinutes: num(raw.driveMinutes, 600),
+    materialsPerVisit: num(raw.materialsPerVisit, 100000),
+    // A target of 0 is meaningless as a goal, so an unset or nonsense value
+    // falls back to something conventional rather than suggesting cost price.
+    // Rounded BEFORE the bounds check, not after: 94.99 rounds to 95.0, which
+    // the Firebase rule rejects, and a rejected write is how contracts vanish.
+    targetMargin: (() => {
+      const n = Math.round(Number(raw.targetMargin) * 10) / 10;
+      return Number.isFinite(n) && n > 0 && n < 95 ? n : 40;
+    })(),
+  };
+  const priced = out.hoursPerVisit || out.crewRate || out.driveMinutes || out.materialsPerVisit;
+  return priced ? out : null;
+}
+
 function ctNormAddons(raw) {
   const out = {};
   const list = Array.isArray(raw) ? raw : Object.values(raw || {});
@@ -137,6 +170,9 @@ function ctNormalizeContract(raw, id) {
     visits: ctNormSchedule(src.visits),
     // What a crew does on each visit. Copied onto generated jobs as tasks.
     checklist: ctNormChecklist(src.checklist),
+    // The assumptions this contract was priced on, so actuals can be checked
+    // against them. Null means it was priced by instinct.
+    pricing: ctNormPricing(src.pricing),
     billing: billingRaw && ctNormSchedule(billingRaw)
       ? Object.assign(ctNormSchedule(billingRaw), {
           amount: ctMoney(billingRaw.amount),
@@ -169,6 +205,13 @@ function ctContractIssues(raw) {
   // A visit with no checklist arrives as a name and a date. Whoever opens it on
   // a dock has nothing telling them what the job is.
   if (c.visits && !c.checklist.length) issues.push('No checklist — generated visits will not say what work to do.');
+  // Without an estimate there is nothing to compare actual hours against, and
+  // a fixed price is locked in for a year before anyone finds out.
+  //
+  // Only worth saying where recurring WORK is being billed at a fixed price. A
+  // retainer has no visits whose hours could run away, so nagging it for an
+  // hours estimate would be noise attached to the word "wrong".
+  if (c.billing && c.visits && !c.pricing) issues.push('No pricing estimate — there is nothing to check the real hours against.');
   const rawStatus = ctStr(raw && raw.status).toLowerCase();
   if (rawStatus && CT_STATUSES.indexOf(rawStatus) < 0) issues.push('Unrecognized status "' + rawStatus + '" — held as paused.');
   const s = ctNormDate(raw && raw.startDate), e = ctNormDate(raw && raw.endDate);
@@ -393,7 +436,7 @@ function ctPlanAll(opts) {
 
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
-    ctNewId, ctNewAddonId, ctNewCheckId, ctNormChecklist, ctNormalizeContract, ctContractIssues, ctNewContract,
+    ctNewId, ctNewAddonId, ctNewCheckId, ctNormChecklist, ctNormPricing, ctNormalizeContract, ctContractIssues, ctNewContract,
     ctLoadContractsLocal, ctSaveContractsLocal, ctWireContractsData,
     ctSaveContract, ctDeleteContract, ctSetContractStatus,
     ctAddAddon, ctStampAddon, ctUnstampAddon,

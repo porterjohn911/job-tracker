@@ -114,7 +114,8 @@ test.describe('validation', () => {
   // the one record here that turns into money, so nothing unrecognized should
   // be able to ride along inside one.
   test('unknown fields are rejected at every level', async () => {
-    const paths = [CONTRACT, CONTRACT.visits, CONTRACT.billing, CONTRACT.billing.items.$itemId, CONTRACT.addons.$addonId];
+    const paths = [CONTRACT, CONTRACT.visits, CONTRACT.billing, CONTRACT.billing.items.$itemId,
+      CONTRACT.addons.$addonId, CONTRACT.pricing];
     paths.forEach(p => expect(p.$other['.validate']).toBe(false));
   });
 
@@ -123,8 +124,11 @@ test.describe('validation', () => {
   // mismatch introduced later on either side.
   test('every field the client writes is permitted', async () => {
     const written = ['id', 'name', 'customerId', 'status', 'startDate', 'endDate', 'visitsThrough',
-      'visits', 'checklist', 'billing', 'addons', 'notes', 'created', 'updatedAt', 'updatedBy'];
+      'visits', 'checklist', 'pricing', 'billing', 'addons', 'notes', 'created', 'updatedAt', 'updatedBy'];
     written.forEach(f => expect(CONTRACT[f], `missing rule for "${f}"`).toBeTruthy());
+
+    ['hoursPerVisit', 'crewRate', 'driveMinutes', 'materialsPerVisit', 'targetMargin']
+      .forEach(f => expect(CONTRACT.pricing[f], `missing pricing rule for "${f}"`).toBeTruthy());
 
     const addon = ['id', 'desc', 'amount', 'date', 'billedInvoiceId', 'created'];
     addon.forEach(f => expect(CONTRACT.addons.$addonId[f], `missing addon rule for "${f}"`).toBeTruthy());

@@ -105,7 +105,7 @@ function ctIssueBanner(c) {
 function openContractForm(seed) {
   const c = ctNormalizeContract(seed) || ctNewContract();
   const isEdit = !!(seed && seed.id && ctGetContract(seed.id));
-  const v = c.visits || {}, b = c.billing || {};
+  const v = c.visits || {}, b = c.billing || {}, pr = c.pricing || {};
 
   $('modal-root').innerHTML = `<div class="modal-bd" id="ct-bd" role="dialog" aria-modal="true" aria-label="Contract"><div class="modal"><div class="modal-handle"></div>
     <div class="modal-head"><div class="modal-title">${isEdit ? 'Edit Contract' : 'New Contract'}</div><button class="modal-close" id="ct-close" aria-label="Close"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button></div>
@@ -143,6 +143,18 @@ function openContractForm(seed) {
       </div>
       <div class="form-group"><label class="form-label">Amount per bill</label><input class="form-input" type="number" min="0" step="0.01" id="ct-bill-amount" value="${esc(String(b.amount || ''))}" placeholder="0.00"></div>
 
+      <div class="section-hd" style="margin-top:6px">Estimate <span>what the price assumes</span></div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Hours on site</label><input class="form-input" type="number" min="0" step="0.25" id="ct-price-hours" value="${esc(String(pr.hoursPerVisit || ''))}" placeholder="2.5"></div>
+        <div class="form-group"><label class="form-label">Crew rate /hr</label><input class="form-input" type="number" min="0" step="1" id="ct-price-rate" value="${esc(String(pr.crewRate || ''))}" placeholder="65"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Drive mins</label><input class="form-input" type="number" min="0" step="5" id="ct-price-drive" value="${esc(String(pr.driveMinutes || ''))}" placeholder="30"></div>
+        <div class="form-group"><label class="form-label">Materials /visit</label><input class="form-input" type="number" min="0" step="1" id="ct-price-materials" value="${esc(String(pr.materialsPerVisit || ''))}" placeholder="0"></div>
+      </div>
+      <div class="form-group"><label class="form-label">Target margin %</label><input class="form-input" type="number" min="1" max="94" step="1" id="ct-price-margin" value="${esc(String(pr.targetMargin || 40))}"></div>
+      <div class="tt-hint" id="ct-price-hint" style="margin-top:-4px">${esc(ctPricingHint(c))}</div>
+
       ${isEdit ? `<div class="section-hd" style="margin-top:6px">Add-ons <span>billed on top, whenever</span></div>
       <div style="margin-bottom:10px">${ctAddonRows(c)}</div>
       <div class="form-row">
@@ -171,6 +183,19 @@ function openContractForm(seed) {
   };
   ['ct-visits-through', 'ct-visit-freq', 'ct-visit-interval', 'ct-start'].forEach(id => {
     $(id)?.addEventListener('change', refreshCount);
+  });
+
+  // The estimate says what the price ought to be, so it recomputes on input
+  // rather than on change — someone typing a crew rate is deciding a number,
+  // and watching the suggested price move as they type is the whole point.
+  const refreshPrice = () => {
+    const el = $('ct-price-hint');
+    if (el) el.textContent = ctPricingHint(ctNormalizeContract(ctReadContractForm(c)) || c);
+  };
+  ['ct-price-hours', 'ct-price-rate', 'ct-price-drive', 'ct-price-materials', 'ct-price-margin',
+    'ct-bill-freq', 'ct-bill-interval', 'ct-bill-amount', 'ct-visit-freq', 'ct-visit-interval'].forEach(id => {
+    $(id)?.addEventListener('input', refreshPrice);
+    $(id)?.addEventListener('change', refreshPrice);
   });
 
   // Checklist edits happen against the in-memory record and redraw only their
@@ -298,6 +323,17 @@ function ctReadContractForm(base) {
     endDate: val('ct-end'),
     visitsThrough: val('ct-visits-through'),
     visits: sched('ct-visit-freq', 'ct-visit-interval'),
+    // Handed over raw; ctNormPricing() clamps them and decides whether anything
+    // was entered at all. An untouched block normalizes back to null, so a
+    // contract nobody priced does not acquire an estimate of all zeroes just by
+    // being opened and saved.
+    pricing: {
+      hoursPerVisit: Number(val('ct-price-hours')) || 0,
+      crewRate: Number(val('ct-price-rate')) || 0,
+      driveMinutes: Number(val('ct-price-drive')) || 0,
+      materialsPerVisit: Number(val('ct-price-materials')) || 0,
+      targetMargin: Number(val('ct-price-margin')) || 0,
+    },
     billing: billing ? Object.assign(billing, { amount: Number(val('ct-bill-amount')) || 0 }) : null,
     notes: val('ct-notes'),
   });

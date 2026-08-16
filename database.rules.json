@@ -135,6 +135,14 @@
             },
             "$other": { ".validate": false }
           },
+          "pricing": {
+            "hoursPerVisit": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 24" },
+            "crewRate": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 1000" },
+            "driveMinutes": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 600" },
+            "materialsPerVisit": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 100000" },
+            "targetMargin": { ".validate": "newData.isNumber() && newData.val() > 0 && newData.val() < 95" },
+            "$other": { ".validate": false }
+          },
           "checklist": {
             "$index": {
               ".validate": "newData.hasChildren(['id', 'text'])",
