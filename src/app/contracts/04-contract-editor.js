@@ -455,6 +455,7 @@ function attachContractHandlers() {
 
   if (typeof ctAttachBillRunHandlers === 'function') ctAttachBillRunHandlers();
   if (typeof ctAttachProposalHandlers === 'function') ctAttachProposalHandlers();
+  if (typeof ctAttachHomeHandlers === 'function') ctAttachHomeHandlers();
 
   // Reporting is reachable from the account page and the day route, which are
   // the two places someone looks at a finished visit.

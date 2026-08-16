@@ -25,6 +25,29 @@ function cmdItems(){
   out.push({type:'action',name:'Connect Team (Firebase)',sub:'Live sync setup',ico:'link',run:showSetupModal});
   out.push({type:'action',name:'Keyboard Shortcuts',sub:'See all hotkeys',ico:'kbd',run:showShortcutsModal});
   out.push({type:'action',name:'Undo last action',sub:'Reverse the most recent change',ico:'undo',run:undoLast});
+  // Contracts. Gated the same way the nav tab is: a project company has no
+  // contracts view, so offering to navigate there would be a dead end. Without
+  // this block the fastest way around the app is blind to the entire
+  // maintenance side — every screen behind the Contracts tab was unreachable
+  // from search.
+  if(typeof ctEnabled==='function'&&ctEnabled()){
+    const goCt=extra=>()=>{
+      S.view='contracts';S.detail=null;
+      S.ctDetail=null;S.ctRoute=null;S.ctRevenue=false;S.ctBills=false;
+      if(extra)extra();
+      render();
+    };
+    out.push({type:'view',name:'Go to Contracts',sub:'View',ico:'list',run:goCt()});
+    out.push({type:'view',name:"Today's Route",sub:'Where the crew is going today',ico:'map',run:goCt(()=>{S.ctRoute=ctDateKey(new Date())})});
+    out.push({type:'view',name:'Bill Run',sub:'Review and send unsent invoices',ico:'invoice',run:goCt(()=>{S.ctBills=true})});
+    out.push({type:'view',name:'Recurring Revenue',sub:'MRR, renewals and where it comes from',ico:'chart',run:goCt(()=>{S.ctRevenue=true})});
+    out.push({type:'action',name:'New Contract',sub:'Recurring visits, billing, or both',ico:'plus',run:goCt(()=>{setTimeout(()=>openContractForm(ctNewContract()),0)})});
+    // Every contract by name, so an account is reachable the same way a job is.
+    ctContractList().forEach(c=>{
+      const sub=[ctCustomerName(c.customerId),ctFreqLabel(c.visits)&&ctFreqLabel(c.visits).toLowerCase()+' visits',ctStatusLabel(c.status)].filter(Boolean).join(' · ');
+      out.push({type:'job',name:c.name||'Untitled contract',sub,ico:'list',run:goCt(()=>{S.ctDetail=c.id})});
+    });
+  }
   // Jobs
   jobs().forEach(j=>{
     const sub=[j.customerName,j.address,spLabel(j.status)].filter(Boolean).join(' · ');
