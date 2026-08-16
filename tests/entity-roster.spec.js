@@ -415,3 +415,86 @@ test.describe('the editor', () => {
     await expect(page.locator('#btn-me-add')).toBeVisible();
   });
 });
+
+test.describe('the tab gate fails closed', () => {
+  // Shipped visible and hidden later, every way the gating can fail to run —
+  // a slow first paint, a stale cached bundle, an exception thrown earlier in
+  // attachShellHandlers — leaves a company looking at a tab that is not theirs.
+  // A maintenance company seeing Entities is exactly that failure.
+  test('both type-gated tabs are hidden in the markup before any JS runs', async ({ page }) => {
+    const html = require('fs').readFileSync('index.html', 'utf8');
+    ['entities', 'contracts'].forEach(v => {
+      const m = html.match(new RegExp('<button class="nav-btn" data-view="' + v + '"[^>]*>'));
+      expect(m, v + ' button not found').toBeTruthy();
+      expect(m[0], v + ' must ship hidden').toContain('display:none');
+    });
+  });
+
+  test('a maintenance company never shows Entities, even mid-load', async ({ page }) => {
+    await stubExternals(page);
+    await page.addInitScript(() => {
+      localStorage.setItem('jt_company', 'co');
+      localStorage.setItem('jt_companies', JSON.stringify({
+        co: { id: 'co', ns: 'co', label: 'Maint', active: true, type: 'maintenance' },
+      }));
+    });
+    // Sampled from the very first paint, before boot has necessarily finished.
+    await page.goto('/', { waitUntil: 'commit' });
+    const everShown = await page.evaluate(async () => {
+      let seen = false;
+      for (let i = 0; i < 40; i++) {
+        const b = document.querySelector('.nav-btn[data-view="entities"]');
+        if (b && b.getBoundingClientRect().width > 0) seen = true;
+        await new Promise(r => setTimeout(r, 25));
+      }
+      return seen;
+    });
+    expect(everShown).toBe(false);
+  });
+
+  // The gating used to sit below $('setup-link').onclick — a TypeError there
+  // skipped it entirely and left the static markup showing.
+  test('an exception later in attachShellHandlers cannot reveal the tab', async ({ page }) => {
+    await boot(page, 'maintenance');
+    const r = await page.evaluate(() => {
+      // Remove an element the wiring below the gate dereferences unguarded.
+      document.getElementById('setup-link')?.remove();
+      let threw = false;
+      try { attachShellHandlers(); } catch (e) { threw = true; }
+      const b = document.querySelector('.nav-btn[data-view="entities"]');
+      return { threw, display: b.style.display, contracts: document.querySelector('.nav-btn[data-view="contracts"]').style.display };
+    });
+    expect(r.threw).toBe(true);
+    // Gated first, so the throw below it changes nothing.
+    expect(r.display).toBe('none');
+    expect(r.contracts).toBe('');
+  });
+
+  test('a management company still gets Entities revealed', async ({ page }) => {
+    await boot(page, 'management');
+    const d = await page.evaluate(() => document.querySelector('.nav-btn[data-view="entities"]').style.display);
+    expect(d).toBe('');
+  });
+
+  test('a project company gets neither', async ({ page }) => {
+    await boot(page, 'project');
+    const r = await page.evaluate(() => ({
+      entities: document.querySelector('.nav-btn[data-view="entities"]').style.display,
+      contracts: document.querySelector('.nav-btn[data-view="contracts"]').style.display,
+    }));
+    expect(r.entities).toBe('none');
+    expect(r.contracts).toBe('none');
+  });
+
+  // Switching a company's type in the editor updates ACTIVE_CO in place, so the
+  // tab has to be able to come back without a reload.
+  test('a tab that becomes relevant mid-session comes back', async ({ page }) => {
+    await boot(page, 'maintenance');
+    const after = await page.evaluate(() => {
+      ACTIVE_CO.type = 'management';
+      applyTypeGatedTabs();
+      return document.querySelector('.nav-btn[data-view="entities"]').style.display;
+    });
+    expect(after).toBe('');
+  });
+});
