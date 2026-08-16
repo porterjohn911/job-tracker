@@ -374,7 +374,7 @@ function attachContractHandlers() {
     if (!confirm('Remove everything named "Sample —"?\n\nContracts you created yourself are not touched.')) return;
     try {
       const r = await ctRemoveSampleData();
-      S.ctDetail = null; S.ctRoute = null; S.ctRevenue = false;
+      S.ctDetail = null; S.ctRoute = null; S.ctRevenue = false; S.ctBills = false;
       if (typeof render === 'function') render();
       toast('Removed ' + r.contracts + ' sample contracts and ' + r.jobs + ' jobs');
     } catch (e) {
@@ -399,6 +399,7 @@ function attachContractHandlers() {
       // Cleared so the account page's "← All contracts" goes where it says it
       // does, rather than back to whichever sub-view the card was clicked from.
       S.ctRevenue = false;
+      S.ctBills = false;
       if (typeof render === 'function') render();
     };
   });
@@ -434,6 +435,25 @@ function attachContractHandlers() {
     S.ctRevenue = false;
     if (typeof render === 'function') render();
   });
+
+  // The bill run, same routing again. Opening it clears any result left over
+  // from a previous run, so yesterday's outcome never reads as today's.
+  $('btn-ct-bills')?.addEventListener('click', () => {
+    S.ctBills = true;
+    S.ctBillResult = null;
+    S.ctDetail = null;
+    S.ctRoute = null;
+    S.ctRevenue = false;
+    if (typeof render === 'function') render();
+  });
+
+  document.querySelector('[data-ct-bill-back]')?.addEventListener('click', () => {
+    S.ctBills = false;
+    S.ctBillResult = null;
+    if (typeof render === 'function') render();
+  });
+
+  if (typeof ctAttachBillRunHandlers === 'function') ctAttachBillRunHandlers();
 
   // Reporting is reachable from the account page and the day route, which are
   // the two places someone looks at a finished visit.
