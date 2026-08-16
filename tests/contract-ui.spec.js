@@ -129,11 +129,12 @@ test.describe('the view', () => {
       subs: [...document.querySelectorAll('#content .kpi-sub')].map(el => el.textContent.trim()),
     }));
     // One active of two. Four weekly visits still ahead in the next 30 days —
-    // the paused contract contributes none. Only the unbilled add-on counts
-    // toward what is owed; the $1,000 already billed must not.
-    expect(r.values).toEqual(['1', '4', '$450.00']);
+    // the paused contract contributes none. Neither needs renewing. Only the
+    // unbilled add-on counts toward what is owed; the $1,000 already billed
+    // must not.
+    expect(r.values).toEqual(['1', '4', '0', '$450.00']);
     expect(r.subs[0]).toBe('of 2 contracts');
-    expect(r.subs[2]).toBe('1 item');
+    expect(r.subs[3]).toBe('1 item');
   });
 
   // A contract that looks Active but generates nothing is the failure most

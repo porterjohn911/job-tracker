@@ -18,6 +18,7 @@
 
 function ctNewId() { return 'ct_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 8); }
 function ctNewAddonId() { return 'ad_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 8); }
+function ctNewCheckId() { return 'ck_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 8); }
 
 // ── Normalization ───────────────────────────────────────────────────────────
 
@@ -74,6 +75,17 @@ function ctNormAddon(raw, id) {
   };
 }
 
+// The scope of work, defined once on the contract and copied onto every visit
+// it generates. Order is meaningful — it is the order the crew works in — so
+// this stays an array rather than the keyed map used for add-ons.
+function ctNormChecklist(raw) {
+  const list = Array.isArray(raw) ? raw : Object.values(raw || {});
+  return list
+    .map(it => ({ id: ctStr(it && it.id, 64) || ctNewCheckId(), text: ctStr(it && it.text, 200) }))
+    .filter(it => it.text)
+    .slice(0, 60);
+}
+
 function ctNormAddons(raw) {
   const out = {};
   const list = Array.isArray(raw) ? raw : Object.values(raw || {});
@@ -123,6 +135,8 @@ function ctNormalizeContract(raw, id) {
     // visits get created at all.
     visitsThrough: ctNormDate(src.visitsThrough),
     visits: ctNormSchedule(src.visits),
+    // What a crew does on each visit. Copied onto generated jobs as tasks.
+    checklist: ctNormChecklist(src.checklist),
     billing: billingRaw && ctNormSchedule(billingRaw)
       ? Object.assign(ctNormSchedule(billingRaw), {
           amount: ctMoney(billingRaw.amount),
@@ -152,6 +166,9 @@ function ctContractIssues(raw) {
   // exists to prevent: the contract looks scheduled but books nobody.
   if (c.visits && !c.visitsThrough) issues.push('Visits are scheduled but none are paid for yet — set how far ahead the customer has paid.');
   if (c.visits && c.visitsThrough && c.startDate && c.visitsThrough < c.startDate) issues.push('Paid through a date before the contract starts, so no visits fall inside it.');
+  // A visit with no checklist arrives as a name and a date. Whoever opens it on
+  // a dock has nothing telling them what the job is.
+  if (c.visits && !c.checklist.length) issues.push('No checklist — generated visits will not say what work to do.');
   const rawStatus = ctStr(raw && raw.status).toLowerCase();
   if (rawStatus && CT_STATUSES.indexOf(rawStatus) < 0) issues.push('Unrecognized status "' + rawStatus + '" — held as paused.');
   const s = ctNormDate(raw && raw.startDate), e = ctNormDate(raw && raw.endDate);
@@ -376,7 +393,7 @@ function ctPlanAll(opts) {
 
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
-    ctNewId, ctNewAddonId, ctNormalizeContract, ctContractIssues, ctNewContract,
+    ctNewId, ctNewAddonId, ctNewCheckId, ctNormChecklist, ctNormalizeContract, ctContractIssues, ctNewContract,
     ctLoadContractsLocal, ctSaveContractsLocal, ctWireContractsData,
     ctSaveContract, ctDeleteContract, ctSetContractStatus,
     ctAddAddon, ctStampAddon, ctUnstampAddon,

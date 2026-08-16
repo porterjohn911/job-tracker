@@ -155,6 +155,11 @@ function ctVisitRows(contract, nowTs) {
     const receipts = typeof receiptTotal === 'function' ? receiptTotal(j) : 0;
     if (receipts > 0) bits.push(money2(receipts) + ' materials');
     if ((j.photos || []).length) bits.push((j.photos || []).length + ' photo' + ((j.photos || []).length === 1 ? '' : 's'));
+    // Checklist progress is the plainest answer to "was this visit actually
+    // done?", which is what a fixed-fee customer is really asking at renewal.
+    const tasks = j.tasks || [];
+    const doneCount = tasks.filter(t => t && t.done).length;
+    if (tasks.length) bits.push(doneCount + '/' + tasks.length + ' done');
     return `<div data-open="${esc(j.id)}" style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);cursor:pointer">
       <div style="flex:1;min-width:0">
         <div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(j.name || 'Visit')}</div>

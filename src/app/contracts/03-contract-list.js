@@ -115,6 +115,45 @@ function ctGenerateButton(nowTs) {
   </button>`;
 }
 
+// ── Renewals ────────────────────────────────────────────────────────────────
+
+// Contracts that have stopped scheduling, or are about to.
+//
+// This is the counterpart to visits stopping when prepayment runs out. That is
+// the safe behaviour, but it fails quietly: the crews simply stop being booked.
+// The account page says so for one contract; this says it for all of them, so a
+// lapse cannot hide behind a list of cards that all read "Active".
+//
+// Urgent first, then soonest, because the order is a work queue.
+function ctNeedsRenewal(nowTs) {
+  if (typeof ctRenewalState !== 'function') return [];
+  const rank = { urgent: 0, soon: 1 };
+  return ctContractList()
+    .filter(c => c.status === 'active')
+    .map(c => ({ contract: c, state: ctRenewalState(c, nowTs) }))
+    .filter(r => r.state.level === 'urgent' || r.state.level === 'soon')
+    .sort((a, b) =>
+      (rank[a.state.level] - rank[b.state.level]) ||
+      ((a.state.paidDays == null ? 9e9 : a.state.paidDays) - (b.state.paidDays == null ? 9e9 : b.state.paidDays)) ||
+      (a.contract.name || '').localeCompare(b.contract.name || ''));
+}
+
+function ctRenewalSection(nowTs) {
+  const rows = ctNeedsRenewal(nowTs);
+  if (!rows.length) return '';
+  const urgent = rows.filter(r => r.state.level === 'urgent').length;
+  return `<div class="section" style="border:1px solid ${urgent ? 'var(--orange)' : 'var(--border)'};border-radius:10px;padding:12px 14px">
+    <div class="section-hd" style="margin-bottom:6px">Needs Renewing <span>${urgent ? urgent + ' already stopped scheduling' : 'coming up'}</span></div>
+    ${rows.map(r => `<div data-ct="${esc(r.contract.id)}" style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);cursor:pointer">
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(r.contract.name || 'Untitled contract')}</div>
+        <div style="font-size:11.5px;color:${r.state.level === 'urgent' ? 'var(--orange)' : 'var(--text-3)'}">${esc(r.state.message)}</div>
+      </div>
+      <span style="font-size:11px;font-weight:700;flex-shrink:0;color:${r.state.level === 'urgent' ? 'var(--orange)' : 'var(--text-3)'}">${r.state.level === 'urgent' ? 'STOPPED' : (r.state.paidDays != null ? r.state.paidDays + 'd' : '')}</span>
+    </div>`).join('')}
+  </div>`;
+}
+
 // ── Card ────────────────────────────────────────────────────────────────────
 
 function ctContractCard(c, nowTs) {
@@ -184,12 +223,14 @@ function renderContracts(nowTs) {
   // app's router, exactly as renderCustomers() switches on S.custDetail, so no
   // shared view or routing code has to know contracts have a detail view.
   if (S.ctDetail && typeof renderContractDetail === 'function') return renderContractDetail(S.ctDetail, now);
+  if (S.ctRoute && typeof renderDayRoute === 'function') return renderDayRoute(S.ctRoute, now);
   const all = ctContractList();
   const q = ((typeof S !== 'undefined' && S.ctSearch) || '').trim().toLowerCase();
   const list = all.filter(c => !q ||
     (c.name + ' ' + ctCustomerName(c.customerId) + ' ' + (c.notes || '')).toLowerCase().includes(q));
 
   const active = all.filter(c => c.status === 'active');
+  const renewals = ctNeedsRenewal(now);
   const dueSoon = active.reduce((n, c) => n + ctUpcoming(c, 'visit', now, 30).length, 0);
   const pendingAddons = all.reduce((acc, c) => {
     const a = ctPendingAddons(c);
@@ -203,6 +244,7 @@ function renderContracts(nowTs) {
         <div style="font-size:20px;font-weight:700;margin-top:2px">Contracts</div>
       </div>
       <div style="display:flex;gap:8px;align-items:center">
+        <button class="btn-cancel" id="btn-ct-route" aria-label="Today's route">Today's Route</button>
         ${ctGenerateButton(now)}
         <button class="btn-add" id="btn-ct-add" aria-label="Add contract">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
@@ -213,8 +255,10 @@ function renderContracts(nowTs) {
     <div class="kpi-grid">
       <div class="kpi-card"><div class="kpi-label">Active</div><div class="kpi-value">${active.length}</div><div class="kpi-sub">of ${all.length} contract${all.length === 1 ? '' : 's'}</div></div>
       <div class="kpi-card"><div class="kpi-label">Visits Due</div><div class="kpi-value">${dueSoon}</div><div class="kpi-sub">next 30 days</div></div>
+      <div class="kpi-card"><div class="kpi-label">Needs Renewing</div><div class="kpi-value" style="color:${renewals.length ? 'var(--orange)' : 'var(--green-700)'}">${renewals.length}</div><div class="kpi-sub">${renewals.filter(r => r.state.level === 'urgent').length} stopped scheduling</div></div>
       <div class="kpi-card accent"><div class="kpi-label">Unbilled Add-ons</div><div class="kpi-value" style="color:${pendingAddons.total > 0 ? 'var(--orange)' : 'var(--green-700)'}">${money2(pendingAddons.total)}</div><div class="kpi-sub">${pendingAddons.count} item${pendingAddons.count === 1 ? '' : 's'}</div></div>
     </div>
+    ${ctRenewalSection(now)}
     ${all.length ? `<div style="margin:6px 0 12px">
       <input class="form-input" id="ct-search" value="${esc((typeof S !== 'undefined' && S.ctSearch) || '')}" placeholder="Search contracts…" style="width:100%">
     </div>` : ''}
@@ -228,7 +272,7 @@ function renderContracts(nowTs) {
 
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
-    ctFreqLabel, ctNextDate, ctUpcoming, ctStatusStyle, ctStatusLabel,
+    ctFreqLabel, ctNextDate, ctUpcoming, ctNeedsRenewal, ctRenewalSection, ctStatusStyle, ctStatusLabel,
     ctShortDate, ctCustomerName, ctContractCard, renderContracts,
   };
 }
