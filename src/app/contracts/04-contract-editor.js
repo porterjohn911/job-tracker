@@ -317,6 +317,36 @@ function attachContractHandlers() {
 
   $('btn-ct-add')?.addEventListener('click', () => openContractForm(ctNewContract()));
 
+  // Offered only on an empty Contracts tab, so it cannot be pressed on a real
+  // book of business, and confirmed because it writes jobs and invoices.
+  $('btn-ct-sample')?.addEventListener('click', async () => {
+    if (!confirm('Load five example contracts, with visits, hours and draft invoices?\n\nEverything it creates is named "Sample —" and can be removed in one press.')) return;
+    const btn = $('btn-ct-sample');
+    btn.disabled = true;
+    btn.textContent = 'Loading…';
+    try {
+      const r = await ctLoadSampleData();
+      if (typeof render === 'function') render();
+      toast('Loaded ' + r.contracts + ' sample contracts');
+    } catch (e) {
+      if (typeof render === 'function') render();
+      toast('Could not finish loading the sample data', '');
+    }
+  });
+
+  $('btn-ct-sample-rm')?.addEventListener('click', async () => {
+    if (!confirm('Remove everything named "Sample —"?\n\nContracts you created yourself are not touched.')) return;
+    try {
+      const r = await ctRemoveSampleData();
+      S.ctDetail = null; S.ctRoute = null;
+      if (typeof render === 'function') render();
+      toast('Removed ' + r.contracts + ' sample contracts and ' + r.jobs + ' jobs');
+    } catch (e) {
+      if (typeof render === 'function') render();
+      toast('Could not finish removing the sample data', '');
+    }
+  });
+
   $('btn-ct-generate')?.addEventListener('click', () => {
     if (typeof openGeneratePreview === 'function') openGeneratePreview();
   });
