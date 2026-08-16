@@ -374,7 +374,7 @@ function attachContractHandlers() {
     if (!confirm('Remove everything named "Sample —"?\n\nContracts you created yourself are not touched.')) return;
     try {
       const r = await ctRemoveSampleData();
-      S.ctDetail = null; S.ctRoute = null;
+      S.ctDetail = null; S.ctRoute = null; S.ctRevenue = false;
       if (typeof render === 'function') render();
       toast('Removed ' + r.contracts + ' sample contracts and ' + r.jobs + ' jobs');
     } catch (e) {
@@ -396,6 +396,9 @@ function attachContractHandlers() {
       if (!ctGetContract(el.dataset.ct)) return;
       S.ctDetail = el.dataset.ct;
       S.ctRoute = null;
+      // Cleared so the account page's "← All contracts" goes where it says it
+      // does, rather than back to whichever sub-view the card was clicked from.
+      S.ctRevenue = false;
       if (typeof render === 'function') render();
     };
   });
@@ -415,6 +418,20 @@ function attachContractHandlers() {
 
   document.querySelector('[data-ct-route-back]')?.addEventListener('click', () => {
     S.ctRoute = null;
+    if (typeof render === 'function') render();
+  });
+
+  // The revenue book, routed the same way — a sub-view of this tab rather than
+  // a nav item, so nothing outside src/app/contracts/ has to know it exists.
+  $('btn-ct-revenue')?.addEventListener('click', () => {
+    S.ctRevenue = true;
+    S.ctDetail = null;
+    S.ctRoute = null;
+    if (typeof render === 'function') render();
+  });
+
+  document.querySelector('[data-ct-rev-back]')?.addEventListener('click', () => {
+    S.ctRevenue = false;
     if (typeof render === 'function') render();
   });
 

@@ -1332,3 +1332,22 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
   body{max-width:none;background:#fff}
   .content{padding:0}
 }
+
+/* ── CONTRACT REVENUE CHART ──
+   Additive only: every class here is used solely by src/app/contracts/, which
+   project-work companies never load. One series carrying magnitude, so a single
+   hue and no legend. The green ramp is not redefined in dark mode, so the fills
+   step to --green-400 there the same way .inv-total-row.grand does. */
+.ct-rev-bar{fill:var(--green-700);transition:fill .12s}
+.ct-rev-bar:hover{fill:var(--green-600)}
+.ct-rev-bar-zero{fill:var(--border-md)}
+.ct-rev-axis{fill:var(--text-3);font-size:9px;font-family:var(--font)}
+.ct-rev-axis-line{stroke:var(--border);stroke-width:1}
+.ct-rev-track{height:5px;border-radius:3px;background:var(--surface-3);overflow:hidden}
+.ct-rev-fill{height:100%;border-radius:3px;background:var(--green-700);min-width:2px}
+.ct-rev-fill.wide{background:var(--orange)}
+@media(prefers-color-scheme:dark){
+  .ct-rev-bar{fill:var(--green-400)}
+  .ct-rev-bar:hover{fill:var(--green-600)}
+  .ct-rev-fill{background:var(--green-400)}
+}
