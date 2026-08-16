@@ -1380,3 +1380,25 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .ct-home-money{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);padding:12px 14px;cursor:pointer;font-family:var(--font);text-align:left;box-shadow:var(--shadow-sm)}
 .ct-home-money-value{font-size:18px;font-weight:800;margin-top:2px}
 .ct-home-money-value.owed{color:var(--orange)}
+
+/* ── MAINTENANCE NAV & SECTION CHIPS ──
+   Additive. Used only by src/app/contracts/, which project companies never
+   load, so their thirteen-tab bar and account pages are untouched. */
+.nav.ct-folded .nav-btn{flex:1 1 auto;min-width:0}
+.ct-nav-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(96px,1fr));gap:8px}
+.ct-nav-item{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;
+  padding:14px 8px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--surface);
+  cursor:pointer;font-family:var(--font);font-size:11px;font-weight:700;letter-spacing:0.04em;
+  text-transform:uppercase;color:var(--text-2)}
+.ct-nav-item.active{border-color:var(--green-700);color:var(--green-700)}
+.ct-nav-ico svg{width:22px;height:22px;stroke-width:1.8;display:block}
+.ct-nav-hint{font-size:11.5px;color:var(--text-3);line-height:1.5;margin-top:12px}
+/* flex:0 0 auto matters: .content is a flex column, so without it the chip bar
+   shrinks against its taller siblings and collapses into empty pills. */
+.ct-chips{display:flex;flex:0 0 auto;gap:6px;overflow-x:auto;scrollbar-width:none;
+  position:sticky;top:0;z-index:5;background:var(--surface-2);padding:6px 0 8px;margin:-6px 0 10px}
+.ct-chips::-webkit-scrollbar{display:none}
+.ct-chip{flex:0 0 auto;padding:6px 12px;border-radius:999px;border:1px solid var(--border);
+  background:var(--surface);font-family:var(--font);font-size:12px;font-weight:600;color:var(--text-2);
+  cursor:pointer;white-space:nowrap}
+.ct-chip:active{border-color:var(--green-700);color:var(--green-700)}

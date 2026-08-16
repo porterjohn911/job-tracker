@@ -201,6 +201,30 @@ function ctInvoiceRows(contract) {
   }).join('');
 }
 
+// The account page runs past three screens — renewal, proposal, pricing, the
+// visit history and the invoices. Reaching the invoices means three thumb
+// scrolls past everything else, every time.
+//
+// So the sections get a sticky jump bar. Chips are built from what is actually
+// on the page rather than a fixed list: a retainer has no visit schedule and a
+// contract nobody has quoted has no proposal, and a chip that scrolls to
+// nothing is worse than no chip.
+function ctDetailSections(contract) {
+  const out = [{ id: 'ct-sec-renewal', label: 'Renewal' }];
+  if (typeof ctProposalSection === 'function') out.push({ id: 'ct-sec-proposal', label: 'Proposal' });
+  if (typeof ctPricingSection === 'function') out.push({ id: 'ct-sec-pricing', label: 'Pricing' });
+  out.push({ id: 'ct-sec-visits', label: 'Visits' });
+  out.push({ id: 'ct-sec-invoices', label: 'Invoices' });
+  return out;
+}
+
+function ctDetailChips(contract) {
+  const secs = ctDetailSections(contract);
+  if (secs.length < 3) return '';
+  return `<div class="ct-chips">${secs.map(s =>
+    `<button class="ct-chip" data-ct-jump="${esc(s.id)}">${esc(s.label)}</button>`).join('')}</div>`;
+}
+
 function renderContractDetail(contractId, nowTs) {
   const c = ctGetContract(contractId);
   if (!c) return `<div class="tt-empty" style="padding:40px 16px"><p style="font-size:14px;color:var(--text-2)">That contract no longer exists.</p></div>`;
@@ -248,13 +272,15 @@ function renderContractDetail(contractId, nowTs) {
 
     ${ctRenewalBanner(renewal)}
 
+    ${ctDetailChips(c)}
+
     <div class="kpi-grid">
       ${ctStat('Margin', marginValue, marginSub, marginColor)}
       ${ctStat('Billed', money2(m.revenue), m.outstanding > 0.005 ? money2(m.outstanding) + ' outstanding' : m.invoiceCount + ' invoice' + (m.invoiceCount === 1 ? '' : 's'), m.outstanding > 0.005 ? 'var(--orange)' : '')}
       ${ctStat('Cost', money2(m.cost), costParts)}
     </div>
 
-    <div class="section">
+    <div class="section" id="ct-sec-renewal">
       <div class="section-hd">Renewal <span>${renewal.paid ? 'visits paid through ' + esc(ctDateKey(renewal.paid)) : 'nothing paid for'}</span></div>
       <div style="font-size:12.5px;color:var(--text-2);line-height:1.6">
         ${c.visits
@@ -269,16 +295,16 @@ function renderContractDetail(contractId, nowTs) {
       </div>
     </div>
 
-    ${typeof ctProposalSection === 'function' ? ctProposalSection(c, now) : ''}
+    <div id="ct-sec-proposal">${typeof ctProposalSection === 'function' ? ctProposalSection(c, now) : ''}</div>
 
-    ${typeof ctPricingSection === 'function' ? ctPricingSection(c) : ''}
+    <div id="ct-sec-pricing">${typeof ctPricingSection === 'function' ? ctPricingSection(c) : ''}</div>
 
-    <div class="section">
+    <div class="section" id="ct-sec-visits">
       <div class="section-hd">Visits <span>${m.visitCount} created</span></div>
       ${ctVisitRows(c, now)}
     </div>
 
-    <div class="section">
+    <div class="section" id="ct-sec-invoices">
       <div class="section-hd">Invoices <span>${m.invoiceCount} raised</span></div>
       ${ctInvoiceRows(c)}
     </div>
@@ -288,6 +314,7 @@ function renderContractDetail(contractId, nowTs) {
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
     ctContractJobs, ctContractInvoices, ctContractCosting, ctRenewalState,
+    ctDetailSections, ctDetailChips,
     ctVisitRows, ctInvoiceRows, renderContractDetail,
   };
 }
