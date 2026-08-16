@@ -22,6 +22,9 @@ function attachShellHandlers(){
   // updates ACTIVE_CO in place. Hiding only would leave the tab missing until a
   // reload right after someone switched the company to maintenance.
   const _ct=document.querySelector('.nav-btn[data-view="contracts"]');if(_ct)_ct.style.display=(typeof ctEnabled==='function'&&ctEnabled())?'':'none';
+  // Entities are management-only, set both ways for the same reason: a
+  // company's type can change mid-session from the company editor.
+  const _me=document.querySelector('.nav-btn[data-view="entities"]');if(_me)_me.style.display=(typeof meEnabled==='function'&&meEnabled())?'':'none';
   $('owner-refresh')?.addEventListener('click',refreshOwnerData);
   $('owner-manage-companies')?.addEventListener('click',showCompanyManagerModal);
   document.querySelectorAll('[data-view-company]').forEach(b=>b.onclick=()=>{
