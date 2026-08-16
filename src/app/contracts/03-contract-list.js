@@ -225,6 +225,7 @@ function renderContracts(nowTs) {
   if (S.ctDetail && typeof renderContractDetail === 'function') return renderContractDetail(S.ctDetail, now);
   if (S.ctRoute && typeof renderDayRoute === 'function') return renderDayRoute(S.ctRoute, now);
   if (S.ctRevenue && typeof renderRevenue === 'function') return renderRevenue(now);
+  if (S.ctBills && typeof renderBillRun === 'function') return renderBillRun(now);
   const all = ctContractList();
   const q = ((typeof S !== 'undefined' && S.ctSearch) || '').trim().toLowerCase();
   const list = all.filter(c => !q ||
@@ -245,6 +246,7 @@ function renderContracts(nowTs) {
         <div style="font-size:20px;font-weight:700;margin-top:2px">Contracts</div>
       </div>
       <div style="display:flex;gap:8px;align-items:center">
+        ${typeof ctBillRunButton === 'function' ? ctBillRunButton(now) : ''}
         <button class="btn-cancel" id="btn-ct-revenue" aria-label="Recurring revenue">Revenue</button>
         <button class="btn-cancel" id="btn-ct-route" aria-label="Today's route">Today's Route</button>
         ${ctGenerateButton(now)}
