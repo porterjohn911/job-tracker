@@ -223,6 +223,7 @@ function renderContracts(nowTs) {
   // app's router, exactly as renderCustomers() switches on S.custDetail, so no
   // shared view or routing code has to know contracts have a detail view.
   if (S.ctDetail && typeof renderContractDetail === 'function') return renderContractDetail(S.ctDetail, now);
+  if (S.ctRoute && typeof renderDayRoute === 'function') return renderDayRoute(S.ctRoute, now);
   const all = ctContractList();
   const q = ((typeof S !== 'undefined' && S.ctSearch) || '').trim().toLowerCase();
   const list = all.filter(c => !q ||
@@ -243,6 +244,7 @@ function renderContracts(nowTs) {
         <div style="font-size:20px;font-weight:700;margin-top:2px">Contracts</div>
       </div>
       <div style="display:flex;gap:8px;align-items:center">
+        <button class="btn-cancel" id="btn-ct-route" aria-label="Today's route">Today's Route</button>
         ${ctGenerateButton(now)}
         <button class="btn-add" id="btn-ct-add" aria-label="Add contract">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>

@@ -329,6 +329,7 @@ function attachContractHandlers() {
     el.onclick = () => {
       if (!ctGetContract(el.dataset.ct)) return;
       S.ctDetail = el.dataset.ct;
+      S.ctRoute = null;
       if (typeof render === 'function') render();
     };
   });
@@ -336,6 +337,26 @@ function attachContractHandlers() {
   document.querySelector('[data-ct-back]')?.addEventListener('click', () => {
     S.ctDetail = null;
     if (typeof render === 'function') render();
+  });
+
+  // The day route is a sub-view of this tab, routed on S.ctRoute the same way
+  // the account page routes on S.ctDetail.
+  $('btn-ct-route')?.addEventListener('click', () => {
+    S.ctRoute = ctDateKey(new Date());
+    S.ctDetail = null;
+    if (typeof render === 'function') render();
+  });
+
+  document.querySelector('[data-ct-route-back]')?.addEventListener('click', () => {
+    S.ctRoute = null;
+    if (typeof render === 'function') render();
+  });
+
+  document.querySelectorAll('[data-ct-route-day]').forEach(btn => {
+    btn.onclick = () => {
+      S.ctRoute = btn.dataset.ctRouteDay;
+      if (typeof render === 'function') render();
+    };
   });
 
   $('btn-ct-edit')?.addEventListener('click', () => {
