@@ -200,6 +200,9 @@ function canOpenView(v){
   // Guarded so the app still routes correctly if the contracts scripts are
   // absent — an unknown view then simply stays closed.
   if(v==='contracts')return typeof ctEnabled==='function'&&ctEnabled();
+  // Managed entities exist only for management companies. Same shape as the
+  // line above, and an unknown view stays closed if the scripts are absent.
+  if(v==='entities')return typeof meEnabled==='function'&&meEnabled();
   return true;
 }
 let SESSION=accessEnabled()?(()=>{try{return findMember(localStorage.getItem(SESSION_KEY))}catch(e){return null}})():null;

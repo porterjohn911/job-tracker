@@ -12,4 +12,5 @@ function attachHandlers(){
   // listener for a company that does not use them, or for a worker, would earn
   // a permission-denied from Firebase on every load.
   if(typeof ctEnabled==='function'&&ctEnabled()&&typeof attachContractHandlers==='function')attachContractHandlers();
+  if(typeof meEnabled==='function'&&meEnabled()&&typeof attachEntityHandlers==='function')attachEntityHandlers();
 }

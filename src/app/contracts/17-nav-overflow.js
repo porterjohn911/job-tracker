@@ -34,13 +34,23 @@
 // them, or by typing. It is one tap away in the sheet.
 const CT_NAV_PRIMARY = ['dashboard', 'contracts', 'schedule', 'jobs'];
 
+// A management company's day starts on its entities, not on a crew's route, so
+// Entities takes the place Jobs holds for maintenance. Kept as its own list
+// rather than a splice so each type's bar can be read at a glance.
+const ME_NAV_PRIMARY = ['dashboard', 'entities', 'contracts', 'schedule'];
+
+function ctNavPrimary() {
+  return (typeof meCompanyManages === 'function' && meCompanyManages())
+    ? ME_NAV_PRIMARY : CT_NAV_PRIMARY;
+}
+
 // Everything else, in the order it goes in the sheet. Read off the DOM rather
 // than hardcoded, so a tab added to index.html later appears here on its own
 // instead of vanishing.
 function ctNavOverflowViews() {
   return [...document.querySelectorAll('.nav-btn[data-view]')]
     .map(b => b.dataset.view)
-    .filter(v => CT_NAV_PRIMARY.indexOf(v) < 0);
+    .filter(v => ctNavPrimary().indexOf(v) < 0);
 }
 
 // The label already on the tab, so the sheet and the bar never disagree about
@@ -150,7 +160,7 @@ function ctApplyNavOverflow() {
 
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
-    CT_NAV_PRIMARY, ctNavOverflowViews, ctNavLabel, ctNavSheetViews,
+    CT_NAV_PRIMARY, ME_NAV_PRIMARY, ctNavPrimary, ctNavOverflowViews, ctNavLabel, ctNavSheetViews,
     ctShowNavSheet, ctApplyNavOverflow,
   };
 }
