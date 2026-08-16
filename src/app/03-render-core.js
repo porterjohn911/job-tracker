@@ -50,6 +50,13 @@ function spClass(s){return{lead:'sp-lead',active:'sp-active',complete:'sp-comple
 function spLabel(s){return{lead:'Lead',active:'Active',complete:'Complete',hold:'On Hold',lost:'Lost'}[s]||s}
 
 function renderDashboard(){
+  // Maintenance and management companies get a different Home. The questions a
+  // recurring book asks every morning — where is the crew going, what is about
+  // to lapse, what is waiting to be billed — are not the ones below, and the
+  // project numbers below ("$0 in pipeline", a count of generated visits) mean
+  // nothing on that side. Project companies never take this branch, so their
+  // dashboard is the same code it has always been.
+  if(typeof ctEnabled==='function'&&ctEnabled()&&typeof ctHome==='function')return ctHome();
   const all=jobs();
   const active=all.filter(j=>j.status==='active');
   const leads=all.filter(j=>j.status==='lead');
