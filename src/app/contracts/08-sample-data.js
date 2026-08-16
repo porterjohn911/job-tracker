@@ -82,6 +82,9 @@ function ctSampleScenario(nowTs) {
       startDate: ctSampleMonths(key, -5),
       visits: { freq: 'monthly' }, visitsThrough: ctSampleMonths(key, 6),
       billing: { freq: 'monthly', amount: 650 }, checklist: dockList,
+      // Quoted a shade under what it really takes, and still comfortably
+      // profitable — the case where hours running over is not a problem.
+      pricing: { hoursPerVisit: 2, crewRate: 55, driveMinutes: 20, materialsPerVisit: 50, targetMargin: 40 },
       notes: 'Sample data. Safe to delete.',
     },
     // Lapses in a fortnight, and runs thin on margin — weekly labour against
@@ -92,6 +95,9 @@ function ctSampleScenario(nowTs) {
       startDate: days(-70),
       visits: { freq: 'weekly' }, visitsThrough: days(14),
       billing: { freq: 'quarterly', amount: 1800 }, checklist: sweepList,
+      // Quoted at 1.5 hours; the crew takes 3.5. Fifty-two visits a year turns
+      // that gap into thousands, which is the whole reason this panel exists.
+      pricing: { hoursPerVisit: 1.5, crewRate: 50, driveMinutes: 15, materialsPerVisit: 20, targetMargin: 40 },
       notes: 'Sample data. Safe to delete.',
     },
     // Already stopped scheduling. This is the one the renewal board exists for.
@@ -101,6 +107,7 @@ function ctSampleScenario(nowTs) {
       startDate: ctSampleMonths(key, -9),
       visits: { freq: 'quarterly' }, visitsThrough: days(-24),
       billing: { freq: 'annual', amount: 2400 }, checklist: seawallList,
+      pricing: { hoursPerVisit: 3, crewRate: 55, driveMinutes: 30, materialsPerVisit: 120, targetMargin: 40 },
       notes: 'Sample data. Safe to delete.',
     },
     // Billing with no visits — a retainer, which must not be nagged for a
@@ -120,6 +127,9 @@ function ctSampleScenario(nowTs) {
       startDate: ctSampleMonths(key, -2),
       visits: { freq: 'quarterly' }, visitsThrough: '',
       billing: null, checklist: seawallList,
+      // Priced but not yet billed, so the estimate quotes a yearly figure with
+      // nothing to compare it to — the state a contract is in when it is quoted.
+      pricing: { hoursPerVisit: 2, crewRate: 50, driveMinutes: 40, materialsPerVisit: 30, targetMargin: 40 },
       notes: 'Sample data. Safe to delete.',
     },
   ].map(c => Object.assign({}, c, {
