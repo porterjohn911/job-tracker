@@ -12,6 +12,11 @@ function render(){
     attachHandlers();
     return;
   }
+  // The view dispatch is wrapped so one screen that cannot draw does not freeze
+  // the whole app. Before this, a throw here left the previous screen on the
+  // display, byte for byte, with no message — you tapped a tab and nothing
+  // happened. Now the failing screen says so and the nav below still works.
+  try{
   if(S.view==='jobs'&&S.detail)c.innerHTML=renderDetail(S.detail);
   else if(S.view==='jobs')c.innerHTML=renderJobs();
   else if(S.view==='dashboard')c.innerHTML=renderDashboard();
@@ -27,10 +32,17 @@ function render(){
   else if(S.view==='team')c.innerHTML=renderTeam();
   else if(S.view==='time')c.innerHTML=renderTime();
   else if(S.view==='bank')c.innerHTML=renderBank();
-  updateUserUI();
-  updateBellBadge();
-  attachHandlers();
-  if(S.view==='map')mountMap();
+  }catch(e){
+    c.innerHTML=(typeof jtViewErrorHTML==='function')?jtViewErrorHTML(S.view,e):'';
+    if(typeof jtReportError==='function')jtReportError(e,'render:'+S.view);
+  }
+  // Each guarded on its own: the chrome and the handlers are what let someone
+  // leave a broken screen, so they must run even when one of them fails.
+  const _g=(fn,where)=>(typeof jtTry==='function')?jtTry(fn,where):fn();
+  _g(updateUserUI,'updateUserUI');
+  _g(updateBellBadge,'updateBellBadge');
+  _g(attachHandlers,'attachHandlers');
+  if(S.view==='map')_g(mountMap,'mountMap');
 }
 
 function renderRestrictedView(view){

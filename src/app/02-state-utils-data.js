@@ -299,7 +299,10 @@ const LOCAL={
   saveTimeOff(required){return saveLocalValue(LS('timeoff'),S.timeOff,'time off',required)},
   saveReceipts(required){return saveLocalValue(LS('receipts'),DB?slimReceiptsForLocal(S.receipts):S.receipts,'receipts',required)}
 };
-function syncStatus(state,msg){const d=$('sync-dot'),t=$('sync-text');d.className='sync-dot '+state;t.textContent=msg}
+// Guarded because this is called from inside Firebase listener callbacks: a
+// throw here does not just lose the status text, it kills the callback that
+// was delivering data.
+function syncStatus(state,msg){const d=$('sync-dot'),t=$('sync-text');if(d)d.className='sync-dot '+state;if(t)t.textContent=msg}
 
 // ══ Cloud file storage (Firebase Storage) ══
 // Photos, receipts and documents upload to Firebase Storage and we keep only

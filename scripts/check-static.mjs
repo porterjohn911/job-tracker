@@ -8,6 +8,10 @@ const scriptRe = /<script\s+src="\.\/([^"]+)"[^>]*><\/script>/g;
 const scripts = [...index.matchAll(scriptRe)].map((m) => m[1]);
 
 const requiredFirst = [
+  // The error boundary loads before everything so it is already listening
+  // while the rest of the app boots — an exception during startup is exactly
+  // the one nobody would otherwise see.
+  'src/app/00-error-boundary.js',
   'src/app/01-config-auth.js',
   'src/app/02-state-utils-data.js',
   'src/app/03-render-core.js',

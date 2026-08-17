@@ -37,8 +37,11 @@ function attachShellHandlers(){
       S.view=view;S.detail=null;render();
     }
   });
-  $('user-btn').onclick=showSettingsModal;
-  $('setup-link').onclick=showSetupModal;
+  // onId rather than $('x').onclick: these two threw if either element was
+  // missing, and being above the rest of this function that took everything
+  // below them down with it — including the tab gating.
+  onId('user-btn','click',showSettingsModal);
+  onId('setup-link','click',showSetupModal);
   const _bco=$('brand-co');if(_bco)_bco.textContent=OWNER_MODE?'All Companies':ACTIVE_CO.label;
   const _bsw=$('brand-switch');if(_bsw){if(gateOn()&&!canSeeAll(SESSION)){_bsw.style.display='none';}else{_bsw.onclick=showCompanySwitcher;}}
   const _rpt=document.querySelector('.nav-btn[data-view="reports"]');if(_rpt&&!canSeeBank())_rpt.style.display='none';
