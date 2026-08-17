@@ -1,7 +1,35 @@
 // Navigation, header, referrals, and primary shell handlers
 // Generated from src/app/10-handlers-boot.js.
 
+// Which nav tabs a company's TYPE allows.
+//
+// Both tabs are marked display:none in index.html and revealed here, rather
+// than shipped visible and hidden later. A gate has to fail closed: shipped
+// visible, every way this function can fail to run — a slow load before the
+// first paint, a stale cached bundle, an exception thrown earlier in
+// attachShellHandlers — leaves a company looking at a tab that is not theirs.
+// Hidden by default, the same failures show one tab too few, which is a
+// nuisance rather than a wrong answer. A maintenance company seeing Entities
+// is exactly the failure this shape prevents.
+//
+// Called at the very top of attachShellHandlers, before the element wiring
+// below it, because a TypeError on any missing element down there used to skip
+// the gating entirely.
+//
+// Set BOTH ways, not hidden-only: a company's type can change mid-session from
+// the company editor, which updates ACTIVE_CO in place, so a tab that has just
+// become relevant has to be able to come back without a reload.
+function applyTypeGatedTabs(){
+  const set=(view,on)=>{
+    const btn=document.querySelector('.nav-btn[data-view="'+view+'"]');
+    if(btn)btn.style.display=on?'':'none';
+  };
+  set('contracts',typeof ctEnabled==='function'&&ctEnabled());
+  set('entities',typeof meEnabled==='function'&&meEnabled());
+}
+
 function attachShellHandlers(){
+  applyTypeGatedTabs();
   document.querySelectorAll('.nav-btn').forEach(b=>{
     b.onclick=()=>{
       const view=b.dataset.view;
@@ -15,16 +43,6 @@ function attachShellHandlers(){
   const _bsw=$('brand-switch');if(_bsw){if(gateOn()&&!canSeeAll(SESSION)){_bsw.style.display='none';}else{_bsw.onclick=showCompanySwitcher;}}
   const _rpt=document.querySelector('.nav-btn[data-view="reports"]');if(_rpt&&!canSeeBank())_rpt.style.display='none';
   const _bnk=document.querySelector('.nav-btn[data-view="bank"]');if(_bnk&&!canSeeBank())_bnk.style.display='none';
-  // Contracts only exist for maintenance/management companies, and only for
-  // managers and owners — the same people the Firebase rules let read the node.
-  // Set both ways rather than only hiding: unlike the role-based buttons above,
-  // a company's type can change mid-session from the company editor, which
-  // updates ACTIVE_CO in place. Hiding only would leave the tab missing until a
-  // reload right after someone switched the company to maintenance.
-  const _ct=document.querySelector('.nav-btn[data-view="contracts"]');if(_ct)_ct.style.display=(typeof ctEnabled==='function'&&ctEnabled())?'':'none';
-  // Entities are management-only, set both ways for the same reason: a
-  // company's type can change mid-session from the company editor.
-  const _me=document.querySelector('.nav-btn[data-view="entities"]');if(_me)_me.style.display=(typeof meEnabled==='function'&&meEnabled())?'':'none';
   $('owner-refresh')?.addEventListener('click',refreshOwnerData);
   $('owner-manage-companies')?.addEventListener('click',showCompanyManagerModal);
   document.querySelectorAll('[data-view-company]').forEach(b=>b.onclick=()=>{
