@@ -56,16 +56,32 @@ maps rather than arrays so concurrent appends merge naturally.
 ### 3. Two different customer models in one app — **open**
 
 **Evidence.** Project jobs have **no `customerId`** — they carry `customerName`,
-`customerEmail`, `customerPhone` and `billingAddress` as free text. The Customers
-view (`src/app/views/07-customers.js`) groups jobs by normalised name string
-(`normName(j.customerName)`) and collects contact details *from the jobs*.
-Contracts and entities, by contrast, link by `customerId` and read the name from
-the directory.
+`customerEmail`, `customerPhone` and `billingAddress` as free text, entered into
+four blank inputs on the job modal (`src/app/jobs/01-job-modal.js:32`) with no
+picker and no link to the directory. The Customers view is a *report over jobs*,
+not a source of truth: `buildCustomers()` groups them by `customerKey(j)`, which
+prefers email, then phone, then name, and overlays any saved record matched by
+alias. Contracts and entities, by contrast, link by `customerId` and read the
+name from the directory (`ctCustomerName()`).
+
+The grouping is better than a raw name match — a shared email holds "Whitaker
+Marina" and "Whitaker Marina LLC" together. The problem is direction of flow:
+the directory reads *from* jobs and never writes back to them.
 
 **Impact.** The same customer is retyped on every job. Fixing a phone number in
-Customers leaves every existing job with the old one. "Whitaker Marina" and
-"Whitaker Marina LLC" become two customers; renaming one splits their history.
+Customers corrects the display but leaves `j.customerPhone` stale on every
+existing job — which is what invoices and visit reports actually read. A job
+with no email falls back to name matching and can split off as its own customer.
 The stale-email bug patched narrowly in the bill run was a symptom of this.
+
+**Sketch of the fix.** Three pieces, each useful alone: a customer picker on the
+job form so new jobs store `customerId`; a one-time backfill that turns today's
+grouping into real records and stamps `customerId` on existing jobs, behind a
+preview screen; and read-through accessors that prefer the linked record and
+fall back to the job's own fields, so old data keeps working unchanged.
+
+**Note:** this touches the job form, which is core MHS. Needs an explicit
+decision on whether project companies are in scope.
 
 **Especially worth settling before the deployment split** — afterwards it is two
 migrations instead of one, and it gets more expensive every month.
@@ -94,9 +110,25 @@ standing next to it. It depends on someone remembering that evening. For a
 maintenance business this is usually the largest quiet revenue leak: you are
 already on site, already trusted.
 
-**Sketch.** A "Found work" action on a visit — photo, one line, urgency —
-landing either as an add-on on the contract (which already bills) or as a quote
-to send.
+**The billing half is already built.** `ctAddAddon()`
+(`src/app/contracts/02-contract-store.js:392`) stores add-ons as a keyed map,
+`ctPendingAddons()` sweeps them into the next billing period, and
+`ctStampAddon()` marks them with an invoice ID so they cannot bill twice. All
+tested. The **only** entry point today is buried in the contract editor
+(`04-contract-editor.js:278`) — six steps, off-site, hours later, from memory.
+
+**Sketch of the fix.** A "Found work" button on the visit job and the day-route
+stop, opening one short sheet: what you found, a photo (camera-direct — same
+change as #12), a rough amount, an urgency. Two outcomes: *Add to their bill*
+calls the existing `ctAddAddon()`, or *Send a quote* holds it pending for the
+proposal flow. Plus a Found-work worklist beside the bill run, so capturing it
+does not just move the forgetting somewhere else.
+
+Photos ride on the job's existing storage path with a `foundwork` category, so
+no new storage plumbing. **Needs a rules deploy** — add-ons have
+`"$other": {".validate": false}`, so urgency/photo/status fields are rejected
+until the rules are published. Contract-only, so project companies are
+unaffected.
 
 ### 6. Clocking in is buried — **open**
 
