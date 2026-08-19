@@ -37,9 +37,17 @@ mark the invoice provisional so a duplicate can be spotted later.
 
 ### 2. Concurrent edits silently overwrite each other — **open**
 
-**Evidence.** `writeJob()` does `writeDB('jobs/'+j.id, copy)`, which is
-`DB.child(path).set(value)` — a whole-object replace. Jobs carry no `updatedAt`,
-so there is nothing to compare versions with.
+**Evidence.** `writeJob()` writes the whole job object, not the changed fields.
+Jobs carry no `updatedAt`, so there is nothing to compare versions with.
+
+Reproduced in a browser on 19 Aug 2026: a teammate's note arrives over sync
+(1 note present), a save from a modal opened before it lands, note count 0.
+
+The audit also found the mechanism that makes it near-certain rather than
+merely possible. The sync listener does `S.jobs = applyPendingJobs(…)` — it
+**replaces the whole object**. A modal that captured `const j = S.jobs[id]` on
+open is then holding a snapshot that `S.jobs` no longer contains, so the longer
+a modal stays open the more certain the clobber.
 
 **Impact.** Dale ticks a checklist item while Rick adds a note to the same visit.
 Whoever saves second writes their entire stale copy over the top, and the other
@@ -202,11 +210,79 @@ disproportionately what customers remember.
 **Evidence.** Filling a job form and tapping the backdrop closes it and discards
 the text with nothing asked. Escape does the same.
 
-### 16. Offline gives no reassurance — **open**
+### 16. Offline froze every save, and lost the work on reload — **fixed** (PR: outbox)
 
-Firebase queues writes and syncs them later, so data genuinely is not lost in a
-dead zone. But the crew is shown "Reconnecting…" and no confirmation their hours
-saved, which produces double entry or a re-drive.
+This entry originally read "offline gives no reassurance" and assumed data was
+safe. A write-path audit on 19 Aug 2026 measured otherwise, and it was the most
+serious flaw in the app.
+
+**Evidence.** Firebase's `set()` resolves only on server acknowledgement, so
+`await writeJob(j)` never returned with no signal — and every save handler is
+shaped `await write…; toast(); closeModal()`. Measured in a browser: press
+*Add Job* in a dead zone and the modal stays open, the button stays live, no
+toast, indefinitely. Press it again, as anyone would, and `mode === 'add'` mints
+a fresh `uid()` — **two identical jobs**.
+
+Worse, the Firebase **web** SDK holds pending writes in memory only. Measured:
+save offline, reload, and the edit is silently and permanently gone — the
+localStorage copy survives the reload but nothing marks it unsent, so the first
+sync replaces it with server truth.
+
+**Fixed by** `src/app/02-outbox.js`: a durable localStorage record of unsent
+writes that survives a reload, is consulted by `applyPendingJobs` before server
+truth is applied, drains on reconnect, and shows an honest count in the sync
+bar. Saves now resolve on the local write. `guardBtn()` closes the
+double-submit. Kill switch: `OUTBOX_ON`.
+
+---
+
+## Found in the write-path audit, 19 Aug 2026
+
+### 17. There is no backup of anything — **open**
+
+**Evidence.** `exportCSV` is the only export in the app: a 17-column job
+summary. It excludes notes, photos, tasks, daily logs, invoices, estimates,
+time entries, receipts, transactions, contracts, entities, customers, team and
+pay rates.
+
+**Impact.** If a company node is wrongly deleted or corrupted there is no path
+back. Every other item on this list is recoverable; this is the one that keeps
+it that way.
+
+**Sketch.** A "Download everything" button in Settings producing one JSON file
+of the company's full node, and a restore that previews before writing.
+
+### 18. Deleting a job orphans its Storage files — **open**
+
+**Evidence.** `deleteJobDB()` removes the database record and never references
+Storage. Every photo, document and receipt under `{company}/jobs/{id}/` stays
+in the bucket permanently, billed monthly, unreachable.
+
+### 19. Customer saves still swallow their failures — **open**
+
+**Evidence.** `saveCustomer()` (`views/07-customers.js:57`) ends
+`try{await DB.child('customers/'+rec.id).set(rec)}catch(e){}` — the exact bare
+catch that caused the contract-vanishing bug. Probed with a rejected write: the
+call does not throw, the record appears saved, and the next sync erases it.
+`deleteCustomer()` has the same.
+
+**Urgent because** issue 3 makes the customer record the thing invoices and
+visit reports read from. Two-line fix.
+
+### 20. A typo in a quantity silently zeroes a job's total — **open**
+
+**Evidence.** `Number('abc')` is `NaN`, which flows into `j.invoiced`.
+`JSON.stringify` converts `NaN` to `null`, Firebase stores null, and every
+reader doing `Number(j.invoiced||0)` gets **0**. The job reports nothing
+invoiced. A guard in `calcInvoice` fixes it.
+
+### 21. Rules with `$other: false` reject the whole write — **standing hazard**
+
+Contracts, entities and add-ons reject any field the *deployed* rules do not
+know about, failing the entire write rather than the field. This caused the
+vanishing-contract bug. Not a fix so much as a working rule: **any change
+touching contract, entity or add-on fields must ship its rules change with it,
+and say so in the PR.**
 
 ---
 

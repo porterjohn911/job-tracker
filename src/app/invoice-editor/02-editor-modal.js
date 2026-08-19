@@ -196,18 +196,20 @@ function renderInvoiceModal(jobId,isEdit,kind){
     return INV_DRAFT;
   }
 
-  $('inv-save').onclick=async()=>{
+  // All three write the same draft, so a second press on any of them while the
+  // first is still running would append the invoice to the job twice.
+  $('inv-save').onclick=()=>guardBtn('inv-save',async()=>{
     const saved=await saveInvoice();
     if(saved){toast('Invoice saved');INV_DRAFT=null;closeModal();render()}
-  };
-  $('inv-print').onclick=async()=>{
+  });
+  $('inv-print').onclick=()=>guardBtn('inv-print',async()=>{
     const saved=await saveInvoice();
     if(saved){INV_DRAFT=null;closeModal();render();printInvoice(S.jobs[jobId],saved,kind)}
-  };
-  $('inv-send').onclick=async()=>{
+  });
+  $('inv-send').onclick=()=>guardBtn('inv-send',async()=>{
     const saved=await saveInvoice();
     if(saved){INV_DRAFT=null;closeModal();render();showSendInvoiceModal(S.jobs[jobId],saved,kind)}
-  };
+  });
   if(isEdit){
     $('inv-del').onclick=async()=>{
       const j=S.jobs[jobId];if(!j)return;

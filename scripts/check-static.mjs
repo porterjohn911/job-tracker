@@ -14,6 +14,9 @@ const requiredFirst = [
   'src/app/00-error-boundary.js',
   'src/app/01-config-auth.js',
   'src/app/02-state-utils-data.js',
+  // The outbox loads with the data layer it belongs to and before anything
+  // renders, because the sync listener consults it on its very first callback.
+  'src/app/02-outbox.js',
   'src/app/03-render-core.js',
 ];
 const legacyRuntimeFiles = new Set([
