@@ -60,7 +60,10 @@ function showJobModal(mode,job){
     $('custom-wrap').style.display='block';
     $('f-cname').value=j.assigned;
   }
-  $('btn-sv').onclick=async()=>{
+  // Guarded because a second press on the add path mints a fresh uid() and
+  // creates a duplicate job. That was reachable whenever the save was slow —
+  // measured as two identical jobs from two taps in a dead zone.
+  $('btn-sv').onclick=()=>guardBtn('btn-sv',async()=>{
     const name=$('f-name').value.trim();
     if(!name){toast('Please enter a job name','');return}
     let assigned=$('f-assigned').value;
@@ -103,7 +106,7 @@ function showJobModal(mode,job){
       await writeJob(merged);await logAct('updated job',name,merged.id);toast('Changes saved');
     }
     closeModal();render();
-  };
+  });
   if(mode==='edit')$('btn-del').onclick=async()=>{
     const backup=JSON.parse(JSON.stringify(j));
     await deleteJobDB(j.id);await logAct('deleted job',j.name);

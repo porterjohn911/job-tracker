@@ -452,21 +452,40 @@ test.describe('the tab gate fails closed', () => {
     expect(everShown).toBe(false);
   });
 
-  // The gating used to sit below $('setup-link').onclick — a TypeError there
-  // skipped it entirely and left the static markup showing.
-  test('an exception later in attachShellHandlers cannot reveal the tab', async ({ page }) => {
+  // The gating used to sit below $('setup-link').onclick, and a TypeError there
+  // skipped it entirely. That trigger is now gone — onId() no-ops on a missing
+  // element instead of throwing.
+  test('a missing setup-link no longer throws at all', async ({ page }) => {
     await boot(page, 'maintenance');
     const r = await page.evaluate(() => {
-      // Remove an element the wiring below the gate dereferences unguarded.
       document.getElementById('setup-link')?.remove();
       let threw = false;
       try { attachShellHandlers(); } catch (e) { threw = true; }
-      const b = document.querySelector('.nav-btn[data-view="entities"]');
-      return { threw, display: b.style.display, contracts: document.querySelector('.nav-btn[data-view="contracts"]').style.display };
+      return { threw, entities: document.querySelector('.nav-btn[data-view="entities"]').style.display };
+    });
+    expect(r.threw).toBe(false);
+    expect(r.entities).toBe('none');
+  });
+
+  // And the structural guarantee still holds for any OTHER throw further down:
+  // the gating runs first, so nothing below it can reveal a tab.
+  test('a throw later in attachShellHandlers cannot reveal the tab', async ({ page }) => {
+    await boot(page, 'maintenance');
+    const r = await page.evaluate(() => {
+      const real = window.canSeeBank;
+      window.canSeeBank = () => { throw new Error('later boom'); };
+      let threw = false;
+      try { attachShellHandlers(); } catch (e) { threw = true; }
+      window.canSeeBank = real;
+      return {
+        threw,
+        entities: document.querySelector('.nav-btn[data-view="entities"]').style.display,
+        contracts: document.querySelector('.nav-btn[data-view="contracts"]').style.display,
+      };
     });
     expect(r.threw).toBe(true);
-    // Gated first, so the throw below it changes nothing.
-    expect(r.display).toBe('none');
+    // Gated before it, so the throw changes nothing about the tabs.
+    expect(r.entities).toBe('none');
     expect(r.contracts).toBe('');
   });
 

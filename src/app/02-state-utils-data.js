@@ -192,13 +192,13 @@ function timeOffByDay(){
 async function writeTimeOff(r){
   S.timeOff[r.id]=r;
   const localOk=LOCAL.saveTimeOff(!DB);
-  await writeDB('timeoff/'+r.id,r,'time off');
+  await cloudSave('timeoff/'+r.id,r,'time off');
   if(!localOk&&!DB)throw new Error('Local time-off save failed');
 }
 async function deleteTimeOff(id){
   delete S.timeOff[id];
   const localOk=LOCAL.saveTimeOff(!DB);
-  await removeDB('timeoff/'+id,'time off');
+  await cloudRemove('timeoff/'+id,'time off');
   if(!localOk&&!DB)throw new Error('Local time-off delete failed');
 }
 
@@ -207,18 +207,22 @@ function overheadReceipts(){return Object.values(S.receipts||{})}
 async function writeReceipt(r){
   S.receipts=S.receipts||{};S.receipts[r.id]=r;
   const localOk=LOCAL.saveReceipts(!DB);
-  await writeDB('receipts/'+r.id,r,'receipt');
+  await cloudSave('receipts/'+r.id,r,'receipt');
   if(!localOk&&!DB)throw new Error('Local receipt save failed');
 }
 async function deleteReceipt(id){
   if(S.receipts)delete S.receipts[id];
   const localOk=LOCAL.saveReceipts(!DB);
-  await removeDB('receipts/'+id,'receipt');
+  await cloudRemove('receipts/'+id,'receipt');
   if(!localOk&&!DB)throw new Error('Local receipt delete failed');
 }
 
 // ══ DB layer ══
-const SYNC={pendingJobs:{}};
+// pendingJobs is the in-memory half of the same job the outbox does durably.
+// It is kept so a write in flight is not flickered away by an incoming sync
+// before it lands; the outbox is what survives a reload. online is tracked so
+// the sync bar can tell "waiting to sync" from "saving".
+const SYNC={pendingJobs:{},online:true};
 function reportLocalSaveError(label,e,required){
   console.warn('Local save failed for '+label,e);
   syncStatus('err','Browser storage is full - team sync may still save');
@@ -233,7 +237,23 @@ function showCloudSaveError(label,e){
   syncStatus('err','Team sync save failed');
   toast('Could not save '+label+' to team sync','');
 }
+// Hold this device's unsent edits on top of whatever the server just sent.
+//
+// The outbox is read first and matters most: it is the half that survives a
+// reload. Without it, an edit made in a dead zone sits in localStorage with
+// nothing marking it unsent, and the first sync after reconnecting replaces it
+// with server truth — measured, and silent.
 function applyPendingJobs(remote){
+  if(typeof OUTBOX_ON!=='undefined'&&OUTBOX_ON&&typeof OUTBOX!=='undefined'){
+    Object.keys(OUTBOX).forEach(path=>{
+      const m=/^jobs\/(.+)$/.exec(path);
+      if(!m)return;
+      const e=OUTBOX[path];
+      if(!e)return;
+      if(e.op==='remove')delete remote[m[1]];
+      else remote[m[1]]=e.value;
+    });
+  }
   Object.keys(SYNC.pendingJobs).forEach(id=>{
     const pending=SYNC.pendingJobs[id];
     if(pending===null)delete remote[id];
@@ -299,7 +319,10 @@ const LOCAL={
   saveTimeOff(required){return saveLocalValue(LS('timeoff'),S.timeOff,'time off',required)},
   saveReceipts(required){return saveLocalValue(LS('receipts'),DB?slimReceiptsForLocal(S.receipts):S.receipts,'receipts',required)}
 };
-function syncStatus(state,msg){const d=$('sync-dot'),t=$('sync-text');d.className='sync-dot '+state;t.textContent=msg}
+// Guarded because this is called from inside Firebase listener callbacks: a
+// throw here does not just lose the status text, it kills the callback that
+// was delivering data.
+function syncStatus(state,msg){const d=$('sync-dot'),t=$('sync-text');if(d)d.className='sync-dot '+state;if(t)t.textContent=msg}
 
 // ══ Cloud file storage (Firebase Storage) ══
 // Photos, receipts and documents upload to Firebase Storage and we keep only
@@ -457,38 +480,74 @@ function initFB(cfg){
     else S.payRates={};
     if(canSeeBank())DB.child('transactions').on('value',s=>{S.transactions=s.val()||{};LOCAL.saveTransactions();render()});
     else S.transactions={};
-    DB.child('.info/connected').on('value',s=>{if(!s.val())syncStatus('err','Reconnecting…')});
+    // Previously this only ever said "Reconnecting…" and said nothing at all
+    // when the connection came back, so someone who saved in a dead zone had
+    // no way to tell whether their work had gone up. Now it reports what is
+    // still owed, and drains the outbox the moment there is a line to send on.
+    DB.child('.info/connected').on('value',s=>{
+      SYNC.online=!!s.val();
+      if(typeof syncPendingUI==='function')syncPendingUI();
+      else if(!SYNC.online)syncStatus('err','Reconnecting…');
+      // force: a pass may still be sitting on a write that stalled while the
+      // line was down. Reconnecting is precisely when it should be taken over.
+      if(SYNC.online&&typeof outboxFlush==='function')outboxFlush(true);
+    });
     return true;
   }catch(e){syncStatus('err','Firebase error');return false}
 }
+// Resolves when THIS DEVICE has the work, not when the server acknowledges it.
+//
+// That distinction is the whole fix. Awaiting the server meant that with no
+// signal the promise never settled, so the toast never fired and the modal
+// never closed — and the person pressed Save again and created a duplicate.
+// The cloud write is handed to the outbox, which is durable and drains on
+// reconnect, so nothing is lost by not waiting for it.
+//
+// All 58 callers get this without being touched, which is exactly why it lives
+// here rather than at the call sites.
 async function writeJob(j){
   const copy=JSON.parse(JSON.stringify(j));
-  S.jobs[j.id]=j;SYNC.pendingJobs[j.id]=copy;
+  S.jobs[j.id]=j;
   const localOk=LOCAL.saveJobs(!DB);
-  try{await writeDB('jobs/'+j.id,copy,'job')}
-  finally{delete SYNC.pendingJobs[j.id]}
+  if(typeof OUTBOX_ON!=='undefined'&&OUTBOX_ON){
+    cloudSave('jobs/'+j.id,copy,'job');
+  }else{
+    SYNC.pendingJobs[j.id]=copy;
+    try{await writeDB('jobs/'+j.id,copy,'job')}
+    finally{delete SYNC.pendingJobs[j.id]}
+  }
   if(!localOk&&!DB)throw new Error('Local job save failed');
 }
 async function deleteJobDB(id){
-  delete S.jobs[id];SYNC.pendingJobs[id]=null;
+  delete S.jobs[id];
   const localOk=LOCAL.saveJobs(!DB);
-  try{await removeDB('jobs/'+id,'job')}
-  finally{delete SYNC.pendingJobs[id]}
+  if(typeof OUTBOX_ON!=='undefined'&&OUTBOX_ON){
+    cloudRemove('jobs/'+id,'job');
+  }else{
+    SYNC.pendingJobs[id]=null;
+    try{await removeDB('jobs/'+id,'job')}
+    finally{delete SYNC.pendingJobs[id]}
+  }
   if(!localOk&&!DB)throw new Error('Local job delete failed');
 }
 async function logAct(action,job,jobId){
   const e={user:S.user||'Someone',action,job:job||'',time:Date.now()};
   if(jobId)e.jobId=jobId;
   S.activity.unshift(e);LOCAL.saveActivity();
-  if(DB){try{await DB.child('activity').push(e)}catch(err){console.warn('Activity sync failed',err)}}
+  // Not awaited. This sits directly behind writeJob in every save handler
+  // (`await writeJob(j); await logAct(...); toast(...)`), so awaiting a push
+  // that cannot complete offline reintroduces the exact hang writeJob was
+  // changed to avoid. Activity is a log — best-effort is the right bar for it,
+  // which is why the failure was already only a console warning.
+  if(DB){try{DB.child('activity').push(e).catch(err=>console.warn('Activity sync failed',err))}catch(err){console.warn('Activity sync failed',err)}}
 }
-async function saveMembers(){const localOk=LOCAL.saveMembers(!DB);await writeDB('members',S.members,'team members');if(!localOk&&!DB)throw new Error('Local team save failed')}
-async function writeReferral(r){S.referrals[r.id]=r;const localOk=LOCAL.saveReferrals(!DB);await writeDB('referrals/'+r.id,r,'referral');if(!localOk&&!DB)throw new Error('Local referral save failed')}
-async function deleteReferralDB(id){delete S.referrals[id];const localOk=LOCAL.saveReferrals(!DB);await removeDB('referrals/'+id,'referral');if(!localOk&&!DB)throw new Error('Local referral delete failed')}
+async function saveMembers(){const localOk=LOCAL.saveMembers(!DB);await cloudSave('members',S.members,'team members');if(!localOk&&!DB)throw new Error('Local team save failed')}
+async function writeReferral(r){S.referrals[r.id]=r;const localOk=LOCAL.saveReferrals(!DB);await cloudSave('referrals/'+r.id,r,'referral');if(!localOk&&!DB)throw new Error('Local referral save failed')}
+async function deleteReferralDB(id){delete S.referrals[id];const localOk=LOCAL.saveReferrals(!DB);await cloudRemove('referrals/'+id,'referral');if(!localOk&&!DB)throw new Error('Local referral delete failed')}
 
 // ── Time tracking (clock in / clock out) ──
-async function writeTimeEntry(t){S.timeEntries[t.id]=t;const localOk=LOCAL.saveTime(!DB);await writeDB('time/'+t.id,t,'time entry');if(!localOk&&!DB)throw new Error('Local time save failed')}
-async function deleteTimeEntryDB(id){delete S.timeEntries[id];const localOk=LOCAL.saveTime(!DB);await removeDB('time/'+id,'time entry');if(!localOk&&!DB)throw new Error('Local time delete failed')}
+async function writeTimeEntry(t){S.timeEntries[t.id]=t;const localOk=LOCAL.saveTime(!DB);await cloudSave('time/'+t.id,t,'time entry');if(!localOk&&!DB)throw new Error('Local time save failed')}
+async function deleteTimeEntryDB(id){delete S.timeEntries[id];const localOk=LOCAL.saveTime(!DB);await cloudRemove('time/'+id,'time entry');if(!localOk&&!DB)throw new Error('Local time delete failed')}
 function tid(){return't_'+Date.now()+'_'+Math.random().toString(36).slice(2,6)}
 function timeList(){return Object.values(S.timeEntries||{})}
 function activeEntry(member){return timeList().find(t=>t.member===member&&!t.end)}
@@ -503,7 +562,7 @@ let TIME_TICK=null;
 function stopTimeTick(){if(TIME_TICK){clearInterval(TIME_TICK);TIME_TICK=null}}
 function startTimeTick(){stopTimeTick();TIME_TICK=setInterval(()=>{document.querySelectorAll('[data-tick-start]').forEach(el=>{const s=parseInt(el.getAttribute('data-tick-start'),10);if(s)el.textContent=fmtHMS(Date.now()-s)})},1000)}
 // ── Labor cost roll-ups ──
-async function savePayRates(){if(!canSeeFinancials()){toast('Only managers and owners can edit pay rates','');return}const localOk=LOCAL.savePayRates(!DB);await writeDB('payrates',S.payRates,'pay rates');if(!localOk&&!DB)throw new Error('Local pay rate save failed')}
+async function savePayRates(){if(!canSeeFinancials()){toast('Only managers and owners can edit pay rates','');return}const localOk=LOCAL.savePayRates(!DB);await cloudSave('payrates',S.payRates,'pay rates');if(!localOk&&!DB)throw new Error('Local pay rate save failed')}
 function rateOf(m){return Number((S.payRates||{})[m]||0)}
 function hoursOf(ms){return ms/3600000}
 function jobLaborStats(jobId){let ms=0,cost=0,active=0;timeList().forEach(t=>{if((t.job||'')!==jobId)return;const d=entryDur(t);ms+=d;cost+=hoursOf(d)*rateOf(t.member);if(!t.end)active++});return{ms,hours:hoursOf(ms),cost,active}}
@@ -564,5 +623,14 @@ function inputToMin(v){if(!v)return null;const p=String(v).split(':');return (Nu
 
 function loadAndConnect(){
   if(OWNER_MODE){ownerLoadLocal();if(FIREBASE_CONFIG)ownerInitFB(FIREBASE_CONFIG);}
-  else{LOCAL.load();if(FIREBASE_CONFIG){initFB(FIREBASE_CONFIG);listenCompanyRegistry();}}
+  // The outbox is read before the sync listener attaches, because the first
+  // thing that listener does is replace S.jobs with server truth. Anything
+  // this device saved but never sent has to be back in hand by then or it is
+  // overwritten — which is precisely the loss this fixes.
+  else{
+    if(typeof outboxLoad==='function')outboxLoad();
+    LOCAL.load();
+    if(FIREBASE_CONFIG){initFB(FIREBASE_CONFIG);listenCompanyRegistry();}
+    if(typeof outboxFlush==='function')outboxFlush(true);
+  }
 }
